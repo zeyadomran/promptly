@@ -1,3 +1,5 @@
+import './squirrel-uninstall-login';
+
 import { app } from 'electron';
 import squirrelStartup from 'electron-squirrel-startup';
 

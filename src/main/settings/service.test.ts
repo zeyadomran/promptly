@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import { expect, it } from 'vitest';
 
-import { loginPreferences } from './login-preferences';
+import { loginPreferences, prepareSquirrelLogin } from './login-preferences';
 import { testSettings } from './settings-test-fixture';
 
 it('persists settings across reopen and rolls back rejected native effects', async () => {
@@ -134,6 +134,50 @@ it('persists settings across reopen and rolls back rejected native effects', asy
 
     development.setLogin(true);
     expect(loginEntries.get(installedExecutable)).toBe(true);
+    let applicationId = '';
+    const setupApplication = {
+      ...application,
+      setAppUserModelId: (identity: string) => {
+        applicationId = identity;
+      }
+    };
+    const cleanupErrors: unknown[] = [];
+    const reportCleanupError = (error: unknown) => cleanupErrors.push(error);
+
+    prepareSquirrelLogin(
+      setupApplication,
+      '--squirrel-updated',
+      reportCleanupError,
+      upgradedExecutable
+    );
+    expect(login.getLogin()).toBe(true);
+    prepareSquirrelLogin(
+      setupApplication,
+      '--squirrel-uninstall',
+      reportCleanupError,
+      upgradedExecutable
+    );
+    expect(applicationId).toBe('com.squirrel.Promptly.Promptly');
+    expect(login.getLogin()).toBe(false);
+    expect(cleanupErrors).toEqual([]);
+    const deniedCleanup = new Error('Native removal denied');
+
+    prepareSquirrelLogin(
+      {
+        ...setupApplication,
+        setLoginItemSettings: () => {
+          throw deniedCleanup;
+        }
+      },
+      '--squirrel-uninstall',
+      reportCleanupError,
+      upgradedExecutable
+    );
+    expect(cleanupErrors).toEqual([deniedCleanup]);
+    fixture.store.reopen();
+    expect(fixture.store.invoke('getSettings', {})).toMatchObject({
+      settings: { launchAtLogin: true, theme: 'light' }
+    });
   } finally {
     await fixture.service.close();
     fixture.store.dispose();
