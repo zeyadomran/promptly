@@ -10,6 +10,7 @@
 @import './library.css';
 @import './regular-library.css';
 @import './tag-picker.css';
+@import './tag-management.css';
 @import './storage.css';
 
 :root {
