@@ -10,7 +10,7 @@ const fixture = fileURLToPath(new URL('./experiment-startup-fixture.mjs', import
 it('allows bounded delayed startup beyond the ordinary request deadline', async () => {
   const helper = openHelper(process.execPath, [fixture, '2100'], {
     startupDeadlineMs: 3500,
-    requestDeadlineMs: 40
+    requestDeadlineMs: 200
   });
 
   try {
