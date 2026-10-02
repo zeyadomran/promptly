@@ -7,6 +7,9 @@ import { saveNativeReceipt } from './native-receipt';
 type HarnessGlobal = typeof globalThis & { ownedMacActivationHarness: typeof OwnedHarness };
 
 interface ActivationReceipt {
+  sourceLaunchMode: 'launchServices' | 'direct';
+  nativeSourceForeground: { matched: boolean; launchDateAvailable: boolean } | undefined;
+  terminatedSourceRejected: boolean;
   stage: string;
   ownedWindowReady: boolean;
   fixtureReadyForeground: boolean;

@@ -1,8 +1,10 @@
 import AppKit
 
+extension NSRunningApplication: ApplicationLifetime {}
+
 struct SourceIdentity {
     let pid: pid_t
-    let started: Date
+    let started: Date?
     let bundle: String?
     let token: String
     let source: [String: Any]?
@@ -13,7 +15,7 @@ struct SourceIdentity {
 
     static func record() -> SourceIdentity? {
         guard let app = NSWorkspace.shared.frontmostApplication, !app.isTerminated,
-              app.processIdentifier > 0, let started = app.launchDate else { return nil }
+              app.processIdentifier > 0 else { return nil }
         var source: [String: Any]?
         if let bundle = app.bundleIdentifier, let name = app.localizedName,
            bundle.utf16.count <= 255, name.utf16.count <= 255,
@@ -21,7 +23,7 @@ struct SourceIdentity {
            name.range(of: "^[\\p{L}\\p{N}._ -]{1,255}$", options: .regularExpression) != nil {
             source = ["pid": app.processIdentifier, "name": name, "id": bundle]
         }
-        let identity = SourceIdentity(pid: app.processIdentifier, started: started,
+        let identity = SourceIdentity(pid: app.processIdentifier, started: app.launchDate,
             bundle: app.bundleIdentifier, token: UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased(),
             source: source, application: app)
         guard identity.valid(foreground: true) else { return nil }
@@ -34,10 +36,11 @@ struct SourceIdentity {
     static func resolve(_ token: String) -> SourceIdentity? { identities[token] }
 
     func valid(foreground: Bool) -> Bool {
-        guard !application.isTerminated,
-              let app = NSRunningApplication(processIdentifier: pid), !app.isTerminated,
-              app.launchDate == started, app.bundleIdentifier == bundle else { return false }
-        return !foreground || NSWorkspace.shared.frontmostApplication?.processIdentifier == pid
+        validApplicationIdentity(retained: application,
+            fresh: NSRunningApplication(processIdentifier: pid), pid: pid,
+            started: started, bundle: bundle,
+            foreground: foreground ? NSWorkspace.shared.frontmostApplication : nil,
+            requireForeground: foreground)
     }
 
     func result(_ status: String) -> [String: Any] {

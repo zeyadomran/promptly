@@ -76,3 +76,37 @@ Local Windows verification of this diagnostic delta passed all strict checks and
 252 tests in 56 files, including 11 owned-observer response regressions. Actual
 Swift compilation and the owned-PID launch-date observation require fresh macOS CI.
 The production package contents are unchanged from the packaged `70f770d` head.
+
+[`activation-82c101a-macos-failed.json`](activation-82c101a-macos-failed.json) retains
+the failure from [run 36998321957](https://github.com/zeyadomran/promptly/actions/runs/36998321957),
+macOS job 110810021823. The actual owned Promptly PID was foreground and its native
+launch date was unavailable, while production identity returned `foregroundChanged`
+in 1.12 ms. This confirms the missing-date prerequisite failure; source activation
+was never attempted. The receipt remains byte-identical to its CI artifact.
+
+The production correction follows Apple's public
+[`processIdentifier` guidance](https://developer.apple.com/documentation/appkit/nsrunningapplication/processidentifier):
+retain the original `NSRunningApplication` and compare it using `isEqual` against
+each fresh PID resolution. Both applications must be live with the same positive
+PID and bundle, and required actual foreground must equal the retained instance.
+Nonnil recorded launch dates add supplemental checks; nil dates never permit bare
+PID/bundle identity. Main-held capability/opaque token and post-activation checks
+remain intact, with the same 100 ms deadline and unchanged forged-capability,
+text, selection and pasteboard assertions.
+
+Twenty-two owned Swift seam cases exercise equal distinct nil-date objects,
+unequal lifetime despite identical PID/bundle/date, termination, missing instances,
+changed PID/bundle/date and foreground. The fixture build compiles and runs these
+cases on macOS. The packaged activation flow now runs separately for LaunchServices
+and direct-launched owned source apps; the latter must prove a nil launch date before
+actual source capture, Promptly foreground and the single background activation.
+After the direct source exits, another capture with its retained capability must
+reject `foregroundChanged`; it cannot inspect a subsequent PID owner.
+Local Windows strict checks cannot qualify Swift compilation or these OS behaviors;
+fresh macOS native and packaged CI remain required.
+
+Windows validation of the source-identity correction passed all strict checks,
+252 unit tests, 17 focused adapter/observer tests and Forge packaging. Both actual
+macOS activation cases are discovered but skipped on Windows. The 22 Swift seam
+cases and OS source/handoff behavior are pending native and packaged macOS CI;
+their execution is not claimed from this development host.

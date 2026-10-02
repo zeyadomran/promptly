@@ -20,8 +20,12 @@ Promptly window operation, then pass that main-held object to `captureSelection(
 Startup and normal window opening also record foreground before showing a window;
 that observation is discarded and must never be reused for future captures.
 The helper creates an opaque random token and retains the OS running application,
-PID, launch date and exact nullable bundle ID. It revalidates process creation,
-bundle ID and frontmost PID before and after selection. Only 32 native identities
+PID, optional launch date and exact nullable bundle ID. It resolves a fresh
+`NSRunningApplication` and requires retained-versus-fresh `isEqual`, both live,
+positive matching PID and unchanged bundle ID before and after selection. Available
+recorded launch metadata adds a date equality check; missing LaunchServices dates
+never replace application-object equality with PID matching. Required foreground
+also has to equal the retained OS process instance. Only 32 native identities
 are retained, so evicted/restarted/stale capabilities fail closed. Copies of a
 main-held identity object fail the adapter's WeakSet check. Activation only calls
 the previously validated `NSRunningApplication`, after process/bundle revalidation;
@@ -119,6 +123,23 @@ production behavior, the owned observer now reports `launchDateAvailable` only f
 the matched owned Promptly PID. No unrelated app property is queried or logged.
 Both booleans are strictly decoded, and the production `ok` assertion remains.
 Runtime confirmation is pending; no launch-date failure cause is claimed yet.
+
+The [`82c101a` failed receipt](../verification/P08/activation-82c101a-macos-failed.json)
+from [run 36998321957](https://github.com/zeyadomran/promptly/actions/runs/36998321957)
+then confirmed actual owned Promptly foreground with `launchDateAvailable: false`;
+the adapter rejected it in 1.12 ms. Apple explicitly recommends comparing
+[`NSRunningApplication` instances using `isEqual`](https://developer.apple.com/documentation/appkit/nsrunningapplication/processidentifier)
+for process identity. The corrected production guard retains that OS instance and
+compares it with each fresh PID resolution, using available launch date as
+supplemental metadata. It supports direct-launched source apps with nil dates while
+retaining termination, bundle, foreground, opaque token, main WeakSet and 100 ms
+activation guards. No private process API or persisted bare-PID activation exists.
+Owned Swift seam regressions test distinct equal objects, lifetime mismatch even
+with identical PID/bundle/date, termination, missing instances and changed metadata
+or foreground. The packaged activation test covers both LaunchServices and actual
+direct-launched sources, proving nil-date eligibility before exact source capture
+and background handoff. New native compilation/runtime CI must pass before these
+new tests qualify the correction.
 
 The fixture receipt records hardware/OS/Node architecture, helper startup and
 separate cold/warm native and pipe durations, plus focus/selection/pasteboard-count

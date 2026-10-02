@@ -50,19 +50,18 @@ async function readState(filename: string): Promise<FixtureState> {
   throw new Error('Owned macOS fixture readiness timed out');
 }
 
-/** LaunchServices owns fixture activation. No user selection, input injection, TCC changes. */
-export async function macosFixture(mode: string) {
+/** Owned AppKit activation only. No user selection, input injection or TCC changes. */
+export async function macosFixture(
+  mode: string,
+  launchMode: 'launchServices' | 'direct' = 'launchServices'
+) {
   const directory = await mkdtemp(path.join(tmpdir(), 'promptly-owned-selection-'));
+  const bundle = path.resolve('tests/native/macos/out/SelectionFixture.app');
   const child = spawn(
-    '/usr/bin/open',
-    [
-      '-W',
-      '-n',
-      path.resolve('tests/native/macos/out/SelectionFixture.app'),
-      '--args',
-      mode,
-      directory
-    ],
+    launchMode === 'direct'
+      ? path.join(bundle, 'Contents/MacOS/selection-fixture')
+      : '/usr/bin/open',
+    launchMode === 'direct' ? [mode, directory] : ['-W', '-n', bundle, '--args', mode, directory],
     { stdio: 'ignore' }
   );
   const exited = once(child, 'exit');
