@@ -3,6 +3,8 @@ import path from 'node:path';
 import { _electron as electron, expect, test } from '@playwright/test';
 import type { WebContents, WebPreferences } from 'electron';
 
+import { operations } from '../../src/shared/contracts/operations';
+
 interface InspectableWebContents extends WebContents {
   getLastWebPreferences(): WebPreferences;
 }
@@ -44,7 +46,7 @@ test('packaged React window preserves the sandboxed preload boundary', async () 
       }))
     ).toEqual({
       platform: process.platform,
-      bridgeKeys: ['platform'],
+      bridgeKeys: ['platform', ...Object.keys(operations), 'subscribeChanges'],
       frozen: true,
       node: [],
       csp: expect.stringContaining("connect-src 'none'")

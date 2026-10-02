@@ -54,12 +54,15 @@ export function inspectModule(filename, source, root) {
     }
 
     if (layer === 'main') {
+      if (isTest && testPackages.has(specifier)) return;
       if (!specifier.startsWith('node:') && specifier !== 'electron')
         errors.push(`Unapproved main dependency: ${specifier}`);
       return;
     }
 
     if (layer === 'preload' && specifier === 'electron') return;
+    if (isTest && testPackages.has(specifier)) return;
+    if (layer === 'shared' && specifier === 'zod') return;
     if (
       layer === 'renderer' &&
       (rendererPackages.has(specifier) || (isTest && testPackages.has(specifier)))

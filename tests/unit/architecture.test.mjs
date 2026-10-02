@@ -9,6 +9,11 @@ const inspect = (layer, source) =>
   inspectModule(path.join(root, 'src', layer, 'fixture.tsx'), source, root);
 
 describe('process boundaries', () => {
+  it('allows Zod only in pure shared schemas', () => {
+    expect(inspect('shared', "import { z } from 'zod';")).toEqual([]);
+    expect(inspect('renderer', "import { z } from 'zod';").length).toBeGreaterThan(0);
+    expect(inspect('main', "import { z } from 'zod';").length).toBeGreaterThan(0);
+  });
   it.each([
     "import fs from 'node:fs';",
     "export * from '../main/storage';",
