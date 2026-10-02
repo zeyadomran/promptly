@@ -1,7 +1,9 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import { launchIsolatedElectron } from '../isolated-electron';
 
 test('packaged fonts and logos load offline with native System colors and no fixture route', async () => {
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
@@ -15,7 +17,8 @@ test('packaged fonts and logos load offline with native System colors and no fix
     if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') env[key] = value;
   }
 
-  const app = await electron.launch({ executablePath, env });
+  const isolated = await launchIsolatedElectron(executablePath, env);
+  const app = isolated.application;
 
   try {
     const page = await app.firstWindow();
@@ -78,6 +81,6 @@ test('packaged fonts and logos load offline with native System colors and no fix
     expect(errors).toEqual([]);
     expect(remoteRequests).toEqual([]);
   } finally {
-    await app.close();
+    await isolated.dispose();
   }
 });
