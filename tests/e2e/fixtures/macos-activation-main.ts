@@ -4,9 +4,12 @@ import type { MacosIdentity } from '../../../src/shared/contracts/macos-selectio
 let adapter: ReturnType<typeof createMacosSelection> | undefined;
 let fixturePid = 0;
 let recorded: MacosIdentity | undefined;
+const identityReadiness: object[] = [];
+let initializedAt = 0;
 
 // Test-only module loaded into an actual packaged Electron main process. No renderer routes.
 export async function initialize(ownedPid: number) {
+  initializedAt = performance.now();
   fixturePid = ownedPid;
   adapter = createMacosSelection({
     resourcesPath: process.resourcesPath,
@@ -17,12 +20,25 @@ export async function initialize(ownedPid: number) {
 }
 
 export async function recordFixture() {
+  const started = performance.now();
   const result = await adapter?.foregroundIdentityResult();
+  const owned = result?.status === 'ok' && result.identity.source?.pid === fixturePid;
+  const observation = {
+    status: result?.status ?? 'helperUnavailable',
+    owned,
+    sourceAvailable: result?.status === 'ok' && result.identity.source !== null,
+    promptly: result?.status === 'ok' && result.identity.source?.pid === process.pid,
+    requestMs: performance.now() - started,
+    elapsedMs: performance.now() - initializedAt
+  };
 
-  if (result?.status !== 'ok' || result.identity.source?.pid !== fixturePid)
-    throw new Error('Owned fixture must be foreground');
-  recorded = result.identity;
-  return { recorded: true };
+  if (identityReadiness.length < 128) identityReadiness.push(observation);
+  if (owned) recorded = result.identity;
+  return observation;
+}
+
+export function readinessSnapshot() {
+  return [...identityReadiness];
 }
 
 export async function foreground() {

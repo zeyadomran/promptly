@@ -31,13 +31,37 @@ test('packaged macOS source activation hands foreground back from owned Promptly
   );
   const isolated = await launchIsolatedElectron(executable, env);
   const application = isolated.application;
-  const fixture = await macosFixture('selected').catch(async (error: unknown) => {
-    await isolated.dispose();
-    throw error;
-  });
+  let ownedWindowReady = false;
+  let fixtureReadyForeground = false;
+  let stage = 'window-ready';
+  let activationStatus: string | undefined;
+  let helperInitialized = false;
+  let ownedFixture: Awaited<ReturnType<typeof macosFixture>> | undefined;
   let activated = false;
 
   try {
+    const page = await application.firstWindow();
+
+    // Window existence precedes ready-to-show; settle its actual renderer/native show
+    // before LaunchServices activates the owned fixture.
+    await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    await expect
+      .poll(
+        () =>
+          application.evaluate(({ BrowserWindow }) => {
+            const window = BrowserWindow.getAllWindows()[0];
+
+            return window !== undefined && window.isVisible() && !window.webContents.isLoading();
+          }),
+        { timeout: 5000 }
+      )
+      .toBe(true);
+    ownedWindowReady = true;
+    const fixture = await macosFixture('selected');
+
+    ownedFixture = fixture;
+    stage = 'fixture-identity';
+    fixtureReadyForeground = fixture.foregroundMatched;
     // Direct owned main-process evaluation only. This module is never shipped or exposed by IPC.
     await application.evaluate(
       async ({ app }, { harnessPath: ownedHarnessPath, fixturePid }) => {
@@ -49,10 +73,25 @@ test('packaged macOS source activation hands foreground back from owned Promptly
 
         Object.assign(globalThis, { ownedMacActivationHarness: harness });
         await harness.initialize(fixturePid);
-        await harness.recordFixture();
       },
       { harnessPath, fixturePid: fixture.fixturePid }
     );
+    helperInitialized = true;
+    // Startup readiness is identity-only and bounded. Every production identity
+    // request still has its own unchanged 100 ms deadline; no selection is retried.
+    await expect
+      .poll(
+        async () => {
+          const observation = await application.evaluate(() =>
+            (globalThis as HarnessGlobal).ownedMacActivationHarness.recordFixture()
+          );
+
+          return observation.owned;
+        },
+        { timeout: 5000, intervals: [50, 100, 200] }
+      )
+      .toBe(true);
+    stage = 'capture-before-handoff';
     const before = await fixture.inspect();
     const selected = await application.evaluate(() =>
       (globalThis as HarnessGlobal).ownedMacActivationHarness.capture()
@@ -61,6 +100,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     expect(before.foregroundMatched).toBe(true);
     expect(selected?.status).toBe('ok');
     if (selected?.status !== 'ok') throw new Error('Missing owned selection');
+    stage = 'promptly-foreground';
     await application.evaluate(({ app, BrowserWindow }) => {
       app.focus();
       BrowserWindow.getAllWindows()[0]?.focus();
@@ -78,11 +118,15 @@ test('packaged macOS source activation hands foreground back from owned Promptly
       )
     ).toBe('foregroundChanged');
     expect((await fixture.inspect()).foregroundMatched).toBe(false);
+    stage = 'source-activation';
     const activation = await application.evaluate(() =>
       (globalThis as HarnessGlobal).ownedMacActivationHarness.activate()
     );
 
+    activationStatus = activation;
+
     expect(activation).toBe('ok');
+    stage = 'handoff-verification';
     // Status alone is insufficient: verify the actual frontmost OS app and full fixture state.
     await expect.poll(async () => (await fixture.inspect()).foregroundMatched).toBe(true);
     expect(await fixture.inspect()).toEqual(before);
@@ -99,21 +143,43 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     if (captured?.status === 'ok') expect(captured.text).toBe(selected.text);
     expect(await fixture.inspect()).toEqual(before);
     activated = true;
+    stage = 'complete';
   } finally {
-    await saveNativeReceipt('macos-source-activation-receipt', {
-      activated,
-      realOwnedPromptlyWindow: true,
-      helperOwnedByElectronMain: true,
-      actualForegroundVerified: activated,
-      selectionAndPasteboardCounterPreserved: activated,
-      humanTccMatrix: false
-    });
-    await Promise.allSettled([
-      application.evaluate(async () => {
-        await (globalThis as Partial<HarnessGlobal>).ownedMacActivationHarness?.dispose();
-      }),
-      fixture.close()
-    ]);
-    await isolated.dispose();
+    const identityReadiness = await application
+      .evaluate(
+        () =>
+          (globalThis as Partial<HarnessGlobal>).ownedMacActivationHarness?.readinessSnapshot() ??
+          []
+      )
+      .catch(() => [{ status: 'mainUnavailable' }]);
+    const fixtureForegroundAtEnd = await ownedFixture
+      ?.inspect()
+      .then((state) => state.foregroundMatched)
+      .catch(() => undefined);
+
+    try {
+      await saveNativeReceipt('macos-source-activation-receipt', {
+        stage,
+        ownedWindowReady,
+        fixtureReadyForeground,
+        fixtureForegroundAtEnd,
+        identityReadiness,
+        activationStatus,
+        activated,
+        realOwnedPromptlyWindow: true,
+        helperOwnedByElectronMain: helperInitialized,
+        actualForegroundVerified: activated,
+        selectionAndPasteboardCounterPreserved: activated,
+        humanTccMatrix: false
+      });
+    } finally {
+      await Promise.allSettled([
+        application.evaluate(async () => {
+          await (globalThis as Partial<HarnessGlobal>).ownedMacActivationHarness?.dispose();
+        }),
+        ownedFixture?.close()
+      ]);
+      await isolated.dispose();
+    }
   }
 });

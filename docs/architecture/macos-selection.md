@@ -69,6 +69,17 @@ uses a longer deadline solely to verify the full escaped maximum-size frame,
 separate from the production 100 ms budget. The permission revocation unit test
 models a status transition; it does not prove an actual user TCC cycle.
 
+[Activation CI at `45c6cb3`](https://github.com/zeyadomran/promptly/actions/runs/36985116730)
+failed at fixture identity recording before capture or source activation. The
+retained receipt contained only outcome booleans, so neither a timing cause nor a
+permission/identity cause is established. The revised test waits for the owned
+Promptly renderer and native window to finish showing before fixture launch, then
+uses at most five seconds of identity-only owned-PID readiness checks. Every native
+identity request remains bounded at 100 ms; capture and actual activation are never
+retried. The receipt retains stage, current fixture-foreground booleans, helper
+status, owned target/source availability, Promptly-match booleans and timing without
+logging unrelated app identity or selection. Latest-head CI must qualify this fix.
+
 The fixture receipt records hardware/OS/Node architecture, helper startup and
 separate cold/warm native and pipe durations, plus focus/selection/pasteboard-count
 checks. These figures exclude shortcuts, persistence and toast display. P11 owns
