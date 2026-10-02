@@ -39,7 +39,7 @@ Before an upgrade or uninstall, quit Promptly fully and export a JSON backup. Up
 
 The payload contains `app.asar`, both offline renderers/preloads, fonts, SQLite worker, Windows selection and keyboard helpers outside ASAR, four tray ICO variants, build provenance and third-party notices. Electron's LICENSE/Chromium notices are retained. Native code is rebuilt from maintained C# source; Node SQLite is supplied by Electron, with no separate native SQLite npm ABI to rebuild.
 
-[License provenance](../packaging/README.md) records actual texts and unresolved installer dependency qualification, including embedded vendor dependency attribution. No author-application or supplied-asset license is invented. Complete that review before publishing a release.
+[License provenance](../packaging/README.md) records actual texts and upstream attribution, including the exact embedded Mono.Cecil 0.11.2 MIT and WpfAnimatedGif 1.4.15 Apache-2.0 texts. Microsoft.Web.Xdt 2.1.1's version-specific terms remain unresolved; modern XDT MIT terms are not substituted. No author-application or supplied-asset license is invented. Complete the remaining qualification before publishing a release.
 
 ## Manual qualification
 
