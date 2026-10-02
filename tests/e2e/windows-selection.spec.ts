@@ -34,14 +34,29 @@ test('Windows captures an ordinary owned Unicode selection through the productio
     const fixture = await windowsFixture('selected');
 
     try {
-      const identity = await adapter.foregroundIdentity();
+      evidence.push({
+        phase: 'fixture-ready',
+        rendered: fixture.rendered,
+        foregroundMatched: fixture.foregroundMatched,
+        activationAccepted: fixture.activationAccepted
+      });
+      expect(fixture.rendered).toBe(true);
+      expect(fixture.foregroundMatched).toBe(true);
+      const identityStarted = performance.now();
+      const recorded = await adapter.foregroundIdentityResult();
 
       evidence.push({
         phase: 'identity',
-        ownedPidMatched: identity?.source?.pid === fixture.fixturePid
+        status: recorded.status,
+        elapsedMs: performance.now() - identityStarted,
+        ownedPidMatched:
+          recorded.status === 'ok' && recorded.identity.source?.pid === fixture.fixturePid
       });
-      expect(identity?.source?.pid).toBe(fixture.fixturePid);
-      if (identity === null) throw new Error('Missing owned identity');
+      expect(recorded.status).toBe('ok');
+      if (recorded.status !== 'ok') throw new Error('Missing owned fixture identity');
+      const identity = recorded.identity;
+
+      expect(identity.source?.pid).toBe(fixture.fixturePid);
       const before = performance.now();
       const result = await adapter.captureSelection(identity);
 
