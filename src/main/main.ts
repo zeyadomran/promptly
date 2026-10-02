@@ -5,7 +5,9 @@ import { app, ipcMain, Menu, nativeTheme } from 'electron';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
-import { createQuitCoordinator } from './lifecycle/quit-coordinator';
+import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
+import type { WindowsSelection } from './platform/windows/windows-selection';
+import { createWindowsSelection } from './platform/windows/windows-selection';
 import {
   electronSettingsControllers,
   updateWindowBackgrounds
@@ -20,6 +22,24 @@ let desktop: ReturnType<typeof installDesktopIpc>;
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
+let windowsSelection: WindowsSelection | undefined;
+const shutdown = createDesktopShutdown({
+  cleanup: () =>
+    closeWindowResources(lifecycle, () =>
+      closeSettingsStorage(settings, storage, {
+        close: () => windowsSelection?.dispose() ?? Promise.resolve()
+      })
+    ),
+  onError: (error) => {
+    console.error('Unable to close desktop services:', error);
+  },
+  quit: () => {
+    app.quit();
+  },
+  exit: (code) => {
+    app.exit(code);
+  }
+});
 const primaryInstance = app.requestSingleInstanceLock();
 
 if (!primaryInstance) app.quit();
@@ -30,7 +50,7 @@ app.on('second-instance', () => {
 function openWindow(): void {
   void lifecycle?.show().catch((error: unknown) => {
     console.error('Unable to open Promptly:', error);
-    app.exit(1);
+    shutdown.fatal();
   });
 }
 
@@ -38,6 +58,17 @@ if (primaryInstance)
   void app
     .whenReady()
     .then(async () => {
+      if (process.platform === 'win32') {
+        windowsSelection = createWindowsSelection({
+          resourcesPath: process.resourcesPath,
+          packaged: app.isPackaged,
+          applicationPath: app.getAppPath()
+        });
+        void windowsSelection.ready().catch(() => {
+          console.warn('Windows selection helper unavailable');
+        });
+      }
+
       storage = new StorageClient(
         path.join(__dirname, 'storage-worker.cjs'),
         path.join(app.getPath('userData'), 'promptly.sqlite'),
@@ -107,21 +138,10 @@ if (primaryInstance)
     })
     .catch((error: unknown) => {
       console.error('Unable to initialize Promptly:', error);
-      app.exit(1);
+      shutdown.fatal();
     });
 
-app.on(
-  'before-quit',
-  createQuitCoordinator({
-    cleanup: () => closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage)),
-    onError: (error) => {
-      console.error('Unable to close local storage:', error);
-    },
-    quit: () => {
-      app.quit();
-    }
-  })
-);
+app.on('before-quit', shutdown.beforeQuit);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

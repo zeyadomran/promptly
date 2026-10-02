@@ -100,8 +100,8 @@ export async function createMainWindow(
   window.webContents.on('will-attach-webview', (event) => {
     event.preventDefault();
   });
-  window.once('ready-to-show', () => {
-    window.show();
+  const ready = new Promise<void>((resolve) => {
+    window.once('ready-to-show', resolve);
   });
 
   const rendererUrl = new URL(
@@ -112,7 +112,14 @@ export async function createMainWindow(
   const url = rendererUrl.href;
 
   windows.register(window.webContents, url);
-  await window.loadURL(url);
+  try {
+    await Promise.all([window.loadURL(url), ready]);
+    window.show();
+  } catch (error) {
+    // A registered but failed window must never become a reusable blank recovery route.
+    window.destroy();
+    throw error;
+  }
 
   return window;
 }

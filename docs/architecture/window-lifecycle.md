@@ -5,7 +5,9 @@ Main obtains the single-instance lock before initialization; a second launch and
 macOS activation reveal the existing library in its current mode. Explicit Quit
 settles window commands and saves normal geometry before SettingsService drains
 accepted settings effects/commits and the storage worker closes. Save failures are
-reported, and following storage cleanup still runs.
+reported, and following storage/native cleanup still runs. Normal and fatal exits
+share the bounded 40-second shutdown coordinator; accepted geometry commits drain
+before settings effects, then storage and the native helper close.
 
 Compact defaults to 440×640, with width fixed at 440 and minimum height 420.
 Regular defaults to 1000×640, with minimum 760×480. Each mode stores its own normal
@@ -18,8 +20,10 @@ onboarding has the 760×510 window contract. P20 and P23 own their later full co
 
 Mode and visibility commands serialize in main. macOS can interpolate native bounds
 over approximately 180ms; reduced motion and Windows use an immediate resize.
-User interaction, another mode request, a display change, or shutdown cancels the
-animation and saves stable native geometry. Maximize/fullscreen rectangles never
+Another mode request, a display change, or shutdown settles the destination rather
+than persisting an intermediate animation frame. Native user move/resize events
+cancel interpolation and make the user's resulting rectangle the new stable bounds.
+Maximize/fullscreen rectangles never
 replace normal bounds; mode switching waits for macOS fullscreen exit before sizing.
 
 The `WindowRecovery` interface reports actual tray, shortcut and Dock availability.
@@ -39,7 +43,10 @@ background, and marks controls `no-drag`.
 
 All new commands use the existing exact-URL/main-frame validation and runtime
 schemas. Auxiliary windows use the same restricted asset handler, cryptographic
-style nonce, sandbox and live settings bootstrap. A narrow preload focus signal
+style nonce, sandbox and live settings bootstrap. The initial show waits for both
+renderer load and ready-to-show, so a late ready event cannot reopen a hidden window.
+Failed renderer loads destroy the owned registered window, allowing a fresh retry.
+A narrow preload focus signal
 lets a later library input opt in with `data-promptly-search`; `useWindow` focuses
 that input on reveal. No global show/hide shortcut is claimed as registered today.
 

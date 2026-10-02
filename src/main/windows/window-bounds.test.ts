@@ -1,10 +1,6 @@
-import type { BrowserWindow } from 'electron';
 import { afterEach, expect, it, vi } from 'vitest';
 
-import { defaultSettings, settingsSchema } from '../../shared/contracts/settings';
-import type { SettingsService } from '../settings/service';
-import type { Rectangle } from './geometry';
-import { WindowBounds } from './window-bounds';
+import { windowBoundsFixture } from './window-bounds-test-fixture';
 
 vi.mock('electron', () => ({
   screen: {
@@ -14,45 +10,10 @@ vi.mock('electron', () => ({
 }));
 
 function fixture(platform: NodeJS.Platform = 'win32') {
-  let rectangle: Rectangle = { x: 10, y: 10, width: 440, height: 600 };
-  let snapshot = { revision: 0, settings: defaultSettings() };
-  const listeners = new Map<string, () => void>();
-  const window = {
-    on: (event: string, listener: () => void) => listeners.set(event, listener),
-    isDestroyed: () => false,
-    getNormalBounds: () => ({ ...rectangle }),
-    getBounds: () => ({ ...rectangle }),
-    setBounds: vi.fn((next: Rectangle) => {
-      rectangle = next;
-    }),
-    setMinimumSize: vi.fn(),
-    setMaximumSize: vi.fn(),
-    isFullScreen: () => false,
-    isMaximized: () => false
-  };
-  const update = vi.fn<SettingsService['services']['updateSettings']>((patch) => {
-    snapshot = {
-      revision: snapshot.revision + 1,
-      settings: settingsSchema.parse({ ...snapshot.settings, ...patch })
-    };
-    return Promise.resolve({ ok: true, value: snapshot });
-  });
-  const settings = {
-    get current() {
-      return snapshot;
-    },
-    services: { updateSettings: update }
-  };
-  const onError = vi.fn();
-  const bounds = new WindowBounds(
-    window as unknown as BrowserWindow,
-    settings as unknown as SettingsService,
-    'compact',
-    onError,
-    platform
-  );
+  const value = windowBoundsFixture(platform);
+  const originalUpdate = value.settings.services.updateSettings;
 
-  return { window, bounds, update, onError, listeners, snapshot: () => snapshot };
+  return { ...value, originalUpdate, update: vi.spyOn(value.settings.services, 'updateSettings') };
 }
 
 afterEach(() => {
@@ -60,16 +21,14 @@ afterEach(() => {
 });
 
 it('drains accepted position commits and preserves the other mode/startup preference', async () => {
-  const { bounds, update, snapshot } = fixture();
+  const { bounds, update, originalUpdate, snapshot } = fixture();
   let complete: (() => void) | undefined;
   const accepted = new Promise<void>((resolve) => {
     complete = resolve;
   });
-  const originalUpdate = update.getMockImplementation();
 
   update.mockImplementationOnce(async (patch) => {
     await accepted;
-    if (originalUpdate === undefined) throw new Error('Missing update implementation.');
     return originalUpdate(patch);
   });
   bounds.save();
@@ -90,14 +49,14 @@ it('drains accepted position commits and preserves the other mode/startup prefer
 });
 
 it('keeps save recovery failures visible to shutdown after attempting accepted work', async () => {
-  const { bounds, update, onError } = fixture();
+  const { bounds, update, errors } = fixture();
 
   update.mockResolvedValue({
     ok: false,
     error: { code: 'UNAVAILABLE', message: 'Restart to recover preferences.' }
   });
   await expect(bounds.close()).rejects.toThrow('Restart to recover preferences.');
-  expect(onError).toHaveBeenCalledOnce();
+  expect(errors).toHaveLength(1);
 });
 
 it('interpolates only on supported platforms and persists final native geometry', async () => {

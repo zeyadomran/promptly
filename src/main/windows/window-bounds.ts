@@ -17,6 +17,7 @@ export function displayAreas() {
 export class WindowBounds {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private animation: ReturnType<typeof setInterval> | undefined;
+  private destination: Rectangle | undefined;
   private tail: Promise<void> = Promise.resolve();
   private stopped = false;
   private saveError: Error | undefined;
@@ -36,6 +37,7 @@ export class WindowBounds {
 
   private readonly interrupt = () => {
     this.cancelAnimation();
+    this.destination = undefined;
     if (this.mode === 'compact') this.window.setMaximumSize(440, 0);
     this.changed();
   };
@@ -51,7 +53,7 @@ export class WindowBounds {
   save(): void {
     clearTimeout(this.timer);
     if (this.window.isDestroyed()) return;
-    const bounds = this.window.getNormalBounds();
+    const bounds = this.destination ?? this.window.getNormalBounds();
     const mode = this.mode;
 
     this.tail = this.tail
@@ -100,6 +102,8 @@ export class WindowBounds {
   private animate(from: Rectangle, target: Rectangle): void {
     const start = Date.now();
 
+    this.destination = target;
+
     this.animation = setInterval(() => {
       const progress = Math.min(1, (Date.now() - start) / 180);
       const ease = 1 - (1 - progress) ** 3;
@@ -121,13 +125,18 @@ export class WindowBounds {
 
   private finish(target: Rectangle): void {
     this.window.setBounds(target);
+    this.destination = undefined;
     if (this.mode === 'compact') this.window.setMaximumSize(target.width, 0);
     this.save();
   }
 
   reconcile(): void {
     this.cancelAnimation();
-    const target = clampBounds(this.window.getNormalBounds(), displayAreas(), this.mode);
+    const target = clampBounds(
+      this.destination ?? this.window.getNormalBounds(),
+      displayAreas(),
+      this.mode
+    );
 
     this.window.setMaximumSize(0, 0);
     this.window.setMinimumSize(

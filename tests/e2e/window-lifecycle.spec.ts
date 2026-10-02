@@ -4,6 +4,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { launchIsolatedElectron } from '../isolated-electron';
+import { beginVisibilityReceipt, expectConcealed, visibilityReceipt } from './window-visibility';
 
 test('packaged modes, pin, recovery, display clamp and restart use durable independent geometry', async () => {
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
@@ -24,6 +25,7 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
     const page = await app.firstWindow();
 
     await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    await beginVisibilityReceipt(app);
     expect(
       await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds().width)
     ).toBe(440);
@@ -40,6 +42,26 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
     const regular = await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]?.getBounds()
     );
+    const area = await app.evaluate(({ BrowserWindow, screen }) => {
+      const bounds = BrowserWindow.getAllWindows()[0]?.getBounds();
+
+      if (bounds === undefined) throw new Error('Missing regular window.');
+      return screen.getDisplayMatching(bounds).workArea;
+    });
+
+    if (regular === undefined) throw new Error('Missing regular geometry.');
+    const restoredRegular = {
+      width: Math.min(regular.width, area.width),
+      height: Math.min(regular.height, area.height),
+      x: Math.max(
+        area.x,
+        Math.min(regular.x, area.x + area.width - Math.min(regular.width, area.width))
+      ),
+      y: Math.max(
+        area.y,
+        Math.min(regular.y, area.y + area.height - Math.min(regular.height, area.height))
+      )
+    };
 
     await page.getByRole('radio', { name: 'Compact', exact: true }).click();
     await expect
@@ -65,16 +87,11 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       ok: true,
       value: { settings: { defaultSizeMode: 'compact', rememberedBounds: { regular } } }
     });
-    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: false }));
-    expect(
-      await app.evaluate(({ BrowserWindow }) => {
-        const window = BrowserWindow.getAllWindows()[0];
+    const beforeHide = await visibilityReceipt(app, 'before-hide');
 
-        return process.platform === 'win32'
-          ? window?.isMinimized() === true
-          : window?.isVisible() === false;
-      })
-    ).toBe(true);
+    expect(beforeHide.visible).toBe(true);
+    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: false }));
+    await expectConcealed(app, 'after-hide', beforeHide.dock);
     const child = spawn(executable, [`--user-data-dir=${isolated.profile}`], {
       env,
       windowsHide: true
@@ -111,7 +128,7 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       .poll(() =>
         app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds())
       )
-      .toEqual(regular);
+      .toEqual(restoredRegular);
     await app.evaluate(({ BrowserWindow, screen }) => {
       BrowserWindow.getAllWindows()[0]?.setBounds({ x: -50_000, y: -50_000 });
       screen.emit('display-metrics-changed');
@@ -135,6 +152,7 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       })
     ).toBe(true);
     app = await isolated.restart();
+    await beginVisibilityReceipt(app);
     const reopened = await app.firstWindow();
 
     await expect(reopened.getByRole('heading', { name: 'Promptly' })).toBeVisible();
@@ -148,15 +166,15 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
     await expect(
       reopened.getByRole('button', { name: 'Always on top', exact: true })
     ).toHaveAttribute('aria-pressed', 'true');
-    const closing = process.platform === 'win32' ? app.waitForEvent('close') : undefined;
+    const recovery = await visibilityReceipt(app, 'before-close');
+    const hidesOnClose = process.platform === 'darwin' && recovery.dock;
+    const closing = hidesOnClose ? undefined : app.waitForEvent('close');
 
     await app.evaluate(({ BrowserWindow }) => {
       BrowserWindow.getAllWindows()[0]?.close();
     });
-    if (process.platform === 'darwin') {
-      expect(
-        await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isVisible())
-      ).toBe(false);
+    if (hidesOnClose) {
+      await expectConcealed(app, 'after-close', recovery.dock);
       await app.evaluate(({ app: nativeApp }) => {
         nativeApp.emit('activate');
       });

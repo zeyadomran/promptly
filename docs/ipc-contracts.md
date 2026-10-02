@@ -65,6 +65,12 @@ views must follow the same invalidation pattern for settings/tag snapshots.
 
 ## Verification
 
+The [Windows selection adapter](architecture/windows-selection.md) is private to
+main. It accepts only main-owned foreground identity objects and never exposes
+paths, HWNDs or native identity tokens through preload. Future Open source app
+IPC must accept an authoritative snippet ID; live native activation does not
+establish safe activation from persisted basename provenance after restart.
+
 `npm run check` covers contract rejection, reply validation, sanitization, preload
 allowlisting/subscription lifetime, stale search handling, and literal snippet
 rendering. `npm run package && npm run test:smoke` checks the packaged shell and

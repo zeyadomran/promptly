@@ -7,8 +7,10 @@ was never opened by these tests.
 
 Passed:
 
-- `npm run check`: strict typechecking, lint/architecture, formatting, 142 unit
-  tests in 34 files. Two subsequently added shutdown-order/failure tests also passed.
+- `npm run check`: strict typechecking, lint/architecture, formatting, 197 unit
+  tests in 46 files after integrating main `9b13dd03` and the native shutdown chain.
+  This includes rapid mode switches, quit during animation, load/ready ordering,
+  failed renderer destruction, and actual-main normal/fatal cleanup ordering.
 - `npm run package`: actual Windows distributable with sandboxed preload and worker.
 - Nine desktop smoke scenarios passed across the full run and a focused rerun of
   the logo assertion updated for the new title-bar logo. That test verifies every
@@ -24,6 +26,24 @@ Passed:
 - `npm run test:packaged-design`: nonce/CSP, real Radix/Sonner behavior and a second
   owned process proving nonce freshness; the production package was restored.
 
+The review-fix verification reran the four applicable Windows packaged cases:
+lifecycle, chrome, failed Settings renderer followed by successful retry, and
+unsupported-database startup failure. All passed. Normal owned processes exited
+0; the intentionally unsupported database exited 1 before opening a window and
+retained the merged startup diagnostics. The separate macOS Dock test awaits CI.
+The CSP run again passed with two normal exit-0 processes. Native visibility
+receipts record route availability and show/hide/minimize/restore events; CI
+retains those JSON attachments with its controlled fixture results.
+
+The first PR CI Windows restore failure compared an unclamped 1100px rectangle
+with a 1024px desktop. The restart/restore test now derives its expected rectangle
+independently from the actual display work area, while keeping the product clamp.
+The first macOS hide failure did not retain Dock/event evidence, so its cause is
+unconfirmed. A separate delayed ready-to-show callback race was reproduced in the
+factory test and removed: initial load and readiness settle before the caller can
+hide. New macOS tests explicitly exercise both real Dock-enabled hiding and
+Dock-disabled reachable visibility, freezing route availability across commands.
+
 The two compact images are actual packaged renderer output. Playwright captures
 web contents; native caption buttons are outside that capture and require a
 native screenshot or manual pointer verification.
@@ -34,6 +54,8 @@ macOS, native caption/traffic-light pointer regions, VoiceOver and Narrator are
 manual verification gaps. This is the working lifecycle shell; the later library,
 full settings/onboarding flows, tray and global shortcuts retain their own issues.
 
-The independent Windows-selection PR #39 changes main startup/shutdown. Its
-integration is pending until it lands on main; window geometry must drain before
-its SettingsService/storage/native cleanup chain.
+Windows-selection PR #39 is integrated. Geometry drains first, then accepted
+SettingsService work, followed by storage/native disposal through the same
+40-second normal/fatal shutdown coordinator. Recovery errors remain visible even
+when following cleanup succeeds. Fresh Windows/macOS CI and Astra review remain
+required before merge; these local checks do not claim those results.
