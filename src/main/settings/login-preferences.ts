@@ -12,6 +12,26 @@ interface LoginApplication {
   getLoginItemSettings: (settings: { path: string; args: string[] }) => { openAtLogin: boolean };
 }
 
+/** Uninstall removes native registration without changing retained database preferences. */
+export function prepareSquirrelLogin(
+  application: LoginApplication & { setAppUserModelId: (identity: string) => void },
+  command: string | undefined,
+  onError: (error: unknown) => void,
+  executable = process.execPath
+): void {
+  if (command !== '--squirrel-uninstall') return;
+  try {
+    application.setAppUserModelId('com.squirrel.Promptly.Promptly');
+    const preferences = loginPreferences(application, executable);
+
+    preferences.setLogin(false);
+    if (preferences.getLogin()) throw new Error('Uninstall login cleanup was rejected.');
+  } catch (error) {
+    // Standard Squirrel shortcut removal and quit must still run after a native failure.
+    onError(error);
+  }
+}
+
 export function loginPreferences(
   application: LoginApplication,
   executable = process.execPath
