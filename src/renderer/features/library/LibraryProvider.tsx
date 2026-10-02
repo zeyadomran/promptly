@@ -22,6 +22,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         state,
         searchRef,
         selection: {
+          hasSearch: state.request.query.length > 0,
           selectedId: state.selectedId,
           select: (id) => {
             const index = state.cache.indexOf(id);

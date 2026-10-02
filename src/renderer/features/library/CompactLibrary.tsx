@@ -1,16 +1,14 @@
-import { PinStatus } from '../../components/shared/PinStatus';
 import { Button } from '../../components/ui/button';
-import { usePreferences } from '../settings/settings-context';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
 import { LibraryEmpty } from './LibraryEmpty';
+import { LibraryFooter } from './LibraryFooter';
 import { LibraryList } from './LibraryList';
 import { LibrarySearch } from './LibrarySearch';
 import { LibraryTags } from './LibraryTags';
 
 export function CompactLibrary() {
   const { state, model, selection } = useLibrary();
-  const { settings } = usePreferences();
   const commands = useLibraryCommands();
 
   return (
@@ -18,6 +16,8 @@ export function CompactLibrary() {
       className="compact-library"
       aria-label="Snippet library"
       onKeyDown={(event) => {
+        if (event.defaultPrevented || !(event.target instanceof HTMLElement)) return;
+        if (!event.target.matches('[data-promptly-search], [role="listbox"]')) return;
         if (
           (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
           !event.metaKey &&
@@ -56,12 +56,7 @@ export function CompactLibrary() {
           <LibraryList />
         )}
       </div>
-      <footer className="library-footer">
-        <span aria-live="polite">
-          {state.total} of {state.unfilteredTotal}
-        </span>
-        <PinStatus pinned={settings.alwaysOnTop} />
-      </footer>
+      <LibraryFooter />
     </section>
   );
 }

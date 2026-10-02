@@ -5,6 +5,7 @@ import type { LibraryModel } from './library-model';
 import type { LibraryState } from './library-state';
 
 export interface LibrarySelectionPort {
+  readonly hasSearch: boolean;
   selectedId: string | null;
   select(id: string): void;
   moveSelection(delta: number): Promise<void>;

@@ -57,8 +57,6 @@ export class PageCache {
     const snippet = page?.items[index - offset];
 
     if (page === undefined || snippet === undefined) return undefined;
-    this.pages.delete(offset);
-    this.pages.set(offset, page);
     return { snippet, ranges: page.matches?.[snippet.id] ?? [] };
   }
 

@@ -1,25 +1,15 @@
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 
 import { useLibrary } from './library-context';
 import { LibraryRow } from './LibraryRow';
+import { useLibraryRange } from './use-library-range';
 import { useVirtualStyles } from './use-virtual-styles';
 
 export function LibraryList() {
-  'use no memo';
   const { state, model } = useLibrary();
-  const scroller = useRef<HTMLDivElement>(null);
-  const virtualizer = useVirtualizer({
-    count: state.total,
-    getScrollElement: () => scroller.current,
-    estimateSize: () => 78,
-    gap: 2,
-    overscan: 4
-  });
-  const rows = virtualizer.getVirtualItems();
-  const scope = useVirtualStyles(virtualizer.getTotalSize(), rows);
-  const first = rows[0]?.index ?? 0;
-  const last = rows.at(-1)?.index ?? 0;
+  const { scroller, range } = useLibraryRange(state.total, state.selectedIndex);
+  const { rows, first, last } = range;
+  const scope = useVirtualStyles(range.height, rows);
 
   useEffect(() => {
     for (let index = first; index <= last; index += 1) {
@@ -29,9 +19,6 @@ export function LibraryList() {
       }
     }
   }, [first, last, state.version, state.cache, model]);
-  useEffect(() => {
-    if (state.selectedIndex >= 0) virtualizer.scrollToIndex(state.selectedIndex, { align: 'auto' });
-  }, [state.selectedIndex, virtualizer]);
   return (
     <div
       className="library-scroller"

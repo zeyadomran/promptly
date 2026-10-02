@@ -3,6 +3,7 @@ import type { SearchPage, SearchRequest } from '../../../shared/contracts/domain
 import type { DesktopResult } from '../../../shared/contracts/result';
 import type { DesktopError } from '../../../shared/contracts/result';
 import { createSearchClient } from '../../lib/desktop-client';
+import { LibraryCursor } from './library-cursor';
 import { initialLibraryState } from './library-state';
 import { initialQuery, PAGE_SIZE, sameQuery } from './page-cache';
 
@@ -13,8 +14,7 @@ export class LibraryModel {
   private state = initialLibraryState();
   private listeners = new Set<() => void>();
   private client: ReturnType<typeof createSearchClient> | undefined;
-  private reconcileId: string | null = null;
-  private targetIndex = 0;
+  private cursor = new LibraryCursor();
   private summaryVersion = 0;
   private closed = false;
 
@@ -52,10 +52,15 @@ export class LibraryModel {
   }
 
   start(): void {
+    if (this.client !== undefined) return;
     this.closed = false;
     this.connect();
+    this.cursor.invalidate(this.state);
+    this.state.cache.clear();
+    this.state.loading = true;
+    this.publish();
     void this.refreshSummary();
-    this.ensure(0);
+    void this.fetch(0);
   }
 
   private async refreshSummary(): Promise<void> {
@@ -79,8 +84,7 @@ export class LibraryModel {
     this.state.selectedId = null;
     this.state.selectedIndex = -1;
     this.state.total = 0;
-    this.reconcileId = null;
-    this.targetIndex = 0;
+    this.cursor.reset();
     this.state.loading = true;
     this.state.error = undefined;
     this.publish();
@@ -88,10 +92,7 @@ export class LibraryModel {
   }
 
   private invalidate(): void {
-    this.reconcileId = this.state.selectedId;
-    this.targetIndex = Math.max(0, this.state.selectedIndex);
-    this.state.selectedId = null;
-    this.state.selectedIndex = -1;
+    this.cursor.invalidate(this.state);
     this.state.cache.clear();
     this.state.loading = true;
     this.publish();
@@ -100,7 +101,7 @@ export class LibraryModel {
 
   ensure(index: number): void {
     if (this.closed || this.state.cache.at(index) !== undefined) return;
-    if (this.reconcileId !== null) return;
+    if (this.cursor.desiredId !== null) return;
     void this.fetch(index);
   }
 
@@ -111,23 +112,15 @@ export class LibraryModel {
   }
 
   select(id: string, index: number): void {
-    if (this.state.cache.at(index)?.snippet.id !== id) return;
-    this.reconcileId = null;
-    this.targetIndex = index;
-    this.state.selectedId = id;
-    this.state.selectedIndex = index;
-    this.publish();
+    if (this.cursor.select(this.state, id, index)) this.publish();
   }
 
   moveSelection(delta: number): Promise<void> {
     if (this.state.total === 0) return Promise.resolve();
-    this.reconcileId = null;
-    this.targetIndex = Math.max(0, Math.min(this.state.total - 1, this.targetIndex + delta));
-    const row = this.state.cache.at(this.targetIndex);
+    const missing = this.cursor.move(this.state, delta);
 
-    if (row === undefined) return this.fetch(this.targetIndex);
-    else this.select(row.snippet.id, this.targetIndex);
-    return Promise.resolve();
+    this.publish();
+    return missing === undefined ? Promise.resolve() : this.fetch(missing);
   }
 
   private receive(result: DesktopResult<SearchPage>, request: SearchRequest): void {
@@ -144,43 +137,11 @@ export class LibraryModel {
     const page = result.value;
     const changed = this.state.cache.add(page);
 
-    if (changed) {
-      this.reconcileId = this.state.selectedId;
-      this.state.selectedId = null;
-      this.state.selectedIndex = -1;
-    }
-
     this.state.total = page.total;
     this.state.error = undefined;
-    if (changed && this.reconcileId !== null && page.offset !== 0) {
-      void this.fetch(0);
-      this.publish();
-      return;
-    }
+    const next = this.cursor.settle(this.state, page, changed);
 
-    if (this.reconcileId !== null) {
-      const found = page.items.findIndex((item) => item.id === this.reconcileId);
-
-      if (found >= 0) {
-        this.targetIndex = page.offset + found;
-        this.reconcileId = null;
-      } else if (page.hasMore) {
-        void this.fetch(page.offset + PAGE_SIZE);
-        this.publish();
-        return;
-      } else this.reconcileId = null;
-    }
-
-    this.targetIndex = Math.min(this.targetIndex, page.total - 1);
-    const selected = this.state.cache.at(this.targetIndex);
-
-    if (selected !== undefined) {
-      this.state.selectedId = selected.snippet.id;
-      this.state.selectedIndex = this.targetIndex;
-    } else if (page.total === 0) {
-      this.state.selectedId = null;
-      this.state.selectedIndex = -1;
-    } else this.ensure(this.targetIndex);
+    if (next !== undefined) void this.fetch(next);
     this.publish();
   }
 

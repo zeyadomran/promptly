@@ -12,7 +12,8 @@ import { closeSettingsFixture } from './close-settings-fixture';
 export async function launchSettingsUiFixture(
   native = false,
   attachNativeReceipt?: (receipt: Buffer) => Promise<void>,
-  storage = false
+  storage = false,
+  prepareProfile?: (profile: string) => void
 ) {
   if (native && attachNativeReceipt === undefined)
     throw new Error('Native qualification requires a retained receipt destination.');
@@ -60,6 +61,7 @@ export async function launchSettingsUiFixture(
   };
 
   try {
+    prepareProfile?.(profile);
     const launched = await start();
 
     return {

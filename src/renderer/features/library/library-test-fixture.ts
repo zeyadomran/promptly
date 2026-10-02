@@ -3,7 +3,7 @@ import type { SearchPage } from '../../../shared/contracts/domain';
 import type { DesktopResult } from '../../../shared/contracts/result';
 
 export function libraryFixture(count = 1_000) {
-  let listener: ((event: ChangeEvent) => void) | undefined;
+  const listeners = new Set<(event: ChangeEvent) => void>();
   let revision = 1;
   let items = Array.from({ length: count }, (_, index): Snippet => ({
     id: `00000000-0000-4000-8000-${index.toString().padStart(12, '0')}`,
@@ -35,9 +35,9 @@ export function libraryFixture(count = 1_000) {
     },
     listTags: () => Promise.resolve({ ok: true as const, value: { revision, tags: [] } }),
     subscribeChanges: (receive: (event: ChangeEvent) => void) => {
-      listener = receive;
+      listeners.add(receive);
       return () => {
-        listener = undefined;
+        listeners.delete(receive);
       };
     }
   };
@@ -46,10 +46,11 @@ export function libraryFixture(count = 1_000) {
     bridge,
     requests,
     items: () => items,
+    activeSubscriptions: () => listeners.size,
     change: (next: Snippet[], domains: ChangeEvent['domains'] = ['snippets']) => {
       items = next;
       revision += 1;
-      listener?.({ revision, domains });
+      for (const listener of listeners) listener({ revision, domains });
     }
   };
 }

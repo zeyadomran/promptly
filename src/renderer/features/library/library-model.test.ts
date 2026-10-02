@@ -26,6 +26,35 @@ describe('paged library selection', () => {
     model.close();
   });
 
+  it('keeps a validated offscreen selection when user scrolling evicts its page', async () => {
+    const fixture = libraryFixture(10_000);
+    const model = new LibraryModel(fixture.bridge);
+    const selections: (string | null)[] = [];
+
+    model.start();
+    await settleLibrary();
+    const selected = model.snapshot().selectedId;
+    const before = fixture.requests.length;
+    const unsubscribe = model.subscribe(() => {
+      selections.push(model.snapshot().selectedId);
+    });
+
+    for (let offset = 200; offset <= 1_600; offset += 200) {
+      model.ensure(offset);
+      await settleLibrary();
+    }
+
+    expect(fixture.requests.slice(before).map((request) => request.offset)).toEqual([
+      200, 400, 600, 800, 1_000, 1_200, 1_400, 1_600
+    ]);
+    expect(selections.every((id) => id === selected)).toBe(true);
+    expect(model.snapshot().selectedIndex).toBe(0);
+    expect(model.snapshot().cache.size).toBe(5);
+    expect(model.snapshot().cache.at(0)).toBeUndefined();
+    unsubscribe();
+    model.close();
+  });
+
   it('finds the selected ID beyond loaded pages after an import/reorder', async () => {
     const fixture = libraryFixture();
     const model = new LibraryModel(fixture.bridge);
