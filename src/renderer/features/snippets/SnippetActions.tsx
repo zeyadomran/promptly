@@ -10,8 +10,8 @@ import { SnippetMoreMenu } from './SnippetMoreMenu';
 export function SnippetActions({ snippet }: { snippet: Snippet }) {
   const commands = useLibraryCommands();
   const { state: library } = useLibrary();
-  const { session } = useSnippetSession();
-  const eligible = library.selectedId === snippet.id;
+  const { session, state } = useSnippetSession();
+  const eligible = library.selectedId === snippet.id && !state.loading;
   const copied = commands?.copiedId === snippet.id;
 
   return (

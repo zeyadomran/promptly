@@ -19,9 +19,7 @@ export class SnippetSession {
   private refreshVersion = 0;
   private closed = false;
   private listeners = new Set<() => void>();
-
   constructor(private bridge: Pick<DesktopBridge, 'getSnippet' | 'updateSnippet'>) {}
-
   snapshot = () => this.state;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -79,7 +77,8 @@ export class SnippetSession {
     const snippet = this.state.snippet;
     const text = this.state.draft;
 
-    if (snippet === null || this.state.pending || this.state.missing) return false;
+    if (snippet === null || this.state.loading || this.state.pending || this.state.missing)
+      return false;
     if (text.trim() === '') {
       this.report('A snippet cannot be empty.');
       return false;
@@ -161,10 +160,13 @@ export class SnippetSession {
   }
   private async load(id: string | null): Promise<void> {
     const generation = ++this.generation;
+    // Keep the same preview's live controls/anchors mounted during committed-data refresh.
+    const snippet = this.state.snippet?.id === id ? this.state.snippet : null;
+    const cleared = { snippet: null, draft: '', loading: false };
 
     this.publish({
-      snippet: null,
-      draft: '',
+      snippet,
+      draft: snippet?.text ?? '',
       editing: false,
       loading: id !== null,
       error: undefined,
@@ -180,14 +182,14 @@ export class SnippetSession {
         result.ok
           ? { snippet: result.value.snippet, draft: result.value.snippet.text, loading: false }
           : {
-              loading: false,
+              ...cleared,
               missing: result.error.code === 'NOT_FOUND',
               error: result.error.message
             }
       );
     } catch {
       if (generation === this.generation)
-        this.publish({ loading: false, error: 'Unable to load the snippet.' });
+        this.publish({ ...cleared, error: 'Unable to load the snippet.' });
     }
   }
   close(): void {
