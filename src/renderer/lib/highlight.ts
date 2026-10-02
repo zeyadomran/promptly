@@ -1,3 +1,5 @@
+import { foldText, matchRanges } from '../../shared/search/match-text';
+
 export interface HighlightRange {
   start: number;
   end: number;
@@ -66,5 +68,3 @@ export function splitHighlightedText(
 
   return segments;
 }
-
-import { foldText, matchRanges } from '../../shared/search/match-text';

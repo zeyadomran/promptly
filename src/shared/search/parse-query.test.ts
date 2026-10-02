@@ -32,12 +32,23 @@ describe('literal search language', () => {
 
     expect(foldText(text)).toBe('👋i\u0307σ\u0000end 𐐨');
     expect(matchRanges(text, ['i', 'σ', '\u0000end', '𐐨'])).toEqual([
-      { start: 2, end: 3 },
-      { start: 3, end: 4 },
-      { start: 4, end: 8 },
+      { start: 2, end: 8 },
       { start: 9, end: 11 }
     ]);
     expect(foldText('é')).not.toBe(foldText('e\u0301'));
     expect(foldText('ß')).not.toBe(foldText('SS'));
+  });
+  it('preserves every term and occurrence beyond 512 while merging redundant spans', () => {
+    expect(matchRanges(`b ${'a'.repeat(512)}`, ['a', 'b'])).toEqual([
+      { start: 0, end: 1 },
+      { start: 2, end: 514 }
+    ]);
+    const text = `b ${'a '.repeat(700)}İ b`;
+    const ranges = matchRanges(text, ['a', 'i', 'b']);
+
+    expect(ranges).toHaveLength(703);
+    expect(ranges[0]).toEqual({ start: 0, end: 1 });
+    expect(ranges.at(-2)).toEqual({ start: text.length - 3, end: text.length - 2 });
+    expect(ranges.at(-1)).toEqual({ start: text.length - 1, end: text.length });
   });
 });

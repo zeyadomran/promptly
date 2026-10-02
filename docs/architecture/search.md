@@ -41,9 +41,11 @@ in the stored string.
 
 `SearchPage.matches` maps each returned UUID to original UTF-16 start/end ranges,
 including lowercase expansions and surrogate pairs. Only free-text terms produce
-snippet-text highlights. Overlapping ranges are merged by `HighlightedText`;
-React escapes every segment. Range output is bounded to the first 512 matches per
-snippet in term order; this limit never changes matching, counts or full text.
+snippet-text highlights. Every occurrence of every term contributes to the union
+of matched text, including later terms and later positions. Adjacent/overlapping
+spans are compressed before transport without losing coverage; Unicode scalar
+boundaries remain intact. `HighlightedText` safely renders the complete union and
+React escapes every segment. There is no occurrence-count truncation.
 The shared renderer helper uses exactly the worker's fold/range rules. Full text
 still travels in each returned `Snippet`; preview rendering does not truncate
 storage or search. Optional `searchDurationMs` measures worker snapshot refresh,

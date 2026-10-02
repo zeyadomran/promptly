@@ -47,7 +47,11 @@ void app.whenReady().then(async () => {
   );
   const desktop = installDesktopIpc(ipcMain, storageDesktopServices(storage), revision);
 
-  await createMainWindow(desktop.windows);
+  const window = await createMainWindow(desktop.windows);
+
+  window.setContentSize(1000, 640);
+  app.focus({ steal: true });
+  window.focus();
 });
 app.on('window-all-closed', () => {
   app.quit();

@@ -35,7 +35,7 @@ export function SearchFixture() {
     [query]
   );
   const state = useSearch(requested, bridge);
-  const result = state?.request === requested ? state.result : undefined;
+  const result = state?.result;
   const [paint, setPaint] = useState<{
     query: string;
     revision: number;
@@ -47,7 +47,8 @@ export function SearchFixture() {
   }>();
 
   useLayoutEffect(() => {
-    if (result?.ok !== true || inputAt.current === undefined) return;
+    if (state?.request !== requested || result?.ok !== true || inputAt.current === undefined)
+      return;
     const started = inputAt.current;
     const committed = performance.now();
     let second = 0;
@@ -71,24 +72,30 @@ export function SearchFixture() {
       cancelAnimationFrame(first);
       cancelAnimationFrame(second);
     };
-  }, [result, query]);
+  }, [result, query, requested, state]);
 
   return (
     <main>
-      <label>
-        Search
-        <input
-          aria-label="Search"
-          value={query}
-          onChange={(event) => {
-            inputAt.current = event.timeStamp;
-            setPaint(undefined);
-            setQuery(event.target.value);
-          }}
-        />
-      </label>
-      <output data-testid="ready">{result?.ok === true ? result.value.revision : 'waiting'}</output>
-      <output data-testid="total">{result?.ok === true ? result.value.total : ''}</output>
+      <header>
+        <label>
+          Search
+          <input
+            aria-label="Search"
+            value={query}
+            onChange={(event) => {
+              inputAt.current = event.timeStamp;
+              setPaint(undefined);
+              setQuery(event.target.value);
+            }}
+          />
+        </label>
+      </header>
+      <footer>
+        <output data-testid="ready">
+          {result?.ok === true ? result.value.revision : 'waiting'}
+        </output>
+        <output data-testid="total">{result?.ok === true ? result.value.total : ''}</output>
+      </footer>
       <output
         data-testid="paint"
         data-query={paint?.query}
@@ -97,6 +104,7 @@ export function SearchFixture() {
         data-worker-ms={paint?.workerMs}
         data-commit-ms={paint?.commitMs}
         data-paint-wait-ms={paint?.paintWaitMs}
+        hidden
       >
         {paint?.ms}
       </output>

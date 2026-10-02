@@ -16,10 +16,7 @@ describe('literal highlight matching', () => {
     const ranges = findTextMatches(text, 'test');
 
     expect(ranges.map(({ start, end }) => text.slice(start, end))).toEqual(['TEST', 'test']);
-    expect(findTextMatches('😀😀', '😀')).toEqual([
-      { start: 0, end: 2 },
-      { start: 2, end: 4 }
-    ]);
+    expect(findTextMatches('😀😀', '😀')).toEqual([{ start: 0, end: 4 }]);
   });
   it('merges intersecting ranges without mutating callers and rejects invalid offsets', () => {
     const ranges = [

@@ -4,6 +4,10 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { migrate } from '../../src/main/storage/migrations';
 
+export function searchCorpusText(index: number): string {
+  return `Prompt ${String(index)}: ${'review code and improve this test; '.repeat(20)}${index % 97 === 0 ? '👋İΣ 你好 a%b_c (x)* prefix\u0000END' : ''} needle-${String(index)}`;
+}
+
 export function seedSearchCorpus(filename: string) {
   const db = new DatabaseSync(filename);
 
@@ -14,7 +18,7 @@ export function seedSearchCorpus(filename: string) {
 
   db.exec('BEGIN IMMEDIATE');
   for (let index = 0; index < 10_000; index += 1) {
-    const text = `Prompt ${String(index)}: ${'review code and improve this test; '.repeat(20)}${index % 97 === 0 ? '👋İΣ 你好 a%b_c (x)* prefix\u0000END' : ''} needle-${String(index)}`;
+    const text = searchCorpusText(index);
     const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
 
     characters += text.length;

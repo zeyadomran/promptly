@@ -40,16 +40,37 @@ export function matchRanges(text: string, terms: readonly string[]): MatchRange[
   for (const term of new Set(terms)) {
     if (term === '') continue;
     let start = folded.indexOf(term);
+    let previous: MatchRange | undefined;
 
-    while (start !== -1 && ranges.length < 512) {
+    while (start !== -1) {
       const originalStart = ascii ? start : starts[start];
       const originalEnd = ascii ? start + term.length : ends[start + term.length - 1];
 
-      if (originalStart !== undefined && originalEnd !== undefined)
-        ranges.push({ start: originalStart, end: originalEnd });
+      if (originalStart !== undefined && originalEnd !== undefined) {
+        // Compress adjacent/overlapping occurrences without dropping any matched text.
+        if (previous !== undefined && originalStart <= previous.end)
+          previous.end = Math.max(previous.end, originalEnd);
+        else {
+          previous = { start: originalStart, end: originalEnd };
+          ranges.push(previous);
+        }
+      }
+
       start = folded.indexOf(term, start + 1);
     }
   }
 
-  return ranges.sort((left, right) => left.start - right.start || left.end - right.end);
+  const merged: MatchRange[] = [];
+
+  for (const range of ranges.sort(
+    (left, right) => left.start - right.start || left.end - right.end
+  )) {
+    const previous = merged.at(-1);
+
+    if (previous !== undefined && range.start <= previous.end)
+      previous.end = Math.max(previous.end, range.end);
+    else merged.push(range);
+  }
+
+  return merged;
 }

@@ -71,7 +71,7 @@ export const searchPageSchema = z.strictObject({
             end: z.number().int().positive()
           })
         )
-        .max(512)
+        .max(1_000_000)
     )
     .optional()
 });

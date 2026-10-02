@@ -1,0 +1,103 @@
+@import '../../../src/renderer/styles/fonts.css';
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  background: #09090b;
+  color: #fafafa;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+}
+main {
+  height: 100%;
+  display: grid;
+  grid-template-rows: 64px minmax(0, 1fr) 32px;
+  padding: 0 16px;
+}
+header {
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+}
+label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+input {
+  flex: 1;
+  font: inherit;
+  color: inherit;
+  background: #18181b;
+  border: 1px solid #3f3f46;
+  border-radius: 6px;
+  padding: 10px;
+}
+section {
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  min-height: 0;
+  gap: 16px;
+}
+.fixture-list {
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+}
+article {
+  padding: 12px;
+  border-bottom: 1px solid #27272a;
+}
+pre {
+  font-family: 'Geist Mono', monospace;
+  font-size: 13px;
+  line-height: 20px;
+  margin: 0;
+}
+article pre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+small {
+  display: block;
+  color: #a1a1aa;
+  margin-top: 4px;
+}
+aside {
+  overflow: auto;
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid #27272a;
+  border-radius: 6px;
+}
+aside pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+h2 {
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+mark {
+  background: #43350d;
+  color: #fafafa;
+  border-radius: 2px;
+}
+footer {
+  grid-row: 3;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  color: #a1a1aa;
+}
