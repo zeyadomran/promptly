@@ -54,6 +54,15 @@ See the [official login-item API](https://www.electronjs.org/docs/latest/api/app
 The macOS case separately requires actual Dock hide/show readback and recovery
 of a hidden main window before removing its only route.
 
+The initial CI run passed all three macOS Settings cases, but memory-only native
+attachments were absent from the uploaded list-reporter artifacts. The receipt
+fix writes `native-login-readback.json` and `native-preferences-restored.json` to
+the test's output directory and attaches their paths, including startup cleanup.
+Two focused regressions verify persistent unsigned-Mac denial evidence and
+retention of a failed restoration alongside the original startup/close error
+before owned profile deletion. Their local run passed; fresh CI must establish
+actual native execution and retained JSON files on the new head.
+
 Fresh hosted native execution and full platform CI remain required on the PR.
 Local skipped native checks are not native registration qualification.
 

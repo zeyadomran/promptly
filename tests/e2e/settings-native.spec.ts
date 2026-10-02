@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import { writeSettingsReceipt } from './settings-receipt';
 import { launchSettingsUiFixture, readOwnedNativePreferences } from './settings-ui-fixture';
 
 test('hosted native preferences retain authoritative state and restore initial OS preferences', async () => {
@@ -9,10 +10,7 @@ test('hosted native preferences retain authoritative state and restore initial O
     'Only an ephemeral GitHub-hosted runner may change native login/Dock preferences.'
   );
   const owned = await launchSettingsUiFixture(true, async (receipt) => {
-    await test.info().attach('native-preferences-restored', {
-      body: receipt,
-      contentType: 'application/json'
-    });
+    await writeSettingsReceipt(test.info(), 'native-preferences-restored', receipt);
   });
   const { settings, main, application } = owned;
   const failures: unknown[] = [];
@@ -46,10 +44,11 @@ test('hosted native preferences retain authoritative state and restore initial O
       });
     }
 
-    await test.info().attach('native-login-readback', {
-      body: JSON.stringify({ enabled: native.login, unsignedMacDenial: !native.login }),
-      contentType: 'application/json'
-    });
+    await writeSettingsReceipt(
+      test.info(),
+      'native-login-readback',
+      JSON.stringify({ enabled: native.login, unsignedMacDenial: !native.login })
+    );
     if (process.platform === 'darwin') {
       expect(await settings.evaluate(() => window.promptly.getWindowRecovery({}))).toMatchObject({
         ok: true,
