@@ -2,6 +2,16 @@ import assert from 'node:assert/strict';
 
 import { startFixture } from './fixture-process.mjs';
 
+async function observedCleanup(fixture, failure) {
+  try {
+    return await fixture.close();
+  } catch (error) {
+    if (failure === undefined) throw error;
+    failure.cleanup = error.receipt ?? { status: 'cleanupFailed' };
+    return failure.cleanup;
+  }
+}
+
 export async function checkNativeFixtures(executable, helper, accessibilityAllowed) {
   const evidence = [];
 
@@ -10,9 +20,13 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
     ['empty', 'empty'],
     ['password', 'secureInput']
   ]) {
-    const fixture = await startFixture(executable, mode);
+    let fixture;
+    let failure;
+    let startup;
 
     try {
+      fixture = await startFixture(executable, mode);
+      startup = fixture.startupReceipt;
       const { fixturePid, foregroundMatched } = fixture;
       const elapsed = [];
       const roundTrips = [];
@@ -67,8 +81,18 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
         maxRoundTripMs: Math.max(...roundTrips),
         maxNativeMs: Math.max(...elapsed)
       });
+    } catch (error) {
+      failure = error;
+      error.fixtureLifecycle = error.receipt ?? fixture?.receipt();
+      throw error;
     } finally {
-      await fixture.close();
+      if (fixture !== undefined) {
+        const cleanup = await observedCleanup(fixture, failure);
+        const entry = evidence.at(-1);
+
+        if (entry?.fixture === mode) entry.lifecycle = { startup, cleanup };
+        if (failure !== undefined) failure.cleanup = cleanup;
+      }
     }
   }
 

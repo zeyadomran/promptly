@@ -2,6 +2,12 @@ import AppKit
 import Foundation
 
 func runFixture(mode: String) {
+    // A candidate PID is available even if UI readiness fails. The driver validates
+    // the live executable and fresh per-launch argv before signaling this PID.
+    if CommandLine.arguments.count > 3 {
+        try? String(ProcessInfo.processInfo.processIdentifier).write(
+            toFile: CommandLine.arguments[3] + ".pid", atomically: true, encoding: .utf8)
+    }
     let app = NSApplication.shared
     app.setActivationPolicy(.regular)
     let window = NSWindow(contentRect: NSRect(x: 200, y: 200, width: 420, height: 160),
