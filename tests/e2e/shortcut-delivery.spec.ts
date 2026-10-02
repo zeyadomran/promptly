@@ -84,31 +84,34 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
       .toMatchObject({ ok: true, value: { visible: true } });
   } catch (error) {
     failure = error;
-  } finally {
-    const cleanupErrors: unknown[] = [];
-
-    try {
-      if (receiptPage !== undefined)
-        await writeWindowReceipt('shortcut-final', {
-          settings: await receiptPage.evaluate(() => window.promptly.getSettings({})),
-          window: await receiptPage.evaluate(() => window.promptly.getWindowState({}))
-        });
-    } catch (error) {
-      cleanupErrors.push(error);
-    }
-
-    try {
-      await isolated.dispose();
-    } catch (error) {
-      cleanupErrors.push(error);
-    }
-
-    if (cleanupErrors.length > 0)
-      throw new AggregateError(
-        failure === undefined ? cleanupErrors : [failure, ...cleanupErrors],
-        'Owned shortcut fixture cleanup failed.'
-      );
   }
 
-  if (failure !== undefined) throw failure;
+  const cleanupErrors: unknown[] = [];
+
+  try {
+    if (receiptPage !== undefined)
+      await writeWindowReceipt('shortcut-final', {
+        settings: await receiptPage.evaluate(() => window.promptly.getSettings({})),
+        window: await receiptPage.evaluate(() => window.promptly.getWindowState({}))
+      });
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
+
+  try {
+    await isolated.dispose();
+  } catch (error) {
+    cleanupErrors.push(error);
+  }
+
+  if (cleanupErrors.length > 0)
+    throw new AggregateError(
+      failure === undefined ? cleanupErrors : [failure, ...cleanupErrors],
+      'Owned shortcut fixture cleanup failed.'
+    );
+
+  if (failure !== undefined)
+    throw failure instanceof Error
+      ? failure
+      : new Error('Owned shortcut flow failed.', { cause: failure });
 });
