@@ -63,7 +63,7 @@ export async function createMainWindow(
     ...(process.platform === 'win32'
       ? {
           titleBarOverlay: {
-            height: 40,
+            height: kind === 'main' ? 40 : 38,
             color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
             symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
           }

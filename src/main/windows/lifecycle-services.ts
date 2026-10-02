@@ -4,6 +4,8 @@ import type { WindowLifecycle } from './window-lifecycle';
 export type WindowOperations = Pick<
   DesktopOperations,
   | 'getWindowState'
+  | 'getWindowRecovery'
+  | 'returnToMainWindow'
   | 'setWindowMode'
   | 'setWindowVisibility'
   | 'openDesktopWindow'
@@ -22,6 +24,8 @@ export function lifecycleServices(
 
   return {
     getWindowState: (request) => services().getWindowState(request),
+    getWindowRecovery: (request) => services().getWindowRecovery(request),
+    returnToMainWindow: (request) => services().returnToMainWindow(request),
     setWindowMode: (request) => services().setWindowMode(request),
     setWindowVisibility: (request) => services().setWindowVisibility(request),
     openDesktopWindow: (request) => services().openDesktopWindow(request),

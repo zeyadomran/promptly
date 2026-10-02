@@ -3,6 +3,7 @@ import type { BrowserWindow } from 'electron';
 /** P24/P07 inject actual native registrations; requested settings never imply availability. */
 export interface WindowRecovery {
   trayAvailable: () => boolean;
+  trayControllerAvailable?: () => boolean;
   shortcutAvailable: () => boolean;
   dockAvailable: () => boolean;
 }

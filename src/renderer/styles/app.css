@@ -5,6 +5,7 @@
 @import './components.css';
 @import './highlights.css';
 @import './window-chrome.css';
+@import './settings.css';
 
 :root {
   color: var(--foreground);

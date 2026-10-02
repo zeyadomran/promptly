@@ -10,4 +10,12 @@ export const windowStateSchema = z.strictObject({
 export type SizeMode = z.infer<typeof sizeModeSchema>;
 export type WindowKind = z.infer<typeof windowKindSchema>;
 export type WindowState = z.infer<typeof windowStateSchema>;
+export const windowRecoverySchema = z.strictObject({
+  tray: z.boolean(),
+  trayController: z.boolean(),
+  shortcut: z.boolean(),
+  dock: z.boolean(),
+  mainReachable: z.boolean()
+});
+export type WindowRecoveryState = z.infer<typeof windowRecoverySchema>;
 export const focusSearchChannel = 'promptly:focus-search';

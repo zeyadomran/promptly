@@ -79,6 +79,8 @@ export function createDesktopBridge(
   const bridge = Object.freeze<DesktopBridge>({
     platform,
     getWindowState: (request) => call('getWindowState', request),
+    getWindowRecovery: (request) => call('getWindowRecovery', request),
+    returnToMainWindow: (request) => call('returnToMainWindow', request),
     setWindowMode: (request) => call('setWindowMode', request),
     setWindowVisibility: (request) => call('setWindowVisibility', request),
     openDesktopWindow: (request) => call('openDesktopWindow', request),
@@ -99,6 +101,8 @@ export function createDesktopBridge(
     mergeTags: (request) => call('mergeTags', request),
     getSettings: (request) => call('getSettings', request),
     updateSettings: (request) => call('updateSettings', request),
+    getMacosPermissions: (request) => call('getMacosPermissions', request),
+    openMacosPermissionSettings: (request) => call('openMacosPermissionSettings', request),
     captureSelection: (request) => call('captureSelection', request),
     subscribeWindowFocus(listener) {
       if (disposed || transport.listenFocus === undefined) return () => undefined;
