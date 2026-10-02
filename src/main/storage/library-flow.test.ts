@@ -45,6 +45,54 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     expect(store.invoke('searchSnippets', { ...allSnippets, tagIds: [tag.id] }).items).toHaveLength(
       2
     );
+    const target = store.invoke('createTag', { name: 'archive', color: 'teal' }).tag;
+
+    store.invoke('setTagMembership', { id: duplicate.id, tagId: target.id, assigned: true });
+    const renamed = store.engine.run(2, 'updateTag', {
+      id: tag.id,
+      name: '  PROJECT  ',
+      color: 'purple'
+    });
+
+    expect(renamed).toMatchObject({
+      result: { ok: true, value: { tag: { id: tag.id, name: 'project', color: 'purple' } } },
+      change: { domains: ['tags', 'snippets'] }
+    });
+    expect(store.invoke('getSnippet', { id: original.id }).snippet.tags).toEqual([
+      expect.objectContaining({ id: tag.id, name: 'project', color: 'purple' })
+    ]);
+    expect(() =>
+      store.invoke('updateTag', { id: target.id, name: 'PROJECT', color: 'red' })
+    ).toThrow('CONFLICT');
+    expect(store.invoke('listTags', {}).tags).toEqual([
+      expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 1 }),
+      expect.objectContaining({ id: tag.id, name: 'project', color: 'purple', snippetCount: 2 })
+    ]);
+    const beforeMerge = store.export();
+
+    // Inject only the external SQLite write failure; observe atomicity through the public export.
+    store.engine.context.db.exec(`CREATE TRIGGER reject_tag_merge BEFORE DELETE ON tags
+      BEGIN SELECT RAISE(ABORT, 'owned write failure'); END;`);
+    expect(() => store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id })).toThrow(
+      'CONFLICT'
+    );
+    expect(store.export()).toEqual(beforeMerge);
+    store.engine.context.db.exec('DROP TRIGGER reject_tag_merge');
+    store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id });
+    expect(store.invoke('listTags', {}).tags).toEqual([
+      expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 2 })
+    ]);
+    for (const id of [original.id, duplicate.id])
+      expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({
+        text,
+        tags: [{ id: target.id, color: 'teal' }]
+      });
+    store.invoke('deleteTag', { id: target.id });
+    store.reopen();
+    expect(store.invoke('listTags', {}).tags).toEqual([]);
+    for (const id of [original.id, duplicate.id])
+      expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({ id, text, tags: [] });
+    expect(store.invoke('searchSnippets', allSnippets).total).toBe(2);
   } finally {
     store.dispose();
   }
