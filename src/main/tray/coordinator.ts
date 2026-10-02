@@ -18,6 +18,7 @@ export class TrayCoordinator {
   private handle: TrayHandle | undefined;
   private owner: MainCopyOwner | undefined;
   private closing = false;
+  private commandsStopped = false;
   private version = 0;
   private refreshing: Promise<void> | undefined;
 
@@ -38,14 +39,14 @@ export class TrayCoordinator {
     apply: (settings) => this.setVisible(settings.showInTray),
     quarantine: () => {
       this.retire();
-      void this.commands.recover().catch(this.commands.error);
+      if (!this.commandsStopped) void this.commands.recover().catch(this.commands.error);
     }
   };
 
   private async setVisible(visible: boolean): Promise<void> {
     if (this.closing) throw new Error('Tray is shutting down.');
     if (!visible) {
-      if (this.handle !== undefined) await this.commands.recover();
+      if (this.handle !== undefined && !this.commandsStopped) await this.commands.recover();
       this.retire();
       return;
     }
@@ -54,6 +55,7 @@ export class TrayCoordinator {
       this.retire();
       this.handle = this.native.create();
       this.owner = new MainCopyOwner();
+      if (this.commandsStopped) this.owner.close();
     }
 
     await this.refresh();
@@ -145,8 +147,7 @@ export class TrayCoordinator {
       ? item
       : {
           ...item,
-          run: () =>
-            this.available && this.owner === owner && owner.isAlive() ? run() : Promise.resolve()
+          run: () => (this.isCurrent(owner) ? run() : Promise.resolve())
         };
   }
 
@@ -172,7 +173,7 @@ export class TrayCoordinator {
   }
 
   private isCurrent(owner: MainCopyOwner): boolean {
-    return this.available && owner === this.owner && owner.isAlive();
+    return !this.commandsStopped && this.available && owner === this.owner && owner.isAlive();
   }
 
   private retire(): void {
@@ -183,12 +184,14 @@ export class TrayCoordinator {
   }
 
   stopCommands(): void {
-    this.closing = true;
+    // Settings still owns apply/rollback until its accepted work has drained.
+    this.commandsStopped = true;
     this.owner?.close();
   }
 
   async close(): Promise<void> {
     this.stopCommands();
+    this.closing = true;
     this.retire();
     await this.refreshing;
   }

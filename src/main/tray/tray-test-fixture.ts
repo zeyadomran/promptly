@@ -9,10 +9,17 @@ import type { TrayItem } from './ports';
 
 export function trayFixture() {
   let second = 0;
+  let settingsRead = Promise.resolve();
+  let settingsEntered: () => void = () => undefined;
   const controllers: SettingsController[] = [];
   const fixture = testSettings(
     { available: controllers, unavailable: [] },
-    () => new Date(Date.UTC(2026, 9, 2, 10, 0, second++))
+    () => new Date(Date.UTC(2026, 9, 2, 10, 0, second++)),
+    (name) => {
+      if (name !== 'getSettings') return Promise.resolve();
+      settingsEntered();
+      return settingsRead;
+    }
   );
   const keyboard = shortcutFixture((callback) => callback);
   const mutations = new LibraryMutations();
@@ -119,6 +126,17 @@ export function trayFixture() {
     captured: () => captured,
     deny: (value: boolean) => {
       denied = value;
+    },
+    holdSettingsRead: () => {
+      let release: () => void = () => undefined;
+      const entered = new Promise<void>((resolve) => {
+        settingsEntered = resolve;
+      });
+
+      settingsRead = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      return { entered, release };
     },
     holdRead: () => {
       let release: () => void = () => undefined;

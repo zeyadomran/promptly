@@ -8,14 +8,16 @@ import { SettingsService } from './service';
 
 export function testSettings(
   controllers: SettingsControllers = { available: [], unavailable: [] },
-  now?: () => Date
+  now?: () => Date,
+  wait?: (name: StorageOperation) => Promise<void>
 ) {
   const store = testStorage(now);
   const storage = {
-    call<K extends StorageOperation>(
+    async call<K extends StorageOperation>(
       name: K,
       input: StorageRequest<K>
     ): Promise<DesktopResult<StorageResponse<K>>> {
+      if (wait !== undefined) await wait(name);
       const reply = store.engine.run(1, name, input);
 
       return Promise.resolve(

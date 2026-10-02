@@ -1,5 +1,6 @@
 import { expect, it, vi } from 'vitest';
 
+import { closeSettingsStorage } from '../lifecycle/close-settings-storage';
 import { trayFixture } from './tray-test-fixture';
 
 it('keeps recent commands authoritative and capture-only pause reachable through reversible tray visibility', async () => {
@@ -124,11 +125,22 @@ it('keeps recent commands authoritative and capture-only pause reachable through
 
     await quit?.run?.();
     expect(windows.at(-1)).toBe('quit');
-    await tray.close();
+    const settingsRead = owned.holdSettingsRead();
+    const accepted = fixture.service.services.updateSettings({ showInTray: false });
+
+    await settingsRead.entered;
+    tray.stopCommands();
+    const draining = closeSettingsStorage(fixture.service, undefined, undefined, tray);
     const beforeRetired = windows.length;
 
     await quit?.run?.();
     expect(windows.length).toBe(beforeRetired);
+    settingsRead.release();
+    expect(await accepted).toMatchObject({ ok: true });
+    await draining;
+    expect(windows.length).toBe(beforeRetired);
+    expect(fixture.service.current.settings.showInTray).toBe(false);
+    expect(fixture.store.invoke('getSettings', {}).settings.showInTray).toBe(false);
     expect(tray.available).toBe(false);
   } finally {
     await tray.close();

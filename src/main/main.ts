@@ -44,15 +44,20 @@ const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
     tray?.stopCommands();
-    return closeLibraryResources([tray, library?.capture, library?.copy, library?.transfer], () =>
+    return closeLibraryResources([library?.capture, library?.copy, library?.transfer], () =>
       closeWindowResources(lifecycle, () =>
-        closeSettingsStorage(settings, storage, {
-          close: () =>
-            closeNativeResources([
-              keyboard,
-              { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
-            ])
-        })
+        closeSettingsStorage(
+          settings,
+          storage,
+          {
+            close: () =>
+              closeNativeResources([
+                keyboard,
+                { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
+              ])
+          },
+          tray
+        )
       )
     );
   },
