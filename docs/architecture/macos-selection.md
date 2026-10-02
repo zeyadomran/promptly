@@ -93,6 +93,22 @@ fails. This is a test-only precondition correction: production activation, its
 rejection remain unchanged. Windows checks cannot qualify macOS foreground behavior;
 fresh macOS CI is required.
 
+At `424fcdc`, [macOS CI](https://github.com/zeyadomran/promptly/actions/runs/36991774202)
+still failed before activation: app/window checks succeeded and the fixture was
+background, but the adapter's two display-PID matches were false. The
+[retained receipt](../verification/P08/activation-424fcdc-macos-failed.json) lacks
+adapter status/source availability, so the observed cause is unknown. Review found
+a separate static test mismatch: an `ok` identity can validly have `source: null`.
+The test now requires an independent owned AppKit observation of
+[`NSWorkspace.frontmostApplication`](https://developer.apple.com/documentation/appkit/nsworkspace/frontmostapplication),
+comparing its PID with the actual packaged Electron main PID and returning only a
+match boolean. Adapter status must remain `ok`; optional display metadata is no
+longer foreground proof. Safe receipts record status, source availability, owned
+matches and timings before the unchanged single 100 ms activation. The native
+observer neither selects text nor activates an app, and the production identity
+capability, text/selection/pasteboard assertions and forged-identity rejection are
+unchanged. Latest-head macOS CI must qualify this test correction.
+
 The fixture receipt records hardware/OS/Node architecture, helper startup and
 separate cold/warm native and pipe durations, plus focus/selection/pasteboard-count
 checks. These figures exclude shortcuts, persistence and toast display. P11 owns

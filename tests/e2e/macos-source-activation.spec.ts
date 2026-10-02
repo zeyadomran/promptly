@@ -6,12 +6,12 @@ import type { BrowserWindow } from 'electron';
 import { launchIsolatedElectron } from '../isolated-electron';
 import { buildMacosActivation } from './build-macos-activation';
 import type * as OwnedHarness from './fixtures/macos-activation-main';
+import { finishMacosActivation } from './macos-activation-receipt';
 import { buildMacosFixture, macosFixture } from './macos-fixture';
 import {
   establishOwnedPromptlyForeground,
   type OwnedPromptlyForeground
 } from './macos-promptly-focus';
-import { saveNativeReceipt } from './native-receipt';
 
 type HarnessGlobal = typeof globalThis & { ownedMacActivationHarness: typeof OwnedHarness };
 
@@ -44,6 +44,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
   let ownedFixture: Awaited<ReturnType<typeof macosFixture>> | undefined;
   let activated = false;
   let promptlyForeground: OwnedPromptlyForeground | undefined;
+  let nativePromptlyForeground: { matched: boolean; requestMs: number } | undefined;
 
   try {
     const page = await application.firstWindow();
@@ -112,11 +113,20 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     await establishOwnedPromptlyForeground(application, ownedWindowId, fixture, (observation) => {
       promptlyForeground = observation;
     });
-    expect(
-      await application.evaluate(() =>
-        (globalThis as HarnessGlobal).ownedMacActivationHarness.foreground()
-      )
-    ).toEqual({ fixture: false, promptly: true });
+    const nativeIdentity = await application.evaluate(() =>
+      (globalThis as HarnessGlobal).ownedMacActivationHarness.foreground()
+    );
+    const ownedMainPid = await application.evaluate(() => process.pid);
+    const observationStarted = performance.now();
+
+    nativePromptlyForeground = {
+      matched: await fixture.isForeground(ownedMainPid),
+      requestMs: performance.now() - observationStarted
+    };
+    // Display metadata is optional even for a valid native identity. The independent
+    // owned AppKit observer must prove the actual Promptly main PID is frontmost.
+    expect(nativePromptlyForeground.matched).toBe(true);
+    expect(nativeIdentity).toMatchObject({ status: 'ok', fixture: false });
     expect(await fixture.inspect()).toEqual({ ...before, foregroundMatched: false });
     expect(
       await application.evaluate(() =>
@@ -140,7 +150,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
       await application.evaluate(() =>
         (globalThis as HarnessGlobal).ownedMacActivationHarness.foreground()
       )
-    ).toEqual({ fixture: true, promptly: false });
+    ).toMatchObject({ status: 'ok', fixture: true, promptly: false });
     const captured = await application.evaluate(() =>
       (globalThis as HarnessGlobal).ownedMacActivationHarness.capture()
     );
@@ -151,42 +161,15 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     activated = true;
     stage = 'complete';
   } finally {
-    const identityReadiness = await application
-      .evaluate(
-        () =>
-          (globalThis as Partial<HarnessGlobal>).ownedMacActivationHarness?.readinessSnapshot() ??
-          []
-      )
-      .catch(() => [{ status: 'mainUnavailable' }]);
-    const fixtureForegroundAtEnd = await ownedFixture
-      ?.inspect()
-      .then((state) => state.foregroundMatched)
-      .catch(() => undefined);
-
-    try {
-      await saveNativeReceipt('macos-source-activation-receipt', {
-        stage,
-        ownedWindowReady,
-        fixtureReadyForeground,
-        fixtureForegroundAtEnd,
-        promptlyForeground,
-        identityReadiness,
-        activationStatus,
-        activated,
-        realOwnedPromptlyWindow: true,
-        helperOwnedByElectronMain: helperInitialized,
-        actualForegroundVerified: activated,
-        selectionAndPasteboardCounterPreserved: activated,
-        humanTccMatrix: false
-      });
-    } finally {
-      await Promise.allSettled([
-        application.evaluate(async () => {
-          await (globalThis as Partial<HarnessGlobal>).ownedMacActivationHarness?.dispose();
-        }),
-        ownedFixture?.close()
-      ]);
-      await isolated.dispose();
-    }
+    await finishMacosActivation(isolated, ownedFixture, {
+      stage,
+      ownedWindowReady,
+      fixtureReadyForeground,
+      promptlyForeground,
+      nativePromptlyForeground,
+      activationStatus,
+      activated,
+      helperInitialized
+    });
   }
 });

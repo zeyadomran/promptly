@@ -42,6 +42,7 @@ DispatchQueue.main.async {
 DispatchQueue.main.asyncAfter(deadline: .now() + 1) { writeState("ready.json") }
 // Owned file signals permit state reads/clean shutdown without input injection or AppleScript.
 let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+    observeOwnedForeground(in: directory)
     if FileManager.default.fileExists(atPath: directory + "/inspect") {
         try? FileManager.default.removeItem(atPath: directory + "/inspect")
         writeState("state.json")

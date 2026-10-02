@@ -6,6 +6,8 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
+import { observeOwnedMacosForeground } from './macos-foreground-observer';
+
 export const buildMacosFixture = () =>
   promisify(execFile)('sh', [path.resolve('tests/native/macos/build.sh')]);
 interface FixtureState {
@@ -100,6 +102,7 @@ export async function macosFixture(mode: string) {
     return {
       ...state,
       close,
+      isForeground: (ownedPid: number) => observeOwnedMacosForeground(directory, ownedPid),
       inspect: async () => {
         await rm(path.join(directory, 'state.json'), { force: true });
         await writeFile(path.join(directory, 'inspect'), '');

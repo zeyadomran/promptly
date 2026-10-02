@@ -5,6 +5,7 @@ let adapter: ReturnType<typeof createMacosSelection> | undefined;
 let fixturePid = 0;
 let recorded: MacosIdentity | undefined;
 const identityReadiness: object[] = [];
+const foregroundObservations: object[] = [];
 let initializedAt = 0;
 
 // Test-only module loaded into an actual packaged Electron main process. No renderer routes.
@@ -42,12 +43,23 @@ export function readinessSnapshot() {
 }
 
 export async function foreground() {
+  const started = performance.now();
   const result = await adapter?.foregroundIdentityResult();
-
-  return {
+  const observation = {
+    status: result?.status ?? 'helperUnavailable',
+    sourceAvailable: result?.status === 'ok' && result.identity.source !== null,
     fixture: result?.status === 'ok' && result.identity.source?.pid === fixturePid,
-    promptly: result?.status === 'ok' && result.identity.source?.pid === process.pid
+    promptly: result?.status === 'ok' && result.identity.source?.pid === process.pid,
+    requestMs: performance.now() - started,
+    elapsedMs: performance.now() - initializedAt
   };
+
+  if (foregroundObservations.length < 128) foregroundObservations.push(observation);
+  return observation;
+}
+
+export function foregroundSnapshot() {
+  return [...foregroundObservations];
 }
 
 export async function capture() {
