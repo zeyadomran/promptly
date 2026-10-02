@@ -18,7 +18,14 @@ function containsJsx(node) {
 }
 
 function unwrap(node) {
-  while (['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression'].includes(node?.type)) {
+  while (
+    [
+      'TSAsExpression',
+      'TSSatisfiesExpression',
+      'TSNonNullExpression',
+      'ParenthesizedExpression'
+    ].includes(node?.type)
+  ) {
     node = node.expression;
   }
 
