@@ -36,6 +36,7 @@ export function useLibraryRange(
         current.query === saved.query
       )
         store.restoreScroll(saved.top);
+      else if (current !== undefined) store.scrollToIndex(current.index);
     });
 
     return () => {

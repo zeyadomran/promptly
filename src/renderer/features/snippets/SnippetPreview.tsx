@@ -30,6 +30,11 @@ export function SnippetPreview() {
         <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
       </div>
       <PreviewTagBar snippet={snippet} />
+      {state.editing && snippet.id !== library.selectedId && (
+        <p className="snippet-draft-notice" role="status">
+          Editing the previous snippet. Apply or cancel to preview your new selection.
+        </p>
+      )}
       {state.editing ? (
         <SnippetEditor />
       ) : (
