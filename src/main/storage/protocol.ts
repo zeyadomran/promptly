@@ -1,6 +1,5 @@
-import { z } from 'zod';
-
 import { importPreviewSchema } from '../../shared/contracts/backup/operations';
+import { exportDataSchema, importFileSchema } from '../../shared/contracts/backup/worker';
 import type { ChangeEvent } from '../../shared/contracts/domain';
 import {
   captureResultSchema,
@@ -32,13 +31,10 @@ export const storageOperations = {
   clearLibrary: { request: operations.listTags.request, response: revisionSnapshotSchema },
   exportLibraryData: {
     request: operations.exportLibrary.request,
-    response: z.strictObject({
-      revision: z.number().int().nonnegative(),
-      data: z.instanceof(Uint8Array)
-    })
+    response: exportDataSchema
   },
   prepareLibraryImport: {
-    request: z.strictObject({ filename: z.string().min(1).max(4096) }),
+    request: importFileSchema,
     response: importPreviewSchema
   },
   commitLibraryImport: operations.confirmLibraryImport,

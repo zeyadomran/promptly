@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import type { PortableBackup } from '../../../shared/contracts/backup/format';
 import type { ImportPreview } from '../../../shared/contracts/backup/operations';
 import type { StorageContext } from '../context';
+import { ImportTagNames } from './import-tag-names';
 
 export interface ImportPlan {
   backup: PortableBackup;
@@ -16,7 +17,6 @@ export interface ImportPlan {
 export function planImport(context: StorageContext, backup: PortableBackup): ImportPlan {
   const snippetIds = new Map<string, string>();
   const tagIds = new Map<string, string>();
-  const names = new Map<string, string>();
   const newTags = new Set<string>();
   const reservedTags = new Set<string>();
   const reservedSnippets = new Set<string>();
@@ -43,39 +43,44 @@ export function planImport(context: StorageContext, backup: PortableBackup): Imp
     snippetIds.set(snippet.id, id);
   }
 
-  for (const tag of backup.tags) {
-    const existing = context.db
-      .prepare('SELECT id FROM tags WHERE name = ? COLLATE NOCASE')
-      .get(tag.name);
-    const nameKey = tag.name.replace(/[A-Z]/gu, (letter) => letter.toLowerCase());
-    const sameName = existing === undefined ? names.get(nameKey) : String(existing['id']);
+  const names = new ImportTagNames(context.db);
 
-    if (sameName !== undefined) {
-      tagIds.set(tag.id, sameName);
-      coalescedTags += 1;
-      continue;
-    }
+  try {
+    for (const tag of backup.tags) {
+      const existing = context.db
+        .prepare('SELECT id FROM tags WHERE name = ? COLLATE NOCASE')
+        .get(tag.name);
+      const sameName = existing === undefined ? names.find(tag.name) : String(existing['id']);
 
-    let id = tag.id;
+      if (sameName !== undefined) {
+        tagIds.set(tag.id, sameName);
+        coalescedTags += 1;
+        continue;
+      }
 
-    if (
-      reservedTags.has(id) ||
-      context.db.prepare('SELECT id FROM tags WHERE id = ?').get(id) !== undefined
-    ) {
-      do {
-        id = randomUUID();
-      } while (
+      let id = tag.id;
+
+      if (
         reservedTags.has(id) ||
         context.db.prepare('SELECT id FROM tags WHERE id = ?').get(id) !== undefined
-      );
+      ) {
+        do {
+          id = randomUUID();
+        } while (
+          reservedTags.has(id) ||
+          context.db.prepare('SELECT id FROM tags WHERE id = ?').get(id) !== undefined
+        );
 
-      remappedTagIds += 1;
+        remappedTagIds += 1;
+      }
+
+      tagIds.set(tag.id, id);
+      names.add(tag.name, id);
+      reservedTags.add(id);
+      newTags.add(tag.id);
     }
-
-    tagIds.set(tag.id, id);
-    names.set(nameKey, id);
-    reservedTags.add(id);
-    newTags.add(tag.id);
+  } finally {
+    names.close();
   }
 
   return {

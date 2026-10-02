@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, ipcMain, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from '../../../src/main/ipc/install-desktop-ipc';
+import { closeLibraryResources } from '../../../src/main/lifecycle/close-library-resources';
 import { closeSettingsStorage } from '../../../src/main/lifecycle/close-settings-storage';
 import { closeWindowResources } from '../../../src/main/lifecycle/close-window-resources';
 import { createDesktopShutdown } from '../../../src/main/lifecycle/desktop-shutdown';
@@ -51,8 +52,9 @@ events.on('owned-settings-receipt', (reply: (receipt: object) => void) => {
 const shutdown = createDesktopShutdown({
   cleanup: async () => {
     const settled = await Promise.allSettled([
-      library?.transfer.close(),
-      closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage))
+      closeLibraryResources(library?.transfer, () =>
+        closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage))
+      )
     ]);
 
     settled.push(...(await Promise.allSettled([nativePreferences.restore()])));
