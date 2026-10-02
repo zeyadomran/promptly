@@ -16,7 +16,7 @@ export function keyboardFocus(event: KeyboardEvent): LibraryFocus {
     return 'overlay';
   if (
     document.querySelector(
-      '[role="dialog"][data-state="open"], [role="menu"][data-state="open"]'
+      '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [role="menu"][data-state="open"]'
     ) !== null
   )
     return 'overlay';
@@ -45,7 +45,7 @@ export function windowFocusMaySearch(): boolean {
 
   if (
     document.querySelector(
-      '[role="dialog"][data-state="open"], [role="menu"][data-state="open"], [data-promptly-overlay]'
+      '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"], [role="menu"][data-state="open"], [data-promptly-overlay]'
     ) !== null
   )
     return false;

@@ -47,18 +47,16 @@ const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources(copy, () =>
-      closeLibraryResources(transfer, () =>
-        closeWindowResources(lifecycle, () =>
-          closeSettingsStorage(settings, storage, {
-            close: () =>
-              closeNativeResources([
-                keyboard,
-                { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
-                { close: () => macosSelection?.dispose() ?? Promise.resolve() }
-              ])
-          })
-        )
+    return closeLibraryResources([copy, transfer], () =>
+      closeWindowResources(lifecycle, () =>
+        closeSettingsStorage(settings, storage, {
+          close: () =>
+            closeNativeResources([
+              keyboard,
+              { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
+              { close: () => macosSelection?.dispose() ?? Promise.resolve() }
+            ])
+        })
       )
     );
   },
