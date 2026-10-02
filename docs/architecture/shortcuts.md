@@ -16,7 +16,27 @@ shortcuts and modifier recognition; each authorized WebContents owns its scope.
 Completion, renderer destruction, main-frame navigation and renderer failure
 release that owner. Resets, overflow, sleep and fresh hook sessions retain owners.
 Owner release during shutdown stays idempotent without re-enabling shortcuts.
-The recorder UI belongs to P20; the scoped API is available for its future lifetime.
+The shared P21 recorder controls now wire Settings to that scoped API. A renderer
+owns one recording session across its capture/open/pin controls. IPC transitions
+serialize, newer requests retire older acquires, and key input is accepted only
+after main acknowledges suppression. Composition, AltGr text, repeats and lone
+modifiers never become bindings. A valid chord waits for modifier release before
+suppression ends and the settings transaction starts. Escape, Tab/Shift+Tab,
+recorder blur, window blur, hidden context and unmount cancel and release ownership.
+
+Shared accelerator validation, alias identity and known Windows reservations are
+used in both renderer and main. Settings shows committed bindings and actual
+registration/listener status; native registration errors survive the settings
+transaction. Windows Alt+Space has an explanatory warning and an explicit
+Ctrl+Alt+Space attempt. No alternate is silently chosen, no other app is scanned,
+and registration is not evidence of physical shortcut delivery. Component reuse
+for onboarding P23/#25 is available; that flow remains unimplemented here.
+
+Windows reservations and the Alt+Space window-menu warning follow
+[Microsoft's keyboard shortcuts](https://support.microsoft.com/en-us/accessibility/windows/keyboard-shortcuts-in-windows).
+Electron documents [registration and suspension](https://www.electronjs.org/docs/latest/api/global-shortcut)
+as the available OS boundary. Native rebind, rendering, assistive technology,
+physical double taps and capture suppression still require manual qualification.
 
 The dedicated keyboard helper never shares AX/UIA selection transport. Windows
 uses a low-level hook and its own message loop; macOS uses a passive session event
