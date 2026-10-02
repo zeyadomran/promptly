@@ -49,12 +49,16 @@ test('Settings matches the 639/640 breakpoint, preserves keyboard focus and rend
     }
 
     await resizeSettings(application, 639);
+    await expect.poll(() => settings.evaluate(() => window.innerWidth)).toBe(639);
+    await expect(settings.getByRole('tablist')).toHaveAttribute('aria-orientation', 'horizontal');
     const appearance = settings.getByRole('tab', { name: 'Appearance' });
 
     await appearance.focus();
     const identity = await appearance.getAttribute('id');
 
     await resizeSettings(application, 640);
+    await expect.poll(() => settings.evaluate(() => window.innerWidth)).toBe(640);
+    await expect(settings.getByRole('tablist')).toHaveAttribute('aria-orientation', 'vertical');
     await expect(appearance).toBeFocused();
     expect(await appearance.getAttribute('id')).toBe(identity);
     await appearance.press('ArrowDown');
@@ -63,9 +67,20 @@ test('Settings matches the 639/640 breakpoint, preserves keyboard focus and rend
       'aria-selected',
       'true'
     );
+    const tags = settings.getByRole('tab', { name: 'Tags' });
+    const tagsNode = await tags.elementHandle();
+
     await resizeSettings(application, 639);
-    await settings.getByRole('tab', { name: 'Tags' }).press('ArrowRight');
+    await expect.poll(() => settings.evaluate(() => window.innerWidth)).toBe(639);
+    await expect(settings.getByRole('tablist')).toHaveAttribute('aria-orientation', 'horizontal');
+    await expect(tags).toBeFocused();
+    expect(await tags.evaluate((element, original) => element === original, tagsNode)).toBe(true);
+    await tags.press('ArrowRight');
     await expect(settings.getByRole('tab', { name: 'Storage' })).toBeFocused();
+    await expect(settings.getByRole('tab', { name: 'Storage' })).toHaveAttribute(
+      'aria-selected',
+      'true'
+    );
     await settings.getByRole('tab', { name: 'Storage' }).press('Home');
     await expect(settings.getByRole('tab', { name: 'General' })).toBeFocused();
     const csp = await settings

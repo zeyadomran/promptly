@@ -7,6 +7,7 @@ const owned = vi.hoisted(() => ({
   storageClose: vi.fn<() => Promise<void>>(),
   settingsClose: vi.fn<() => Promise<void>>(),
   settingsInitialize: vi.fn<() => Promise<void>>(),
+  settingsControllers: vi.fn(() => ({})),
   nativeDispose: vi.fn<() => Promise<void>>(),
   foreground: vi.fn<() => Promise<{ status: 'foregroundChanged' }>>(),
   window: vi.fn<() => Promise<void>>(),
@@ -54,7 +55,7 @@ vi.mock('./platform/macos/macos-selection', () => ({
 }));
 vi.mock('./storage/desktop-services', () => ({ storageDesktopServices: () => ({}) }));
 vi.mock('./settings/electron-controllers', () => ({
-  electronSettingsControllers: () => ({}),
+  electronSettingsControllers: owned.settingsControllers,
   updateWindowBackgrounds: vi.fn()
 }));
 vi.mock('./settings/service', () => ({
@@ -75,9 +76,7 @@ vi.mock('./windows/window-lifecycle', () => ({
   }
 }));
 
-afterEach(() => {
-  vi.restoreAllMocks();
-});
+afterEach(() => vi.restoreAllMocks());
 
 it
   .skipIf(!['win32', 'darwin'].includes(process.platform))
@@ -117,6 +116,12 @@ it
       error
     );
     expect(owned.storageClose).toHaveBeenCalledOnce();
+    if (failure === 'storage') {
+      expect(owned.settingsControllers).not.toHaveBeenCalled();
+      expect(owned.settingsInitialize).not.toHaveBeenCalled();
+      expect(owned.window).not.toHaveBeenCalled();
+    }
+
     expect(owned.exit).not.toHaveBeenCalled();
     const preventDefault = vi.fn();
 
