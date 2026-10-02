@@ -10,6 +10,7 @@ import { seedSearchCorpus } from './search-corpus';
 import { measureSearchInvalidations } from './search-invalidations';
 import { startSearchProfiler } from './search-profiler';
 import { summarizeSearchSamples } from './search-statistics';
+import { finishSearchTrace, prepareSearchTrace } from './search-trace';
 import { assertVisibleSearch } from './search-visibility';
 
 test('10k input-to-painted React results via named IPC and the packaged worker', async ({
@@ -27,6 +28,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
       : path.join(packaged, 'resources/app.asar');
   const env: Record<string, string> = {
     PROMPTLY_SEARCH_DATABASE: filename,
+    PROMPTLY_SEARCH_TRACE_PATH: testInfo.outputPath('search-chromium-trace.json'),
     PROMPTLY_SEARCH_WORKER: path.join(asar, '.vite/build/storage-worker.cjs')
   };
 
@@ -46,6 +48,8 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
   });
   try {
     const page = await application.firstWindow();
+
+    await prepareSearchTrace(page);
     const finishProfile = await startSearchProfiler(page, testInfo);
 
     await expect(page.getByTestId('ready')).toHaveText('0');
@@ -129,6 +133,8 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
           });
         }
       }
+
+      if (pass === 1) await finishSearchTrace(application, testInfo);
     }
 
     await input.fill('');
@@ -147,6 +153,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
     const evidence = {
       browserName,
       diagnosticProfile: process.env['PROMPTLY_SEARCH_PROFILE'] === '1',
+      diagnosticTrace: process.env['PROMPTLY_SEARCH_TRACE'] === '1',
       hardware: {
         platform: process.platform,
         cpu: cpus()[0]?.model,

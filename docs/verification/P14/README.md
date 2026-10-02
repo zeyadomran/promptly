@@ -9,8 +9,9 @@ head remain required; local timing alone does not establish that.
 The [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
 preview Windows CI failure (85.4 ms), passing Mac receipt (49.2 ms), profiler
 diagnostics and rejected numeric transport. The native-helper/shutdown main
-`9b13dd0` is merged. Fresh ordinary CI at this performance-fix head is pending;
-local success does not establish both-OS qualification.
+`9b13dd0` is merged. Ordinary CI at `843b4eb` failed both OS (Mac 155.2 ms, Windows 77.8 ms);
+qualification is unresolved. See the retained receipts and trace plan in the
+diagnosis document. Local success does not establish both-OS qualification.
 
 ## Native highlights and compiled filters, 2026-10-02
 

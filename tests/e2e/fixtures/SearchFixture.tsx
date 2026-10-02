@@ -2,6 +2,7 @@ import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import { useSearch } from '../../../src/renderer/features/search/hooks/use-search';
 import { FixtureResult } from './FixtureResult';
+import { traceSearchPhase } from './trace-search-phase';
 
 /** Test-only input -> named IPC -> packaged worker -> real React DOM -> paint fixture. */
 export function SearchFixture() {
@@ -12,7 +13,11 @@ export function SearchFixture() {
     () => ({
       searchSnippets: async (request: Parameters<typeof window.promptly.searchSnippets>[0]) => {
         const started = performance.now();
+
+        traceSearchPhase('bridge-request', { query: request.query });
         const reply = await window.promptly.searchSnippets(request);
+
+        traceSearchPhase('bridge-reply', { query: request.query });
 
         timings.current = {
           bridgeMs: performance.now() - started,
@@ -53,10 +58,14 @@ export function SearchFixture() {
       return;
     const started = inputAt.current;
     const committed = performance.now();
+
+    traceSearchPhase('react-commit', { query });
     let second = 0;
     const first = requestAnimationFrame(() => {
+      traceSearchPhase('first-frame', { query });
       // Between consecutive frame callbacks, Chromium paints the committed result DOM.
       second = requestAnimationFrame(() => {
+        traceSearchPhase('second-frame', { query });
         if (inputAt.current === started)
           setPaint({
             query,
@@ -86,6 +95,10 @@ export function SearchFixture() {
             aria-label="Search"
             value={query}
             onChange={(event) => {
+              traceSearchPhase('input', {
+                query: event.target.value,
+                inputTimestamp: event.timeStamp
+              });
               inputAt.current = event.timeStamp;
               setPaint(undefined);
               setQuery(event.target.value);

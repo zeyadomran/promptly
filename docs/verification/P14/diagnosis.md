@@ -65,3 +65,42 @@ nonzero geometry and actual matching background pixels for every occurrence,
 including leading and later terms. Browser selection text remains complete.
 The two-process production CSP test additionally checks native highlight paint
 with both actual light and dark theme colors.
+
+
+## Native highlight CI: unresolved failures at 843b4eb
+
+Run 36985751096 failed both OS. The [Mac receipt](incomplete/macos-native-highlights-ci-failure-843b4eb.json)
+shows first `i`155.2 ms: bridge13.7, worker3.07, React5.9, frame wait134.4.
+Every other query max was at most45.7 ms; rapid46.2, complete highlight27.2,
+mutations at most36.5. This demonstrates the long interval followed the React
+commit; it does not establish why Chromium's callbacks were delayed.
+
+The [Windows receipt](incomplete/windows-native-highlights-ci-failure-843b4eb.json)
+shows max77.8 ms (warm `e`: bridge57.0, worker1.64, React4.9, frame14.7), first
+`i`68.4 (bridge49.5, including14.85 total response validation), first `re`70.4,
+no-match62.4, Unicode63.6. Complete highlighting39.0, rapid23.1 and mutations
+at most35.8 passed. Bridge and worker wall time still varied materially despite
+small matching/DOM costs; queueing, serialization, process scheduling and main
+thread work cannot be distinguished from those aggregate values alone.
+
+Code-identical prior10b run36985287238 [Mac passed](macos-native-highlights-ci-10b47c3.json)
+(max query44.1, rapid47.2), while its Windows job was cancelled by the subsequent
+push after emitting a [failing search receipt](incomplete/windows-native-highlights-ci-failure-10b47c3.json):
+max64.5, first `re`64.0 and no-match62.5. Neither a cancelled job nor the passing
+Mac sample qualifies both OS. These are consecutive naturally triggered runs;
+no failed gate was rerun solely to obtain a success receipt.
+
+The next diagnostic-only CI step runs once after a failed ordinary packaged gate,
+with a separate temporary output directory and separate artifact. Original
+ordinary failure and receipts remain intact. No product code, readiness waits,
+query samples, frame flags, deadlines or performance gate are changed.
+[Electron contentTracing](https://www.electronjs.org/docs/latest/api/content-tracing)
+records restricted timeline/compositor/IPC categories, bounded to32 MiB and10 s,
+from before creation of the owned fixture window until two query passes finish
+(or the time limit). Fixture phase marks identify input, bridge request/reply,
+React commit and each frame callback. Main IPC receive/reply epoch timestamps,
+window creation/loading/show/focus/visibility/bounds/background-throttling events,
+font readiness, renderer visibility/focus, long tasks and passive frame cadence
+will distinguish startup/presentation readiness from runtime queue/CPU work.
+These instrumented measurements are explicitly nonqualifying. A robust fix must
+follow the resulting trace evidence; no root cause is claimed yet.

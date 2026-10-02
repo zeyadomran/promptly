@@ -1,17 +1,19 @@
 import { EventEmitter } from 'node:events';
 import path from 'node:path';
 
-import { app, ipcMain } from 'electron';
+import { app } from 'electron';
 
 import { installDesktopIpc } from '../../../src/main/ipc/install-desktop-ipc';
 import { createQuitCoordinator } from '../../../src/main/lifecycle/quit-coordinator';
 import { StorageClient } from '../../../src/main/storage/client';
 import { storageDesktopServices } from '../../../src/main/storage/desktop-services';
 import { createMainWindow } from '../../../src/main/windows/create-main-window';
+import { searchFixtureIpc, startSearchStartupTrace } from './search-startup-trace';
 
 let storage: StorageClient | undefined;
 
 void app.whenReady().then(async () => {
+  await startSearchStartupTrace();
   const filename = process.env['PROMPTLY_SEARCH_DATABASE'];
   const workerFile = process.env['PROMPTLY_SEARCH_WORKER'];
 
@@ -45,7 +47,7 @@ void app.whenReady().then(async () => {
       database: path.basename(filename)
     })
   );
-  const desktop = installDesktopIpc(ipcMain, storageDesktopServices(storage), revision);
+  const desktop = installDesktopIpc(searchFixtureIpc(), storageDesktopServices(storage), revision);
 
   const window = await createMainWindow(desktop.windows);
 
