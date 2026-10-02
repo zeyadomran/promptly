@@ -23,6 +23,8 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
   let release: (() => void) | undefined;
   let hold = false;
   let missing = false;
+  let writeHold = false;
+  let finishWrite: (() => void) | undefined;
   const session = new SnippetSession({
     getSnippet: ({ id }) => {
       if (missing)
@@ -46,8 +48,19 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     updateSnippet: ({ id, text }) => {
       const snippet = { ...(records.get(id) ?? first), text };
 
-      records.set(id, snippet);
-      return Promise.resolve({ ok: true, value: { revision: 2, snippet } });
+      const persisted = { ok: true as const, value: { revision: 2, snippet } };
+
+      if (!writeHold) {
+        records.set(id, snippet);
+        return Promise.resolve(persisted);
+      }
+
+      return new Promise((resolve) => {
+        finishWrite = () => {
+          records.set(id, snippet);
+          resolve(persisted);
+        };
+      });
     }
   });
 
@@ -81,7 +94,27 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     expect(session.snapshot().draft).toBe('Preserved draft');
     session.warnModeChange();
     expect(session.snapshot().prompt).toBe(true);
-    expect(await session.save()).toBe(true);
+    session.select(first.id);
+    writeHold = true;
+    const saving = session.save();
+
+    hold = true;
+    session.refresh();
+    hold = false;
+    finishWrite?.();
+    expect(await saving).toBe(true);
+    writeHold = false;
+    session.edit();
+    release?.();
+    await Promise.resolve();
+    expect(session.snapshot()).toMatchObject({
+      snippet: { text: 'Preserved draft' },
+      draft: 'Preserved draft',
+      conflict: false
+    });
+    expect(session.dirty).toBe(false);
+    session.discard();
+    session.select(second.id);
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.id).toBe(second.id);
     });

@@ -13,7 +13,7 @@ export interface LibraryTagActions {
   editSelectedTags(id: string, trigger?: HTMLElement): void;
   removeTag?(snippetId: string, tagId: string): Promise<void>;
   readonly busy?: boolean;
-  readonly error?: string;
+  readonly error?: string | undefined;
 }
 export const LibraryCommandsContext = createContext<LibraryCommandsPort | undefined>(undefined);
 export const LibraryTagActionsContext = createContext<LibraryTagActions | undefined>(undefined);

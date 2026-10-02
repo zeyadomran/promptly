@@ -99,6 +99,8 @@ export function createDesktopBridge(
     duplicateSnippet: (request) => call('duplicateSnippet', request),
     copySnippet: (request) => call('copySnippet', request),
     setSnippetTags: (request) => call('setSnippetTags', request),
+    setTagMembership: (request) => call('setTagMembership', request),
+    ensureTag: (request) => call('ensureTag', request),
     listTags: (request) => call('listTags', request),
     createTag: (request) => call('createTag', request),
     updateTag: (request) => call('updateTag', request),

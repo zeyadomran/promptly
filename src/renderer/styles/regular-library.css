@@ -107,25 +107,6 @@
   flex-wrap: wrap;
   gap: 6px;
 }
-.preview-tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 7px;
-  border: 1px solid var(--border);
-  border-radius: 5px;
-  font-size: 11.5px;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-.preview-tag button {
-  width: 16px;
-  height: 16px;
-}
-.preview-tag svg {
-  width: 10px;
-  height: 10px;
-}
 .preview-add-tag {
   border-style: dashed;
   color: var(--muted-foreground);

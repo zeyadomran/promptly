@@ -55,6 +55,7 @@ export class SnippetSession {
   }
   edit(): void {
     if (this.state.snippet === null || this.state.loading) return;
+    this.refreshVersion += 1;
     this.publish({ editing: true, draft: this.state.snippet.text, error: undefined });
   }
   change(draft: string): void {
@@ -96,6 +97,7 @@ export class SnippetSession {
         return false;
       }
 
+      this.refreshVersion += 1;
       this.publish({
         snippet: result.value.snippet,
         draft: text,

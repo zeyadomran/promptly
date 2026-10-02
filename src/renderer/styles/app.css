@@ -9,6 +9,7 @@
 @import './shortcuts.css';
 @import './library.css';
 @import './regular-library.css';
+@import './tag-picker.css';
 @import './storage.css';
 
 :root {

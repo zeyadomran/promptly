@@ -21,6 +21,8 @@ export const storageOperations = {
   deleteSnippet: operations.deleteSnippet,
   undoDeleteSnippet: operations.undoDeleteSnippet,
   setSnippetTags: operations.setSnippetTags,
+  setTagMembership: operations.setTagMembership,
+  ensureTag: operations.ensureTag,
   listTags: operations.listTags,
   createTag: operations.createTag,
   updateTag: operations.updateTag,

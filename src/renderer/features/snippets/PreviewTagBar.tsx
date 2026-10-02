@@ -1,9 +1,9 @@
-import { Plus, X } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import type { Snippet } from '../../../shared/contracts/domain';
 import { Button } from '../../components/ui/button';
-import { tagColorClasses } from '../../lib/tag-palette';
 import { useLibraryTagActions } from '../library/library-commands';
+import { TagBadge } from '../tags/TagBadge';
 
 /** The shared picker owns all mutations; this surface only supplies entrypoints. */
 export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
@@ -12,23 +12,19 @@ export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
   return (
     <div className="preview-tag-bar" aria-label="Snippet tags">
       {snippet.tags.map((tag) => (
-        <span key={tag.id} className={`preview-tag ${tagColorClasses[tag.color]}`}>
-          {tag.name}
-          {tags?.removeTag !== undefined && (
-            <Button
-              variant="ghost"
-              size="icon-xs"
-              disabled={tags.busy}
-              aria-label={`Remove ${tag.name} tag`}
-              onClick={(event) => {
-                event.stopPropagation();
-                void tags.removeTag?.(snippet.id, tag.id);
-              }}
-            >
-              <X aria-hidden="true" />
-            </Button>
-          )}
-        </span>
+        <TagBadge
+          key={tag.id}
+          name={tag.name}
+          color={tag.color}
+          disabled={tags?.busy ?? false}
+          {...(tags?.removeTag === undefined
+            ? {}
+            : {
+                onRemove: () => {
+                  void tags.removeTag?.(snippet.id, tag.id);
+                }
+              })}
+        />
       ))}
       <Button
         variant="outline"

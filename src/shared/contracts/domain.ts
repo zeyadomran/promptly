@@ -22,7 +22,12 @@ export const tagNameSchema = z
   .string()
   .min(1)
   .max(64)
-  .refine((name) => name === name.trim().toLowerCase());
+  .refine((name) => name === name.trim().toLowerCase())
+  .refine((name) => !/[\uD800-\uDFFF]/u.test(name), 'Use well-formed Unicode.');
+export const tagInputNameSchema = z
+  .string()
+  .transform((name) => name.trim().toLowerCase())
+  .pipe(tagNameSchema);
 export const tagSchema = z.strictObject({
   id: idSchema,
   name: tagNameSchema,
