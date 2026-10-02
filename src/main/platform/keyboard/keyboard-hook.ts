@@ -43,7 +43,7 @@ export class NativeKeyboardHook implements KeyboardHook {
       const failed = () => {
         clearTimeout(timer);
         if (this.child === child) {
-          this.current.installed = false;
+          this.current = { installed: false, accessibility: null, inputMonitoring: null };
           this.child = undefined;
           this.receive({ kind: 'reset', timeMs: 0 });
           this.retire(child);
@@ -97,7 +97,14 @@ export class NativeKeyboardHook implements KeyboardHook {
               this.receive({ kind: 'reset', timeMs: frame.timeMs });
             } else this.receive(frame);
             lastTime = frame.timeMs;
-            if (frame.kind === 'reset') this.current.installed = false;
+            if (frame.kind === 'health')
+              this.current = {
+                installed: this.current.installed && frame.installed,
+                accessibility: frame.accessibility,
+                inputMonitoring: frame.inputMonitoring
+              };
+            if (frame.kind === 'reset')
+              this.current = { installed: false, accessibility: null, inputMonitoring: null };
             newline = buffer.indexOf(10);
           }
 
@@ -118,7 +125,7 @@ export class NativeKeyboardHook implements KeyboardHook {
     const child = this.child;
 
     this.child = undefined;
-    this.current.installed = false;
+    this.current = { installed: false, accessibility: null, inputMonitoring: null };
     this.receive({ kind: 'reset', timeMs: 0 });
     this.retire(child);
     await Promise.all(this.retiring);

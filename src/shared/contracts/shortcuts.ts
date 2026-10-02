@@ -12,6 +12,13 @@ export const hookFrameSchema = z.discriminatedUnion('kind', [
     inputMonitoring: z.boolean().nullable()
   }),
   z.strictObject({
+    kind: z.literal('health'),
+    installed: z.boolean(),
+    timeMs: z.number().nonnegative(),
+    accessibility: z.boolean().nullable(),
+    inputMonitoring: z.boolean().nullable()
+  }),
+  z.strictObject({
     kind: z.literal('modifiers'),
     mask: z.number().int().min(0).max(255),
     repeat: z.boolean(),

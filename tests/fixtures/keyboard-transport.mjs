@@ -18,6 +18,16 @@ else if (mode !== 'timeout') {
     setTimeout(() => {
       emit({ kind: 'reset', timeMs: 20 });
     }, 20);
+  if (mode === 'revoked')
+    setTimeout(() => {
+      emit({
+        kind: 'health',
+        installed: false,
+        accessibility: false,
+        inputMonitoring: false,
+        timeMs: 20
+      });
+    }, 20);
 }
 
 process.stdin.resume();

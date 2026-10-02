@@ -3,6 +3,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { launchIsolatedElectron } from '../isolated-electron';
+import { observeShortcutDelivery } from './shortcut-delivery-probe';
 import { createShortcutDriver } from './shortcut-driver';
 
 test('real OS shortcut delivery toggles visibility and persists pin while capture is paused', async () => {
@@ -19,11 +20,13 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
   );
   const isolated = await launchIsolatedElectron(executable, env);
   const application = isolated.application;
+  let save: ((phase: string) => Promise<void>) | undefined;
 
   try {
     const page = await application.firstWindow();
 
     await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    save = await observeShortcutDelivery(application, page);
     expect(
       await page.evaluate(() =>
         window.promptly.updateSettings({
@@ -44,6 +47,8 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
     });
     const send = await createShortcutDriver(application);
 
+    await save('before-send');
+
     expect(await send('pin')).toEqual({
       status: 'sent',
       ownedForeground: true,
@@ -52,6 +57,7 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
     await expect
       .poll(() => page.evaluate(() => window.promptly.getSettings({})))
       .toMatchObject({ ok: true, value: { settings: { alwaysOnTop: true } } });
+    await save('pin-committed');
     expect(await send('open')).toEqual({
       status: 'sent',
       ownedForeground: true,
@@ -79,6 +85,7 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
       value: { captureHandlerAvailable: false }
     });
   } finally {
+    await save?.('final').catch(() => undefined);
     await isolated.dispose();
   }
 });

@@ -39,7 +39,7 @@ export class DoubleTap {
       return;
     }
 
-    if (frame.kind === 'reset') {
+    if (frame.kind === 'reset' || frame.kind === 'health') {
       this.reset(this.held);
       return;
     }

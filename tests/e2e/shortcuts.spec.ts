@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test';
 
 import { launchIsolatedElectron } from '../isolated-electron';
 import { writeWindowReceipt } from './native-window-receipt';
+import { observeShortcutDelivery } from './shortcut-delivery-probe';
 
 test('packaged OS registration, conflict rollback, capture pause and owned recorder recovery', async () => {
   const executable = path.resolve(
@@ -24,6 +25,7 @@ test('packaged OS registration, conflict rollback, capture pause and owned recor
     const page = await application.firstWindow();
 
     await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    const save = await observeShortcutDelivery(application, page);
     const initial = await page.evaluate(() => window.promptly.getShortcutStatus({}));
     const actual = await application.evaluate(({ globalShortcut }) =>
       globalShortcut.isRegistered('Alt+Space')
@@ -102,6 +104,7 @@ test('packaged OS registration, conflict rollback, capture pause and owned recor
       ok: true,
       value: { captureHandlerAvailable: false }
     });
+    await save('registration-recorder');
   } finally {
     await application
       .evaluate(({ globalShortcut }) => {

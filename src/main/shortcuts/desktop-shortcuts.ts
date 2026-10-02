@@ -8,6 +8,7 @@ import {
 import type { SettingsService } from '../settings/service';
 import type { WindowLifecycle } from '../windows/window-lifecycle';
 import { CaptureTrigger } from './capture-trigger';
+import { reportShortcutCommand } from './command-receipt';
 import { CommandRunner } from './command-runner';
 import { Shortcuts } from './service';
 
@@ -29,9 +30,12 @@ export function createDesktopShortcuts(
         commands.run(
           'open',
           async () => {
+            reportShortcutCommand({ action: 'open', phase: 'requested' });
             await lifecycle()?.toggle();
+            reportShortcutCommand({ action: 'open', phase: 'completed' });
           },
           () => {
+            reportShortcutCommand({ action: 'open', phase: 'failed', errorCode: 'UNAVAILABLE' });
             lifecycle()?.recoverVisibility();
           }
         );
@@ -42,12 +46,23 @@ export function createDesktopShortcuts(
           async () => {
             const preferences = settings();
 
-            if (preferences !== undefined)
-              await preferences.services.updateSettings({
+            reportShortcutCommand({ action: 'pin', phase: 'requested' });
+            if (preferences !== undefined) {
+              const result = await preferences.services.updateSettings({
                 alwaysOnTop: !preferences.current.settings.alwaysOnTop
               });
+
+              reportShortcutCommand(
+                result.ok
+                  ? { action: 'pin', phase: 'completed' }
+                  : { action: 'pin', phase: 'failed', errorCode: result.error.code }
+              );
+            } else
+              reportShortcutCommand({ action: 'pin', phase: 'failed', errorCode: 'UNAVAILABLE' });
           },
-          () => undefined
+          () => {
+            reportShortcutCommand({ action: 'pin', phase: 'failed', errorCode: 'INTERNAL' });
+          }
         );
       }
     },
@@ -76,11 +91,16 @@ export function createDesktopShortcuts(
   }
 
   const suspend = () => {
-    void shortcuts.sleep();
+    void shortcuts.sleep().catch(() => {
+      console.warn('Unable to suspend shortcut listener.');
+    });
   };
 
   const resume = () => {
-    void shortcuts.resume();
+    void shortcuts.resume().catch(() => {
+      console.warn('Unable to resume shortcut listener.');
+      lifecycle()?.recoverVisibility();
+    });
   };
 
   powerMonitor.on('suspend', suspend);

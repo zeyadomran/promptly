@@ -10,6 +10,7 @@ export interface AcceleratorApi {
 /** Retain old OS registrations until every newly required registration succeeds. */
 export class Accelerators {
   private active = new Map<string, Binding>();
+  private readonly owned = new Map<string, Binding>();
   private quarantined = false;
 
   constructor(
@@ -50,7 +51,11 @@ export class Accelerators {
           if (!this.quarantined && current !== undefined) this.dispatch(current.action);
         });
 
-        if (registered) added.push(binding);
+        if (registered) {
+          added.push(binding);
+          this.owned.set(binding.accelerator, binding);
+        }
+
         if (!registered || !this.api.isRegistered(binding.accelerator)) {
           if (initial) continue;
           throw new Error('The operating system did not register this shortcut.');
@@ -59,23 +64,28 @@ export class Accelerators {
         retained.set(binding.key, binding);
       }
     } catch (error) {
-      try {
-        for (const binding of added) this.remove(binding);
-      } catch {
+      const rollbackErrors = this.removeAll(added);
+
+      if (rollbackErrors.length > 0) {
         this.quarantine();
+        throw new AggregateError([error, ...rollbackErrors], 'Shortcut rollback failed.', {
+          cause: error
+        });
       }
 
       throw error;
     }
 
-    try {
-      for (const binding of this.active.values())
-        if (!retained.has(binding.key)) this.remove(binding);
-      this.active = retained;
-    } catch {
+    const errors = this.removeAll(
+      [...this.active.values()].filter((binding) => !retained.has(binding.key))
+    );
+
+    if (errors.length > 0) {
       this.quarantine();
-      throw new Error('Unable to restore shortcut registrations.');
+      throw new AggregateError(errors, 'Unable to restore shortcut registrations.');
     }
+
+    this.active = retained;
   }
 
   suspend(suspended: boolean): void {
@@ -92,14 +102,7 @@ export class Accelerators {
       errors.push(error);
     }
 
-    for (const binding of this.active.values()) {
-      try {
-        this.remove(binding);
-      } catch (error) {
-        errors.push(error);
-      }
-    }
-
+    errors.push(...this.removeAll(this.owned.values()));
     this.active.clear();
     if (errors.length > 0) throw new AggregateError(errors, 'Shortcut cleanup failed.');
   }
@@ -107,6 +110,21 @@ export class Accelerators {
   private remove(binding: Binding): void {
     this.api.unregister(binding.accelerator);
     if (this.api.isRegistered(binding.accelerator)) throw new Error('Shortcut unregister failed.');
+    this.owned.delete(binding.accelerator);
+  }
+
+  private removeAll(bindings: Iterable<Binding>): unknown[] {
+    const errors: unknown[] = [];
+
+    for (const binding of [...bindings]) {
+      try {
+        this.remove(binding);
+      } catch (error) {
+        errors.push(error);
+      }
+    }
+
+    return errors;
   }
 
   quarantine(): void {

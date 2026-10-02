@@ -10,6 +10,8 @@ final class KeyboardTap {
     private var source: CFRunLoopSource?
     private var healthTimer: CFRunLoopTimer?
     private var previous = 0
+    private var lastListening = false
+    private var lastAccessible = false
 
     init(output: EventQueue) { self.output = output }
 
@@ -20,6 +22,8 @@ final class KeyboardTap {
     func start() {
         let listening = CGPreflightListenEventAccess()
         let accessible = AXIsProcessTrusted()
+        lastListening = listening
+        lastAccessible = accessible
         previous = PhysicalModifiers.initial()
         let events = (CGEventMask(1) << CGEventType.keyDown.rawValue)
             | (CGEventMask(1) << CGEventType.keyUp.rawValue)
@@ -62,10 +66,15 @@ final class KeyboardTap {
 
     func checkHealth() {
         guard let port else { return }
-        if !CGEvent.tapIsEnabled(tap: port) || !CGPreflightListenEventAccess() || IsSecureEventInputEnabled() {
-            output.offer("{\"kind\":\"reset\",\"timeMs\":\(time)}", time: time)
-            stop()
+        let listening = CGPreflightListenEventAccess()
+        let accessible = AXIsProcessTrusted()
+        let installed = CGEvent.tapIsEnabled(tap: port) && listening && !IsSecureEventInputEnabled()
+        if !installed || listening != lastListening || accessible != lastAccessible {
+            output.offer("{\"kind\":\"health\",\"installed\":\(installed),\"timeMs\":\(time),\"accessibility\":\(accessible),\"inputMonitoring\":\(listening)}", time: time)
+            lastListening = listening
+            lastAccessible = accessible
         }
+        if !installed { stop() }
     }
 
     func stop() {

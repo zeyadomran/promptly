@@ -14,7 +14,28 @@ Local Windows 11 x64 verification passed:
 - The final owned Windows delivery driver compiled with warnings as errors;
   it was not launched again after the local foreground denial.
 
-Hosted Windows/macOS CI and Astra review are pending at implementation handoff.
+At initial head `edd748b`, hosted run 36994861653 passed the complete Windows
+foundation lane, including actual shortcut delivery. macOS native decoding,
+hook installation and registration/recorder cases passed, but pin remained false
+after the driver reported posted input. That receipt does not establish callback
+delivery. The original failure artifact is retained; the next diagnostic head keeps
+the same driver and the required pin/hide/show assertions and adds bounded callback,
+command-result, native pin, durable preference and registration/suspension receipts.
+No synthetic input is counted as physical hardware qualification.
+
+Review corrections add independent ownership for every successfully registered
+binding, all-attempted rollback cleanup and late-close retry; fresh permission-loss
+snapshots; recorder release during shutdown without resuming commands; recovery
+after a lost resume registration; and generation-ordered native transitions so a
+newer suspend wins over a late resume. All 260 tests in 57 files and strict checks
+passed after these corrections (268 handwritten modules). Fresh hosted evidence
+and review remain pending.
+The corrected Windows package and three focused decoder/hook/registration-recorder
+cases also passed. The observer installed against actual Electron registrations and
+saved its receipt; no new local delivery attempt was made. The test diagnostic
+observer keeps only scalar counters (capped at 1024) and the last command outcome.
+Main emits sanitized command phases only when an app-local listener exists; it
+retains no history and adds no renderer API or product controls.
 
 Owned fixtures always use isolated temporary profiles. Decoder fixtures construct
 native events without posting input; they test the production eight-side decoding,

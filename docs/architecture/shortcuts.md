@@ -5,6 +5,8 @@
 New registrations succeed before old registrations are released; rejected OS
 registration, in-app aliases and SQLite rejection restore previous bindings.
 Failed rollback quarantines callbacks and future preference mutations until restart.
+Ownership is tracked independently of active dispatch: every rollback removal is
+attempted and failed unregisters remain owned for later shutdown retry.
 Startup reports requested defaults separately from actual registration: Windows
 Alt+Space is permitted to be unavailable. Window recovery uses actual show/hide
 registration and excludes recording, sleep and shutdown.
@@ -13,6 +15,7 @@ Capture pause gates only capture. Recorder ownership suspends all Electron
 shortcuts and modifier recognition; each authorized WebContents owns its scope.
 Completion, renderer destruction, main-frame navigation and renderer failure
 release that owner. Resets, overflow, sleep and fresh hook sessions retain owners.
+Owner release during shutdown stays idempotent without re-enabling shortcuts.
 The recorder UI belongs to P20; the scoped API is available for its future lifetime.
 
 The dedicated keyboard helper never shares AX/UIA selection transport. Windows
@@ -33,6 +36,9 @@ pairs within the configured 150–600 ms release interval. Overlap, another modi
 ordinary typing, repeated presses and holds cancel the sequence. Preference changes
 and resume reset timing. A fresh session snapshot cannot turn an already-held key
 into a first tap.
+Native lifecycle transitions serialize with generations; a newer suspend retires
+an old resume before another session can start. Losing the registered reopen route
+on resume makes the existing window reachable.
 
 Main commands toggle the existing `WindowLifecycle` and persist the shared pin
 through SettingsService. The narrow capture gateway remains without a handler until
@@ -44,6 +50,8 @@ another cleanup fails.
 
 macOS reports actual Accessibility and Input Monitoring without requesting unrelated
 permissions. Permission loss, Secure Input and tap disablement invalidate the tap.
+Periodic checks publish changed permission snapshots; bare loss/retirement makes
+unknown permissions explicit rather than retaining a stale granted value.
 Combinations remain independently available. Windows hook installation is reported
 honestly; the OS does not provide definitive detection of silent timeout removal.
 Physical hardware delivery and permission transitions require qualification.

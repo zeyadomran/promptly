@@ -5,6 +5,7 @@ import type { SettingsController } from '../settings/controllers';
 import { type AcceleratorApi, Accelerators } from './accelerators';
 import { bindings, type ShortcutAction } from './bindings';
 import { DoubleTap } from './double-tap';
+import { HookSession } from './hook-session';
 import { shortcutController } from './settings-controller';
 import { shortcutStatus } from './status';
 
@@ -21,9 +22,8 @@ export class Shortcuts {
   private preferences: Settings | undefined;
   private readonly recorders = new Set<number>();
   private paused = false;
-  private sleeping = false;
   private closing = false;
-  private hook: KeyboardHook | undefined;
+  private readonly session: HookSession;
 
   constructor(
     api: AcceleratorApi,
@@ -37,12 +37,22 @@ export class Shortcuts {
     this.taps = new DoubleTap('shift', 300, () => {
       this.dispatch('capture');
     });
+    this.session = new HookSession(
+      () => {
+        this.taps.reset();
+      },
+      () => {
+        if (this.preferences !== undefined)
+          this.accelerators.replace(bindings(this.preferences, this.platform), true);
+        if (!this.accelerators.registered('open')) this.recover();
+      }
+    );
     this.controller = shortcutController({
       previous: () => this.preferences,
       commit: (settings) => {
         this.preferences = settings;
       },
-      hook: () => this.hook,
+      hook: () => this.session.hook,
       recording: () => this.recorders.size > 0,
       accelerators: this.accelerators,
       taps: this.taps,
@@ -52,7 +62,7 @@ export class Shortcuts {
   }
 
   attachHook(hook: KeyboardHook): void {
-    this.hook = hook;
+    this.session.hook = hook;
   }
 
   readonly controller: SettingsController;
@@ -60,7 +70,7 @@ export class Shortcuts {
   receive(frame: HookFrame): void {
     if (
       this.blockedCapture ||
-      this.hook?.health.installed !== true ||
+      this.session.hook?.health.installed !== true ||
       this.preferences?.saveShortcut.kind !== 'double-tap'
     ) {
       this.taps.reset(
@@ -78,7 +88,13 @@ export class Shortcuts {
   }
 
   record(owner: number, active: boolean): void {
-    if (this.closing) throw new Error('Shortcuts are shutting down.');
+    if (this.closing) {
+      if (active) throw new Error('Shortcuts are shutting down.');
+      this.recorders.delete(owner);
+      this.taps.reset();
+      return;
+    }
+
     if (active) this.recorders.add(owner);
     else this.recorders.delete(owner);
     try {
@@ -106,7 +122,7 @@ export class Shortcuts {
   get recoveryAvailable(): boolean {
     return (
       !this.closing &&
-      !this.sleeping &&
+      !this.session.sleeping &&
       this.recorders.size === 0 &&
       this.accelerators.registered('open')
     );
@@ -115,10 +131,10 @@ export class Shortcuts {
   get status(): ShortcutStatus {
     return shortcutStatus(
       this.preferences,
-      this.hook?.health,
+      this.session.hook?.health,
       this.accelerators,
       {
-        sleeping: this.sleeping,
+        sleeping: this.session.sleeping,
         paused: this.paused,
         recording: this.recorders.size > 0,
         captureAvailable: this.commands.captureAvailable()
@@ -127,23 +143,12 @@ export class Shortcuts {
     );
   }
   async sleep(): Promise<void> {
-    this.sleeping = true;
-    this.taps.reset();
-    await this.hook?.stop();
+    await this.session.sleep();
   }
 
   async resume(): Promise<void> {
     if (this.closing) return;
-    await this.hook?.start();
-    if (this.isClosing) {
-      await this.hook?.stop();
-      return;
-    }
-
-    this.taps.reset();
-    if (this.preferences !== undefined)
-      this.accelerators.replace(bindings(this.preferences, this.platform), true);
-    this.sleeping = false;
+    await this.session.resume();
   }
 
   stopCommands(): void {
@@ -157,28 +162,24 @@ export class Shortcuts {
     try {
       this.accelerators.close();
     } finally {
-      await this.hook?.stop();
+      await this.session.close();
     }
   }
 
   private get blockedCapture(): boolean {
     return (
       this.closing ||
-      this.sleeping ||
+      this.session.sleeping ||
       this.paused ||
       this.recorders.size > 0 ||
       this.accelerators.failed
     );
   }
 
-  private get isClosing(): boolean {
-    return this.closing;
-  }
-
   private dispatch(action: ShortcutAction): void {
     if (
       this.closing ||
-      this.sleeping ||
+      this.session.sleeping ||
       this.recorders.size > 0 ||
       this.accelerators.failed ||
       (action === 'capture' && this.blockedCapture)

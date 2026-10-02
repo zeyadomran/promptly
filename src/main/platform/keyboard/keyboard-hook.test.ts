@@ -52,3 +52,30 @@ it('native reset marks the hook unavailable and restart observes a new owned ses
   expect(hook.health.installed).toBe(true);
   await hook.stop();
 });
+
+it('permission loss replaces startup permissions with the current native snapshot', async () => {
+  const hook = new NativeKeyboardHook(
+    () =>
+      spawn(process.execPath, [path.resolve('tests/fixtures/keyboard-transport.mjs'), 'revoked'], {
+        stdio: 'pipe',
+        windowsHide: true
+      }),
+    vi.fn()
+  );
+
+  try {
+    await hook.start();
+    expect(hook.health.inputMonitoring).toBe(true);
+    await vi.waitFor(() => {
+      expect(hook.health).toEqual({
+        installed: false,
+        accessibility: false,
+        inputMonitoring: false
+      });
+    });
+  } finally {
+    await hook.stop();
+  }
+
+  expect(hook.health).toEqual({ installed: false, accessibility: null, inputMonitoring: null });
+});
