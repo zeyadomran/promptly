@@ -3,6 +3,13 @@
 Status: **selected for production implementation; real-app release qualification incomplete**.
 Evidence date: 2026-10-02. Scope: P03 / issue #5. Disposable implementation: `experiments/native-capture/`.
 
+P09 now has a maintained [production Windows adapter](windows-selection.md) under
+`native/windows/` and `src/main/platform/windows/`, including packaged-helper
+integration, read-only warmup and watchdogs. Its narrower production protocol and
+live identity activation boundary are documented there. The disposable spike's
+keyboard/clipboard commands are not part of this production helper. Real-app
+qualification and full capture-to-toast latency remain open.
+
 ## Decision and stable boundary
 
 Use a persistent Swift helper on macOS and a small C# helper using the OS-installed .NET Framework on Windows. Both communicate only with Electron main through NDJSON v1 on inherited stdio. Ship executables outside ASAR through Forge `extraResource`; resolve the helper from a fixed application resource path, never from renderer input. The spike is unsigned; signing and notarization are explicitly left to the user.

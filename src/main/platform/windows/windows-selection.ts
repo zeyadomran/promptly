@@ -1,0 +1,130 @@
+import { spawn } from 'node:child_process';
+import path from 'node:path';
+
+import type { NativeCaptureReply, NativeSource } from '../../../shared/contracts/native-selection';
+import {
+  nativeActivationSchema,
+  nativeCaptureSchema,
+  nativeForegroundSchema,
+  nativeReadySchema
+} from '../../../shared/contracts/native-selection';
+import type { NativeProcessOptions, TransportFailure } from '../native/native-process';
+import { NativeProcess, NativeTransportError } from '../native/native-process';
+
+export interface WindowsIdentity {
+  readonly token: string;
+  readonly source: NativeSource | null;
+}
+export type WindowsCaptureResult = NativeCaptureReply | { status: TransportFailure };
+export interface WindowsSelectionOptions {
+  resourcesPath: string;
+  packaged: boolean;
+  applicationPath: string;
+}
+
+/** Paths originate in Electron main only. No renderer channel exposes this adapter. */
+export function windowsHelperPath(options: WindowsSelectionOptions): string {
+  return options.packaged
+    ? path.join(options.resourcesPath, 'promptly-windows.exe')
+    : path.join(options.applicationPath, 'native', 'windows', 'out', 'promptly-windows.exe');
+}
+
+export class WindowsSelection {
+  private readonly transport: NativeProcess;
+  private readiness: Promise<ReturnType<typeof nativeReadySchema.parse>> | undefined;
+  private readonly identities = new WeakSet<WindowsIdentity>();
+
+  constructor(options: NativeProcessOptions) {
+    this.transport = new NativeProcess(options);
+  }
+
+  ready(): Promise<ReturnType<typeof nativeReadySchema.parse>> {
+    if (!this.transport.running) this.readiness = undefined;
+    this.readiness ??= this.transport
+      .request(
+        'capabilities',
+        {},
+        (value) => {
+          const result = nativeReadySchema.parse(value);
+
+          if (!result.warmupReady) throw new NativeTransportError('helperUnavailable');
+          return result;
+        },
+        5000
+      )
+      .catch((error: unknown) => {
+        this.readiness = undefined;
+        throw error;
+      });
+    return this.readiness;
+  }
+
+  async foregroundIdentity(): Promise<WindowsIdentity | null> {
+    try {
+      await this.ready();
+      const result = await this.transport.request(
+        'foreground',
+        {},
+        (value) => nativeForegroundSchema.parse(value),
+        100
+      );
+
+      if (result.status !== 'ok') return null;
+      const identity = Object.freeze({ token: result.identity, source: result.source });
+
+      this.identities.add(identity);
+      return identity;
+    } catch {
+      this.readiness = undefined;
+      return null;
+    }
+  }
+
+  async captureSelection(identity: WindowsIdentity): Promise<WindowsCaptureResult> {
+    if (!this.identities.has(identity)) return { status: 'foregroundChanged', v: 1, id: 'local' };
+    try {
+      await this.ready();
+      return await this.transport.request(
+        'capture',
+        { identity: identity.token, includeText: true },
+        (value) => nativeCaptureSchema.parse(value),
+        100
+      );
+    } catch (error) {
+      this.readiness = undefined;
+      return { status: error instanceof NativeTransportError ? error.status : 'helperUnavailable' };
+    }
+  }
+
+  async activateSource(
+    identity: WindowsIdentity
+  ): Promise<ReturnType<typeof nativeActivationSchema.parse>['status'] | TransportFailure> {
+    if (!this.identities.has(identity)) return 'foregroundChanged';
+    try {
+      await this.ready();
+      const result = await this.transport.request(
+        'activate',
+        { identity: identity.token },
+        (value) => nativeActivationSchema.parse(value),
+        100
+      );
+
+      return result.status;
+    } catch (error) {
+      this.readiness = undefined;
+      return error instanceof NativeTransportError ? error.status : 'helperUnavailable';
+    }
+  }
+
+  dispose(): Promise<void> {
+    return this.transport.dispose();
+  }
+}
+
+export function createWindowsSelection(options: WindowsSelectionOptions): WindowsSelection {
+  const executable = windowsHelperPath(options);
+
+  return new WindowsSelection({
+    launch: () => spawn(executable, [], { windowsHide: true, stdio: 'pipe' })
+  });
+}
