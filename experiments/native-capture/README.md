@@ -24,6 +24,29 @@ Send one JSON request per newline to `out/promptly-native[.exe]`, for example `{
 
 The driver uses a separate, bounded 5-second process-launch-to-capabilities readiness deadline before ordinary requests. Its existing ordinary-request watchdog still kills a blocked helper after 2 seconds. This disposable feasibility budget is not the production adapter's 100-ms capture budget. Startup receipts report elapsed milliseconds, process/exit state and output byte counts without retaining output text; timeout/exit diagnostics use the same structured fields. A delayed-start regression reproduces startup taking more than the former shared 2-second timer.
 
+Owned fixture readiness also keeps its existing five-second deadline, but now
+settles on validated metadata, process error/exit, stream failure/closure or timeout.
+Metadata is limited to 4 KiB and a positive owned PID; output text is discarded.
+Direct-child cleanup waits for [Node's process-and-stdio `close` event](https://nodejs.org/download/release/latest-jod/docs/api/child_process.html#event-close),
+with 500 ms after SIGTERM and another 500 ms after SIGKILL. It reports failure if
+termination was not observed. macOS retains LaunchServices launch: its fixture
+writes a candidate PID sidecar immediately, and the driver verifies the live
+executable and fresh per-launch ready-file arguments before each signal. Each
+identity probe has a 200 ms bound; each termination phase polls for at most 500 ms.
+Missing or changed identity is reported as cleanup unverified without signaling
+that candidate. Readiness and cleanup receipts retain only stage/mode, timing,
+PID, exit/signal/error codes and byte counts. The native CI workflow retains
+`test-results/native-feasibility/fixture-lifecycle.json` on success or failure.
+See [the retained failure and follow-up evidence](../../docs/verification/P03/README.md).
+
+Windows owned fixtures emit flushed, fixed startup-stage markers on stderr from
+main entry through WPF construction, run/source initialization, Loaded/rendered
+events, metadata output and timer registration. The driver decodes at most 8 KiB
+and retains at most 32 validated stage/timing/HRESULT records; arbitrary stderr
+and exception messages are discarded. These markers diagnose a live fixture
+that times out without stdout. They do not change the five-second deadline or
+establish the cause of previous timeouts.
+
 It validates foreground mismatch, denied fallback, metadata-only counter observation, hook installation and Alt+Space registration probe. Durations are native capture time, not full capture-to-toast latency. A changing clipboard counter is reported as a concurrent change; the harness never restores old content over it.
 
 The safety driver launches a separate helper with `--protocol-fixtures`, rejects malformed capture options before any native selection call, and privately compares synthetic quote/control/Unicode-heavy payloads at the selection boundary. It prints only assertion counts. All helpers/client enforce the same 6,356,992-byte escaped-response budget for up to 1,048,576 UTF-16 selection units; overflow returns `selectionTooLarge` without truncation. Supplied PID must be a JSON integer in 1–2,147,483,647; supplied `includeText` must be a JSON boolean. Only omitted fields use defaults.
