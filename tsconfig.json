@@ -15,7 +15,10 @@
     "skipLibCheck": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "paths": {
+      "@/*": ["./src/renderer/*"]
+    }
   },
   "include": ["src", "tests/**/*.ts", "*.config.ts"]
 }

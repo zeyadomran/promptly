@@ -26,7 +26,7 @@ export async function buildIpcFixture(rendererUrl?: string): Promise<void> {
         formats: ['cjs'],
         fileName: () => 'ipc-fixture.cjs'
       },
-      rollupOptions: { external: ['electron', 'node:path', 'node:url'] }
+      rollupOptions: { external: ['electron', 'node:crypto', 'node:path', 'node:url'] }
     }
   });
 }

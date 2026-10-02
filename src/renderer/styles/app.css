@@ -1,13 +1,38 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
+@import './fonts.css';
+@import './tokens.css';
+@import './components.css';
 
 :root {
-  color: #09090b;
-  background: #ffffff;
-  font-family: system-ui, sans-serif;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 16px;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
 
 body {
   margin: 0;
+  font-size: 13.5px;
+}
+
+* {
+  border-color: var(--border);
+}
+
+svg.lucide {
+  stroke-width: 1.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
