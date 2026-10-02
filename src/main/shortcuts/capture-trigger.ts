@@ -1,13 +1,13 @@
 /** P11 installs the capture pipeline here. Triggering never focuses a window or fakes a save. */
 export class CaptureTrigger {
-  private handler: (() => Promise<void>) | undefined;
+  private handler: (() => () => Promise<void>) | undefined;
   private running = false;
 
   get available(): boolean {
     return this.handler !== undefined;
   }
 
-  install(handler: () => Promise<void>): () => void {
+  install(handler: () => () => Promise<void>): () => void {
     this.handler = handler;
     return () => {
       if (this.handler === handler) this.handler = undefined;
@@ -16,9 +16,11 @@ export class CaptureTrigger {
 
   fire(): void {
     if (this.running || this.handler === undefined) return;
+    const work = this.handler();
+
     this.running = true;
     void Promise.resolve()
-      .then(this.handler)
+      .then(work)
       .catch(() => undefined)
       .finally(() => {
         this.running = false;
