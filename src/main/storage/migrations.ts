@@ -1,5 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 
+import { defaultSettings } from '../../shared/contracts/settings';
+
 export interface Migration {
   version: number;
   sql: string;
@@ -31,6 +33,19 @@ export const migrations: readonly Migration[] = [
       );
       CREATE INDEX snippet_tags_tag ON snippet_tags(tagId, snippetId);
       CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+    `
+  },
+  {
+    version: 2,
+    sql: `
+      UPDATE settings SET value = '"always"' WHERE key = 'hideAfterCopy' AND value = 'true';
+      UPDATE settings SET value = '"never"' WHERE key = 'hideAfterCopy' AND value = 'false';
+      ${Object.entries(defaultSettings())
+        .map(
+          ([key, value]) =>
+            `INSERT OR IGNORE INTO settings (key, value) VALUES ('${key}', '${JSON.stringify(value).replaceAll("'", "''")}');`
+        )
+        .join('\n')}
     `
   }
 ];

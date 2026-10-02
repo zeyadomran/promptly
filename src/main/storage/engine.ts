@@ -1,5 +1,6 @@
 import type { ChangeEvent } from '../../shared/contracts/domain';
 import { failure, resultSchema } from '../../shared/contracts/result';
+import { SettingsRepository } from '../settings/repository';
 import { SnippetDelete } from '../snippets/snippet-delete';
 import { SnippetReader } from '../snippets/snippet-reader';
 import { SnippetWrites } from '../snippets/snippet-writes';
@@ -12,7 +13,8 @@ const reads = new Set<StorageOperation>([
   'getSnippet',
   'searchSnippets',
   'listTags',
-  'getRevision'
+  'getRevision',
+  'getSettings'
 ]);
 
 export class StorageEngine {
@@ -25,8 +27,18 @@ export class StorageEngine {
     const writes = new SnippetWrites(reader);
     const deletion = new SnippetDelete(writes);
     const tags = new TagRepository(reader);
+    let settings: SettingsRepository;
+
+    try {
+      settings = new SettingsRepository(this.context);
+    } catch (error) {
+      this.context.db.close();
+      throw error;
+    }
 
     this.handlers = {
+      getSettings: () => settings.read(),
+      updateSettings: (input) => settings.write(input),
       getSnippet: (input) => reader.snapshot(input.id),
       searchSnippets: (input) => reader.query(input),
       createSnippet: (input) => writes.create(input),
@@ -91,6 +103,8 @@ export class StorageEngine {
   }
 
   private change(operation: StorageOperation): ChangeEvent {
+    if (operation === 'updateSettings')
+      return { revision: this.context.revision(), domains: ['settings'] };
     const tagsOnly = operation === 'createTag' || operation === 'updateTag';
     const relationships = [
       'deleteSnippet',

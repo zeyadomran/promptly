@@ -99,7 +99,7 @@ describe('bounded main-owned delete snapshots', () => {
 
     store.invoke('createSnippet', { text: 'another' });
     store.invoke('createTag', { name: 'gone' });
-    store.engine.context.db.prepare('INSERT INTO settings VALUES (?, ?)').run('theme', 'dark');
+    store.invoke('updateSettings', { theme: 'dark' });
     store.invoke('clearLibrary', {});
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(0);
     expect(store.invoke('listTags', {}).tags).toEqual([]);
@@ -111,6 +111,6 @@ describe('bounded main-owned delete snapshots', () => {
       store.engine.context.db.prepare('SELECT value FROM settings WHERE key = ?').get('theme')?.[
         'value'
       ]
-    ).toBe('dark');
+    ).toBe('"dark"');
   });
 });

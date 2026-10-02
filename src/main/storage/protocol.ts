@@ -9,6 +9,8 @@ import type { DesktopResult } from '../../shared/contracts/result';
 import { captureInputSchema } from '../../shared/contracts/storage';
 
 export const storageOperations = {
+  getSettings: operations.getSettings,
+  updateSettings: operations.updateSettings,
   searchSnippets: operations.searchSnippets,
   getSnippet: operations.getSnippet,
   createSnippet: operations.createSnippet,

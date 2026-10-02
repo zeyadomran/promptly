@@ -22,21 +22,26 @@ describe('versioned atomic migrations', () => {
         migrate(db, [
           ...migrations,
           {
-            version: 2,
+            version: migrations.length + 1,
             sql: "CREATE TABLE added (id INTEGER); UPDATE settings SET value = 'changed';"
           },
-          { version: 3, sql: 'INSERT INTO nonexistent VALUES (1);' }
+          { version: migrations.length + 2, sql: 'INSERT INTO nonexistent VALUES (1);' }
         ]);
       }).toThrow();
       db.close();
       db = new DatabaseSync(filename);
-      expect(db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(1);
-      expect(db.prepare('SELECT value FROM settings').get()?.['value']).toBe('你好');
+      expect(db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(migrations.length);
+      expect(db.prepare("SELECT value FROM settings WHERE key = 'survives'").get()?.['value']).toBe(
+        '你好'
+      );
       expect(
         db.prepare("SELECT name FROM sqlite_master WHERE name = 'added'").get()
       ).toBeUndefined();
-      migrate(db, [...migrations, { version: 2, sql: 'CREATE TABLE added (id INTEGER);' }]);
-      expect(db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(2);
+      migrate(db, [
+        ...migrations,
+        { version: migrations.length + 1, sql: 'CREATE TABLE added (id INTEGER);' }
+      ]);
+      expect(db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(migrations.length + 1);
     } finally {
       db.close();
       rmSync(directory, { recursive: true, force: true });

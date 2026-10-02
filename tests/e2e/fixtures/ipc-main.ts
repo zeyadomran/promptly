@@ -1,7 +1,6 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import type { IpcMainInvokeEvent } from 'electron';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 import { installDesktopIpc } from '../../../src/main/ipc/install-desktop-ipc';
@@ -64,7 +63,7 @@ void app.whenReady().then(async () => {
       return !desktop.windows.isAuthorized({
         sender: first.webContents,
         senderFrame: child
-      } as IpcMainInvokeEvent);
+      });
     }
   };
 });
