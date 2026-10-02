@@ -2,7 +2,7 @@
 
 Build the supplied local-only macOS and Windows app using **Electron + React + TypeScript + Tailwind + shadcn/ui**.
 
-The [implementation plan](https://github.com/zeyadomran/promptly/blob/docs/v1-implementation-plan/docs/implementation-plan.md) defines architecture, delivery order, proposed behavior for ambiguous requirements, and release gates. The [functional spec](https://github.com/zeyadomran/promptly/blob/docs/v1-implementation-plan/docs/app-functionality-spec.md), [visual spec](https://github.com/zeyadomran/promptly/blob/docs/v1-implementation-plan/docs/design-reference/DESIGN.md), and [ten supplied screenshots](https://github.com/zeyadomran/promptly/blob/docs/v1-implementation-plan/docs/design-reference/screenshots) are preserved with the plan.
+The [implementation plan](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/implementation-plan.md) defines architecture, delivery order, proposed behavior for ambiguous requirements, and release gates. The [functional spec](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/app-functionality-spec.md), [visual spec](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/design-reference/DESIGN.md), and [ten supplied screenshots](https://github.com/zeyadomran/promptly/tree/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/design-reference/screenshots) are preserved with the plan.
 
 ## Required code structure
 
