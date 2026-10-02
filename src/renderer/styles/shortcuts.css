@@ -1,0 +1,107 @@
+.shortcut-keycaps,
+.shortcut-recorder-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.shortcut-recorder-controls {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.shortcut-recorder {
+  height: 36px;
+  min-width: 170px;
+  flex: 1;
+  border-style: dashed;
+}
+.shortcut-recorder[data-recording='true'] {
+  border: 1.5px solid var(--foreground);
+  box-shadow: var(--focus-shadow);
+}
+.shortcut-recorder-group {
+  min-width: 0;
+}
+.shortcut-hint {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.shortcut-recorder-group > .shortcut-hint {
+  margin-top: 6px;
+}
+.capture-shortcut-mode {
+  min-width: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.capture-shortcut-mode legend,
+.shortcut-mode-title,
+.shortcut-group-heading {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.shortcut-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.shortcut-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.shortcut-mode[data-selected='true'] {
+  border: 1.5px solid var(--foreground);
+}
+.shortcut-mode > [data-slot='button'] {
+  justify-content: flex-start;
+  padding-inline: 0;
+  height: auto;
+  white-space: normal;
+  text-align: left;
+}
+.shortcut-mode label {
+  font-size: 12.5px;
+}
+.shortcut-modifier {
+  height: 36px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding-inline: 8px;
+  color: var(--foreground);
+  background: var(--background);
+}
+.shortcut-modifier:focus-visible {
+  outline: 1.5px solid var(--foreground);
+  box-shadow: var(--focus-shadow);
+}
+.shortcut-conflict-status,
+.shortcut-system-warning {
+  padding: 12px;
+  margin-block: 14px;
+  border-radius: 8px;
+  background: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.shortcut-conflict-status p + p,
+.shortcut-system-warning p + p {
+  margin-top: 6px;
+}
+.shortcut-system-warning [data-slot='button'] {
+  margin-block: 8px;
+}
+.shortcut-group-heading {
+  margin-top: 24px;
+}
+@media (width < 760px) {
+  .shortcut-modes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
