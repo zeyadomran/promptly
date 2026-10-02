@@ -4,9 +4,10 @@ import { PinStatus } from '../../components/shared/PinStatus';
 import { Button } from '../../components/ui/button';
 import { TooltipProvider } from '../../components/ui/tooltip';
 import { FoundationScreen } from '../library';
+import { SettingsTitleBar } from '../settings/components/SettingsTitleBar';
+import { SettingsWindow } from '../settings/components/SettingsWindow';
 import { usePreferences } from '../settings/settings-context';
 import { useWindow } from './use-window';
-import { WindowSettings } from './WindowSettings';
 import { WindowTitleBar } from './WindowTitleBar';
 
 export function DesktopShell() {
@@ -31,41 +32,43 @@ export function DesktopShell() {
   return (
     <TooltipProvider>
       <div className="desktop-shell">
-        <WindowTitleBar
-          mode={mode}
-          setMode={(next) => {
-            void setMode(next);
-          }}
-          {...(settingsWindow
-            ? { title: 'Settings' }
-            : onboardingWindow
-              ? { title: 'Set up Promptly' }
-              : {})}
-        />
+        {settingsWindow ? (
+          <SettingsTitleBar />
+        ) : (
+          <WindowTitleBar
+            mode={mode}
+            setMode={(next) => {
+              void setMode(next);
+            }}
+            {...(onboardingWindow ? { title: 'Set up Promptly' } : {})}
+          />
+        )}
         <div className="desktop-content">
           {settingsWindow ? (
-            <WindowSettings />
+            <SettingsWindow />
           ) : (
             <FoundationScreen platform={window.promptly.platform} />
           )}
         </div>
-        {(error ?? preferences.error?.message) !== undefined && (
+        {!settingsWindow && (error ?? preferences.error?.message) !== undefined && (
           <p className="px-4 text-destructive" role="alert">
             {error ?? preferences.error?.message}
           </p>
         )}
-        <footer className="window-footer">
-          <PinStatus pinned={preferences.settings.alwaysOnTop} />
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              void window.promptly.quitApplication({});
-            }}
-          >
-            Quit Promptly
-          </Button>
-        </footer>
+        {!settingsWindow && (
+          <footer className="window-footer">
+            <PinStatus pinned={preferences.settings.alwaysOnTop} />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                void window.promptly.quitApplication({});
+              }}
+            >
+              Quit Promptly
+            </Button>
+          </footer>
+        )}
       </div>
     </TooltipProvider>
   );

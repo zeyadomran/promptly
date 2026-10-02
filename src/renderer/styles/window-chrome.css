@@ -65,38 +65,3 @@
   flex-shrink: 0;
   font-size: 11.5px;
 }
-.window-settings {
-  display: grid;
-  grid-template-columns: 190px 1fr;
-  height: 100%;
-}
-.window-settings nav {
-  background: var(--sidebar);
-  padding: 16px;
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.window-settings nav button {
-  justify-content: flex-start;
-}
-.window-settings-content {
-  padding: 24px 32px;
-  min-width: 0;
-}
-@media (width < 640px) {
-  .window-settings {
-    display: flex;
-    flex-direction: column;
-  }
-  .window-settings nav {
-    flex-direction: row;
-    overflow-x: auto;
-    padding: 5px 10px;
-    border-bottom: 1px solid var(--border);
-  }
-  .window-settings-content {
-    padding: 20px 18px;
-  }
-}

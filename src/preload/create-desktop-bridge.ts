@@ -75,6 +75,8 @@ export function createDesktopBridge(
   const bridge = Object.freeze<DesktopBridge>({
     platform,
     getWindowState: (request) => call('getWindowState', request),
+    getWindowRecovery: (request) => call('getWindowRecovery', request),
+    returnToMainWindow: (request) => call('returnToMainWindow', request),
     setWindowMode: (request) => call('setWindowMode', request),
     setWindowVisibility: (request) => call('setWindowVisibility', request),
     openDesktopWindow: (request) => call('openDesktopWindow', request),
