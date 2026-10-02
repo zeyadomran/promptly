@@ -50,8 +50,3 @@ export function libraryFixture(count = 1_000) {
     }
   };
 }
-
-export async function settleLibrary(): Promise<void> {
-  // The client queues IPC in microtasks, including multi-page reconciliation.
-  for (let index = 0; index < 100; index += 1) await Promise.resolve();
-}

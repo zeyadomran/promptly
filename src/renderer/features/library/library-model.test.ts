@@ -1,8 +1,7 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 
 import { delayedLibraryFixture } from './delayed-library-fixture';
 import { LibraryModel } from './library-model';
-import { settleLibrary } from './library-test-fixture';
 import { initialQuery } from './page-cache';
 
 it('browses paged results with command-safe selection across refreshes and newer queries', async () => {
@@ -11,13 +10,19 @@ it('browses paged results with command-safe selection across refreshes and newer
 
   try {
     model.start();
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot().selectedIndex).toBe(0);
+    });
+    await model.moveSelection(-1);
+    expect(model.snapshot().selectedIndex).toBe(0);
+    expect(model.snapshot().revealVersion).toBe(1);
     await model.moveSelection(199);
     fixture.holdNext(200);
     const moving = model.moveSelection(1);
 
-    await settleLibrary();
-    expect(model.snapshot().selectedId).toBeNull();
+    await vi.waitFor(() => {
+      expect(model.snapshot().selectedId).toBeNull();
+    });
     const next = model.moveSelection(1);
 
     fixture.release();
@@ -27,55 +32,71 @@ it('browses paged results with command-safe selection across refreshes and newer
     if (selected === undefined) throw new Error('Missing owned item');
     expect(model.snapshot().selectedId).toBe(selected.id);
     expect(model.snapshot().selectedIndex).toBe(201);
+    const reveal = model.snapshot().revealVersion;
+
     for (const index of [400, 600, 800, 1_000, 1_200, 0]) {
       model.ensure(index);
-      await settleLibrary();
+      await vi.waitFor(() => {
+        expect(model.snapshot().cache.at(index)).toBeDefined();
+      });
     }
 
     expect(model.snapshot().cache.size).toBeLessThanOrEqual(5);
     expect(model.snapshot().cache.at(201)).toBeUndefined();
     expect(model.snapshot().selectedId).toBe(selected.id);
     expect(model.snapshot().selectedIndex).toBe(201);
+    expect(model.snapshot().revealVersion).toBe(reveal);
     expect(model.select(selected.id, 201)).toBe(false);
     model.refresh();
     expect(model.snapshot().selectedId).toBeNull();
-    await settleLibrary();
-    expect(model.snapshot().selectedId).toBe(selected.id);
+    await vi.waitFor(() => {
+      expect(model.snapshot().selectedId).toBe(selected.id);
+    });
     const changed = fixture.items().filter((item) => item.id !== selected.id);
 
     changed.splice(805, 0, selected);
     fixture.holdNext(200);
     fixture.change(changed);
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot().cache.revision).toBe(2);
+    });
     expect(model.snapshot().selectedId).toBeNull();
     const latest = changed.filter((item) => item.id !== selected.id);
 
     latest.splice(905, 0, selected);
     fixture.change(latest);
     fixture.release();
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot().selectedIndex).toBe(905);
+    });
     expect(model.snapshot().selectedId).toBe(selected.id);
-    expect(model.snapshot().selectedIndex).toBe(905);
     fixture.holdNext(200);
     fixture.change(latest);
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot().cache.revision).toBe(4);
+    });
     model.query({ ...initialQuery, query: 'Snippet 999' });
     fixture.release();
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot().total).toBe(1);
+    });
     expect(model.snapshot().selectedId).toBe('00000000-0000-4000-8000-000000000999');
-    expect(model.snapshot().total).toBe(1);
     expect(model.snapshot().unfilteredTotal).toBe(1_400);
     model.query({ ...initialQuery, query: 'missing' });
-    await settleLibrary();
+    await vi.waitFor(() => {
+      expect(model.snapshot()).toMatchObject({ loading: false, total: 0 });
+    });
+    expect(model.snapshot().selectedId).toBeNull();
+    model.query(initialQuery);
+    await vi.waitFor(() => {
+      expect(model.snapshot().total).toBe(1_400);
+    });
+    fixture.change([], ['snippets', 'tags']);
+    await vi.waitFor(() => {
+      expect(model.snapshot().unfilteredTotal).toBe(0);
+    });
     expect(model.snapshot().selectedId).toBeNull();
     expect(model.snapshot().total).toBe(0);
-    model.query(initialQuery);
-    await settleLibrary();
-    expect(model.snapshot().total).toBe(1_400);
-    fixture.change([], ['snippets', 'tags']);
-    await settleLibrary();
-    expect(model.snapshot().selectedId).toBeNull();
-    expect(model.snapshot().unfilteredTotal).toBe(0);
   } finally {
     model.close();
   }

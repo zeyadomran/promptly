@@ -16,7 +16,7 @@ export function CompactLibrary() {
       className="compact-library"
       aria-label="Snippet library"
       onKeyDown={(event) => {
-        if (commands !== undefined) return;
+        if (commands !== undefined || event.nativeEvent.isComposing) return;
         if (event.defaultPrevented || !(event.target instanceof HTMLElement)) return;
         if (!event.target.matches('[data-promptly-search], [role="listbox"]')) return;
         if (
