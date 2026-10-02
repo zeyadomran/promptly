@@ -49,6 +49,14 @@ struct SourceIdentity {
         guard bundle != nil else { return "activationDenied" }
         // OS-owned application object only. No launching, URLs, paths, shell or AppleScript.
         guard application.activate(options: []) else { return "activationDenied" }
-        return valid(foreground: false) ? "ok" : "foregroundChanged"
+        // Activation is asynchronous. Let OS workspace notifications settle within the
+        // production pipe budget; an accepted request alone is not a completed handoff.
+        let deadline = ProcessInfo.processInfo.systemUptime + 0.075
+        while valid(foreground: false) && !valid(foreground: true) &&
+              ProcessInfo.processInfo.systemUptime < deadline {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 0.005))
+        }
+        guard valid(foreground: false) else { return "foregroundChanged" }
+        return valid(foreground: true) ? "ok" : "activationDenied"
     }
 }

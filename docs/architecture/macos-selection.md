@@ -53,8 +53,16 @@ AppleScript automation, root or extra permission is requested.
 ## Verification status
 
 Windows development host: clean install and strict repository checks are run
-locally. The macOS production build and packaged tests are supplied to native CI;
-their results must be recorded before claiming runtime verification. Tests launch
+locally (181 unit tests, type checking, lint, architecture and formatting passed),
+and Windows Forge packaging passed. [Native CI at `f074170`](https://github.com/zeyadomran/promptly/actions/runs/36983333651)
+confirmed the production Swift and AppKit fixture compile on macOS. [Packaged macOS
+CI at the same head](https://github.com/zeyadomran/promptly/actions/runs/36983333689)
+passed the guarded text/focus/protocol/restart fixtures. A further regression
+test launches actual packaged Promptly with an isolated owned profile, records the
+fixture's identity before Promptly takes foreground, then activates the background
+fixture through the main adapter and verifies OS foreground, exact selected text,
+selection range and pasteboard counter. Its latest-head CI must pass before
+claiming that activation handoff is qualified. Tests launch
 only the owned unsigned AppKit `.app`, never sample a user's private selection,
 and do not grant/revoke TCC or modify user System Settings. The protocol fixture
 uses a longer deadline solely to verify the full escaped maximum-size frame,
