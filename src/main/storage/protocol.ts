@@ -7,7 +7,7 @@ import {
 import { operations } from '../../shared/contracts/operations';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { captureInputSchema } from '../../shared/contracts/storage';
-import type { WorkerTimings } from './worker-diagnostics';
+import type { WorkerTimings } from '../../shared/contracts/storage-diagnostics';
 
 export const storageOperations = {
   getSettings: operations.getSettings,

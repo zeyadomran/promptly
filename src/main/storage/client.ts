@@ -131,11 +131,12 @@ export class StorageClient {
       return Promise.reject(new Error('Local storage queue is full.'));
     const id = this.nextId++;
 
-    const diagnostic = this.onBoundary !== undefined && operation === 'searchSnippets';
+    const diagnostic = operation === 'searchSnippets' && this.diagnostics?.recording === true;
     const response = this.register(id, timeout, diagnostic);
+    const posted = diagnostic ? storageTimestamp() : undefined;
 
-    if (diagnostic) this.diagnostics?.post(id, storageTimestamp());
     this.worker.postMessage({ id, operation, input, ...(diagnostic ? { diagnostic: true } : {}) });
+    if (posted !== undefined) this.diagnostics?.post(id, posted);
     return response;
   }
 

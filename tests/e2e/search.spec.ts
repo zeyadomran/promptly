@@ -10,6 +10,7 @@ import { startSearchProfiler } from './search-profiler';
 import { summarizeSearchSamples } from './search-statistics';
 import { finishSearchTrace, prepareSearchTrace, settleSearchCleanup } from './search-trace';
 import { assertVisibleSearch } from './search-visibility';
+import { finishSearchWorkerBoundaries } from './search-worker-boundaries';
 
 test('10k input-to-painted React results via named IPC and the packaged worker', async ({
   browserName
@@ -18,6 +19,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
   const { application, consoleMessages, corpus, directory, profileIdentity } =
     await launchSearchFixture(testInfo);
   let traceFinished = false;
+  let boundariesFinished = false;
   let failed = false;
 
   try {
@@ -125,12 +127,9 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
     const completeHighlightPaint = await assertCompleteHighlights(page);
 
     await finishProfile();
-    const workerBoundaries = await application.evaluate(({ app }) => {
-      if (app.listenerCount('search-fixture:flush-worker-boundaries') === 0) return undefined;
-      return new Promise<unknown>((resolve) => {
-        app.emit('search-fixture:flush-worker-boundaries', resolve);
-      });
-    });
+    const workerBoundaries = await finishSearchWorkerBoundaries(application, testInfo, true);
+
+    boundariesFinished = true;
 
     const statistics = summarizeSearchSamples(samples);
     const evidence = {
@@ -180,6 +179,9 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
   } finally {
     await settleSearchCleanup(
       [
+        async () => {
+          if (!boundariesFinished) await finishSearchWorkerBoundaries(application, testInfo, false);
+        },
         async () => {
           if (!traceFinished) await finishSearchTrace(application, testInfo);
         },

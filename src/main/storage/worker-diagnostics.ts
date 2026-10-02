@@ -1,16 +1,5 @@
-import { z } from 'zod';
-
-const timestampSchema = z.strictObject({
-  epochMs: z.number().nonnegative(),
-  monotonicMs: z.number().nonnegative()
-});
-const workerTimingsSchema = z.strictObject({
-  received: timestampSchema,
-  sent: timestampSchema
-});
-
-export type StorageTimestamp = z.infer<typeof timestampSchema>;
-export type WorkerTimings = z.infer<typeof workerTimingsSchema>;
+import type { StorageTimestamp } from '../../shared/contracts/storage-diagnostics';
+import { workerTimingsSchema } from '../../shared/contracts/storage-diagnostics';
 export interface StorageBoundary {
   requestId: number;
   phase: 'main-post' | 'worker-receive' | 'worker-send' | 'main-receive';
@@ -34,12 +23,16 @@ export class StorageDiagnostics {
   private stopped = false;
   private droppedRequests = 0;
 
+  get recording(): boolean {
+    return (
+      !this.stopped &&
+      performance.now() <= this.deadline &&
+      this.pending.size + this.groups.length < 128
+    );
+  }
+
   post(requestId: number, timestamp: StorageTimestamp): void {
-    if (
-      this.stopped ||
-      performance.now() > this.deadline ||
-      this.pending.size + this.groups.length >= 128
-    ) {
+    if (!this.recording) {
       this.droppedRequests += 1;
       return;
     }
