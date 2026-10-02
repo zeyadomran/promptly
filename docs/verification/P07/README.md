@@ -99,3 +99,38 @@ P13 geometry, shared pin and both Dock recovery contracts remain covered. The Do
 test deliberately owns recorder suspension so its no-shortcut/no-Dock reachability
 case continues to test a genuinely unavailable recovery route. No claim is made
 that the existing manual fullscreen or assistive-technology gaps are resolved here.
+
+At `084d35e`, Mac run [36998101646](https://github.com/zeyadomran/promptly/actions/runs/36998101646)
+again failed required application delivery: the guarded driver reported sent input
+and observed key state, but actual Electron callback and command counts were zero.
+Registrations were present and unsuspended, with native/durable pin false. The
+byte-identical [driver](macos-084-driver.json) and [command](macos-084-command-final.json)
+receipts are preserved here; the cause remains unknown.
+
+The next diagnostic adds a separate hosted-only owned AppKit control. It registers
+Control+Option F11 through Carbon with Chromium's same target, modifiers and
+hot-key event handler. A passive session tap retains only scalar down/up counts
+for that fixed chord, plus tap health; unrelated events are discarded. Each count
+is capped at 1024. The unchanged guarded driver sends the chord only after actual
+owned foreground readiness, and releases its preallocated owned keys in reverse
+order on every outcome. The probe exits after a five-second observation window.
+Final counts are retained even when foreground or delivery assertions fail; the
+original failure remains primary if receipt collection or cleanup also fails.
+
+The standalone control runs serially before Promptly shortcut registrations. It
+uses a fresh temporary launch directory and native PID sidecar; fallback cleanup
+checks the live command against the exact executable and fresh directory before
+each signal, then requires observed owner exit. A stale sidecar never authorizes
+termination of another process. No permission request, general key log, production
+shortcut change or local input attempt is added.
+
+A Carbon callback points the next investigation toward Electron's handler path;
+exact session delivery with zero Carbon callbacks places that failure before
+product dispatch. Neither diagnostic outcome qualifies the product or replaces
+the unchanged required callback/pin/hide/show assertions. Windows strict checks
+passed with 304 tests in 64 files (288 handwritten modules), including 18 new
+scalar/privacy/owner regressions. Native Swift compilation and controlled Mac
+observations remain pending fresh hosted CI.
+The Windows package also passed. The hosted-only control test was discovered and
+explicitly skipped on Windows; no local Carbon process or synthetic input was
+started. Existing production/native delivery assertions are unchanged.

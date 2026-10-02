@@ -64,3 +64,13 @@ Primary API contracts: [Electron globalShortcut](https://www.electronjs.org/docs
 [Apple flagsChanged](https://developer.apple.com/documentation/coregraphics/cgeventtype/flagschanged),
 [Apple keyState](https://developer.apple.com/documentation/coregraphics/cgeventsource/keystate(_:key:)),
 and [Apple IOHID device masks](https://github.com/apple-oss-distributions/IOHIDFamily/blob/777ccd9698845aadf711e32d843c8c9b777431d9/IOHIDSystem/IOLLEvent.h).
+
+The hosted test-only Carbon control follows Chromium's
+[macOS accelerator listener](https://raw.githubusercontent.com/chromium/chromium/main/ui/base/accelerators/global_accelerator_listener/global_accelerator_listener_mac.mm):
+Control+Option F11, `GetApplicationEventTarget`, registration options zero and a
+`kEventHotKeyPressed` handler that verifies its own fixed hot-key ID. Its
+[listen-only session tap](https://developer.apple.com/documentation/coregraphics/cgeventtapoptions/listenonly)
+returns events unchanged and retains no general key stream. This independent
+control partitions failed synthetic delivery; actual Promptly callbacks and
+physical hardware qualification remain separate required evidence. See P07's
+retained failures and bounded diagnostic scope.

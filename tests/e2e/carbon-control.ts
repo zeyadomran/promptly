@@ -1,0 +1,121 @@
+import { execFile, spawn } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
+import { promisify } from 'node:util';
+
+import { retireCarbonOwner } from './carbon-owner';
+import { decodeCarbonState } from './carbon-state';
+
+const execute = promisify(execFile);
+
+export async function launchCarbonControl(buildDirectory: string) {
+  const bundle = path.join(buildDirectory, 'CarbonControl.app');
+  const executable = path.join(bundle, 'Contents/MacOS/carbon-control');
+  const driver = path.join(buildDirectory, 'carbon-shortcut-driver');
+
+  await mkdir(path.dirname(executable), { recursive: true });
+  await execute('xcrun', [
+    'swiftc',
+    '-swift-version',
+    '5',
+    '-warnings-as-errors',
+    '-parse-as-library',
+    path.resolve('tests/native/keyboard/macos/CarbonControl.swift'),
+    '-framework',
+    'AppKit',
+    '-framework',
+    'Carbon',
+    '-o',
+    executable
+  ]);
+  await execute('xcrun', [
+    'swiftc',
+    '-swift-version',
+    '6',
+    '-warnings-as-errors',
+    '-parse-as-library',
+    path.resolve('tests/native/keyboard/macos/ShortcutDriver.swift'),
+    '-o',
+    driver
+  ]);
+  await writeFile(
+    path.join(bundle, 'Contents/Info.plist'),
+    `<?xml version="1.0" encoding="UTF-8"?>
+<plist version="1.0"><dict><key>CFBundleExecutable</key><string>carbon-control</string>
+<key>CFBundleIdentifier</key><string>dev.promptly.owned-carbon-control</string>
+<key>CFBundlePackageType</key><string>APPL</string><key>CFBundleName</key>
+<string>Promptly owned Carbon control</string></dict></plist>`
+  );
+  const directory = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-carbon-control-')));
+  const nativeExecutable = await realpath(executable);
+  const child = spawn('/usr/bin/open', ['-W', '-n', await realpath(bundle), '--args', directory], {
+    stdio: 'ignore'
+  });
+  let exitCode: number | null | undefined;
+  let failed = false;
+  const closed = new Promise<void>((resolve) => {
+    child.once('error', () => {
+      failed = true;
+    });
+    child.once('close', (code) => {
+      exitCode = code;
+      resolve();
+    });
+  });
+
+  async function state(phase: 'ready' | 'final') {
+    const deadline = performance.now() + 10_000;
+
+    while (performance.now() < deadline) {
+      try {
+        const filename = path.join(directory, `${phase}.json`);
+
+        if ((await stat(filename)).size > 4096)
+          throw new Error('Carbon receipt exceeded byte bound');
+        const receipt = decodeCarbonState(await readFile(filename, 'utf8'));
+        const ownerPid = await readFile(path.join(directory, 'owner.pid'), 'utf8');
+
+        if (receipt.phase !== phase || String(receipt.pid) !== ownerPid)
+          throw new Error('Carbon receipt owner or phase mismatch');
+        return receipt;
+      } catch (error) {
+        if (!(error instanceof Error) || !('code' in error) || error.code !== 'ENOENT') throw error;
+        if (exitCode !== undefined || failed)
+          throw new Error('Carbon control stopped before receipt', { cause: error });
+      }
+
+      await delay(50);
+    }
+
+    throw new Error('Carbon control receipt timed out');
+  }
+
+  async function close() {
+    await Promise.race([closed, delay(6000)]);
+    const owner = await retireCarbonOwner(nativeExecutable, directory);
+
+    if (exitCode === undefined) child.kill();
+    await Promise.race([closed, delay(1000)]);
+    if (owner.status !== 'exited')
+      throw new Error(`Carbon control cleanup unverified (${owner.status})`);
+    await rm(directory, { recursive: true, force: true });
+    if (failed || exitCode !== 0) throw new Error('Carbon control launcher failed');
+    return { owner, launcherExitCode: exitCode };
+  }
+
+  return {
+    ready: () => state('ready'),
+    close,
+    final: () => state('final'),
+    send: async (ownedPid: number) => {
+      const result = await execute(driver, [String(ownedPid), 'pin'], {
+        timeout: 3000,
+        maxBuffer: 4096
+      });
+
+      return result.stdout.trim();
+    }
+  };
+}
