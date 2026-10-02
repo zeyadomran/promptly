@@ -58,14 +58,14 @@
       "Compare maintained native packages against small packaged native helpers; record licenses, supported Electron ABI/architectures, permissions, helper lifecycle, and rebuild/signing needs. Select adapters behind stable interfaces.",
       "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and protected input. Native capture must not invoke Ctrl+C or read/write the clipboard; unsupported/failed/empty selections save nothing and report truthful state.",
       "Keep deferred fallback safety research in P10; it is not a v1 dependency or release gate. Explicit snippet/Markdown/tray Copy and its clipboard qualification remain in scope.",
-      "Measure capture-to-feedback on each path. Confirm Alt+Space availability instead of assuming it."
+      "Verify capture feedback without focus theft. Confirm Alt+Space availability instead of assuming it."
     ],
     "checks": [
       "A documented support matrix contains real observations from Windows, with OS/architecture and app versions.",
       "Adapter choice and packaging proof exist for Windows; unsupported paths return explicit errors without overwriting the clipboard.",
-      "The ADR records outstanding release blockers, including failures of the under-150-ms target; no untested claim of universal capture."
+      "The ADR records outstanding native safety/support blockers and historical timing failures; timing budgets do not gate this pass, and no untested claim of universal capture is made."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P04",
@@ -163,7 +163,7 @@
       "300 ms default and 150/600 ms boundaries behave deterministically.",
       "Failed/conflicting registration has honest status; no claim to identify every owning app."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P08",
@@ -200,7 +200,7 @@
       "No-selection and unavailable-provider cases are distinct; no unrelated clipboard text is returned as a selection.",
       "No focus change, elevation prompt, or main-process freeze occurs."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P10",
@@ -257,7 +257,7 @@
       "Capture never calls show/focus on main or settings windows.",
       "Unsupported/failed/empty selections save nothing with truthful state; explicit snippet/Markdown/tray Copy remains required."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P12",
@@ -282,7 +282,7 @@
       "Main hidden/minimized and pinned/unpinned cases all show the correct toast when enabled.",
       "No toast window leaks after repeated captures; disabled confirmation creates no visible overlay."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P13",
@@ -307,7 +307,7 @@
       "Pin state agrees across title bar, footer, settings, and OS behavior after restart.",
       "Closing/hiding, a second launch, display disconnect, and Quit produce predictable lifecycle behavior."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P14",
@@ -325,14 +325,14 @@
       "Use case-insensitive substring semantics, AND across selected tags and tag: tokens, intersection with source/free text, All reset, and Regular Untagged.",
       "Evaluate FTS5 trigram plus a correct short-query path or an in-memory index; ordinary token FTS alone does not fulfill substring matching. Verify Unicode behavior and 1–2-character searches.",
       "Implement all four stable sorts, counts, pagination, stale-response protection, and shared match ranges for safe renderer highlighting.",
-      "Budget the full input-to-painted-results path under 50 ms at 10k; debounce must fit inside that budget, not add 50 ms to a 50 ms query."
+      "Preserve correct large-library results and stale-response protection; performance measurements and budgets are skipped for this pass."
     ],
     "checks": [
       "Substring, punctuation, Unicode, AND-tag intersection, Untagged, all sorts, and combined syntax have documented correct results.",
       "Capture/edit/tag/delete/import changes invalidate the index and counts consistently.",
-      "Benchmarks include short/worst-case queries and rapid typing, not only query execution."
+      "Short/common/no-match/Unicode queries and rapid input retain correct current results without stale responses; no timing benchmark gates this pass."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P15",
@@ -358,7 +358,7 @@
       "10k snippets scroll smoothly with bounded mounted rows and stable selection.",
       "Counts, pin status, no-results reset, and the configured-shortcut empty-state copy are correct."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P16",
@@ -383,7 +383,7 @@
       "Edit, duplicate, delete/undo update storage, counts, preview, and search results consistently.",
       "No selection, deleted selection, long text, and narrow Regular minimum size have usable states."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P17",
@@ -409,7 +409,7 @@
       "Text editing never deletes snippets, and dialogs/IME are not interrupted.",
       "Copy errors leave counters unchanged and do not hide the window."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P18",
@@ -434,7 +434,7 @@
       "Creating/assigning/removing tags refreshes both layouts and Settings counts.",
       "Focus returns to the trigger and picker Enter/Esc do not copy or hide the library."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P19",
@@ -458,7 +458,7 @@
       "Rename/recolor is reflected in every open window immediately.",
       "Deleting an active filter tag cannot strand the user in an unexplained empty state."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P20",
@@ -484,7 +484,7 @@
       "Every listed General/Appearance preference persists and takes effect immediately.",
       "Only supported Windows controls are present; close/back returns to the expected window."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P21",
@@ -509,7 +509,7 @@
       "Invalid/conflicting bindings do not replace working shortcuts.",
       "Onboarding and Settings share the same validation and components."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P22",
@@ -534,7 +534,7 @@
       "Malformed/canceled/failed imports leave existing data unchanged and never execute imported text.",
       "Clear all requires the exact confirmation and updates every window/tray with no recoverable in-app undo."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P23",
@@ -562,7 +562,7 @@
       "Practice success is backed by stored data, with no duplicate synthetic event or fake toast.",
       "Back/skip/restart/unsupported-capture paths remain usable and clean up listeners."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P24",
@@ -589,7 +589,7 @@
       "Paused state is visible and capture does not fire; resuming reinstates the selected shortcut.",
       "Quit exits fully, while normal hide/close preserves intended background behavior."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P25",
@@ -612,7 +612,7 @@
       "Clean Windows builds use the lockfile and load required native modules.",
       "CI documentation distinguishes automated tests from real permission/fullscreen/native manual tests."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P26",
@@ -641,7 +641,7 @@
       "Native helpers use the actual packaged app paths and Windows process identity, and helpers/modules load on Windows x64.",
       "Unsigned development status and remaining release qualification are explicit; unsigned test builds are not described as production-ready."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P27",
@@ -672,11 +672,11 @@
       "No critical keyboard traps, inaccessible icon controls, or unlabeled overlays remain.",
       "Settings remains usable around 640 px and with enlarged text; light/dark highlights retain contrast."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P28",
-    "title": "Verify Windows reliability, performance budgets, and release readiness",
+    "title": "Verify Windows reliability and distribution readiness",
     "phase": 5,
     "deps": [
       "P26",
@@ -684,19 +684,18 @@
     ],
     "refs": "SPEC §9 and all v1 workflows",
     "files": "docs/qa/release-checklist.md",
-    "goal": "Demonstrate that Promptly meets its native safety and responsiveness requirements in packaged builds.",
+    "goal": "Demonstrate native safety, functional reliability and distribution readiness in packaged Windows builds.",
     "scope": [
       "Run the complete highlight→shortcut→capture→toast→search→tag→copy flow on Windows, including hidden/minimized/pinned states and real applications.",
-      "Benchmark 10k+ realistic snippets and long-text outliers: full input-to-painted results under 50 ms, trigger-to-toast under 150 ms; report p50/p95/max, sample counts, OS/hardware, warm/cold state, and native UIA capture and explicit Copy outcomes separately.",
-      "Measure idle total process-tree RSS and CPU over a defined interval, repeated window/capture cycles, and startup; propose a numeric memory budget from measured Electron baselines because the spec gives none.",
+      "Verify functional large-library search and durable restoration, including Unicode and long-text records. Performance measurements and timing/RSS/CPU budgets are skipped for this pass; historical measurements remain evidence only.",
       "Verify native capture never invokes Ctrl+C or reads/writes the clipboard and saves nothing on unsupported/failed/empty selections. Exercise explicit snippet/Markdown/tray Copy, permission/access-denial changes, unsupported apps, restart, database failure, display changes, sleep/resume, and offline usage. P10/#12 fallback is deferred/not implemented and is not a v1 gate.",
-      "Confirm every issue acceptance criterion and install/signing check; record failures as release blockers instead of silently weakening requirements."
+      "Confirm current issue acceptance criteria and distribution checks, including installer/artifact verification, install/upgrade/uninstall and data preservation; signing depends on available credentials. Record required-check failures as release blockers instead of silently weakening requirements."
     ],
     "checks": [
       "A reproducible evidence report covers Windows x64 and packaged artifacts.",
-      "Clipboard loss, false capture, focus theft, data loss, and unmet performance targets have no unresolved release blockers.",
+      "Clipboard loss, false capture, focus theft and data loss have no unresolved release blockers.",
       "Final checklist links automated results and manual evidence; account/signing/hardware gaps remain explicitly incomplete."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   }
 ]

@@ -22,7 +22,7 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/
 2. Desktop capture: native UIA adapters, shortcuts, capture orchestration, windows, and non-activating toast.
 3. Library: substring search, both layouts, snippet actions, copy/navigation, and tag assignment.
 4. Daily workflows: responsive settings, tag administration, data transfer, onboarding, and tray.
-5. Release: packaged installers, design/accessibility verification, native regression, and performance evidence.
+5. Release: packaged installers, design/accessibility verification, native reliability, and distribution evidence.
 
 ## Decisions and release risks
 
@@ -35,14 +35,16 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/
 - Search is substring-based, including one/two-character queries; ordinary word FTS alone is insufficient.
 - Clear all erases library data and in-app undo, retaining preferences/onboarding.
 - JSON import validates before a transactional merge, preserves deliberate duplicate text, and resolves ID/tag conflicts.
-- Native adapter choice, minimum OS versions, signing credentials, and memory budget require implementation evidence.
+- Native adapter choice, minimum OS versions, signing credentials and distribution compatibility require qualification evidence.
+
+Performance measurements and budgets are skipped for this pass by the [latest user decision](https://github.com/zeyadomran/promptly/issues/30#issuecomment-5963023552). Distribution checks remain required. Historical timing/RSS evidence is retained without a performance-pass claim; production bounded timeouts and correctness, native safety, clipboard and accessibility requirements are unchanged.
 
 ## Release acceptance
 
 - [ ] All active v1 implementation issues below have their own acceptance evidence; deferred P08/P10 are excluded, not marked complete.
 - [ ] Windows supports the complete highlight → capture → search → tag → copy workflow in packaged builds.
 - [ ] No clipboard loss, focus theft, false success, or unresolved data-loss defects.
-- [ ] Capture-to-toast under 150 ms and complete search updates under 50 ms at 10k snippets are measured; deviations remain blockers.
+- [ ] Distribution artifacts, install/upgrade/uninstall and database preservation are verified; signing/credential gaps are stated explicitly.
 - [ ] Light/dark/system themes, all ten design references, keyboard operation, NVDA, and responsive Settings are verified.
 - [ ] Offline operation, installer/native-module compatibility, and release signing status are verified.
 
@@ -52,7 +54,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 
 - [x] #55 Remove macOS implementation and restrict builds to Windows x64.
 - Windows capture (#13), tag management (#22), capture feedback (#15), tray (#26) and onboarding (#25) are implemented; their issues remain open for manual acceptance evidence.
-- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Actual installation (#28), accessibility/native/performance release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
+- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Actual installation (#28), accessibility/native/distribution release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
 
 ## Implementation issues
 
@@ -97,4 +99,4 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 
 - [ ] [P26 — Package Windows installers with native modules](https://github.com/zeyadomran/promptly/issues/28)
 - [ ] [P27 — Audit design fidelity, keyboard accessibility, and assistive technology](https://github.com/zeyadomran/promptly/issues/29)
-- [ ] [P28 — Verify Windows reliability, performance budgets, and release readiness](https://github.com/zeyadomran/promptly/issues/30)
+- [ ] [P28 — Verify Windows reliability and distribution readiness](https://github.com/zeyadomran/promptly/issues/30)

@@ -316,7 +316,7 @@
   {
     "key": "P28",
     "number": 30,
-    "title": "[P28] Verify Windows reliability, performance budgets, and release readiness",
+    "title": "[P28] Verify Windows reliability and distribution readiness",
     "url": "https://github.com/zeyadomran/promptly/issues/30",
     "phase": 5,
     "dependencies": [

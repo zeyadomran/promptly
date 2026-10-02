@@ -49,6 +49,8 @@ Before qualifying a release, use a packaged application with a fresh owned profi
 
 Native preferences must be captured before application initialization and restored/read back after shutdown. Verify owned process death before deleting profiles; retain the tree if death is unverified. Use only owned selection/input/clipboard fixtures, never a user's data or desktop application. These checks are manual qualification work, not a replacement automated fixture framework.
 
+Performance measurements and budgets are skipped for this pass by the [latest user decision](https://github.com/zeyadomran/promptly/issues/30#issuecomment-5963023552). Distribution checks remain required. Historical timing/RSS evidence is retained without a performance-pass claim; production bounded timeouts and correctness, native safety, clipboard and accessibility requirements are unchanged.
+
 ## Historical qualification
 
 Historical receipts and failure reports remain under `docs/`. Removing E2E, repeated native variants, 10k/50 ms benchmarks and tracing does not fix their failures or qualify performance, permissions, physical input, assistive technology, fullscreen or multi-monitor behavior. The native capture deadline remains 100 ms. The Windows helper MTA correction aligns UI Automation threading guidance; its effect on earlier hosted capture timeouts is unproven. Functional CI verifies service behavior and package construction, not OS delivery or a complete capture-save-copy product.
