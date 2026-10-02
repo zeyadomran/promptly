@@ -6,16 +6,21 @@ uploads JSON and visible common-query screenshots even on failure. The strict
 **maximum <50 ms** gate is unchanged. Both OS results at the final integrated
 head remain required; local timing alone does not establish that.
 
-## Corrected visible fixture checkpoint, 2026-10-02
+## Corrected visible fixture after settings integration, 2026-10-02
 
 [Windows receipt](windows-search-benchmark.json) contains 110 input samples,
 phase timings, startup, viewport geometry, rapid typing, revision refreshes and
-a 703-highlight regression. The first corrected-layout packaged run passed.
-Rapid input measured 8.0 ms; capture/edit/tag/delete refresh measured
-8.0/8.1/10.1/5.3 ms; complete-highlight query 10.4 ms. Worker-ready startup was
-114.4 ms. The full check/package/smoke/design suite after integration remains
-pending at this checkpoint; additional wrapping/focus/screenshot assertions
-have been added for that run. Raw query first-use/warm p50/p95/max are in JSON.
+a 703-highlight regression. The integrated packaged run passed: maximum query
+21.6 ms, rapid input 9.5 ms, capture/edit/tag/delete refresh
+7.8/8.1/9.7/6.8 ms, complete-highlight query 11.2 ms. Worker-ready startup was
+111.9 ms. Clean install, strict check (147 tests/36 files), package, all eight
+smokes, both design tests and packaged two-process CSP passed locally. Raw query
+first-use/warm p50/p95/max are in JSON. Both OS CI at the final head is pending.
+
+The first integrated full smoke already passed with a 22.5 ms maximum. Subsequent
+design/package checks cleared the generated Playwright/build outputs, so the
+final standalone search run collected durable artifacts after normal package
+restoration. No failed attempt was rerun to obtain a passing timing receipt.
 
 Hardware: Ryzen 7 7800X3D, 16 logical CPUs, 31.15 GiB RAM. Electron 44.5.1,
 embedded Node 24.21.0, SQLite 3.53.4, Chromium 152.0.7977.130. Corpus: 10,000
@@ -25,7 +30,9 @@ NUL-bearing snippets.
 
 The regular-style fixture has simultaneously visible scrolling list and selected
 full-text panes, bundled Space Grotesk/Geist Mono fonts and wrapped text. Its
-selected pane occupies x=352..984 and y=64..608 in a 1000x640 viewport. Each
+selected pane occupies x=352..984 and y=64..608 in a 1000x640 viewport. Its full
+text wraps to 220px at 20px line height. The [inspected screenshot](windows-visible-common-query.png)
+shows both panes and actual common-query highlights. Each
 query verifies complete selected text and a visible highlight; no-match verifies
 the selected pane disappears. The long-match regression verifies every mark,
 including leading/later terms and the late highlight after scrolling. There is
@@ -68,7 +75,7 @@ are bounded to 160 units; the selected preview is complete.
 These failures were not removed or accepted. Corrected visible focused layout,
 font readiness, complete range compression and avoiding redundant result DOM
 rebuilds address observed work, but their effect on both CI machines is not yet
-proven. The final gate must pass without rerunning solely to obtain green.
+proven. The final CI gate must pass without rerunning solely to obtain green.
 
 ## Scope and isolation
 
