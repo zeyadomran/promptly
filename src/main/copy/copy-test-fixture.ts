@@ -12,30 +12,51 @@ export function copyFixture(writeText: (text: string) => Promise<void>, text = '
   let alive = true;
   let visible = true;
   let retire: () => void = () => undefined;
-  const service = new CopyService({
-    call: <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
-      Promise.resolve(store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>)
-  }, mutations, {
-    platform: 'win32',
-    owner: (senderId) => senderId !== 1 ? undefined : {
-      id: 1,
-      isAlive: () => alive,
-      onClose: (listener) => {
-        retire = listener;
-        return () => { retire = () => undefined; };
-      }
+  const service = new CopyService(
+    {
+      call: <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
+        Promise.resolve(
+          store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>
+        )
     },
-    settings: () => settings,
-    writeText,
-    hide: () => { visible = false; return Promise.resolve(true); }
-  });
+    mutations,
+    {
+      platform: 'win32',
+      owner: (senderId) =>
+        senderId !== 1
+          ? undefined
+          : {
+              id: 1,
+              isAlive: () => alive,
+              onClose: (listener) => {
+                retire = listener;
+                return () => {
+                  retire = () => undefined;
+                };
+              }
+            },
+      settings: () => settings,
+      writeText,
+      hide: () => {
+        visible = false;
+        return Promise.resolve(true);
+      }
+    }
+  );
 
   return {
-    store, id, service, mutations, settings,
+    store,
+    id,
+    service,
+    mutations,
+    settings,
     visible: () => visible,
     copy: (format: 'text' | 'markdown' = 'text') =>
       service.services.copySnippet({ id, format }, { senderId: 1 }),
-    retire: () => { alive = false; retire(); },
+    retire: () => {
+      alive = false;
+      retire();
+    },
     dispose: async () => {
       await service.close();
       await mutations.close();

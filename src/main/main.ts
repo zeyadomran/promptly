@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { app, ipcMain, Menu, nativeTheme } from 'electron';
+import { app, ipcMain, nativeTheme } from 'electron';
 
 import { createDesktopCopy } from './copy/desktop-copy';
 import type { CopyService } from './copy/service';
@@ -30,6 +30,7 @@ import { storageDesktopServices } from './storage/desktop-services';
 import { LibraryMutations } from './storage/library-mutations';
 import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
 import { StorageTransfer } from './storage/transfer/service';
+import { installDesktopMenu } from './windows/desktop-menu';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { WindowLifecycle } from './windows/window-lifecycle';
 
@@ -46,18 +47,20 @@ const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources(copy, () => closeLibraryResources(transfer, () =>
-      closeWindowResources(lifecycle, () =>
-        closeSettingsStorage(settings, storage, {
-          close: () =>
-            closeNativeResources([
-              keyboard,
-              { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
-              { close: () => macosSelection?.dispose() ?? Promise.resolve() }
-            ])
-        })
+    return closeLibraryResources(copy, () =>
+      closeLibraryResources(transfer, () =>
+        closeWindowResources(lifecycle, () =>
+          closeSettingsStorage(settings, storage, {
+            close: () =>
+              closeNativeResources([
+                keyboard,
+                { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
+                { close: () => macosSelection?.dispose() ?? Promise.resolve() }
+              ])
+          })
+        )
       )
-    ));
+    );
   },
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
@@ -125,9 +128,10 @@ if (primaryInstance)
       );
       await settings.initialize();
       const dialogs = nativeTransferDialogs(
-          app.getPath('userData'),
-          path.join(app.getPath('userData'), 'promptly.sqlite')
+        app.getPath('userData'),
+        path.join(app.getPath('userData'), 'promptly.sqlite')
       );
+
       transfer = new StorageTransfer(storage, mutations, dialogs);
       copy = createDesktopCopy(storage, mutations, dialogs, settings, () => lifecycle);
       desktop = installDesktopIpc(
@@ -160,26 +164,7 @@ if (primaryInstance)
           console.error('Unable to save window geometry:', error);
         }
       );
-      Menu.setApplicationMenu(
-        Menu.buildFromTemplate([
-          {
-            label: 'Promptly',
-            submenu: [
-              { label: 'Open Promptly', click: openWindow },
-              {
-                label: 'Settings…',
-                accelerator: 'CommandOrControl+,',
-                click: () => {
-                  void lifecycle?.show('settings').catch(console.error);
-                }
-              },
-              { type: 'separator' },
-              { role: 'quit' }
-            ]
-          },
-          { role: 'editMenu' }
-        ])
-      );
+      installDesktopMenu(openWindow, () => lifecycle);
       nativeTheme.on('updated', updateWindowBackgrounds);
       openWindow();
       app.on('activate', () => {

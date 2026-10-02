@@ -3,7 +3,18 @@ import { expect, it } from 'vitest';
 import { libraryKeyCommand } from './library-keyboard';
 
 it('routes library navigation and copy while preserving text, IME, and overlay ownership', () => {
-  const input = { key: 'Enter', meta: false, ctrl: false, alt: false, shift: false, composing: false, prevented: false, focus: 'search' as const, selected: true, hasSearch: true };
+  const input = {
+    key: 'Enter',
+    meta: false,
+    ctrl: false,
+    alt: false,
+    shift: false,
+    composing: false,
+    prevented: false,
+    focus: 'search' as const,
+    selected: true,
+    hasSearch: true
+  };
 
   expect(libraryKeyCommand(input)).toBe('copy');
   expect(libraryKeyCommand({ ...input, key: 'ArrowDown' })).toBe('next');

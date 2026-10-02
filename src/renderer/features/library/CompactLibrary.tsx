@@ -8,28 +8,11 @@ import { LibrarySearch } from './LibrarySearch';
 import { LibraryTags } from './LibraryTags';
 
 export function CompactLibrary() {
-  const { state, model, selection } = useLibrary();
+  const { state, model } = useLibrary();
   const commands = useLibraryCommands();
 
   return (
-    <section
-      className="compact-library"
-      aria-label="Snippet library"
-      onKeyDown={(event) => {
-        if (commands !== undefined) return;
-        if (event.defaultPrevented || !(event.target instanceof HTMLElement)) return;
-        if (!event.target.matches('[data-promptly-search], [role="listbox"]')) return;
-        if (
-          (event.key === 'ArrowDown' || event.key === 'ArrowUp') &&
-          !event.metaKey &&
-          !event.ctrlKey &&
-          !event.altKey
-        ) {
-          event.preventDefault();
-          void selection.moveSelection(event.key === 'ArrowDown' ? 1 : -1);
-        }
-      }}
-    >
+    <section className="compact-library" aria-label="Snippet library">
       <LibrarySearch />
       <LibraryTags />
       {(state.error?.message ?? commands?.error) !== undefined && (
@@ -40,10 +23,10 @@ export function CompactLibrary() {
               variant="ghost"
               size="xs"
               onClick={() => {
-                model.query(state.request);
+                model.refresh();
               }}
             >
-              Retry
+              Refresh library
             </Button>
           )}
         </p>

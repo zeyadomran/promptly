@@ -1,15 +1,16 @@
 import { type BrowserWindow, screen } from 'electron';
 
 import { failure } from '../../shared/contracts/result';
+import { shouldHideAfterCopy } from '../../shared/contracts/settings';
 import type { WindowKind, WindowState } from '../../shared/contracts/window';
 import { focusSearchChannel } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
-import { clampBounds, windowGeometry } from './geometry';
+import { reconcileWindows } from './reconcile-windows';
 import { concealWindow, type WindowRecovery } from './visibility';
 import { watchWindowLifecycle } from './watch-window-lifecycle';
-import { displayAreas, WindowBounds } from './window-bounds';
+import { WindowBounds } from './window-bounds';
 import { createWindowOperations } from './window-operations';
 
 export class WindowLifecycle {
@@ -32,18 +33,7 @@ export class WindowLifecycle {
 
   private readonly reconcile = () => {
     this.bounds?.reconcile();
-    for (const [kind, window] of this.windows) {
-      if (kind === 'main' || window.isDestroyed()) continue;
-      const mode = this.state().mode;
-      const target = clampBounds(window.getNormalBounds(), displayAreas(), mode, kind);
-      const minimum = windowGeometry(kind, mode);
-
-      window.setMinimumSize(
-        Math.min(minimum.minWidth, target.width),
-        Math.min(minimum.minHeight, target.height)
-      );
-      window.setBounds(target);
-    }
+    reconcileWindows(this.windows, this.state().mode);
   };
 
   async show(kind: WindowKind = 'main'): Promise<BrowserWindow> {
@@ -109,16 +99,18 @@ export class WindowLifecycle {
   }
 
   async hideAfterCopy(senderId: number): Promise<boolean> {
-    const result = await this.enqueue(async () => {
+    const result = await this.enqueue(() => {
       const window = this.windows.get('main');
 
       if (window === undefined || window.isDestroyed() || window.webContents.id !== senderId)
         throw new Error('The copy window is no longer available.');
-      this.hide();
-      return this.state();
+      if (shouldHideAfterCopy(this.settings.current.settings)) this.hide();
+      return Promise.resolve(this.state());
     });
 
-    return result.ok && !result.value.visible;
+    return (
+      result.ok && (!shouldHideAfterCopy(this.settings.current.settings) || !result.value.visible)
+    );
   }
 
   async toggle(): Promise<void> {

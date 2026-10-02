@@ -1,6 +1,13 @@
 export type LibraryKeyCommand =
-  | 'copy' | 'next' | 'previous' | 'delete' | 'focus-search' | 'tag'
-  | 'settings' | 'clear-search' | 'hide';
+  | 'copy'
+  | 'next'
+  | 'previous'
+  | 'delete'
+  | 'focus-search'
+  | 'tag'
+  | 'settings'
+  | 'clear-search'
+  | 'hide';
 export type LibraryFocus = 'search' | 'library' | 'editor' | 'overlay' | 'control';
 
 export function libraryKeyCommand(input: {
@@ -30,7 +37,11 @@ export function libraryKeyCommand(input: {
   if (input.key === 'ArrowDown') return 'next';
   if (input.key === 'ArrowUp') return 'previous';
   if (input.key === 'Enter' && input.selected) return 'copy';
-  if ((input.key === 'Delete' || input.key === 'Backspace') && input.selected && input.focus !== 'search')
+  if (
+    (input.key === 'Delete' || input.key === 'Backspace') &&
+    input.selected &&
+    input.focus !== 'search'
+  )
     return 'delete';
   return undefined;
 }
