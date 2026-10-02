@@ -16,6 +16,7 @@ export function CompactLibrary() {
       className="compact-library"
       aria-label="Snippet library"
       onKeyDown={(event) => {
+        if (commands !== undefined) return;
         if (event.defaultPrevented || !(event.target instanceof HTMLElement)) return;
         if (!event.target.matches('[data-promptly-search], [role="listbox"]')) return;
         if (
@@ -34,15 +35,17 @@ export function CompactLibrary() {
       {(state.error?.message ?? commands?.error) !== undefined && (
         <p role="alert" className="library-error">
           {state.error?.message ?? commands?.error}
-          <Button
-            variant="ghost"
-            size="xs"
-            onClick={() => {
-              model.query(state.request);
-            }}
-          >
-            Retry
-          </Button>
+          {state.error !== undefined && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                model.query(state.request);
+              }}
+            >
+              Retry
+            </Button>
+          )}
         </p>
       )}
       <div className="library-results" aria-busy={state.loading}>

@@ -32,8 +32,9 @@ export function LibraryRow({
       data-snippet-id={snippet.id}
       className={`library-row ${positionClass}`}
       onClick={() => {
-        model.select(snippet.id, index);
-        if (commands !== undefined) void commands.copy(snippet.id);
+        const accepted = model.select(snippet.id, index);
+
+        if (accepted && commands !== undefined) void commands.copy(snippet.id);
       }}
     >
       <LibraryTagDots tags={snippet.tags} />
@@ -44,7 +45,7 @@ export function LibraryRow({
         <LibraryMetadata
           snippet={snippet}
           copied={copied}
-          actionable={selected && commands !== undefined}
+          actionable={commands !== undefined && (selected || copied)}
         />
       </div>
     </div>

@@ -39,3 +39,13 @@ immutable useSyncExternalStore snapshots; no lint suppression or unused dependen
 retained. The shadcn DropdownMenu uses the existing cn utility, with one component per
 file. Command eligibility is explicitly null during unloaded moves/reconciliation;
 the port also exposes hasSearch for the one issue19 keyboard owner.
+
+## Resumed functional-only implementation
+
+Main `bbc783ba3ae1c51096e7b002588aa3c06bb990ff` is normally merged at `82f3885`; its production search implementation and functional-only policy replace the older diagnostic contracts. Compact corpus/GUI fixtures, thirteen model/range matrices and all obsolete search diagnostics are retired. One canonical public `LibraryModel` flow now covers delayed page navigation, bounded cache eviction, selection-preserving read refresh, repeated committed revision changes, query supersession, no-results reset and Clear all. Internal search/cursor/cache modules remain real; the controlled IPC boundary supplies deterministic snapshots.
+
+Row copy dispatch requires an accepted current selection, so a stale rendered row cannot invoke the shared copy port after invalidation. The model exposes `refresh()` for issue19 to retry reads without resetting selection. The window-focus bridge focuses the real search ref and cleans up its subscription; the Compact Arrow fallback is disabled whenever the issue19 command context exists. Copied feedback can remain visible on a nonselected row during the provider's feedback interval. Tag chips/row metadata use the supplied Compact design's pill shape, selected colors and spacing.
+
+Actual copy/Enter/Delete/Undo and keyboard dispatch still require issue19's sole provider integration. Tag creation/picker remains an absent, disabled integration port until issue20; Regular library remains issue18. Current light/dark/minimum-height rendering, CSP runtime, native focus and smooth 10k scrolling are manual qualification gaps under `docs/testing.md`. Earlier owned 10k evidence above is historical and is not requalified by current functional checks or packaging. No new GUI/native preference/clipboard/input run is performed.
+
+Current resumed checkpoint validation: `npm run check` passes strict TypeScript/ESLint/architecture (252 modules), Prettier and all 11 functional cases, including the one canonical LibraryModel flow. `npm run package` builds the actual Windows production native helper and Electron package. No new dependency is introduced; the manifest/lockfile match current main. The controlled model test failed before the accepted-selection return value was implemented and passed afterward; this red/green slice qualifies the new public acceptance signal only, not the historical consolidation.

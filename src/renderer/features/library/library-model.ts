@@ -111,8 +111,17 @@ export class LibraryModel {
     return this.client?.search({ ...this.state.request, offset }) ?? Promise.resolve();
   }
 
-  select(id: string, index: number): void {
-    if (this.cursor.select(this.state, id, index)) this.publish();
+  select(id: string, index: number): boolean {
+    const accepted = this.cursor.select(this.state, id, index);
+
+    if (accepted) this.publish();
+    return accepted;
+  }
+
+  refresh(): void {
+    if (this.closed) return;
+    this.invalidate();
+    void this.refreshSummary();
   }
 
   moveSelection(delta: number): Promise<void> {

@@ -13,6 +13,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | File | Canonical behavior |
 | --- | --- |
 | `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights and committed invalidation |
+| `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and revision/query reconciliation |
 | `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo, JSON and Markdown export, clear/import and reopen |
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
 | `settings/service.test.ts` | Successful preference save/reopen and rejected native-effect rollback |
