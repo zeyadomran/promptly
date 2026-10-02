@@ -40,6 +40,14 @@ proves teardown can finish before body finally while still observing real worker
 termination. Ten focused worker cases passed, including the unchanged 100 concurrent
 recaptures/50 copy writes and 1,000-write saturation workload.
 
+Both worker suites use an explicit **45-second teardown-only hook budget** covering
+the existing 30-second accepted drain, five-second close and termination margin.
+The ordinary body deadline remains unchanged. An actual installed-Vitest subprocess
+regression retains an intentional 20ms body timeout while a pending close takes 300ms:
+the old 100ms hook abandons cleanup; the explicit scaled teardown budget observes
+termination and removal. Both child runs still exit 1 for the original body failure.
+The two timeout regressions plus the ten existing ownership/workload cases pass.
+
 Vitest serializes files only when `process.env['CI'] === 'true'`; local unset/other
 values preserve file parallelism. This is a deliberate CI resource isolation policy
 for file-level forks, SQLite workers and Vite builds. It does not establish the cause
@@ -52,3 +60,5 @@ Final local `CI=true npm run check` passed all strict TypeScript projects, ESLin
 with zero warnings, architecture (357 modules), formatting, and 318 tests with one
 macOS topology case skipped on Windows (76 files passed, one skipped). Windows
 production packaging passed. No unchanged broad suites were rerun after this result.
+The subsequent teardown-budget delta is verified by strict types/lint/architecture/
+format and the 12 focused tests under `CI=true`; hosted CI runs the complete new head.

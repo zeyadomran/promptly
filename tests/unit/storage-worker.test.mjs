@@ -5,6 +5,7 @@ import { setImmediate } from 'node:timers/promises';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
+import { storageFixtureTeardownMs } from './storage-worker-budgets.mjs';
 import { buildStorageWorker, query } from './storage-worker-fixture.mjs';
 
 let fixture;
@@ -16,7 +17,7 @@ beforeAll(async () => {
   directory = fixture.directory;
   workerFile = fixture.workerFile;
 });
-afterAll(() => fixture.dispose());
+afterAll(() => fixture.dispose(), storageFixtureTeardownMs);
 
 describe('serialized database worker', () => {
   it('serializes concurrent recaptures, commits ordered events, drains submitted writes and reopens revision', async () => {

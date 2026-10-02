@@ -5,6 +5,7 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
+import { storageFixtureTeardownMs } from './storage-worker-budgets.mjs';
 import { buildStorageWorker, query } from './storage-worker-fixture.mjs';
 
 let fixture;
@@ -12,7 +13,7 @@ let fixture;
 beforeAll(async () => {
   fixture = await buildStorageWorker();
 });
-afterAll(() => fixture.dispose());
+afterAll(() => fixture.dispose(), storageFixtureTeardownMs);
 
 function hangingClient(name) {
   const workerFile = path.join(fixture.directory, `${name}.cjs`);
