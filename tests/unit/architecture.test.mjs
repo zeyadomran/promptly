@@ -23,6 +23,20 @@ describe('process boundaries', () => {
   ])('rejects renderer escape: %s', (source) => {
     expect(inspect('renderer', source).length).toBeGreaterThan(0);
   });
+  it.each(["export type X = import('../main/storage').X;", "export type X = import('node:fs').X;"])(
+    'rejects privileged TypeScript type imports: %s',
+    (source) => {
+      expect(inspect('renderer', source).length).toBeGreaterThan(0);
+    }
+  );
+  it('allows TypeScript import types from shared contracts', () => {
+    expect(
+      inspect(
+        'renderer',
+        "export type Platform = import('../shared/contracts/desktop-bridge').DesktopBridge['platform'];"
+      )
+    ).toEqual([]);
+  });
   it.each([
     "export * from '../main/storage';",
     "import fs from 'node:fs';",
@@ -62,6 +76,25 @@ describe('component ownership', () => {
     expect(inspect('renderer', source)).toEqual([
       expect.stringContaining('own implementation file')
     ]);
+  });
+  it.each([
+    'class First extends Component { render() { return null; } } class Second extends Component { render() { return null; } }',
+    'class First extends React.Component { render() { return null; } } class Second extends React.PureComponent { render() { return null; } }',
+    'const First = () => null; export default function () { return null; }',
+    'const First = () => null; export default class extends Component { render() { return null; } }',
+    'const First = () => null; const Second = class extends PureComponent { render() { return null; } };',
+    "import { Component as Base } from 'react'; class First extends Base { render() { return null; } } class Second extends Base { render() { return null; } }"
+  ])('rejects class and anonymous default second components: %s', (source) => {
+    expect(inspect('renderer', source)).toEqual([
+      expect.stringContaining('own implementation file')
+    ]);
+  });
+  it.each([
+    'export default function () { return null; }',
+    'export default class extends Component { render() { return null; } }',
+    'const Only = class extends PureComponent { render() { return null; } };'
+  ])('allows a single anonymous or class component: %s', (source) => {
+    expect(inspect('renderer', source)).toEqual([]);
   });
   it('flags modules requiring extraction', () => {
     expect(inspect('shared', '\n'.repeat(201))).toEqual([expect.stringContaining('200 lines')]);

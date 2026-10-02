@@ -76,7 +76,7 @@ export function inspectModule(filename, source, root) {
       checkImport(node.source.value);
     }
 
-    if (node.type === 'TSImportType') checkImport(node.argument?.value);
+    if (node.type === 'TSImportType') checkImport(node.source?.value);
     if (node.type === 'TSExternalModuleReference') checkImport(node.expression?.value);
     if (node.type === 'ImportExpression') checkImport(node.source?.value);
     if (
