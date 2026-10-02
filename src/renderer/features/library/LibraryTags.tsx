@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { tagColorClasses } from '../../lib/tag-palette';
 import { useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
@@ -41,18 +42,25 @@ export function LibraryTags() {
           {tag.name}
         </Button>
       ))}
-      <Button
-        variant="ghost"
-        size="icon-xs"
-        className="library-create-tag"
-        disabled={actions === undefined}
-        aria-label="Create tag"
-        onClick={() => {
-          actions?.createTag();
-        }}
-      >
-        <Plus />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="library-create-tag"
+              disabled={actions === undefined}
+              aria-label="Create tag"
+              onClick={() => {
+                actions?.createTag();
+              }}
+            >
+              <Plus aria-hidden="true" />
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Create tag</TooltipContent>
+      </Tooltip>
     </div>
   );
 }
