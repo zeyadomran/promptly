@@ -10,7 +10,7 @@ export function clipboardText(text: string, platform: string, format: 'text' | '
     } else if (unit >= 0xdc00 && unit <= 0xdfff) return undefined;
   }
 
-  // CF_UNICODETEXT terminates at NUL. NSString/pasteboard text is length-delimited.
+  // Windows CF_UNICODETEXT terminates at NUL.
   if (platform === 'win32' && text.includes('\0')) return undefined;
   if (format === 'text') return text;
   let longest = 2;

@@ -34,8 +34,7 @@ export function useWindow() {
     error,
     setMode: async (mode: WindowState['mode']) => {
       const result = await window.promptly.setWindowMode({
-        mode,
-        reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        mode
       });
 
       if (result.ok) {

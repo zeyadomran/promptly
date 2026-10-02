@@ -11,7 +11,7 @@ Force pushes and branch deletion are blocked.
 `Workflow validation` is the only check currently required by branch protection.
 Before merging, the maintainer also verifies every applicable check passes at the
 PR's current head: `Functional checks (windows-latest)`,
-`Functional checks (macos-latest)`, `Analyze (actions)`, and
+`Analyze (actions)`, and
 `Analyze (javascript-typescript)`. Branch protection does not enforce these
 additional checks.
 
@@ -33,12 +33,11 @@ updates, and uses the Conventional Commit prefix `ci`.
 
 The Electron/React foundation uses npm with a committed lockfile. Dependabot checks
 npm packages weekly and groups related Forge, React, and Tailwind updates.
-The `Functional checks` jobs clean-install, run strict TypeScript, zero-warning
-ESLint, architecture and formatting checks, and package the app on Windows and
-macOS. Shared functional service tests run once, on Windows. CI has no automated
+The `Functional checks (windows-latest)` job clean-install, run strict TypeScript, zero-warning
+ESLint, architecture and formatting checks, and package the app for Windows x64. Functional service tests run once. CI has no automated
 GUI launch or native E2E suite; packaging does not qualify OS capture, permissions,
 input delivery or activation. Packaged applications require the native manual
-release checks on both supported OSes in [the test policy](../docs/testing.md).
+release checks on Windows in [the test policy](../docs/testing.md).
 Require new CI checks in branch protection only after verifying they run
 successfully.
 

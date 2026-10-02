@@ -17,7 +17,6 @@ import { initialBounds, windowGeometry } from './geometry';
 import { installRendererAssets } from './install-renderer-assets';
 import { loadWindowRenderer } from './load-window-renderer';
 import { registerNativeChrome } from './native-chrome';
-import { setPinnedWorkspaces } from './pinned-workspaces';
 
 export async function createMainWindow(
   windows: WindowRegistry,
@@ -60,15 +59,11 @@ export async function createMainWindow(
       : {}),
     titleBarStyle: 'hidden',
     autoHideMenuBar: true,
-    ...(process.platform === 'win32'
-      ? {
-          titleBarOverlay: {
-            height: kind === 'main' ? 40 : 38,
-            color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
-            symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
-          }
-        }
-      : {}),
+    titleBarOverlay: {
+      height: kind === 'main' ? 40 : 38,
+      color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
+      symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
+    },
     show: false,
     alwaysOnTop: preferences.alwaysOnTop,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
@@ -91,7 +86,6 @@ export async function createMainWindow(
   });
 
   registerNativeChrome(window);
-  setPinnedWorkspaces(window, preferences.alwaysOnTop);
   created?.(window);
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

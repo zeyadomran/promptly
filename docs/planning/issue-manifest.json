@@ -11,14 +11,14 @@
       "Use Electron + React + TypeScript + Vite, Tailwind, npm with a committed lockfile, and Electron Forge for packaging; verify compatible stable versions during implementation.",
       "Create feature folders and enforce renderer/main import boundaries. Every React component, including extracted shadcn subcomponents, gets its own implementation file; preserve accessible primitive composition and provide explicit re-export entrypoints.",
       "Aim for 50–150 lines per handwritten module; flag files over 200 lines for extraction or a justified review exception. Keep orchestration thin and business logic outside JSX.",
-      "Add lint, format, typecheck, test, dev, and package scripts; build a minimal Vitest/React Testing Library harness."
+      "Add lint, format, typecheck, test, dev, and package scripts; build a minimal Vitest functional service suite."
     ],
     "checks": [
-      "A clean clone installs reproducibly and launches a React window on macOS and Windows.",
+      "A clean clone installs reproducibly and launches a React window on Windows.",
       "Renderer code cannot import Node, Electron main, database, or native adapters.",
       "Component-per-file and module-boundary checks run locally; no starter demo remains."
     ],
-    "verify": "Clean install, typecheck/lint, launch smoke on both platforms, and one meaningful preload-boundary smoke test."
+    "verify": "Extend the canonical public functional service flow where necessary; run strict checks and Windows packaging. UI/native release qualification is manual."
   },
   {
     "key": "P02",
@@ -41,11 +41,11 @@
       "A script-shaped snippet is rendered as text and cannot execute.",
       "Multiple windows receive updates without duplicate listeners; closing a window disposes subscriptions."
     ],
-    "verify": "Contract rejection tests, preload allowlist tests, renderer XSS fixture, and window lifecycle smoke."
+    "verify": "Extend the canonical public functional service flow where necessary; run strict checks and Windows packaging. UI/native release qualification is manual."
   },
   {
     "key": "P03",
-    "title": "Validate native capture, keyboard hooks, and clipboard feasibility on both OSes",
+    "title": "Validate native capture, keyboard hooks, and clipboard feasibility on Windows",
     "phase": 1,
     "deps": [
       "P01"
@@ -54,18 +54,18 @@
     "files": "docs/architecture/native-capture-decision.md, experiments/native-capture/",
     "goal": "Resolve the platform risks before committing the production capture implementation.",
     "scope": [
-      "Build a disposable capture harness for macOS AXSelectedText and Windows UI Automation TextPattern, foreground app identity, modifier hooks, and clipboard fallback.",
+      "Qualify the existing Windows UI Automation TextPattern adapter, foreground app identity and modifier hook through bounded manual checks; evaluate safe clipboard fallback separately. Do not add another native test harness.",
       "Compare maintained native packages against small packaged native helpers; record licenses, supported Electron ABI/architectures, permissions, helper lifecycle, and rebuild/signing needs. Select adapters behind stable interfaces.",
-      "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and macOS Secure Input. Validate terminal-specific Copy behavior; Ctrl+C must not interrupt a running command.",
+      "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and protected input. Validate terminal-specific Copy behavior; Ctrl+C must not interrupt a running command.",
       "Investigate multi-format clipboard snapshots, ownership/change counters, unsupported/lazy formats, failure restoration, and crash behavior. If faithful restoration cannot be established, skip destructive fallback.",
-      "Measure capture-to-feedback on each path; identify any extra macOS Input Monitoring requirement imposed by the chosen hook. Confirm Alt+Space availability instead of assuming it."
+      "Measure capture-to-feedback on each path. Confirm Alt+Space availability instead of assuming it."
     ],
     "checks": [
-      "A documented support matrix contains real observations from macOS and Windows, with OS/architecture and app versions.",
-      "Adapter choice and packaging proof exist for both platforms; unsupported paths return explicit errors without overwriting the clipboard.",
+      "A documented support matrix contains real observations from Windows, with OS/architecture and app versions.",
+      "Adapter choice and packaging proof exist for Windows; unsupported paths return explicit errors without overwriting the clipboard.",
       "The ADR records outstanding release blockers, including failures of the under-150-ms target; no untested claim of universal capture."
     ],
-    "verify": "Human-in-the-loop runs on real machines, format round trips and concurrent-copy tests, foreground-window assertions, latency traces."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P04",
@@ -89,7 +89,7 @@
       "Recapture reuses a deterministic existing ID; deliberate duplicates remain possible.",
       "Migration failure preserves the previous database; writes and relationship changes are atomic."
     ],
-    "verify": "Temporary-database integration tests for migrations, rollback, reopen, concurrent capture, long text, duplicates, and delete/undo."
+    "verify": "Extend the canonical public functional service flow where necessary; run strict checks and Windows packaging. UI/native release qualification is manual."
   },
   {
     "key": "P05",
@@ -104,7 +104,7 @@
     "goal": "Keep every preference consistent across windows and launches.",
     "scope": [
       "Define defaults for theme/system, compact startup mode, pin=false, normalization=true, toast=true, Shift double-tap/300 ms, show/hide Alt+Space or Option+Space, and optional pin shortcut.",
-      "Persist login/tray/dock options, per-mode bounds, onboarding completion, shortcut configuration, and validated 150–600 ms timing.",
+      "Persist login/tray options, per-mode bounds, onboarding completion, shortcut configuration, and validated 150–600 ms timing.",
       "Represent hide-after-copy as an explicit override or automatic default: auto hides when unpinned and stays open when pinned; explicit user choices remain stable.",
       "Apply through typed services and notify all windows immediately. Roll back failed OS operations and leave the last working preference active.",
       "Use one persisted pin state for title-bar and Appearance controls; distinguish remembered per-mode geometry from preferred startup mode."
@@ -114,7 +114,7 @@
       "Invalid values do not corrupt preferences; failed side effects show a useful error.",
       "Open main/settings/toast renderers converge on updated theme and preferences."
     ],
-    "verify": "Defaults/migration/validation tests and multi-window update and failed-operation rollback tests."
+    "verify": "Extend the canonical public functional service flow where necessary; run strict checks and Windows packaging. UI/native release qualification is manual."
   },
   {
     "key": "P06",
@@ -138,7 +138,7 @@
       "Fonts and assets render offline; shared components match supplied reference measurements.",
       "Icon-only actions have labels/tooltips and overlays have accessible titles."
     ],
-    "verify": "Visual fixture inspection against screenshots, offline font/network check, keyboard/focus checks, and safe text-highlighting tests."
+    "verify": "Extend the canonical public functional service flow where necessary; run strict checks and Windows packaging. UI/native release qualification is manual."
   },
   {
     "key": "P07",
@@ -152,9 +152,9 @@
     "files": "src/main/shortcuts/, src/main/platform/keyboard/",
     "goal": "Trigger capture reliably while another application is focused.",
     "scope": [
-      "Use Electron globalShortcut for combinations and the validated native hook for modifier taps. Support Shift, Command/Ctrl, and Option/Alt.",
+      "Use Electron globalShortcut for combinations and the validated native hook for modifier taps. Support Shift, Ctrl, and Alt.",
       "Define a tap as press/release; trigger on the second completed tap within the configured window. Cancel on intervening keys, other modifiers, holds/repeats, pause, sleep, or hook reset.",
-      "Register capture, show/hide, and optional pin combinations with platform display labels; detect duplicates within Promptly and actual registration failures.",
+      "Register capture, show/hide, and optional pin combinations with Windows display labels; detect duplicates within Promptly and actual registration failures.",
       "Replace bindings transactionally, retaining previous valid bindings on failure. Suspend relevant capture during recorder use without leaving it disabled afterward.",
       "Handle resume/restart and unregister hooks/accelerators on quit. Pausing capture must not disable show/hide or pin."
     ],
@@ -163,31 +163,20 @@
       "300 ms default and 150/600 ms boundaries behave deterministically.",
       "Failed/conflicting registration has honest status; no claim to identify every owning app."
     ],
-    "verify": "Fake-clock event-sequence tests plus real background-hook, sleep/resume, and conflict checks on both platforms."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P08",
     "title": "Implement macOS selection capture, permissions, and source app identity",
     "phase": 2,
-    "deps": [
-      "P03",
-      "P02"
-    ],
+    "deps": [],
     "refs": "SPEC §2 Capture behavior and Permissions",
-    "files": "src/main/platform/macos/, native/macos/",
-    "goal": "Read selected text on macOS without taking focus or requiring clipboard mutation on the preferred path.",
-    "scope": [
-      "Implement the selected AX/native adapter; record frontmost app identity before any Promptly window operation.",
-      "Read selected text with bounded execution and typed results: success, empty, unsupported, denied, timed out, and protected input.",
-      "Expose Accessibility status and System Settings navigation; handle permission revocation and any additional permission actually required by the selected hook.",
-      "Expose source activation only from validated OS application identity; never execute commands derived from snippet text."
-    ],
-    "checks": [
-      "Supported editors, browsers, and terminals return complete selected text with source metadata.",
-      "Denied/revoked permission does not crash or trigger unsafe fallback.",
-      "The frontmost application and its selection remain undisturbed."
-    ],
-    "verify": "macOS native integration matrix, permission grant/revoke cycles, Unicode/multiline selection, and focus checks."
+    "files": "",
+    "goal": "Deferred historical work; not a current Windows delivery dependency or release gate.",
+    "scope": [],
+    "checks": [],
+    "verify": "Deferred: macOS is outside current Windows x64 scope; issue #10 closed as not planned.",
+    "status": "deferred"
   },
   {
     "key": "P09",
@@ -211,7 +200,7 @@
       "No-selection and unavailable-provider cases are distinct; no unrelated clipboard text is returned as a selection.",
       "No focus change, elevation prompt, or main-process freeze occurs."
     ],
-    "verify": "Windows native integration matrix with Notepad, browser, Cursor/VS Code, Windows Terminal, and elevated/unsupported controls."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P10",
@@ -219,7 +208,6 @@
     "phase": 2,
     "deps": [
       "P03",
-      "P08",
       "P09"
     ],
     "refs": "SPEC §2 Capture behavior, §9 Never lose the clipboard",
@@ -237,7 +225,7 @@
       "A concurrent user copy wins; timeout, empty selection, error, and cancellation do not replace the clipboard with stale data.",
       "A running terminal command cannot be interrupted by an assumed Ctrl+C copy action."
     ],
-    "verify": "Native round-trip fixtures, unsupported/lazy formats, concurrent-copy races, injected errors/timeouts/helper termination, and terminal checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P11",
@@ -247,7 +235,6 @@
       "P04",
       "P05",
       "P07",
-      "P08",
       "P09",
       "P10"
     ],
@@ -266,7 +253,7 @@
       "Whitespace-only text is ignored; disabled normalization preserves exact selected content.",
       "Capture never calls show/focus on main or settings windows."
     ],
-    "verify": "Pipeline integration tests using fake adapters for failure branches, real shortcut-to-SQLite smoke on both OSes, and normalization fixtures."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P12",
@@ -284,14 +271,14 @@
       "Host Sonner content in a dedicated non-activating, non-focusable overlay with a narrow preload API; renderer Sonner alone cannot appear over other apps when main is hidden.",
       "Match the 290 px reference, logo, Saved to Promptly/Already saved title, one-line preview, relative time, and ~2500 ms dismissal. No actions or tagging controls.",
       "Respect show-confirmation and light/dark/system settings; position within the active display work area and handle DPI/multi-monitor changes.",
-      "Bound burst behavior and timers; test full-screen/Spaces limitations and avoid focus or taskbar entries."
+      "Bound burst behavior and timers; test Windows fullscreen limitations and avoid focus or taskbar entries."
     ],
     "checks": [
       "Keyboard focus and keystrokes remain in the source app during appearance and dismissal.",
       "Main hidden/minimized and pinned/unpinned cases all show the correct toast when enabled.",
       "No toast window leaks after repeated captures; disabled confirmation creates no visible overlay."
     ],
-    "verify": "Native foreground-window assertions, 100-capture burst/lifecycle checks, and screenshot comparison in both themes."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P13",
@@ -305,10 +292,10 @@
     "files": "src/main/windows/, src/renderer/features/window-chrome/",
     "goal": "Provide native-feeling compact, regular, onboarding, and settings windows.",
     "scope": [
-      "Implement single-instance launch, open/show/hide/reactivate, tray-aware close, and explicit Quit cleanup; keep a recovery route when tray/dock visibility is changed.",
+      "Implement single-instance launch, open/show/hide/reactivate, tray-aware close, and explicit Quit cleanup; keep a recovery route when tray visibility is changed.",
       "Compact starts near 440 px wide with minimum height 420; Regular defaults to 1000×640 with minimum 760×480. Persist distinct bounds and clamp restored windows to available displays.",
-      "Use native macOS traffic lights and Windows caption controls with safe draggable/non-draggable title-bar regions.",
-      "Implement persisted pin behavior and fullscreen-space support where available, platform-aware theme/size/pin controls, and ~180 ms resize animation only when supported and reduced motion permits.",
+      "Use Windows caption controls with safe draggable/non-draggable title-bar regions.",
+      "Implement persisted pin behavior and Windows fullscreen support where available, platform-aware theme/size/pin controls, and ~180 ms resize animation only when supported and reduced motion permits.",
       "Onboarding uses its 760×510 layout; settings can resize across 640 px. Show/hide shortcut opens the current mode and focuses search."
     ],
     "checks": [
@@ -316,7 +303,7 @@
       "Pin state agrees across title bar, footer, settings, and OS behavior after restart.",
       "Closing/hiding, a second launch, display disconnect, and Quit produce predictable lifecycle behavior."
     ],
-    "verify": "Packaged desktop smoke for both platforms, multi-monitor/DPI restoration, title-bar hit regions, and reduced-motion checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P14",
@@ -341,7 +328,7 @@
       "Capture/edit/tag/delete/import changes invalidate the index and counts consistently.",
       "Benchmarks include short/worst-case queries and rapid typing, not only query execution."
     ],
-    "verify": "Parser/repository fixtures, literal wildcard tests, index consistency tests, and reproducible 10k end-to-end benchmark."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P15",
@@ -367,7 +354,7 @@
       "10k snippets scroll smoothly with bounded mounted rows and stable selection.",
       "Counts, pin status, no-results reset, and the configured-shortcut empty-state copy are correct."
     ],
-    "verify": "Component interaction tests for filtering/selection/virtualization and visual comparisons at 440 px and minimum height."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P16",
@@ -392,7 +379,7 @@
       "Edit, duplicate, delete/undo update storage, counts, preview, and search results consistently.",
       "No selection, deleted selection, long text, and narrow Regular minimum size have usable states."
     ],
-    "verify": "Management integration tests, nested-backtick fixture, source activation failures, and light/dark visual checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P17",
@@ -418,7 +405,7 @@
       "Text editing never deletes snippets, and dialogs/IME are not interrupted.",
       "Copy errors leave counters unchanged and do not hide the window."
     ],
-    "verify": "Keyboard interaction matrix, fake-timer copy feedback tests, clipboard failure tests, and pinned/unpinned/override behavior."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P18",
@@ -443,7 +430,7 @@
       "Creating/assigning/removing tags refreshes both layouts and Settings counts.",
       "Focus returns to the trigger and picker Enter/Esc do not copy or hide the library."
     ],
-    "verify": "Case-collision/concurrent-create repository tests and full picker keyboard/assignment/filter tests."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P19",
@@ -467,7 +454,7 @@
       "Rename/recolor is reflected in every open window immediately.",
       "Deleting an active filter tag cannot strand the user in an unexplained empty state."
     ],
-    "verify": "Transactional merge/rollback tests, name collisions, deleting tags with many snippets, and dialog keyboard checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P20",
@@ -484,16 +471,16 @@
     "scope": [
       "Implement side navigation at >=640 px and horizontally scrollable tabs below 640 px; stack labels/descriptions and controls while keeping switch rows inline.",
       "Create separate SettingsWindow, SettingsNavigation, SettingsSection, SettingsRow, GeneralSettings, and AppearanceSettings files; mount Tags, Shortcuts, and Storage sections through clear feature entrypoints.",
-      "Wire launch at login, tray visibility, macOS Dock visibility, hide-after-copy override/default, startup size mode, theme, and pin to immediate settings services.",
-      "Provide platform-specific visibility and permission status; ensure a working way to reopen Promptly before hiding tray/Dock routes.",
+      "Wire launch at login, tray visibility, hide-after-copy override/default, startup size mode, theme, and pin to immediate settings services.",
+      "Provide Windows visibility and native-operation status; ensure a working way to reopen Promptly before hiding tray routes.",
       "Handle rejected native preference changes with inline errors and rollback, without a Save button."
     ],
     "checks": [
       "639/640 px breakpoint behavior matches reference layouts and keyboard focus survives resizing.",
       "Every listed General/Appearance preference persists and takes effect immediately.",
-      "macOS-only controls are absent on Windows; close/back returns to the expected window."
+      "Only supported Windows controls are present; close/back returns to the expected window."
     ],
-    "verify": "Responsive screenshots at 440/639/640/900 px, keyboard navigation, relaunch persistence, and native login/tray/Dock checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P21",
@@ -508,7 +495,7 @@
     "goal": "Let users safely configure capture and window shortcuts with one reusable recorder.",
     "scope": [
       "Build ShortcutRecorder, ShortcutKeycaps, CaptureShortcutMode, ModifierSelector, and ShortcutConflictStatus as separate files for Settings and onboarding reuse.",
-      "Support recording/cancel/clear where optional, key-combination validation, platform key labels, double-tap mode selection, and 150–600 ms slider.",
+      "Support recording/cancel/clear where optional, key-combination validation, Windows key labels, double-tap mode selection, and 150–600 ms slider.",
       "Show known reserved/system conflicts and actual registration failures; say availability is limited to detectable conflicts rather than claiming every app was checked.",
       "Wire show/hide, optional pin, confirmation toast, and normalization settings; preserve previous bindings after failure and suppress recording-triggered capture.",
       "Explain Windows Alt+Space conflict when detected and offer a tested alternate such as Ctrl+Alt+Space without silently replacing the user's choice."
@@ -518,7 +505,7 @@
       "Invalid/conflicting bindings do not replace working shortcuts.",
       "Onboarding and Settings share the same validation and components."
     ],
-    "verify": "Recorder event-sequence tests, duplicate bindings, platform key mapping, registration failure, and real shortcut rebind smoke."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P22",
@@ -543,7 +530,7 @@
       "Malformed/canceled/failed imports leave existing data unchanged and never execute imported text.",
       "Clear all requires the exact confirmation and updates every window/tray with no recoverable in-app undo."
     ],
-    "verify": "Round-trip fixtures, duplicate text/ID collisions, Unicode/large files, disk-full/rollback, canceled dialogs, and erase/capture race tests."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P23",
@@ -560,22 +547,22 @@
     "files": "src/renderer/features/onboarding/, src/main/onboarding/",
     "goal": "Take new users from first launch to a successful capture using the real pipeline.",
     "scope": [
-      "Build separate stepper, WelcomeStep, PermissionStep, ShortcutStep, TryCaptureStep, and footer components matching 760×510 references.",
-      "On macOS, show actual Accessibility status, deep-link to settings, poll ~1 s while visible, stop polling on teardown, and auto-advance after permission. Skip the permission step on Windows and adjust step numbering.",
+      "Build separate stepper, WelcomeStep, ShortcutStep, TryCaptureStep, and footer components matching 760×510 references.",
+      "Use three Windows steps: Welcome, Shortcut, and Try Capture. No Accessibility permission screen, System Settings link, or polling is needed.",
       "Reuse shortcut recording/validation; display a selectable sample prompt and route its capture through the production capture pipeline.",
       "Show the real toast and Saved. Nice. only after successful persistence; enable Open Promptly on success and retain a Skip route.",
-      "Persist completion, open Compact on finish, and retain a successfully captured practice snippet. Skip creates no fabricated snippet; missing permissions remain recoverable in Settings."
+      "Persist completion, open Compact on finish, and retain a successfully captured practice snippet. Skip creates no fabricated snippet; unsupported capture remains recoverable with a clear explanation."
     ],
     "checks": [
-      "First-run flow differs correctly by OS and does not repeat after completion.",
+      "The three-step Windows first-run flow works and does not repeat after completion.",
       "Practice success is backed by stored data, with no duplicate synthetic event or fake toast.",
-      "Back/skip/restart/revoked-permission paths remain usable and clean up polling/listeners."
+      "Back/skip/restart/unsupported-capture paths remain usable and clean up listeners."
     ],
-    "verify": "First-run profile tests, real permission grant flow, practice selection/shortcut capture, and skip/relaunch matrix."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P24",
-    "title": "Implement tray/menu bar, recent snippets, and pause capture",
+    "title": "Implement Windows system tray, recent snippets, and pause capture",
     "phase": 4,
     "deps": [
       "P07",
@@ -587,7 +574,7 @@
     "files": "src/main/tray/, src/main/lifecycle/",
     "goal": "Keep Promptly available in the background with useful native tray commands.",
     "scope": [
-      "Generate platform-appropriate monochrome template/tray assets from the supplied SVG, including a paused state.",
+      "Generate Windows tray assets from the supplied SVG, including a paused state.",
       "Build Open Promptly, five most recently updated snippets, Pause/Resume capture, Settings, and Quit menu items; truncate labels but copy full stored text.",
       "Route recent-item copy through the shared successful-copy service and refresh menu data after mutations/import/clear.",
       "Disable only save capture while paused; keep open/pin shortcuts functional. Respect tray visibility preferences and maintain an alternative reopen path.",
@@ -598,11 +585,11 @@
       "Paused state is visible and capture does not fire; resuming reinstates the selected shortcut.",
       "Quit exits fully, while normal hide/close preserves intended background behavior."
     ],
-    "verify": "Native tray checks on both OSes, recent-item/copy-count integration, pause/resume, and leaked-process checks."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P25",
-    "title": "Extend CI for application checks and macOS/Windows build smoke",
+    "title": "Extend CI for application checks and Windows build smoke",
     "phase": 1,
     "deps": [
       "P01"
@@ -611,21 +598,21 @@
     "files": ".github/workflows/, .github/dependabot.yml, test configuration",
     "goal": "Catch module, behavior, and platform build regressions as implementation lands.",
     "scope": [
-      "Preserve the existing Workflow validation job and pinned Actions conventions; add reproducible npm install, formatting/lint, strict types, unit/integration tests, and production build.",
-      "Add Windows/macOS native build/package smoke once adapters land; keep OS permission/UI-dependent tests in a documented separate lane.",
+      "Preserve the existing Workflow validation job and pinned Actions conventions; add reproducible npm install, formatting/lint, strict types, functional service tests, and production build.",
+      "Add Windows native build/package smoke once adapters land; keep OS permission/UI-dependent tests in a documented separate lane.",
       "Add npm Dependabot coverage and JavaScript/TypeScript CodeQL configuration only where supported; preserve the existing eligibility gate rather than assuming private scanning is enabled.",
-      "Add Electron integration test harness and artifact retention for failures. Introduce required checks only after successful runs under repository policy."
+      "Keep minimal canonical functional service tests, strict static checks, Windows packaging and CodeQL. No automated GUI/E2E harness."
     ],
     "checks": [
       "Existing workflow validation still passes; app checks fail on genuine type/import/test/build errors.",
-      "Clean macOS/Windows builds use the lockfile and load required native modules.",
+      "Clean Windows builds use the lockfile and load required native modules.",
       "CI documentation distinguishes automated tests from real permission/fullscreen/native manual tests."
     ],
-    "verify": "Actionlint, clean build matrix, and a temporary intentionally failing check during setup; document required-check names."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P26",
-    "title": "Package macOS and Windows installers with native modules and signing support",
+    "title": "Package Windows installers with native modules",
     "phase": 5,
     "deps": [
       "P03",
@@ -639,18 +626,18 @@
     "files": "forge.config.ts, packaging/, .github/workflows/release.yml, docs/releasing.md",
     "goal": "Produce installable offline builds whose native features work outside development.",
     "scope": [
-      "Choose and document minimum OS versions and release architectures after the native spike; target macOS arm64/x64 and Windows x64, with Windows arm64 deferred unless validated.",
+      "Choose and document minimum OS versions and release architectures after the native spike; target Windows x64, with Windows arm64 deferred unless validated.",
       "Configure Forge installers, app identity/icons, native ABI rebuilds/helper bundling, ASAR exclusions, and locally bundled fonts/assets.",
-      "Add macOS signing/notarization and Windows signing configuration using supplied CI secrets; unsigned artifacts must be clearly development-only when credentials are unavailable.",
+      "Produce clearly labeled unsigned development artifacts. Signing credentials and release signing are outside current authorization; no notarization workflow is required.",
       "Define clean install/upgrade/uninstall behavior that preserves the user database on upgrade and avoids unexpected data removal; include licenses.",
       "Stage artifacts and manual release workflow; no cloud updater, telemetry, or auto-publish feature is required for v1."
     ],
     "checks": [
       "Packaged apps launch and capture/search/copy with no dev server or network dependency.",
-      "Native permissions attach to the actual packaged app identity, and helpers/modules load on each supported architecture.",
-      "Signing/notarization status and any credential blockers are explicit; unsigned test builds are not described as production-ready."
+      "Native helpers use the actual packaged app paths and Windows process identity, and helpers/modules load on Windows x64.",
+      "Unsigned development status and remaining release qualification are explicit; unsigned test builds are not described as production-ready."
     ],
-    "verify": "Clean-machine install/upgrade smoke, native module load, offline start, signatures/notarization verification when credentials exist, and database preservation."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P27",
@@ -668,45 +655,44 @@
       "P24"
     ],
     "refs": "DESIGN §§1–6; SPEC §9 Accessibility",
-    "files": "tests/visual/, tests/accessibility/, docs/qa/design-accessibility.md",
+    "files": "docs/qa/design-accessibility.md",
     "goal": "Verify the complete interface against the supplied designs and accessible behavior.",
     "scope": [
-      "Compare all ten supplied screenshots: four onboarding, compact light/dark, regular light/dark, wide/narrow settings; also cover new Settings subsections using the same tokens.",
+      "Compare the supplied visual references adapted to Windows: three-step onboarding, compact light/dark, regular light/dark, wide/narrow settings; also cover new Settings subsections using the same tokens.",
       "Check 4.5:1 text contrast, visible focus, icon labels/tooltips, dialogs, tag dots with text alternatives, OS key labels, reduced motion, and high DPI.",
       "Verify virtualized list roles/active-descendant behavior, selection independent of copy, focus return, screen-reader announcements, and complete keyboard flows.",
-      "Test VoiceOver and NVDA on real systems; record intentional Windows chrome and accessibility-driven differences from reference pixels."
+      "Test NVDA on Windows; record intentional Windows chrome and accessibility-driven differences from reference pixels."
     ],
     "checks": [
-      "All reference screens have reviewed comparison artifacts and unresolved differences are filed.",
+      "All applicable Windows screens have reviewed comparison artifacts and unresolved differences are filed.",
       "No critical keyboard traps, inaccessible icon controls, or unlabeled overlays remain.",
       "Settings remains usable around 640 px and with enlarged text; light/dark highlights retain contrast."
     ],
-    "verify": "Automated accessibility scan plus manual keyboard, VoiceOver/NVDA, contrast measurement, and screenshot review."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
   {
     "key": "P28",
-    "title": "Verify end-to-end reliability, performance budgets, and release readiness",
+    "title": "Verify Windows reliability, performance budgets, and release readiness",
     "phase": 5,
     "deps": [
       "P26",
       "P27"
     ],
     "refs": "SPEC §9 and all v1 workflows",
-    "files": "tests/e2e/, benchmarks/, docs/qa/release-checklist.md",
+    "files": "docs/qa/release-checklist.md",
     "goal": "Demonstrate that Promptly meets its native safety and responsiveness requirements in packaged builds.",
     "scope": [
-      "Run the complete highlight→shortcut→capture→toast→search→tag→copy flow on both OSes, including hidden/minimized/pinned states and real applications.",
+      "Run the complete highlight→shortcut→capture→toast→search→tag→copy flow on Windows, including hidden/minimized/pinned states and real applications.",
       "Benchmark 10k+ realistic snippets and long-text outliers: full input-to-painted results under 50 ms, trigger-to-toast under 150 ms; report p50/p95/max, sample counts, OS/hardware, warm/cold state, and accessibility/fallback paths separately.",
       "Measure idle total process-tree RSS and CPU over a defined interval, repeated window/capture cycles, and startup; propose a numeric memory budget from measured Electron baselines because the spec gives none.",
       "Exercise clipboard multi-format preservation/concurrent copy, permission revocation, unsupported apps, restart, database failure, display changes, sleep/resume, and offline usage.",
       "Confirm every issue acceptance criterion and install/signing check; record failures as release blockers instead of silently weakening requirements."
     ],
     "checks": [
-      "A reproducible evidence report covers both supported platforms and packaged artifacts.",
+      "A reproducible evidence report covers Windows x64 and packaged artifacts.",
       "Clipboard loss, false capture, focus theft, data loss, and unmet performance targets have no unresolved release blockers.",
       "Final checklist links automated results and manual evidence; account/signing/hardware gaps remain explicitly incomplete."
     ],
-    "verify": "Full regression suite, native matrix, reproducible latency/memory traces, offline network observation, and clean-machine release rehearsal."
+    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   }
 ]
-

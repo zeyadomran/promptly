@@ -1,6 +1,6 @@
 # Test policy
 
-CI uses functional service tests, strict static checks and actual Windows/macOS packaging. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Shared functional tests run once on Windows CI; both OS jobs check and package the application.
+CI uses functional service tests, strict static checks and actual Windows x64 packaging. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Functional tests run once on Windows CI, alongside static checks and packaging.
 
 Keep application modules real and observe public service outcomes. Use a real owned SQLite database for persistence and reopen it to verify durable state. Inject external OS, time or database failure boundaries when necessary; avoid private-method, call-count and own-module mock assertions. Keep temporary files isolated and close owned providers/databases before deletion.
 
@@ -25,7 +25,6 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `settings/service.test.ts` | Successful preference save/reopen and rejected native-effect rollback |
 | `windows/visibility.test.ts` | Reachability when an external recovery route appears or disappears |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
-| `platform/macos/macos-selection.test.ts` | Forged and retired source identity rejection at the adapter boundary |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
 | `shortcuts/transactions.test.ts` | Rejected OS binding replacement preserves authoritative preferences and the previous live command |
 | `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad key mapping, chord release before commit, cancellation and stale acquisition retirement through fake IPC |
@@ -35,11 +34,11 @@ Add functional coverage when its behavior is implemented; absent features have n
 
 ## Manual release checks
 
-Before qualifying a release, use a packaged application with a fresh owned profile on each supported OS and verify:
+Before qualifying a release, use a packaged application with a fresh owned profile on Windows x64 and verify:
 
 - Shell rendering, offline assets, theme, CSP/sandbox/IPC rejection and keyboard focus.
 - Window mode/geometry/pin, hide/reactivate/second launch, reachable recovery, quit, multi-monitor and fullscreen behavior.
-- Settings persistence, native login/Dock/permission outcomes and responsive navigation.
+- Settings persistence, native login/permission outcomes and responsive navigation.
 - Native chooser/reveal and library transfer UI; actual global shortcut delivery, physical modifier recognition, owned selection capture and source activation.
 
 Native preferences must be captured before application initialization and restored/read back after shutdown. Verify owned process death before deleting profiles; retain the tree if death is unverified. Use only owned selection/input/clipboard fixtures, never a user's data or desktop application. These checks are manual qualification work, not a replacement automated fixture framework.

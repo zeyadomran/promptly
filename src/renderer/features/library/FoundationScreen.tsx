@@ -6,8 +6,7 @@ interface FoundationScreenProps {
 }
 
 export function FoundationScreen({ platform }: FoundationScreenProps) {
-  const platformName =
-    platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : 'this platform';
+  const platformName = platform === 'win32' ? 'Windows' : 'this platform';
 
   return (
     <main className="flex h-full items-center justify-center p-8">

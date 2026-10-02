@@ -52,7 +52,7 @@ export function recordedAccelerator(event: ShortcutKeyEvent): string | undefined
     : (numpadKeys.get(event.code) ?? namedKeys.get(event.key) ?? event.key.toUpperCase());
   let accelerator = [...modifiers, key].join('+');
 
-  // Option can produce a glyph such as ß for S. Only fall back for an unsupported
+  // Alt-modified input can produce an unsupported glyph. Only fall back for an unsupported
   // modified character on a letter key; never substitute a punctuation position.
   if (
     !acceleratorSchema.safeParse(accelerator).success &&

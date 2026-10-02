@@ -1,6 +1,13 @@
-# ADR: Native capture through packaged platform helpers
+> Current scope is Windows x64 only. Earlier macOS requirements/history below are superseded; functional service tests are automated and native/UI release qualification is manual.
 
-Status: **selected for production implementation; real-app release qualification incomplete**.
+# Historical ADR: Native capture through packaged platform helpers
+
+Status: **historical cross-platform decision; superseded by Windows-only scope in #55**.
+
+The maintained runtime now ships only the Windows C# UI Automation helper described
+in [Windows selection](windows-selection.md). macOS code and its build target are
+removed. The earlier decision, spike measurements and failures below remain
+historical evidence; they are not current dependencies or release gates.
 Evidence date: 2026-10-02. Scope: P03 / issue #5. Disposable implementation: `experiments/native-capture/`.
 
 P09 now has a maintained [production Windows adapter](windows-selection.md) under

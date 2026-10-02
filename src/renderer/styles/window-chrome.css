@@ -20,9 +20,6 @@
   -webkit-app-region: drag;
   user-select: none;
 }
-.window-titlebar[data-platform='darwin'] {
-  padding-left: 78px;
-}
 .window-titlebar[data-platform='win32'] {
   padding-right: 140px;
 }

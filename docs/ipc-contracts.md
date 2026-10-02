@@ -41,15 +41,14 @@ views must follow the same invalidation pattern for settings/tag snapshots.
 
 - Search accepts query, AND tag IDs, untagged state, sort, offset, and a page size
   of 1–200. Pagination responses include revision, items, total, offset, hasMore,
-  optional UUID-keyed UTF-16 match ranges and worker search duration. See
+  optional UUID-keyed UTF-16 match ranges. See
   [search semantics](architecture/search.md). Existing named bridge methods remain
-  compatible; the production worker supplies ranges and timing.
+  compatible; the production worker supplies ranges.
 - Snippet and tag IDs are UUIDs; timestamps are UTC ISO strings. Full snippet text
   is retained (bounded at one million characters). Tags use lowercase canonical
   names and the design palette: blue, green, red, purple, amber, teal, pink, lime.
 - Source application display/identity is assigned by capture services. Renderer
-  create/edit payloads cannot supply provenance. Source IDs permit macOS bundle
-  identifiers and Windows executable basenames, reject paths, and must be resolved
+  create/edit payloads cannot supply provenance. Source IDs permit Windows executable basenames, reject paths, and must be resolved
   through main-owned platform validation before any future activation command.
 - `deleteSnippet({id})` returns `{revision, undoToken}`. The UUID token is opaque;
   `undoDeleteSnippet({undoToken})` returns `{revision, snippet}`. P04 owns bounded

@@ -58,13 +58,8 @@ export function createDesktopShortcuts(
     }
   );
 
-  if (process.platform === 'win32' || process.platform === 'darwin') {
-    const executable = keyboardExecutable(
-      process.resourcesPath,
-      app.getAppPath(),
-      app.isPackaged,
-      process.platform
-    );
+  if (process.platform === 'win32') {
+    const executable = keyboardExecutable(process.resourcesPath, app.getAppPath(), app.isPackaged);
 
     shortcuts.attachHook(
       new NativeKeyboardHook(

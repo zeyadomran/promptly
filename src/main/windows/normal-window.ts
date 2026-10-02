@@ -1,6 +1,6 @@
 import type { BrowserWindow } from 'electron';
 
-/** Cocoa fullscreen exit is asynchronous; resizing before it completes loses final bounds. */
+/** Wait for native fullscreen exit before restoring normal window bounds. */
 export async function restoreNormalWindow(window: BrowserWindow): Promise<void> {
   if (window.isFullScreen())
     await new Promise<void>((resolve, reject) => {

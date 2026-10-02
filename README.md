@@ -1,14 +1,16 @@
 # Promptly
 
-A local macOS and Windows desktop library for reusable text snippets.
+A local Windows x64 desktop library for reusable text snippets.
 
-The P01 foundation opens a React window and verifies a sandboxed preload boundary.
-Capture, persistence, the full design system, and library interactions are tracked
-in the [implementation plan](docs/implementation-plan.md).
+The application implements sandboxed IPC, SQLite persistence, shared copy/tag commands,
+Compact and Regular libraries, Settings and the native Windows capture pipeline.
+Safe clipboard fallback, feedback, onboarding, tray and release qualification remain
+tracked in the [implementation plan](docs/implementation-plan.md).
+macOS is deferred; its implementation and build target are removed.
 
 ## Development
 
-Use Node **22.23.2** and npm **10 or newer** on Windows or macOS:
+Use Node **22.23.2** and npm **10 or newer** on Windows x64:
 
 ```sh
 npm ci
@@ -26,7 +28,7 @@ npm run format       # Format maintained source and docs
 npm run package      # Forge: local runnable package in out/, no installers/signing
 ```
 
-CI runs strict static checks and packages the application on Windows and macOS.
+CI runs strict static checks and packages the application on Windows x64.
 Shared functional service tests run once, on Windows.
 GUI and native OS interactions are manual release checks described in
 [the test policy](docs/testing.md); automated tests do not qualify those interactions.

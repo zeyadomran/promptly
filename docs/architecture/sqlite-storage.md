@@ -119,8 +119,9 @@ five-second close deadlines without relying on slow wall-clock sleeps.
 
 `npm run check`, `npm run package`, and `npm run test:smoke` are the validation
 commands. The smoke suite loads the real worker from the packaged asar on both
-Windows and macOS CI, using an isolated temporary database; it verifies full text,
+the former cross-platform packaged suite, using an isolated temporary database; it verifies full text,
 deduplication, and durable revision reopen. A separate real-storage IPC fixture
 tests two live windows, commit invalidations, missing-service errors, opaque undo,
 and the reopened subscription handshake. These fixtures are not production hooks.
-Local Windows smoke passed; macOS proof comes from the PR's CI run, not a local claim.
+Those receipts are historical. Current Windows CI runs public functional services
+and packaging; no automated GUI/native suite is maintained.

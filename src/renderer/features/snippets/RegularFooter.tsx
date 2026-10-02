@@ -16,7 +16,7 @@ export function RegularFooter() {
           <kbd>Enter</kbd> copy
         </span>
         <span>
-          <kbd>{window.promptly.platform === 'darwin' ? '⌘' : 'Ctrl'} T</kbd> tag
+          <kbd>Ctrl T</kbd> tag
         </span>
         <span>
           <kbd>Delete</kbd> remove

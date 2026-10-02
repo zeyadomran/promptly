@@ -5,19 +5,16 @@ export interface WindowRecovery {
   trayAvailable: () => boolean;
   trayControllerAvailable?: () => boolean;
   shortcutAvailable: () => boolean;
-  dockAvailable: () => boolean;
 }
 
 export function canRecover(recovery: WindowRecovery): boolean {
-  return recovery.trayAvailable() || recovery.shortcutAvailable() || recovery.dockAvailable();
+  return recovery.trayAvailable() || recovery.shortcutAvailable();
 }
 
 export function concealWindow(
-  window: Pick<BrowserWindow, 'hide' | 'minimize' | 'show'>,
-  recovery: WindowRecovery,
-  platform: NodeJS.Platform = process.platform
+  window: Pick<BrowserWindow, 'hide' | 'minimize'>,
+  recovery: WindowRecovery
 ): void {
   if (canRecover(recovery)) window.hide();
-  else if (platform === 'darwin') window.show();
   else window.minimize();
 }

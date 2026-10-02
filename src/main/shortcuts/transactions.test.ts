@@ -9,10 +9,16 @@ it('rejected OS replacement preserves durable preferences and the previous live 
   const storage = testSettings({ available: [fixture.shortcuts.controller], unavailable: [] });
 
   try {
+    storage.store.invoke('updateSettings', {
+      openShortcut: 'CommandOrControl+Space',
+      pinShortcut: 'Super+P'
+    });
     await storage.service.initialize();
     const initial = await storage.service.services.getSettings({});
 
     if (!initial.ok) throw new Error('Expected initial preferences.');
+    expect(fixture.registered.has('Control+Space')).toBe(true);
+    expect(fixture.registered.has('Super+P')).toBe(true);
     fixture.failures.add('Control+Alt+F9');
     expect(
       await storage.service.services.updateSettings({
@@ -21,7 +27,7 @@ it('rejected OS replacement preserves durable preferences and the previous live 
       })
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
     expect(await storage.service.services.getSettings({})).toEqual(initial);
-    fixture.registered.get(initial.value.settings.openShortcut)?.();
+    fixture.registered.get('Control+Space')?.();
     expect(fixture.commands.open).toHaveBeenCalledOnce();
     expect(fixture.registered.has('Control+Alt+F8')).toBe(false);
   } finally {

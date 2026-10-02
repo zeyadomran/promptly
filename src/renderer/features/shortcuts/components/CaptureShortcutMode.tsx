@@ -53,7 +53,6 @@ export function CaptureShortcutMode({
           <label htmlFor={modifierId}>Modifier</label>
           <ModifierSelector
             id={modifierId}
-            platform={window.promptly.platform}
             value={currentModifier}
             disabled={inactive}
             onChange={(next) => {

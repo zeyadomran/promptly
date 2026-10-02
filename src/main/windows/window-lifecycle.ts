@@ -164,7 +164,6 @@ export class WindowLifecycle {
       tray: this.recovery.trayAvailable(),
       trayController: this.recovery.trayControllerAvailable?.() === true,
       shortcut: this.recovery.shortcutAvailable(),
-      dock: this.recovery.dockAvailable(),
       mainReachable: this.state().visible || this.windows.get('main')?.isMinimized() === true
     }),
     enqueue: (action) => this.enqueue(action),
@@ -175,8 +174,7 @@ export class WindowLifecycle {
     closeSettings: () => {
       this.windows.get('settings')?.close();
     },
-    switchMode: (mode, reducedMotion) =>
-      this.bounds?.switchMode(mode, reducedMotion) ?? Promise.resolve()
+    switchMode: (mode) => this.bounds?.switchMode(mode) ?? Promise.resolve()
   });
 
   async close(): Promise<void> {

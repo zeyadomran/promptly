@@ -14,7 +14,6 @@ export const windowRecoverySchema = z.strictObject({
   tray: z.boolean(),
   trayController: z.boolean(),
   shortcut: z.boolean(),
-  dock: z.boolean(),
   mainReachable: z.boolean()
 });
 export type WindowRecoveryState = z.infer<typeof windowRecoverySchema>;

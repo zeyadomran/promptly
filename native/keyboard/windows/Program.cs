@@ -22,7 +22,7 @@ internal static class Program
             if ((NativeMethods.GetAsyncKeyState(key) & 0x8000) != 0) mask |= KeyboardEvents.Bit(key);
         events = new KeyboardEvents(mask);
         hook = NativeMethods.SetWindowsHookEx(13, Callback, NativeMethods.GetModuleHandle(null), 0);
-        Output.Offer("{\"kind\":\"ready\",\"installed\":" + (hook != IntPtr.Zero ? "true" : "false") + ",\"mask\":" + mask + ",\"timeMs\":" + KeyboardEvents.Number(Clock.Elapsed.TotalMilliseconds) + ",\"accessibility\":null,\"inputMonitoring\":null}", Clock.Elapsed.TotalMilliseconds);
+        Output.Offer("{\"kind\":\"ready\",\"installed\":" + (hook != IntPtr.Zero ? "true" : "false") + ",\"mask\":" + mask + ",\"timeMs\":" + KeyboardEvents.Number(Clock.Elapsed.TotalMilliseconds) + "}", Clock.Elapsed.TotalMilliseconds);
         new Thread(Output.Write) { IsBackground = true }.Start();
         new Thread(delegate()
         {

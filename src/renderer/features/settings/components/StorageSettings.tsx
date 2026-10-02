@@ -23,7 +23,7 @@ export function StorageSettings() {
             void transfer.reveal();
           }}
         >
-          {window.promptly.platform === 'darwin' ? 'Reveal in Finder' : 'Reveal in Explorer'}
+          Reveal in Explorer
         </Button>
       </StorageRow>
       <StorageRow

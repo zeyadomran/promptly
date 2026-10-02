@@ -20,7 +20,7 @@
   {
     "key": "P03",
     "number": 5,
-    "title": "[P03] Validate native capture, keyboard hooks, and clipboard feasibility on both OSes",
+    "title": "[P03] Validate native capture, keyboard hooks, and clipboard feasibility on Windows",
     "url": "https://github.com/zeyadomran/promptly/issues/5",
     "phase": 1,
     "dependencies": [
@@ -75,10 +75,8 @@
     "title": "[P08] Implement macOS selection capture, permissions, and source app identity",
     "url": "https://github.com/zeyadomran/promptly/issues/10",
     "phase": 2,
-    "dependencies": [
-      "P03",
-      "P02"
-    ]
+    "dependencies": [],
+    "status": "deferred"
   },
   {
     "key": "P09",
@@ -99,7 +97,6 @@
     "phase": 2,
     "dependencies": [
       "P03",
-      "P08",
       "P09"
     ]
   },
@@ -113,7 +110,6 @@
       "P04",
       "P05",
       "P07",
-      "P08",
       "P09",
       "P10"
     ]
@@ -261,7 +257,7 @@
   {
     "key": "P24",
     "number": 26,
-    "title": "[P24] Implement tray/menu bar, recent snippets, and pause capture",
+    "title": "[P24] Implement Windows system tray, recent snippets, and pause capture",
     "url": "https://github.com/zeyadomran/promptly/issues/26",
     "phase": 4,
     "dependencies": [
@@ -274,7 +270,7 @@
   {
     "key": "P25",
     "number": 27,
-    "title": "[P25] Extend CI for application checks and macOS/Windows build smoke",
+    "title": "[P25] Extend CI for application checks and Windows build smoke",
     "url": "https://github.com/zeyadomran/promptly/issues/27",
     "phase": 1,
     "dependencies": [
@@ -284,7 +280,7 @@
   {
     "key": "P26",
     "number": 28,
-    "title": "[P26] Package macOS and Windows installers with native modules and signing support",
+    "title": "[P26] Package Windows installers with native modules",
     "url": "https://github.com/zeyadomran/promptly/issues/28",
     "phase": 5,
     "dependencies": [
@@ -317,7 +313,7 @@
   {
     "key": "P28",
     "number": 30,
-    "title": "[P28] Verify end-to-end reliability, performance budgets, and release readiness",
+    "title": "[P28] Verify Windows reliability, performance budgets, and release readiness",
     "url": "https://github.com/zeyadomran/promptly/issues/30",
     "phase": 5,
     "dependencies": [

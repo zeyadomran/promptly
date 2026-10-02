@@ -35,8 +35,6 @@ export function shortcutStatus(
           ? 'registered'
           : 'unavailable',
     hook: flags.sleeping ? 'suspended' : health?.installed === true ? 'installed' : 'unavailable',
-    accessibility: health?.accessibility ?? null,
-    inputMonitoring: health?.inputMonitoring ?? null,
     capturePaused: flags.paused,
     recording: flags.recording,
     quarantined: accelerators.failed,

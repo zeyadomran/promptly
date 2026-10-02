@@ -7,16 +7,12 @@ export const hookFrameSchema = z.discriminatedUnion('kind', [
     kind: z.literal('ready'),
     installed: z.boolean(),
     mask: z.number().int().min(0).max(255),
-    timeMs: z.number().nonnegative(),
-    accessibility: z.boolean().nullable(),
-    inputMonitoring: z.boolean().nullable()
+    timeMs: z.number().nonnegative()
   }),
   z.strictObject({
     kind: z.literal('health'),
     installed: z.boolean(),
-    timeMs: z.number().nonnegative(),
-    accessibility: z.boolean().nullable(),
-    inputMonitoring: z.boolean().nullable()
+    timeMs: z.number().nonnegative()
   }),
   z.strictObject({
     kind: z.literal('modifiers'),
@@ -33,8 +29,6 @@ export const shortcutStatusSchema = z.strictObject({
   open: z.enum(['registered', 'unavailable']),
   pin: z.enum(['registered', 'unavailable', 'disabled']),
   hook: z.enum(['installed', 'unavailable', 'suspended']),
-  accessibility: z.boolean().nullable(),
-  inputMonitoring: z.boolean().nullable(),
   capturePaused: z.boolean(),
   recording: z.boolean(),
   quarantined: z.boolean(),

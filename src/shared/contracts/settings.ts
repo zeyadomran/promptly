@@ -19,7 +19,6 @@ export const windowBoundsSchema = z.strictObject({
 export const settingsSchema = z.strictObject({
   launchAtLogin: z.boolean(),
   showInTray: z.boolean(),
-  showDockIcon: z.boolean(),
   hideAfterCopy: z.enum(['automatic', 'always', 'never']),
   defaultSizeMode: z.enum(['compact', 'regular']),
   saveShortcut: shortcutSchema,
@@ -55,7 +54,6 @@ export function defaultSettings(): Settings {
   return {
     launchAtLogin: false,
     showInTray: true,
-    showDockIcon: true,
     hideAfterCopy: 'automatic',
     defaultSizeMode: 'compact',
     saveShortcut: { kind: 'double-tap', modifier: 'shift' },

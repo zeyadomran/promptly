@@ -6,8 +6,6 @@ import { terminateNative } from '../native/terminate-native';
 
 export interface HookHealth {
   installed: boolean;
-  accessibility: boolean | null;
-  inputMonitoring: boolean | null;
 }
 export interface KeyboardHook {
   readonly health: HookHealth;
@@ -20,7 +18,7 @@ export class NativeKeyboardHook implements KeyboardHook {
   private child: ChildProcessWithoutNullStreams | undefined;
   private starting: Promise<void> | undefined;
   private readonly retiring = new Set<Promise<void>>();
-  private current: HookHealth = { installed: false, accessibility: null, inputMonitoring: null };
+  private current: HookHealth = { installed: false };
 
   constructor(
     private readonly launch: () => ChildProcessWithoutNullStreams,
@@ -43,7 +41,7 @@ export class NativeKeyboardHook implements KeyboardHook {
       const failed = () => {
         clearTimeout(timer);
         if (this.child === child) {
-          this.current = { installed: false, accessibility: null, inputMonitoring: null };
+          this.current = { installed: false };
           this.child = undefined;
           this.receive({ kind: 'reset', timeMs: 0 });
           this.retire(child);
@@ -86,9 +84,7 @@ export class NativeKeyboardHook implements KeyboardHook {
               ready = true;
               offset = performance.now() - frame.timeMs;
               this.current = {
-                installed: frame.installed,
-                accessibility: frame.accessibility,
-                inputMonitoring: frame.inputMonitoring
+                installed: frame.installed
               };
               clearTimeout(timer);
               resolve();
@@ -99,12 +95,9 @@ export class NativeKeyboardHook implements KeyboardHook {
             lastTime = frame.timeMs;
             if (frame.kind === 'health')
               this.current = {
-                installed: this.current.installed && frame.installed,
-                accessibility: frame.accessibility,
-                inputMonitoring: frame.inputMonitoring
+                installed: this.current.installed && frame.installed
               };
-            if (frame.kind === 'reset')
-              this.current = { installed: false, accessibility: null, inputMonitoring: null };
+            if (frame.kind === 'reset') this.current = { installed: false };
             newline = buffer.indexOf(10);
           }
 
@@ -125,7 +118,7 @@ export class NativeKeyboardHook implements KeyboardHook {
     const child = this.child;
 
     this.child = undefined;
-    this.current = { installed: false, accessibility: null, inputMonitoring: null };
+    this.current = { installed: false };
     this.receive({ kind: 'reset', timeMs: 0 });
     this.retire(child);
     await Promise.all(this.retiring);
@@ -144,21 +137,13 @@ export class NativeKeyboardHook implements KeyboardHook {
 export function keyboardExecutable(
   resourcesPath: string,
   applicationPath: string,
-  packaged: boolean,
-  platform: NodeJS.Platform
+  packaged: boolean
 ): string {
-  const name = platform === 'win32' ? 'promptly-keyboard.exe' : 'promptly-keyboard';
+  const name = 'promptly-keyboard.exe';
 
   return packaged
     ? path.join(resourcesPath, name)
-    : path.join(
-        applicationPath,
-        'native',
-        'keyboard',
-        platform === 'win32' ? 'windows' : 'macos',
-        'out',
-        name
-      );
+    : path.join(applicationPath, 'native', 'keyboard', 'windows', 'out', name);
 }
 
 export function launchKeyboard(executable: string): ChildProcessWithoutNullStreams {

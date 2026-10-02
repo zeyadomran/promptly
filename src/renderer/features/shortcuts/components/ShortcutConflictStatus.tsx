@@ -32,9 +32,6 @@ export function ShortcutConflictStatus({
           </p>
           {status.capturePaused && <p>Selection capture is paused.</p>}
           {!status.captureHandlerAvailable && <p>Selection saving is not available yet.</p>}
-          {(status.accessibility === false || status.inputMonitoring === false) && (
-            <p>macOS keyboard access needs Accessibility and Input Monitoring permissions.</p>
-          )}
         </>
       )}
       <p>

@@ -7,8 +7,8 @@ compiler and warnings as errors. Forge builds it during `generateAssets` on
 Windows and copies `promptly-windows.exe` directly into application resources,
 outside ASAR. No compiler is required on the installed machine. The Vite plugin's
 default packaging filter keeps source/test fixtures out of the application ASAR.
-macOS packaging skips this Windows binary and its integration tests explicitly.
-Windows x64 is tested; Windows ARM64 distribution is not qualified.
+Only Windows x64 packaging is supported. Unsupported host/target platforms and
+architectures fail before generating package assets.
 
 ## Main-owned API and lifecycle
 
@@ -46,7 +46,7 @@ read authoritative stored provenance in main, safely resolve a running OS app an
 revalidate HWND/PID/creation time, or return unavailable. It must never accept a
 renderer-provided path/PID as sufficient identity. That resolver is not implemented.
 
-`NativeProcess` is a reusable private transport boundary for a later macOS adapter:
+`NativeProcess` is the private helper transport boundary:
 `request(command,payload,parse,deadlineMs)` and `dispose()`. It serializes requests,
 admits at most four requests (one active), caps each request at 4096 bytes, and
 validates every matched response with the supplied strict runtime schema.
@@ -108,8 +108,15 @@ creation time on that **same handle** before its `TOKEN_QUERY` token is inspecte
 Equal/lower known integrity is allowed to proceed to bounded UIA; higher integrity,
 missing tokens, unavailable handles and creation-time mismatch fail closed. Actual
 UIA denial is still `permissionDenied`. This adds no elevation, UIAccess or CI bypass.
-The independent native policy fixture tests equal/lower/higher/unknown decisions and
-an intentionally incorrect creation time against an actual process handle.
+The former native policy fixtures are historical verification; actual integrity
+and UIA behavior now require manual Windows release qualification.
+
+## Historical native verification
+
+The former native fixture and packaged smoke suites have been retired. The
+receipts below remain historical evidence and failures; current automated coverage
+is the canonical public functional suite in [testing policy](../testing.md).
+They do not qualify current cold capture deadlines or arbitrary source applications.
 
 Initial [Windows CI](https://github.com/zeyadomran/promptly/actions/runs/36971422371)
 failed three positive owned-fixture cases with `permissionDenied`: the former guard

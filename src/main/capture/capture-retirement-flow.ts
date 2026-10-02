@@ -41,9 +41,7 @@ export async function assertQueuedResetRetirement(fixture: Fixture, id: string) 
     kind: 'ready',
     timeMs: 121,
     mask: 0,
-    installed: true,
-    accessibility: null,
-    inputMonitoring: null
+    installed: true
   });
 }
 

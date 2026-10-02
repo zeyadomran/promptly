@@ -6,8 +6,6 @@ import { SettingSwitch } from './SettingSwitch';
 export function GeneralSettings() {
   const { settings } = usePreferences();
   const recovery = useWindowRecovery();
-  const mac = window.promptly.platform === 'darwin';
-  const route = recovery?.tray === true || recovery?.shortcut === true;
 
   return (
     <>
@@ -19,7 +17,7 @@ export function GeneralSettings() {
         patch={(launchAtLogin) => ({ launchAtLogin })}
       />
       <SettingSwitch
-        label={mac ? 'Show in menu bar' : 'Show in system tray'}
+        label="Show in system tray"
         description={
           recovery?.trayController === true
             ? 'Open Promptly from the status icon.'
@@ -29,19 +27,6 @@ export function GeneralSettings() {
         disabled={recovery?.trayController !== true}
         patch={(showInTray) => ({ showInTray })}
       />
-      {mac && (
-        <SettingSwitch
-          label="Show Dock icon"
-          description={
-            route
-              ? 'Open Promptly from the Dock.'
-              : 'Promptly stays visible when its Dock icon is hidden.'
-          }
-          checked={recovery?.dock === true}
-          disabled={recovery === undefined}
-          patch={(showDockIcon) => ({ showDockIcon })}
-        />
-      )}
       <SettingChoice
         label="Hide after copy"
         description={
