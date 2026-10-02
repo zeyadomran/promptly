@@ -1,11 +1,16 @@
 import path from 'node:path';
 
 import { expect, test } from '@playwright/test';
+import type { BrowserWindow } from 'electron';
 
 import { launchIsolatedElectron } from '../isolated-electron';
 import { buildMacosActivation } from './build-macos-activation';
 import type * as OwnedHarness from './fixtures/macos-activation-main';
 import { buildMacosFixture, macosFixture } from './macos-fixture';
+import {
+  establishOwnedPromptlyForeground,
+  type OwnedPromptlyForeground
+} from './macos-promptly-focus';
 import { saveNativeReceipt } from './native-receipt';
 
 type HarnessGlobal = typeof globalThis & { ownedMacActivationHarness: typeof OwnedHarness };
@@ -38,6 +43,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
   let helperInitialized = false;
   let ownedFixture: Awaited<ReturnType<typeof macosFixture>> | undefined;
   let activated = false;
+  let promptlyForeground: OwnedPromptlyForeground | undefined;
 
   try {
     const page = await application.firstWindow();
@@ -57,6 +63,8 @@ test('packaged macOS source activation hands foreground back from owned Promptly
       )
       .toBe(true);
     ownedWindowReady = true;
+    const ownedWindow = await application.browserWindow(page);
+    const ownedWindowId = await ownedWindow.evaluate((window: BrowserWindow) => window.id);
     const fixture = await macosFixture('selected');
 
     ownedFixture = fixture;
@@ -101,11 +109,9 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     expect(selected?.status).toBe('ok');
     if (selected?.status !== 'ok') throw new Error('Missing owned selection');
     stage = 'promptly-foreground';
-    await application.evaluate(({ app, BrowserWindow }) => {
-      app.focus();
-      BrowserWindow.getAllWindows()[0]?.focus();
+    await establishOwnedPromptlyForeground(application, ownedWindowId, fixture, (observation) => {
+      promptlyForeground = observation;
     });
-    await expect.poll(async () => (await fixture.inspect()).foregroundMatched).toBe(false);
     expect(
       await application.evaluate(() =>
         (globalThis as HarnessGlobal).ownedMacActivationHarness.foreground()
@@ -163,6 +169,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
         ownedWindowReady,
         fixtureReadyForeground,
         fixtureForegroundAtEnd,
+        promptlyForeground,
         identityReadiness,
         activationStatus,
         activated,

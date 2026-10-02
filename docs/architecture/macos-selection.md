@@ -80,6 +80,19 @@ retried. The receipt retains stage, current fixture-foreground booleans, helper
 status, owned target/source availability, Promptly-match booleans and timing without
 logging unrelated app identity or selection. Latest-head CI must qualify this fix.
 
+[Activation CI at `f72db61`](https://github.com/zeyadomran/promptly/actions/runs/36986169102)
+then identified the owned fixture on its first request (2.98 ms), but failed to
+bring Promptly to foreground during test setup. The [retained failed receipt](../verification/P08/activation-f72db61-macos-failed.json)
+shows that production activation was never invoked. The test now requests
+`app.focus({ steal: true })` once, followed by focus of the explicitly identified
+owned Promptly window. Before the single production activation, it verifies actual
+`app.isActive()`, window focus and visibility, fixture background state and native
+foreground identity. The receipt records these observed states even when setup
+fails. This is a test-only precondition correction: production activation, its
+100 ms deadline, exact text/selection/pasteboard assertions and forged-capability
+rejection remain unchanged. Windows checks cannot qualify macOS foreground behavior;
+fresh macOS CI is required.
+
 The fixture receipt records hardware/OS/Node architecture, helper startup and
 separate cold/warm native and pipe durations, plus focus/selection/pasteboard-count
 checks. These figures exclude shortcuts, persistence and toast display. P11 owns
@@ -100,3 +113,4 @@ inheritance or onboarding permission success. Signing/notarization stays user-ow
 - [Apple validated running application activation](https://developer.apple.com/documentation/appkit/nsrunningapplication/activate(options:))
 - [Apple passive event access preflight](https://developer.apple.com/documentation/coregraphics/cgpreflightlisteneventaccess())
 - [Apple Secure Input](https://developer.apple.com/library/archive/technotes/tn2150/_index.html)
+- [Electron macOS application focus](https://www.electronjs.org/docs/latest/api/app#appfocusoptions)
