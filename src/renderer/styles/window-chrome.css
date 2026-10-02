@@ -1,0 +1,102 @@
+.desktop-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+.desktop-content {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+.window-titlebar {
+  display: flex;
+  align-items: center;
+  height: 40px;
+  flex-shrink: 0;
+  padding: 0 10px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+.window-titlebar[data-platform='darwin'] {
+  padding-left: 78px;
+}
+.window-titlebar[data-platform='win32'] {
+  padding-right: 140px;
+}
+.window-titlebar[data-mode='regular'] {
+  height: 44px;
+}
+.window-brand {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.window-title-actions {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: auto;
+  -webkit-app-region: no-drag;
+}
+.window-title-actions button {
+  -webkit-app-region: no-drag;
+  height: 26px;
+  width: auto;
+  min-width: 26px;
+  padding: 4px;
+}
+.window-titlebar[data-mode='compact'][data-kind='main'] .window-brand > .window-label {
+  display: none;
+}
+.window-titlebar[data-kind='auxiliary'] {
+  height: 38px;
+}
+.window-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 14px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+  font-size: 11.5px;
+}
+.window-settings {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  height: 100%;
+}
+.window-settings nav {
+  background: var(--sidebar);
+  padding: 16px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.window-settings nav button {
+  justify-content: flex-start;
+}
+.window-settings-content {
+  padding: 24px 32px;
+  min-width: 0;
+}
+@media (width < 640px) {
+  .window-settings {
+    display: flex;
+    flex-direction: column;
+  }
+  .window-settings nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .window-settings-content {
+    padding: 20px 18px;
+  }
+}

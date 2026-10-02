@@ -3,6 +3,7 @@ import { contextBridge, ipcRenderer } from 'electron';
 import { changeChannel } from '../shared/contracts/operations';
 import { resultSchema } from '../shared/contracts/result';
 import { settingsSnapshotSchema } from '../shared/contracts/settings';
+import { focusSearchChannel } from '../shared/contracts/window';
 import { settingsFromArguments } from '../shared/settings-bootstrap';
 import { liveSettingsArgument, settingsBootstrapChannel } from '../shared/settings-bootstrap';
 import { styleNonceFromArguments } from '../shared/style-nonce';
@@ -12,6 +13,16 @@ const platform = process.platform;
 const { bridge, dispose } = createDesktopBridge(
   {
     invoke: (channel, request) => ipcRenderer.invoke(channel, request),
+    listenFocus(listener) {
+      const onFocus = () => {
+        listener();
+      };
+
+      ipcRenderer.on(focusSearchChannel, onFocus);
+      return () => {
+        ipcRenderer.removeListener(focusSearchChannel, onFocus);
+      };
+    },
     listen(listener) {
       const onChange = (_event: unknown, value: unknown): void => {
         listener(value);
