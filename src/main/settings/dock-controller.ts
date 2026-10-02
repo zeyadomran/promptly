@@ -1,6 +1,6 @@
 import type { SettingsController } from './controllers';
 
-interface DockVisibility {
+export interface DockVisibility {
   show: () => Promise<void>;
   hide: () => void;
   isVisible: () => boolean;

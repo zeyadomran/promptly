@@ -4,6 +4,7 @@
 @import './tokens.css';
 @import './components.css';
 @import './window-chrome.css';
+@import './settings.css';
 
 :root {
   color: var(--foreground);
