@@ -2,7 +2,7 @@ import { expect, it } from 'vitest';
 
 import { testSettings } from './settings-test-fixture';
 
-it('rejects native effects without changing authoritative durable settings', async () => {
+it('persists settings across reopen and rolls back rejected native effects', async () => {
   let theme = 'system';
   let pinned = false;
   const fixture = testSettings({
@@ -30,14 +30,23 @@ it('rejects native effects without changing authoritative durable settings', asy
 
   try {
     await fixture.service.initialize();
+    expect(await fixture.service.services.updateSettings({ theme: 'light' })).toMatchObject({
+      ok: true,
+      value: { settings: { theme: 'light' } }
+    });
+    fixture.store.reopen();
+    expect(fixture.store.invoke('getSettings', {})).toMatchObject({
+      revision: 1,
+      settings: { theme: 'light', alwaysOnTop: false }
+    });
     expect(
       await fixture.service.services.updateSettings({ theme: 'dark', alwaysOnTop: true })
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
-    expect({ theme, pinned }).toEqual({ theme: 'system', pinned: false });
+    expect({ theme, pinned }).toEqual({ theme: 'light', pinned: false });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 0,
-      settings: { theme: 'system', alwaysOnTop: false }
+      revision: 1,
+      settings: { theme: 'light', alwaysOnTop: false }
     });
   } finally {
     await fixture.service.close();
