@@ -100,27 +100,29 @@
 }
 .onboarding-welcome-cards {
   display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin-top: 22px;
 }
 .onboarding-welcome-cards > div {
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 12px 14px;
-  display: grid;
-  grid-template-columns: 24px minmax(0, 1fr);
-  column-gap: 10px;
-  row-gap: 3px;
+  padding: 14px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 .onboarding-welcome-cards span {
-  grid-row: span 2;
+  margin-bottom: 2px;
   font-family: 'Geist Mono', monospace;
   font-size: 11px;
   color: var(--muted-foreground);
 }
 .onboarding-welcome-cards strong {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 500;
+  overflow-wrap: anywhere;
 }
 .onboarding-welcome-cards p {
   color: var(--muted-foreground);
@@ -242,5 +244,8 @@
   }
   .onboarding-footer {
     padding-inline: 20px;
+  }
+  .onboarding-welcome-cards {
+    grid-template-columns: minmax(0, 1fr);
   }
 }
