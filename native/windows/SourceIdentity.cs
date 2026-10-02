@@ -76,4 +76,14 @@ internal sealed class SourceIdentity
     {
         return new Dictionary<string, object> { { "status", status }, { "identity", Token }, { "source", Source } };
     }
+
+    internal object Bounds()
+    {
+        NativeMethods.Rectangle bounds;
+        // DWMWA_EXTENDED_FRAME_BOUNDS is in physical screen coordinates, not DPI-virtualized.
+        if (!Valid(true) || NativeMethods.DwmGetWindowAttribute(Window, 9, out bounds, 16) != 0) return null;
+        long width = (long)bounds.Right - bounds.Left, height = (long)bounds.Bottom - bounds.Top;
+        if (width <= 0 || height <= 0 || width > Int32.MaxValue || height > Int32.MaxValue) return null;
+        return new { x = bounds.Left, y = bounds.Top, width = (int)width, height = (int)height };
+    }
 }

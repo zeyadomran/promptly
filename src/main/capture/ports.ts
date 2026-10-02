@@ -24,6 +24,8 @@ export interface CaptureEvent {
   selectedAt?: number;
   persistedAt?: number;
   completedAt: number;
+  /** Physical DWM source frame, main-only; never sent to a desktop renderer. */
+  sourceBounds?: Readonly<{ x: number; y: number; width: number; height: number }>;
 }
 
 export interface CaptureEffects {

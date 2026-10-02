@@ -2,12 +2,10 @@ import path from 'node:path';
 
 import { app, ipcMain, nativeTheme } from 'electron';
 
+import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { createLibraryServices } from './library-services';
-import { closeLibraryResources } from './lifecycle/close-library-resources';
-import { closeNativeResources } from './lifecycle/close-native-resources';
-import { closeSettingsStorage } from './lifecycle/close-settings-storage';
-import { closeWindowResources } from './lifecycle/close-window-resources';
+import { closeDesktopResources } from './lifecycle/close-desktop-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import {
   observeSelectionStartup,
@@ -29,6 +27,7 @@ import type { TrayCoordinator } from './tray/coordinator';
 import { createDesktopTray } from './tray/desktop-tray';
 import { installDesktopMenu } from './windows/desktop-menu';
 import { lifecycleServices } from './windows/lifecycle-services';
+import { observeOrdinaryWindowClosure } from './windows/overlay-windows';
 import { WindowLifecycle } from './windows/window-lifecycle';
 
 let desktop: ReturnType<typeof installDesktopIpc>;
@@ -39,28 +38,22 @@ let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let library: ReturnType<typeof createLibraryServices> | undefined;
 let tray: TrayCoordinator | undefined;
+let confirmation: ReturnType<typeof desktopConfirmation> | undefined;
 const mutations = new LibraryMutations();
+
+observeOrdinaryWindowClosure();
 const shutdown = createDesktopShutdown({
-  cleanup: () => {
-    keyboard?.shortcuts.stopCommands();
-    tray?.stopCommands();
-    return closeLibraryResources([library?.capture, library?.copy, library?.transfer], () =>
-      closeWindowResources(lifecycle, () =>
-        closeSettingsStorage(
-          settings,
-          storage,
-          {
-            close: () =>
-              closeNativeResources([
-                keyboard,
-                { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
-              ])
-          },
-          tray
-        )
-      )
-    );
-  },
+  cleanup: () =>
+    closeDesktopResources({
+      keyboard,
+      library,
+      confirmation,
+      lifecycle,
+      settings,
+      storage,
+      tray,
+      windowsSelection
+    }),
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
   },
@@ -108,6 +101,7 @@ if (primaryInstance)
         (change) => {
           desktop.publish(change);
           if (change.domains.includes('snippets')) tray?.changed();
+          if (change.domains.includes('settings')) confirmation?.refreshPreferences();
         }
       );
       const revision = await storage.ready;
@@ -141,6 +135,7 @@ if (primaryInstance)
         windowsSelection,
         () => lifecycle
       );
+      confirmation = desktopConfirmation(library.capture.service, settings);
       desktop = installDesktopIpc(
         ipcMain,
         {

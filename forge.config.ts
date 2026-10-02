@@ -62,9 +62,17 @@ const config: ForgeConfig = {
           entry: 'src/preload/preload.ts',
           config: 'vite.preload.config.ts',
           target: 'preload'
+        },
+        {
+          entry: 'src/preload/capture-toast-preload.ts',
+          config: 'vite.capture-toast-preload.config.ts',
+          target: 'preload'
         }
       ],
-      renderer: [{ name: 'main_window', config: 'vite.renderer.config.ts' }]
+      renderer: [
+        { name: 'main_window', config: 'vite.renderer.config.ts' },
+        { name: 'capture_toast', config: 'vite.capture-toast.config.ts' }
+      ]
     })
   ]
 };

@@ -18,6 +18,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
 | `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, capture-only pause, reversible tray visibility and retired native-menu ownership |
 | `main/capture/service.test.ts` | Native Windows selection through real SQLite, conservative normalization, exact recapture, suppression/clear/import cancellation, pre-deferral admission and entered-save retirement |
+| `main/capture-toast/service.test.ts` | Committed confirmation replacement, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |
 | `renderer/features/library/library-keyboard.test.ts` | Scoped navigation/copy, editor/IME/overlay ownership and clear-then-hide |
 | `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo, JSON and Markdown export, clear/import/reopen, tag rename/collision/atomic membership merge and tag-only deletion |

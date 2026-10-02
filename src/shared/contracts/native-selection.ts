@@ -10,6 +10,12 @@ export const nativeSourceSchema = z.strictObject({
     .regex(/^[\p{L}\p{N}._ -]{1,255}$/u)
     .refine((name) => name !== '.' && name !== '..')
 });
+export const nativeBoundsSchema = z.strictObject({
+  x: z.int().min(-2_147_483_648).max(2_147_483_647),
+  y: z.int().min(-2_147_483_648).max(2_147_483_647),
+  width: z.int().positive().max(2_147_483_647),
+  height: z.int().positive().max(2_147_483_647)
+});
 const envelope = { v: z.literal(1), id: z.string().min(1).max(128) };
 const identity = z.string().regex(/^[a-f0-9]{32}$/);
 const elapsedMs = z.number().nonnegative();
@@ -56,7 +62,8 @@ export const nativeForegroundSchema = z.union([
     ...envelope,
     status: z.literal('ok'),
     identity,
-    source: nativeSourceSchema.nullable()
+    source: nativeSourceSchema.nullable(),
+    bounds: nativeBoundsSchema.nullable().optional()
   }),
   nativeFailureSchema
 ]);
@@ -75,4 +82,5 @@ export const nativeActivationSchema = z.union([
   nativeFailureSchema
 ]);
 export type NativeSource = z.infer<typeof nativeSourceSchema>;
+export type NativeBounds = z.infer<typeof nativeBoundsSchema>;
 export type NativeCaptureReply = z.infer<typeof nativeCaptureSchema>;

@@ -2,6 +2,7 @@ import { app, BrowserWindow, nativeTheme } from 'electron';
 
 import type { Settings } from '../../shared/contracts/settings';
 import { updateNativeChrome } from '../windows/native-chrome';
+import { isOverlayWindow } from '../windows/overlay-windows';
 import type { SettingsController, SettingsControllers } from './controllers';
 
 /** Owned fixtures replace this OS boundary while exercising the production readback/rollback logic. */
@@ -12,6 +13,7 @@ export interface NativePreferences {
 
 export function updateWindowBackgrounds(): void {
   for (const window of BrowserWindow.getAllWindows()) {
+    if (isOverlayWindow(window)) continue;
     window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff');
     updateNativeChrome(window);
   }
@@ -46,6 +48,7 @@ export function electronSettingsControllers(
         keys: ['alwaysOnTop'],
         apply: (settings: Settings) => {
           for (const window of BrowserWindow.getAllWindows()) {
+            if (isOverlayWindow(window)) continue;
             window.setAlwaysOnTop(settings.alwaysOnTop);
             if (window.isAlwaysOnTop() !== settings.alwaysOnTop)
               throw new Error('Pin was rejected.');
