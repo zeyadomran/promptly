@@ -23,12 +23,15 @@ export function SettingSwitch({
       label={label}
       description={description}
       inline
-      disabled={disabled || mutation.pending}
+      disabled={disabled}
       {...(mutation.error === undefined ? {} : { error: mutation.error })}
     >
       <Switch
         checked={checked}
+        aria-busy={mutation.pending}
+        aria-disabled={disabled || mutation.pending}
         onCheckedChange={(value) => {
+          if (mutation.pending) return;
           void mutation.apply(patch(value));
         }}
       />

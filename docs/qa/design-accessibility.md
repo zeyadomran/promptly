@@ -1,6 +1,6 @@
 # Windows design and accessibility source audit
 
-Issue #29 / P27. This audit compares implemented source with the supplied reference images. It is not a rendered comparison or native accessibility qualification. No application, native input, clipboard, user profile or OS preference was exercised.
+Issue #29 / P27. The original audit compares implemented source with the supplied reference images. It is not a rendered comparison or native accessibility qualification. No application, native input, clipboard, user profile or OS preference was exercised by that source audit. The follow-up below separately identifies a bounded manual before-fix observation.
 
 ## Scope and references
 
@@ -66,3 +66,30 @@ The first combined `npm run make` completed production packaging but failed in S
 One retry after restoring that prerequisite passed `npm run make`, including production packaging and unsigned Windows x64 Squirrel distributables. No installer or packaged application was launched; construction does not qualify installation, startup or native accessibility.
 
 Issue #29 remains open until a packaged Windows build is manually compared with the references and qualified with NVDA. Check the three setup steps; Compact/Regular light and dark; Settings just below/above 640 px and Tags/Storage; keyboard-only dialogs, menus, tag selection and edit cancellation; focus return after deletion/async updates; virtualized offscreen/loading selection and copied/Undo announcements. Also check Windows caption accessibility, nonactivating capture confirmation, 125–200% scaling/text enlargement, mixed-DPI/negative-coordinate displays, focus-ring visibility and reduced motion. Native capture, source activation, shortcut delivery and fullscreen behavior retain their existing manual qualification limits.
+
+## Follow-up: pending Settings focus continuity
+
+Source baseline: main `28801645b9c42abc44bde4e1fad73b1da8165a30`. `SettingChoice` and `SettingSwitch` passed pending saves as `disabled` through `SettingsField`. Installed Radix ToggleGroup propagates that flag to its native buttons and marks every roving-focus item nonfocusable. No restoration handler existed.
+
+A separate [before-fix manual receipt](https://github.com/zeyadomran/promptly/issues/29#issuecomment-5962026608) on the packaged baseline observed Appearance System → Right to Light with a visible focus ring → Space to save. After the save settled, the ring disappeared; Right then Space left Light selected rather than selecting Dark. UIA reported the root throughout and was not used as focus proof. This establishes a bounded keyboard-continuity failure, not complete keyboard or NVDA qualification. The correction has not yet received a corresponding after-fix manual check.
+
+The narrow correction keeps pending radios/switches mounted and focusable, exposes `aria-busy` and `aria-disabled`, and ignores value-change activation while pending. The existing synchronous busy guard still prevents overlapping writes before React renders pending state. Native disabled behavior remains for genuinely unavailable platform/tray controls. Committed-value rendering, serialization, errors and rollback are unchanged; no focus call, queue/controller or test seam was added. Radio value changes are guarded regardless of whether they originate from pointer or keyboard input; roving focus itself remains available.
+
+The bounded follow-up also checked existing Settings labels/descriptions, library listbox/option names and mounted active descendant, and source minimum widths (Settings 440 px, Regular 760 px). Settings preserves one Tabs definition across the 640 px orientation change; rows stack below it. No additional concrete role/label/minimum-width defect was identified from source. Rendered clipping, enlarged text and breakpoint focus still require manual observation.
+
+Recomputed the current opaque normal/muted pairs using the luminance formula above; highlights use the [CSS Color 4 conversion](https://www.w3.org/TR/css-color-4/#color-conversion-code) from literal OKLCH to in-gamut linear sRGB before luminance. The highlight backgrounds resolve approximately to sRGB `(248.362, 232.104, 170.929)` / `(109.586, 92.519, 20.064)`. No color/token change was needed.
+
+| Actual pair | Light | Dark |
+| --- | ---: | ---: |
+| Foreground / base background | 19.895:1 | 19.061:1 |
+| Secondary foreground / base background | 10.444:1 | 13.461:1 |
+| Muted foreground / base background | 5.048:1 | 7.763:1 |
+| Muted foreground / sidebar | 4.837:1 | 7.625:1 |
+| Muted foreground / selected row | 4.593:1 | 6.913:1 |
+| Muted foreground / group or key-hint background | 4.593:1 | 5.812:1 |
+| Foreground / active segment | 19.895:1 | 10.006:1 |
+| Foreground / search highlight (native and escaped mark) | 16.244:1 | 6.255:1 |
+
+These are specific opaque token pairs, not disabled-state, antialiasing or rendered-pixel measurements. Manual follow-up must observe focused Theme/Default size/Hide after copy radios and switches through successful and rejected delayed saves, try repeated keyboard/pointer activation, and confirm no duplicate write, lost keyboard position or unsolicited focus movement. True unavailable controls must remain disabled. Issue #29's rendered comparison, NVDA, enlarged text and DPI requirements remain unqualified by this correction. The implementation agent performed no GUI/E2E test or native application/input/clipboard/preference action; the separately linked before-fix check must not be attributed to the source audit.
+
+Validation of the correction: `npm run check` passed all 23 functional cases in 20 files and all type, strict ESLint, architecture and formatting checks; `npm run package` produced the Windows x64 package. No new renderer test seam or test was introduced, and no test-first history is claimed for this static semantics change.

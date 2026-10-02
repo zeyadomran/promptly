@@ -22,22 +22,23 @@ export function SettingChoice({
     <SettingsRow
       label={label}
       description={description}
-      disabled={mutation.pending}
       {...(mutation.error === undefined ? {} : { error: mutation.error })}
     >
       <ToggleGroup
         type="single"
         value={value}
+        aria-busy={mutation.pending}
+        aria-disabled={mutation.pending}
         className="settings-choice"
         onValueChange={(next) => {
-          if (!choices.some((choice) => choice.value === next)) return;
+          if (mutation.pending || !choices.some((choice) => choice.value === next)) return;
           const change = patch(next);
 
           if (change !== undefined) void mutation.apply(change);
         }}
       >
         {choices.map((choice) => (
-          <ToggleGroupItem key={choice.value} value={choice.value}>
+          <ToggleGroupItem key={choice.value} value={choice.value} aria-disabled={mutation.pending}>
             {choice.label}
           </ToggleGroupItem>
         ))}
