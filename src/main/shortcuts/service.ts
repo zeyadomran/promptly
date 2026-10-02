@@ -153,7 +153,7 @@ export class Shortcuts {
 
   stopCommands(): void {
     this.closing = true;
-    this.taps.reset();
+    this.session.invalidate();
   }
 
   async close(): Promise<void> {

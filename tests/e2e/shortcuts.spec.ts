@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { expect, test } from '@playwright/test';
 
+import { settingsSchema } from '../../src/shared/contracts/settings';
 import { launchIsolatedElectron } from '../isolated-electron';
 import { writeWindowReceipt } from './native-window-receipt';
 import { observeShortcutDelivery } from './shortcut-delivery-probe';
@@ -45,7 +46,25 @@ test('packaged OS registration, conflict rollback, capture pause and owned recor
         })
       )
     ).toMatchObject({ ok: true });
+    const preferences = settingsSchema.omit({ rememberedBounds: true }).strip();
     const before = await page.evaluate(() => window.promptly.getSettings({}));
+
+    if (!before.ok) throw new Error('Initial settings unavailable');
+    const assertPreferences = async () => {
+      const after = await page.evaluate(() => window.promptly.getSettings({}));
+
+      if (!after.ok) throw new Error('Settings unavailable after conflict');
+      expect(preferences.parse(after.value.settings)).toEqual(
+        preferences.parse(before.value.settings)
+      );
+      expect(
+        await application.evaluate(({ globalShortcut }) =>
+          ['Control+Alt+F10', 'Control+Alt+F11', 'Control+Alt+F12'].map((binding) =>
+            globalShortcut.isRegistered(binding)
+          )
+        )
+      ).toEqual([true, true, true]);
+    };
 
     expect(
       await application.evaluate(({ globalShortcut }) =>
@@ -55,10 +74,11 @@ test('packaged OS registration, conflict rollback, capture pause and owned recor
     expect(
       await page.evaluate(() => window.promptly.updateSettings({ openShortcut: 'Control+Alt+F9' }))
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
-    expect(await page.evaluate(() => window.promptly.getSettings({}))).toEqual(before);
+    await assertPreferences();
     expect(
       await page.evaluate(() => window.promptly.updateSettings({ pinShortcut: 'Ctrl+Alt+F10' }))
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
+    await assertPreferences();
     expect(
       await application.evaluate(({ globalShortcut }) =>
         globalShortcut.isRegistered('Control+Alt+F10')

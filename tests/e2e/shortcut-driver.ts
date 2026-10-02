@@ -35,6 +35,7 @@ export async function createShortcutDriver(application: ElectronApplication) {
       '-swift-version',
       '6',
       '-warnings-as-errors',
+      '-parse-as-library',
       path.resolve('tests/native/keyboard/macos/ShortcutDriver.swift'),
       '-o',
       executable

@@ -37,6 +37,33 @@ observer keeps only scalar counters (capped at 1024) and the last command outcom
 Main emits sanitized command phases only when an app-local listener exists; it
 retains no history and adds no renderer API or product controls.
 
+At `5642b8d`, hosted run 36996639088 again passed actual Windows shortcut delivery.
+Its registration/conflict case failed because the full snapshot included an
+independent geometry commit (revision 1 to 2, Compact bounds null to 440x640 at
+292,40); open, pin and capture bindings did not change. The corrected test compares
+every user preference except remembered geometry and checks all three actual OS
+registrations after each conflict rejection. It does not constrain unrelated
+geometry/revision writes. The original Windows artifact is retained.
+
+The same run's Mac delivery receipt reported sent input, but all OS-callback and
+command-phase counts remained zero; registrations were present and unsuspended,
+with durable/native pin false. This rules out the command/settings path for that
+run, without establishing why its posted target-key pair was not delivered. Both
+original Mac artifacts remain retained. The test-only driver now posts actual
+Control/Alt modifier transitions before the fixed target, observes bounded native
+key state, and releases only its own held keys in reverse order on every outcome.
+Every up event is allocated before any down; ownership is rechecked before each
+down, and no new down starts after foreground loss. This fixture correction and
+its unchanged required callback/pin/hide/show assertions need fresh hosted Mac
+evidence; no production input injection or physical qualification is added.
+
+The integration includes main `a03905d` and its owned native-fixture lifecycle fixes.
+An additional regression invalidates deferred resume at accepted shutdown while
+keeping settings controllers available through the drain. Full strict checks passed
+with 286 tests in 62 files (282 handwritten modules); the Windows package and three
+focused decoder/hook/registration-recorder cases passed. No new local delivery
+attempt was made.
+
 Owned fixtures always use isolated temporary profiles. Decoder fixtures construct
 native events without posting input; they test the production eight-side decoding,
 left/right overlap, repeat detection and sanitized cancellation. Windows additionally

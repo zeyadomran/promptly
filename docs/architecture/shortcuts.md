@@ -47,6 +47,9 @@ Quit first stops command dispatch, drains geometry and accepted settings, then
 closes storage and independent native resources. Normal and fatal shutdown share
 the existing 40-second coordinator. Every owned unregister is attempted even if
 another cleanup fails.
+Stopping commands also invalidates pending resume synchronously. A late native
+start is retired without restoring registrations, visibility recovery or callbacks;
+active resources still close after accepted settings settle.
 
 macOS reports actual Accessibility and Input Monitoring without requesting unrelated
 permissions. Permission loss, Secure Input and tap disablement invalidate the tap.

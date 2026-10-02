@@ -41,12 +41,16 @@ export class HookSession {
   }
 
   close(): Promise<void> {
-    this.closed = true;
-    this.generation++;
-    this.reset();
+    this.invalidate();
     return this.enqueue(async () => {
       await this.hook?.stop();
     });
+  }
+
+  invalidate(): void {
+    this.closed = true;
+    this.generation++;
+    this.reset();
   }
 
   private enqueue(action: () => Promise<void>): Promise<void> {
