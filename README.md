@@ -26,7 +26,8 @@ npm run format       # Format maintained source and docs
 npm run package      # Forge: local runnable package in out/, no installers/signing
 ```
 
-CI runs public service tests and packages the application on Windows and macOS.
+CI runs strict static checks and packages the application on Windows and macOS.
+Shared functional service tests run once, on Windows.
 GUI and native OS interactions are manual release checks described in
 [the test policy](docs/testing.md); automated tests do not qualify those interactions.
 
