@@ -4,7 +4,7 @@
   --background: light-dark(#ffffff, #09090b);
   --foreground: light-dark(#09090b, #fafafa);
   --foreground-2: light-dark(#3f3f46, #d4d4d8);
-  --muted-foreground: light-dark(#71717a, #a1a1aa);
+  --muted-foreground: light-dark(#6e6e77, #a1a1aa);
   --muted: light-dark(#f4f4f5, #27272a);
   --row-selected: light-dark(#f4f4f5, #18181b);
   --sidebar: light-dark(#fafafa, #0c0c0e);
@@ -14,7 +14,7 @@
   --highlight: light-dark(oklch(0.93 0.08 95), oklch(0.48 0.09 95));
   --success: #16a34a;
   --warning: #f59e0b;
-  --destructive: light-dark(#dc2626, #f87171);
+  --destructive: light-dark(#d92323, #f87171);
   --destructive-background: light-dark(#fef2f2, #450a0a);
   --primary: var(--foreground);
   --primary-foreground: var(--background);

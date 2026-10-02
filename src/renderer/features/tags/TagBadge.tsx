@@ -3,6 +3,7 @@ import { X } from 'lucide-react';
 import type { Tag } from '../../../shared/contracts/domain';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { tagColorClasses } from '../../lib/tag-palette';
 
 export function TagBadge({
@@ -16,22 +17,27 @@ export function TagBadge({
       <span className={`library-tag-dot ${tagColorClasses[color]}`} aria-hidden="true" />
       <span className="tag-badge-name">{name}</span>
       {onRemove !== undefined && (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="tag-badge-remove"
-          disabled={disabled}
-          aria-label={`Remove ${name}`}
-          onPointerDown={(event) => {
-            event.stopPropagation();
-          }}
-          onClick={(event) => {
-            event.stopPropagation();
-            onRemove();
-          }}
-        >
-          <X aria-hidden="true" size={12} />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="tag-badge-remove"
+              disabled={disabled}
+              aria-label={`Remove ${name}`}
+              onPointerDown={(event) => {
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                onRemove();
+              }}
+            >
+              <X aria-hidden="true" size={12} />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Remove {name}</TooltipContent>
+        </Tooltip>
       )}
     </Badge>
   );
