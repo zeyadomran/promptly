@@ -28,7 +28,7 @@ export async function dispatchOperation<K extends OperationName>(
   try {
     const response: unknown = await handler(request.data as OperationRequest<K>);
     const started = performance.now();
-    const parsed = resultSchema(schema.response).safeParse(response);
+    const parsed = resultSchema<unknown>(schema.response).safeParse(response);
 
     if (!parsed.success)
       return failure('INTERNAL', 'The desktop service returned an invalid response.');

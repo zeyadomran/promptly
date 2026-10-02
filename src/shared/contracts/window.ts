@@ -1,0 +1,13 @@
+import { z } from 'zod';
+
+export const sizeModeSchema = z.enum(['compact', 'regular']);
+export const windowKindSchema = z.enum(['main', 'settings', 'onboarding']);
+export const windowStateSchema = z.strictObject({
+  mode: sizeModeSchema,
+  kind: windowKindSchema,
+  visible: z.boolean()
+});
+export type SizeMode = z.infer<typeof sizeModeSchema>;
+export type WindowKind = z.infer<typeof windowKindSchema>;
+export type WindowState = z.infer<typeof windowStateSchema>;
+export const focusSearchChannel = 'promptly:focus-search';

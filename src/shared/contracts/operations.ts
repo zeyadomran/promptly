@@ -15,6 +15,7 @@ import {
 } from './domain';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
+import { sizeModeSchema, windowKindSchema, windowStateSchema } from './window';
 
 const emptySchema = z.strictObject({});
 const idRequestSchema = z.strictObject({ id: idSchema });
@@ -22,6 +23,20 @@ const revisionResponseSchema = z.strictObject({ revision: revisionSchema });
 const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSchema });
 
 export const operations = {
+  getWindowState: { request: emptySchema, response: windowStateSchema },
+  setWindowMode: {
+    request: z.strictObject({ mode: sizeModeSchema, reducedMotion: z.boolean() }),
+    response: windowStateSchema
+  },
+  setWindowVisibility: {
+    request: z.strictObject({ visible: z.boolean() }),
+    response: windowStateSchema
+  },
+  openDesktopWindow: {
+    request: z.strictObject({ kind: windowKindSchema }),
+    response: windowStateSchema
+  },
+  quitApplication: { request: emptySchema, response: emptySchema },
   searchSnippets: { request: searchRequestSchema, response: searchPageSchema },
   getSnippet: { request: idRequestSchema, response: snippetSnapshotSchema },
   createSnippet: {
