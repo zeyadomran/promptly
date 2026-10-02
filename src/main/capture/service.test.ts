@@ -6,7 +6,9 @@ it('captures through native selection, durable normalization and the shared muta
   const { store, mutations, shortcuts, os, sources, transfer, service, events } = captureFixture();
   let release: () => void = () => undefined;
 
-  service.subscribe(() => { throw new Error('Owned consumer failure'); });
+  service.subscribe(() => {
+    throw new Error('Owned consumer failure');
+  });
   try {
     const saved = await service.capture();
 
