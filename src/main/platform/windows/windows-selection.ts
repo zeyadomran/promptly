@@ -1,7 +1,11 @@
 import { spawn } from 'node:child_process';
 import path from 'node:path';
 
-import type { NativeCaptureReply, NativeSource } from '../../../shared/contracts/native-selection';
+import type {
+  NativeBounds,
+  NativeCaptureReply,
+  NativeSource
+} from '../../../shared/contracts/native-selection';
 import {
   nativeActivationSchema,
   nativeCaptureSchema,
@@ -14,6 +18,7 @@ import { NativeProcess, NativeTransportError } from '../native/native-process';
 export interface WindowsIdentity {
   readonly token: string;
   readonly source: NativeSource | null;
+  readonly bounds?: Readonly<NativeBounds> | null;
 }
 export type WindowsCaptureResult = NativeCaptureReply | { status: TransportFailure };
 export type WindowsForegroundResult =
@@ -82,7 +87,13 @@ export class WindowsSelection {
       );
 
       if (result.status !== 'ok') return { status: result.status };
-      const identity = Object.freeze({ token: result.identity, source: result.source });
+      const identity = Object.freeze({
+        token: result.identity,
+        source: result.source,
+        ...(result.bounds === undefined
+          ? {}
+          : { bounds: result.bounds === null ? null : Object.freeze(result.bounds) })
+      });
 
       this.identities.add(identity);
       return { status: 'ok', identity };
