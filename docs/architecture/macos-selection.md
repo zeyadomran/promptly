@@ -109,6 +109,17 @@ observer neither selects text nor activates an app, and the production identity
 capability, text/selection/pasteboard assertions and forged-identity rejection are
 unchanged. Latest-head macOS CI must qualify this test correction.
 
+The [retained `70f770d` receipt](../verification/P08/activation-70f770d-macos-failed.json)
+from [macOS CI](https://github.com/zeyadomran/promptly/actions/runs/36997414033)
+then established actual owned Promptly foreground, but the adapter returned
+`foregroundChanged` before activation. Its identity record requires a nonnil
+`launchDate`; Apple's documented LaunchServices-only availability may conflict with
+Playwright's direct executable launch. To distinguish this guard without changing
+production behavior, the owned observer now reports `launchDateAvailable` only for
+the matched owned Promptly PID. No unrelated app property is queried or logged.
+Both booleans are strictly decoded, and the production `ok` assertion remains.
+Runtime confirmation is pending; no launch-date failure cause is claimed yet.
+
 The fixture receipt records hardware/OS/Node architecture, helper startup and
 separate cold/warm native and pipe durations, plus focus/selection/pasteboard-count
 checks. These figures exclude shortcuts, persistence and toast display. P11 owns

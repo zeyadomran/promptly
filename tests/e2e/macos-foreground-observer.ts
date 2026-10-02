@@ -2,7 +2,7 @@ import { readFile, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
-/** Only an owned fixture file signal; the native response exposes one match boolean. */
+/** Only owned booleans cross this test-only fixture file signal. */
 export async function observeOwnedMacosForeground(directory: string, ownedPid: number) {
   if (!Number.isInteger(ownedPid) || ownedPid < 1 || ownedPid > 2147483647)
     throw new Error('Invalid owned foreground PID');
@@ -25,9 +25,18 @@ export async function observeOwnedMacosForeground(directory: string, ownedPid: n
     }
 
     try {
-      const matched: unknown = JSON.parse(text);
+      const value: unknown = JSON.parse(text);
 
-      if (typeof matched === 'boolean') return matched;
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        Object.keys(value).length === 2 &&
+        'matched' in value &&
+        typeof value.matched === 'boolean' &&
+        'launchDateAvailable' in value &&
+        typeof value.launchDateAvailable === 'boolean'
+      )
+        return { matched: value.matched, launchDateAvailable: value.launchDateAvailable };
     } catch {
       // Reject malformed data without reproducing its contents in error output.
     }

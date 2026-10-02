@@ -44,7 +44,8 @@ test('packaged macOS source activation hands foreground back from owned Promptly
   let ownedFixture: Awaited<ReturnType<typeof macosFixture>> | undefined;
   let activated = false;
   let promptlyForeground: OwnedPromptlyForeground | undefined;
-  let nativePromptlyForeground: { matched: boolean; requestMs: number } | undefined;
+  let nativePromptlyForeground:
+    { matched: boolean; launchDateAvailable: boolean; requestMs: number } | undefined;
 
   try {
     const page = await application.firstWindow();
@@ -120,7 +121,7 @@ test('packaged macOS source activation hands foreground back from owned Promptly
     const observationStarted = performance.now();
 
     nativePromptlyForeground = {
-      matched: await fixture.isForeground(ownedMainPid),
+      ...(await fixture.isForeground(ownedMainPid)),
       requestMs: performance.now() - observationStarted
     };
     // Display metadata is optional even for a valid native identity. The independent

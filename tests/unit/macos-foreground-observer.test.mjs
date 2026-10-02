@@ -28,12 +28,19 @@ async function respond(contents) {
   await rename(pending, path.join(directory, 'foreground.json'));
 }
 
-test.each([true, false])('returns only the fresh owned observer match %s', async (matched) => {
-  await writeFile(path.join(directory, 'foreground.json'), JSON.stringify(!matched));
+test.each([
+  { matched: true, launchDateAvailable: true },
+  { matched: true, launchDateAvailable: false },
+  { matched: false, launchDateAvailable: false }
+])('returns only fresh owned observer booleans %j', async (response) => {
+  await writeFile(
+    path.join(directory, 'foreground.json'),
+    JSON.stringify({ matched: !response.matched, launchDateAvailable: true })
+  );
   const observed = observeOwnedMacosForeground(directory, process.pid);
 
-  await respond(JSON.stringify(matched));
-  expect(await observed).toBe(matched);
+  await respond(JSON.stringify(response));
+  expect(await observed).toEqual(response);
 });
 
 test.each([0, -1, 1.5, 2147483648])(
@@ -48,13 +55,15 @@ test.each([0, -1, 1.5, 2147483648])(
   }
 );
 
-test.each(['{"private":"unrelated app"}', 'private malformed contents'])(
-  'rejects nonboolean observer output without reproducing it',
-  async (contents) => {
-    const observed = observeOwnedMacosForeground(directory, process.pid);
-    const rejected = expect(observed).rejects.toThrow('Invalid owned foreground response');
+test.each([
+  '{"private":"unrelated app"}',
+  'private malformed contents',
+  '{"matched":true,"launchDateAvailable":false,"name":"unrelated"}',
+  '{"matched":true,"launchDateAvailable":"false"}'
+])('rejects malformed or extra observer output without reproducing it', async (contents) => {
+  const observed = observeOwnedMacosForeground(directory, process.pid);
+  const rejected = expect(observed).rejects.toThrow('Invalid owned foreground response');
 
-    await respond(contents);
-    await rejected;
-  }
-);
+  await respond(contents);
+  await rejected;
+});

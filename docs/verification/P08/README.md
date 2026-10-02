@@ -52,3 +52,27 @@ The eight owned-observer regressions passed, and the main-owned activation harne
 built successfully through Vite. Windows Forge packaging passed. The macOS
 activation case was explicitly skipped on this Windows host; these results do not
 establish the OS foreground behavior.
+
+[`activation-70f770d-macos-failed.json`](activation-70f770d-macos-failed.json) is the
+unchanged receipt from [run 36997414033](https://github.com/zeyadomran/promptly/actions/runs/36997414033),
+macOS job 110807202257. The independent native observer proved Promptly's actual
+main PID was foreground, while app/window checks succeeded and the fixture was
+background. The production adapter returned `foregroundChanged` in 1.56 ms,
+before activation. Initial fixture identity had succeeded in 3.15 ms.
+
+The production identity requires `NSRunningApplication.launchDate`, which
+[Apple documents](https://developer.apple.com/documentation/appkit/nsrunningapplication/launchdate)
+as available only for applications launched by LaunchServices. The fixture uses
+LaunchServices; Playwright directly starts the Promptly executable. This is a
+possible guard mismatch, not a proven cause of the failure. The next test-only
+discriminator returns `launchDateAvailable` alongside the independent owned-PID
+match. It reads that property only when the foreground PID matches the supplied
+owned Promptly PID, and exposes only two booleans. Strict decoding rejects extra
+metadata. The production status must still be `ok`, so this diagnostic does not
+turn the failed precondition into a passing test or change any identity guards,
+activation deadline, capture assertion or retry policy.
+
+Local Windows verification of this diagnostic delta passed all strict checks and
+252 tests in 56 files, including 11 owned-observer response regressions. Actual
+Swift compilation and the owned-PID launch-date observation require fresh macOS CI.
+The production package contents are unchanged from the packaged `70f770d` head.

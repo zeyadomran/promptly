@@ -11,7 +11,8 @@ interface ActivationReceipt {
   ownedWindowReady: boolean;
   fixtureReadyForeground: boolean;
   promptlyForeground: OwnedPromptlyForeground | undefined;
-  nativePromptlyForeground: { matched: boolean; requestMs: number } | undefined;
+  nativePromptlyForeground:
+    { matched: boolean; launchDateAvailable: boolean; requestMs: number } | undefined;
   activationStatus: string | undefined;
   activated: boolean;
   helperInitialized: boolean;
