@@ -10,6 +10,7 @@ const config: ForgeConfig = {
     asar: true,
     executableName: 'Promptly',
     extraResource: [
+      path.resolve('out/tray-assets'),
       path.resolve('native/windows/out/promptly-windows.exe'),
       path.resolve('native/keyboard/windows/out/promptly-keyboard.exe')
     ]
@@ -18,6 +19,9 @@ const config: ForgeConfig = {
     generateAssets: async (_configuration, platform, arch) => {
       if (process.platform !== 'win32' || platform !== 'win32' || arch !== 'x64')
         throw new Error('Promptly can only be packaged for Windows x64 on Windows.');
+      await promisify(execFile)(process.execPath, [path.resolve('scripts/build-tray-assets.mjs')], {
+        windowsHide: true
+      });
       await promisify(execFile)(
         'powershell.exe',
         [

@@ -4,12 +4,14 @@ import type { DesktopOperations } from '../../shared/contracts/operations';
 import type { Shortcuts } from './service';
 
 export function shortcutServices(
-  shortcuts: Shortcuts
+  shortcuts: Shortcuts,
+  changed: () => void = () => undefined
 ): Pick<DesktopOperations, 'getShortcutStatus' | 'setCapturePaused'> {
   return {
     getShortcutStatus: () => Promise.resolve({ ok: true, value: shortcuts.status }),
     setCapturePaused: ({ paused }) => {
       shortcuts.setPaused(paused);
+      changed();
       return Promise.resolve({ ok: true, value: shortcuts.status });
     }
   };

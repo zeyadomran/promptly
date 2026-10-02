@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 
 import { copyFixture } from './copy-test-fixture';
+import { MainCopyOwner } from './main-owner';
 
 it('copies authoritative full text and Markdown with durable statistics and current hide policy', async () => {
   const clipboard: string[] = [];
@@ -19,17 +20,40 @@ it('copies authoritative full text and Markdown with durable statistics and curr
     });
     expect(clipboard).toEqual([text]);
     expect(fixture.visible()).toBe(true);
+    const main = new MainCopyOwner();
+
+    fixture.settings.hideAfterCopy = 'always';
+    expect(
+      await fixture.service.copyFromMain({ id: fixture.id, format: 'text' }, main)
+    ).toMatchObject({
+      ok: true,
+      value: { statistics: { copyCount: 2 }, warnings: [] }
+    });
+    expect(fixture.visible()).toBe(true);
+    main.close();
+    expect(
+      await fixture.service.copyFromMain({ id: fixture.id, format: 'text' }, main)
+    ).toMatchObject({
+      ok: false,
+      error: { code: 'UNAUTHORIZED' }
+    });
+    expect(
+      await fixture.service.services.copySnippet({ id: fixture.id, format: 'text' })
+    ).toMatchObject({
+      ok: false,
+      error: { code: 'UNAUTHORIZED' }
+    });
     fixture.settings.hideAfterCopy = 'always';
     expect(await fixture.copy('markdown')).toMatchObject({
       ok: true,
-      value: { statistics: { copyCount: 2 } }
+      value: { statistics: { copyCount: 3 } }
     });
-    expect(clipboard).toEqual([text, `\`\`\`\`\`\`\n${text}\n\`\`\`\`\`\``]);
+    expect(clipboard).toEqual([text, text, `\`\`\`\`\`\`\n${text}\n\`\`\`\`\`\``]);
     expect(fixture.visible()).toBe(false);
     fixture.store.reopen();
     expect(fixture.store.invoke('getSnippet', { id: fixture.id }).snippet).toMatchObject({
       text,
-      copyCount: 2,
+      copyCount: 3,
       lastCopiedAt: '2026-10-02T10:00:00.000Z'
     });
   } finally {
@@ -72,7 +96,7 @@ it('reports confirmed copy with a statistics warning when SQLite rejects persist
   }
 });
 
-it('drains an entered write after owner retirement and shutdown without replay or hiding', async () => {
+it('drains renderer and main-owned writes after retirement without replay or unrelated hiding', async () => {
   let release: () => void = () => undefined;
   let entered: () => void = () => undefined;
   const ready = new Promise<void>((resolve) => {
@@ -81,33 +105,58 @@ it('drains an entered write after owner retirement and shutdown without replay o
   const held = new Promise<void>((resolve) => {
     release = resolve;
   });
+  let releaseMain: () => void = () => undefined;
+  let enteredMain: () => void = () => undefined;
+  const mainReady = new Promise<void>((resolve) => {
+    enteredMain = resolve;
+  });
+  const mainHeld = new Promise<void>((resolve) => {
+    releaseMain = resolve;
+  });
   const clipboard: string[] = [];
   const fixture = copyFixture(async (text) => {
     clipboard.push(text);
-    entered();
-    await held;
+    if (clipboard.length === 1) {
+      entered();
+      await held;
+    } else {
+      enteredMain();
+      await mainHeld;
+    }
   });
+  const main = new MainCopyOwner();
 
   try {
     const copying = fixture.copy();
 
     await ready;
-    fixture.retire();
-    const closing = fixture.service.close();
+    const mainCopy = fixture.service.copyFromMain({ id: fixture.id, format: 'text' }, main);
 
-    expect(await fixture.copy()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    fixture.retire();
     release();
     expect(await copying).toMatchObject({
       ok: true,
       value: { statistics: { copyCount: 1 }, warnings: ['WINDOW_NOT_HIDDEN'] }
     });
+    await mainReady;
+    main.close();
+    const closing = fixture.service.close();
+
+    expect(await fixture.copy()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    releaseMain();
+    expect(await mainCopy).toMatchObject({
+      ok: true,
+      value: { statistics: { copyCount: 2 }, warnings: [] }
+    });
     await closing;
-    expect(clipboard).toEqual(['stored text']);
+    expect(clipboard).toEqual(['stored text', 'stored text']);
     expect(fixture.visible()).toBe(true);
     fixture.store.reopen();
-    expect(fixture.store.invoke('getSnippet', { id: fixture.id }).snippet.copyCount).toBe(1);
+    expect(fixture.store.invoke('getSnippet', { id: fixture.id }).snippet.copyCount).toBe(2);
   } finally {
     release();
+    releaseMain();
+    main.close();
     await fixture.dispose();
   }
 });

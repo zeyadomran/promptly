@@ -16,6 +16,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
 | `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
+| `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, capture-only pause, reversible tray visibility and retired native-menu ownership |
 | `main/capture/service.test.ts` | Native Windows selection through real SQLite, conservative normalization, exact recapture, suppression/clear/import cancellation, pre-deferral admission and entered-save retirement |
 | `main/capture-toast/service.test.ts` | Committed confirmation replacement, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |
@@ -41,6 +42,7 @@ Before qualifying a release, use a packaged application with a fresh owned profi
 - Window mode/geometry/pin, hide/reactivate/second launch, reachable recovery, quit, multi-monitor and fullscreen behavior.
 - Settings persistence, native login/permission outcomes and responsive navigation.
 - Native chooser/reveal and library transfer UI; actual global shortcut delivery, physical modifier recognition, owned selection capture and source activation.
+- Windows tray visibility, taskbar theme/DPI icons, pause/resume, recent-item full-text copy, recovery after hiding and complete Quit drainage.
 
 Native preferences must be captured before application initialization and restored/read back after shutdown. Verify owned process death before deleting profiles; retain the tree if death is unverified. Use only owned selection/input/clipboard fixtures, never a user's data or desktop application. These checks are manual qualification work, not a replacement automated fixture framework.
 

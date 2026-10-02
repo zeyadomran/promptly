@@ -6,11 +6,13 @@ interface Closable {
 export async function closeSettingsStorage(
   settings?: Closable,
   storage?: Closable,
-  native?: Closable
+  native?: Closable,
+  controllers?: Closable
 ): Promise<void> {
   const preferences = await Promise.allSettled([settleClose(settings)]);
+  const effects = await Promise.allSettled([settleClose(controllers)]);
   const database = await Promise.allSettled([settleClose(storage), settleClose(native)]);
-  const errors = [...preferences, ...database].flatMap((result) =>
+  const errors = [...preferences, ...effects, ...database].flatMap((result) =>
     result.status === 'rejected' ? [result.reason as unknown] : []
   );
 

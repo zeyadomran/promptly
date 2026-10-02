@@ -19,7 +19,7 @@ export function updateWindowBackgrounds(): void {
   }
 }
 
-/** Tray (P24/#26) injects its reversible controller later. */
+/** Main supplies reversible shortcut and tray owners before applying persisted preferences. */
 export function electronSettingsControllers(
   native: NativePreferences = {
     setLogin: (openAtLogin) => {
@@ -27,11 +27,13 @@ export function electronSettingsControllers(
     },
     getLogin: () => app.getLoginItemSettings().openAtLogin
   },
-  shortcuts?: SettingsController
+  shortcuts?: SettingsController,
+  tray?: SettingsController
 ): SettingsControllers {
   return {
     available: [
       ...(shortcuts === undefined ? [] : [shortcuts]),
+      ...(tray === undefined ? [] : [tray]),
       {
         name: 'theme',
         keys: ['theme'],
@@ -67,7 +69,7 @@ export function electronSettingsControllers(
       }
     ],
     unavailable: [
-      'showInTray',
+      ...(tray === undefined ? (['showInTray'] as const) : []),
       ...(shortcuts === undefined ? (['saveShortcut', 'openShortcut', 'pinShortcut'] as const) : [])
     ]
   };
