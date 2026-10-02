@@ -2,7 +2,9 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import { launchIsolatedElectron } from '../isolated-electron';
 
 test('packaged asar worker loads SQLite, persists full text, and reopens durable revision', async () => {
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
@@ -19,7 +21,8 @@ test('packaged asar worker loads SQLite, persists full text, and reopens durable
   delete env.ELECTRON_RUN_AS_NODE;
   const temporary = await mkdtemp(path.join(tmpdir(), 'promptly-packaged-storage-'));
   const databaseFile = path.join(temporary, 'smoke.sqlite');
-  const application = await electron.launch({ executablePath, env, timeout: 20_000 });
+  const isolated = await launchIsolatedElectron(executablePath, env);
+  const application = isolated.application;
 
   try {
     await application.firstWindow();
@@ -118,7 +121,7 @@ test('packaged asar worker loads SQLite, persists full text, and reopens durable
     });
     expect(result.revisions).toEqual([1, 2]);
   } finally {
-    await application.close();
+    await isolated.dispose();
     await rm(temporary, { recursive: true, force: true });
   }
 });

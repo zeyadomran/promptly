@@ -1,6 +1,8 @@
 import path from 'node:path';
 
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
+import { launchIsolatedElectron } from '../isolated-electron';
 
 test('packaged libraries render under CSP while unauthorized styles are rejected', async () => {
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
@@ -14,7 +16,8 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') env[key] = value;
   }
 
-  const app = await electron.launch({ executablePath, env });
+  const isolated = await launchIsolatedElectron(executablePath, env);
+  const app = isolated.application;
   let firstNonce: string | undefined;
 
   try {
@@ -135,10 +138,11 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     expect(violations).toHaveLength(1);
     expect(violations[0]).toContain('Content Security Policy');
   } finally {
-    await app.close();
+    await isolated.dispose();
   }
 
-  const secondApp = await electron.launch({ executablePath, env });
+  const secondIsolation = await launchIsolatedElectron(executablePath, env);
+  const secondApp = secondIsolation.application;
 
   try {
     const page = await secondApp.firstWindow();
@@ -149,6 +153,6 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     expect(nextNonce).toMatch(/^[A-Za-z0-9+/]{24}$/u);
     expect(nextNonce).not.toBe(firstNonce);
   } finally {
-    await secondApp.close();
+    await secondIsolation.dispose();
   }
 });

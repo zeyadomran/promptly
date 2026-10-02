@@ -1,9 +1,10 @@
 import path from 'node:path';
 
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import type { WebContents, WebPreferences } from 'electron';
 
 import { operations } from '../../src/shared/contracts/operations';
+import { launchIsolatedElectron } from '../isolated-electron';
 
 interface InspectableWebContents extends WebContents {
   getLastWebPreferences(): WebPreferences;
@@ -23,7 +24,8 @@ test('packaged React window preserves the sandboxed preload boundary', async () 
   }
 
   delete env.ELECTRON_RUN_AS_NODE;
-  const app = await electron.launch({ executablePath, env, timeout: 20_000 });
+  const isolated = await launchIsolatedElectron(executablePath, env);
+  const app = isolated.application;
 
   try {
     const page = await app.firstWindow();
@@ -69,6 +71,6 @@ test('packaged React window preserves the sandboxed preload boundary', async () 
     expect(app.windows()).toHaveLength(1);
     expect(rendererErrors).toEqual([]);
   } finally {
-    await app.close();
+    await isolated.dispose();
   }
 });
