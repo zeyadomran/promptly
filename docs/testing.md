@@ -10,7 +10,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 
 ## Current suite
 
-Seven smoke definitions cover the implemented base app:
+Eight smoke definitions cover the implemented base app:
 
 | File | Flow owner |
 | --- | --- |
@@ -18,13 +18,18 @@ Seven smoke definitions cover the implemented base app:
 | `window-lifecycle.spec.ts` | Window modes, geometry, pin, reachability and quit |
 | `settings-preferences.spec.ts` | Preference persistence, native outcome, responsive focus and return to main |
 | `storage-packaged.spec.ts` | Snippet/tag CRUD, duplicate/delete/undo, export/clear/import and restart |
+| `shortcut-delivery.spec.ts` | Actual hosted OS shortcut callbacks persist pin and hide/show the owned app |
 | `windows-selection.spec.ts` | Ordinary owned Unicode selection through the production Windows adapter |
 | `macos-selection.spec.ts` | Ordinary owned selection and return to the saved source |
 | `startup-failure.spec.ts` | Owned unsupported database, fatal exit and observed process death; Windows only |
 
-Five Node logic cases cover real-worker search/filter/sort/pagination and committed invalidation, import atomicity/colliding tag memberships, rejected native Settings effects, hung provider retirement and forged/retired macOS source identities. There are 12 authored cases and 16 platform executions: four shared smokes on both OSes, one native smoke per OS, one fatal-startup smoke on Windows, and five logic cases once.
+Eight Node logic cases cover real-worker search/filter/sort/pagination and committed invalidation, import atomicity/colliding tag memberships, rejected native Settings effects, hung provider retirement, forged/retired macOS source identities, completed physical modifier taps, shortcut registration rollback and shutdown invalidation of a late resume. There are 16 authored cases and 21 platform executions: five shared smokes on both OSes, one native smoke per OS, one fatal-startup smoke on Windows, and eight logic cases once.
 
-Shortcuts are a pending integration. They will add one actual delivery smoke and three distinct logic cases: physical modifier recognition, registration transaction rollback and suspend/shutdown ordering. The combined target is eight smokes and eight logic cases; absent features have no placeholders. When the real library UI is implemented, replace overlapping worker-flow coverage instead of duplicating it.
+The actual shortcut flow uses fixed owned input on GitHub-hosted runners only;
+local skips do not qualify native delivery. macOS fixture K/J delivery remains
+required in CI, with Windows F11/F10 unchanged. Absent features have no
+placeholders. When the real library UI is implemented, replace overlapping
+worker-flow coverage instead of duplicating it.
 
 ## Owned runtime boundary
 
