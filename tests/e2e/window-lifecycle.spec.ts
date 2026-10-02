@@ -4,6 +4,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { launchIsolatedElectron } from '../isolated-electron';
+import { expectedRegularRestore, geometryReceipt } from './window-geometry';
 import { beginVisibilityReceipt, expectConcealed, visibilityReceipt } from './window-visibility';
 
 test('packaged modes, pin, recovery, display clamp and restart use durable independent geometry', async () => {
@@ -36,32 +37,18 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
         app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds().width)
       )
       .toBe(1000);
+    const { area } = await geometryReceipt(app, 'regular-before-resize');
+
     await app.evaluate(({ BrowserWindow }) =>
       BrowserWindow.getAllWindows()[0]?.setBounds({ width: 1100, height: 700 })
     );
-    const regular = await app.evaluate(({ BrowserWindow }) =>
-      BrowserWindow.getAllWindows()[0]?.getBounds()
-    );
-    const area = await app.evaluate(({ BrowserWindow, screen }) => {
-      const bounds = BrowserWindow.getAllWindows()[0]?.getBounds();
-
-      if (bounds === undefined) throw new Error('Missing regular window.');
-      return screen.getDisplayMatching(bounds).workArea;
-    });
-
-    if (regular === undefined) throw new Error('Missing regular geometry.');
-    const restoredRegular = {
-      width: Math.min(regular.width, area.width),
-      height: Math.min(regular.height, area.height),
-      x: Math.max(
-        area.x,
-        Math.min(regular.x, area.x + area.width - Math.min(regular.width, area.width))
-      ),
-      y: Math.max(
-        area.y,
-        Math.min(regular.y, area.y + area.height - Math.min(regular.height, area.height))
+    await expect
+      .poll(() =>
+        app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds().width)
       )
-    };
+      .toBeGreaterThanOrEqual(Math.min(1100, area.width));
+    const { bounds: regular } = await geometryReceipt(app, 'regular-after-resize');
+    const restoredRegular = expectedRegularRestore(regular, area);
 
     await page.getByRole('radio', { name: 'Compact', exact: true }).click();
     await expect
@@ -129,6 +116,7 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
         app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.getBounds())
       )
       .toEqual(restoredRegular);
+    await geometryReceipt(app, 'regular-restored');
     await app.evaluate(({ BrowserWindow, screen }) => {
       BrowserWindow.getAllWindows()[0]?.setBounds({ x: -50_000, y: -50_000 });
       screen.emit('display-metrics-changed');

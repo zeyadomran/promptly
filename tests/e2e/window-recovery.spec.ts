@@ -3,7 +3,6 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { launchIsolatedElectron } from '../isolated-electron';
-import { beginVisibilityReceipt, expectConcealed, visibilityReceipt } from './window-visibility';
 
 type HeldRendererRequest = typeof globalThis & {
   heldRenderer?: (reply: { cancel: boolean }) => void;
@@ -129,57 +128,6 @@ test('closing an owned auxiliary window during a held renderer load releases ope
 
     if (settings === undefined) throw new Error('Missing fresh retry window.');
     await expect(settings.getByRole('heading', { name: 'Appearance' })).toBeVisible();
-  } finally {
-    await isolated.dispose();
-  }
-});
-
-test('macOS uses a real Dock recovery route and keeps a reachable window after disabling it', async () => {
-  test.skip(process.platform !== 'darwin', 'macOS Dock contract');
-  const executable = path.resolve(
-    'out',
-    `Promptly-${process.platform}-${process.arch}`,
-    'Promptly.app',
-    'Contents',
-    'MacOS',
-    'Promptly'
-  );
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      (entry): entry is [string, string] =>
-        entry[1] !== undefined && entry[0] !== 'ELECTRON_RUN_AS_NODE'
-    )
-  );
-  const isolated = await launchIsolatedElectron(executable, env);
-  const application = isolated.application;
-
-  try {
-    const page = await application.firstWindow();
-
-    await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
-    await beginVisibilityReceipt(application);
-    expect(
-      await page.evaluate(() => window.promptly.updateSettings({ showDockIcon: true }))
-    ).toMatchObject({ ok: true });
-    const available = await visibilityReceipt(application, 'dock-enabled-before-hide');
-
-    expect(available.dock).toBe(true);
-    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: false }));
-    await expectConcealed(application, 'dock-enabled-after-hide', true);
-    expect(
-      await page.evaluate(() => window.promptly.updateSettings({ showDockIcon: false }))
-    ).toMatchObject({ ok: true });
-    const unavailable = await visibilityReceipt(application, 'dock-disabled-before-hide');
-
-    expect(unavailable.dock).toBe(false);
-    expect(unavailable.visible).toBe(true);
-    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: false }));
-    await expectConcealed(application, 'dock-disabled-after-hide', false);
-    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: true }));
-    const reachable = await visibilityReceipt(application, 'dock-disabled-after-show');
-
-    expect(reachable.dock).toBe(false);
-    expect(reachable.visible).toBe(true);
   } finally {
     await isolated.dispose();
   }

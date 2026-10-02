@@ -1,4 +1,6 @@
-import { type ElectronApplication, expect, test } from '@playwright/test';
+import { type ElectronApplication, expect } from '@playwright/test';
+
+import { writeWindowReceipt } from './native-window-receipt';
 
 interface VisibilityProbe {
   events: string[];
@@ -32,14 +34,13 @@ export async function visibilityReceipt(application: ElectronApplication, phase:
       visible: window?.isVisible() ?? false,
       minimized: window?.isMinimized() ?? false,
       focused: window?.isFocused() ?? false,
+      pinned: window?.isAlwaysOnTop() ?? false,
+      allWorkspaces: window?.isVisibleOnAllWorkspaces() ?? false,
       events: probe?.events ?? []
     };
   });
 
-  await test.info().attach(`native-visibility-${phase}`, {
-    body: JSON.stringify({ phase, ...receipt }, null, 2),
-    contentType: 'application/json'
-  });
+  await writeWindowReceipt(`native-visibility-${phase}`, { phase, ...receipt });
   console.log('Owned native visibility:', JSON.stringify({ phase, ...receipt }));
   return receipt;
 }

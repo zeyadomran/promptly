@@ -7,8 +7,9 @@ was never opened by these tests.
 
 Passed:
 
-- `npm run check`: strict typechecking, lint/architecture, formatting, 206 unit
-  tests in 47 files after integrating main `9b13dd03` and the native shutdown chain.
+- `npm run check`: strict typechecking, lint/architecture, formatting, 213 unit
+  tests in 49 files after integrating the native shutdown chain. Latest merged
+  main `2b5fa20f` adds only the verified setup-node workflow update.
   This includes rapid mode switches, quit during animation, load/ready ordering,
   failed renderer destruction, and actual-main normal/fatal cleanup ordering.
   Readiness terminal-event tests use the actual factory/lifecycle modules, verify
@@ -43,7 +44,10 @@ checks passed. The new native auxiliary-close regression holds its renderer requ
 destroys that owned Settings window before load/paint, verifies the open settles
 with a recoverable result and then renders a fresh Settings window. Its focused
 run passed with a normal process exit 0. The macOS fixture includes the native
-workspace method while production fullscreen-space behavior remains intact.
+workspace method. Workspace/fullscreen hints follow pin state while the Dock
+controller owns process policy. Actual fullscreen placement is a manual gap;
+Electron requires Dock-hidden UIElement policy for floating over another app's
+fullscreen Space. No such physical placement was verified locally.
 
 The first PR CI Windows restore failure compared an unclamped 1100px rectangle
 with a 1024px desktop. The restart/restore test now derives its expected rectangle
@@ -53,6 +57,30 @@ unconfirmed. A separate delayed ready-to-show callback race was reproduced in th
 factory test and removed: initial load and readiness settle before the caller can
 hide. New macOS tests explicitly exercise both real Dock-enabled hiding and
 Dock-disabled reachable visibility, freezing route availability across commands.
+
+CI run `36986038586`, macOS job `110771169194`, at `ec4f8344` passed readiness and
+both failed-load/native-close retry cases but failed Regular restore and explicit
+Dock-enabled recovery. The intentional unsupported-DB case passed separately.
+The native receipt had Dock false before and after hide, with a visible window,
+so no-route reachability worked. Electron 44.5.1's workspace implementation calls
+DockHide for fullscreen hints; that call happened after settings initialization.
+The new workspace helper skips process transformation and tests both pin states
+with each Dock preference. The Regular test captured width 440 after requesting
+1100, then its restore correctly enforced the 760 minimum. Cocoa's zero maximum
+reset leaves its prior native maximum; explicit current-work-area maxima now
+replace it on mode/move/resize/display changes. Sticky-native-maximum and negative
+display/DPI regressions pass. See the architecture document's exact source links.
+
+After these changes, all four applicable local Windows lifecycle/chrome/recovery
+cases passed, plus two-process production CSP with both exits 0. Native geometry
+receipts now record bounds, normal bounds, minimum/maximum, selected work area and
+DPI scales. The test waits for a real Regular resize before capturing its durable
+rectangle and independently derives the expected restore including minimum size.
+Visibility and geometry JSON are explicitly saved in test output paths for CI
+artifact retention; a final local lifecycle run passed and verified these files.
+The new macOS-only Dock case also toggles pin in both Dock
+states; its actual macOS execution awaits fresh CI. Original unknown failures are
+not retroactively attributed to these newly evidenced defects.
 
 The two compact images are actual packaged renderer output. Playwright captures
 web contents; native caption buttons are outside that capture and require a

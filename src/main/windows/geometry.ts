@@ -19,6 +19,25 @@ export function windowGeometry(kind: WindowKind, mode: SizeMode) {
   return modeGeometry[mode];
 }
 
+export function workAreaForBounds(candidate: Rectangle, areas: readonly Rectangle[]): Rectangle {
+  const primary = areas[0];
+
+  if (primary === undefined) throw new Error('No display work area is available.');
+  const overlap = (display: Rectangle) =>
+    Math.max(
+      0,
+      Math.min(candidate.x + candidate.width, display.x + display.width) -
+        Math.max(candidate.x, display.x)
+    ) *
+    Math.max(
+      0,
+      Math.min(candidate.y + candidate.height, display.y + display.height) -
+        Math.max(candidate.y, display.y)
+    );
+
+  return areas.reduce((best, next) => (overlap(next) > overlap(best) ? next : best), primary);
+}
+
 /** All rectangles are Electron DIP work areas; never scale persisted coordinates by DPI. */
 export function clampBounds(
   remembered: Rectangle | null,
@@ -36,18 +55,7 @@ export function clampBounds(
     width: defaults.width,
     height: defaults.height
   };
-  const overlap = (display: Rectangle) =>
-    Math.max(
-      0,
-      Math.min(candidate.x + candidate.width, display.x + display.width) -
-        Math.max(candidate.x, display.x)
-    ) *
-    Math.max(
-      0,
-      Math.min(candidate.y + candidate.height, display.y + display.height) -
-        Math.max(candidate.y, display.y)
-    );
-  const area = areas.reduce((best, next) => (overlap(next) > overlap(best) ? next : best), primary);
+  const area = workAreaForBounds(candidate, areas);
   const width = Math.min(
     area.width,
     kind === 'main' && mode === 'compact'

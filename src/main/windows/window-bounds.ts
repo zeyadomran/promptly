@@ -2,7 +2,7 @@ import { type BrowserWindow, screen } from 'electron';
 
 import type { SizeMode } from '../../shared/contracts/window';
 import type { SettingsService } from '../settings/service';
-import { clampBounds, modeGeometry, type Rectangle } from './geometry';
+import { clampBounds, modeGeometry, type Rectangle, workAreaForBounds } from './geometry';
 import { restoreNormalWindow } from './normal-window';
 
 export function displayAreas() {
@@ -21,6 +21,8 @@ export class WindowBounds {
   private tail: Promise<void> = Promise.resolve();
   private stopped = false;
   private saveError: Error | undefined;
+  private limitsKey: string | undefined;
+  private applyingLimits = false;
 
   constructor(
     private readonly window: BrowserWindow,
@@ -38,17 +40,45 @@ export class WindowBounds {
   private readonly interrupt = () => {
     this.cancelAnimation();
     this.destination = undefined;
-    if (this.mode === 'compact') this.window.setMaximumSize(440, 0);
+    this.setLimits(this.window.getNormalBounds(), this.mode === 'compact');
     this.changed();
   };
 
   private readonly changed = () => {
-    if (this.stopped || this.animation !== undefined) return;
+    if (
+      this.stopped ||
+      this.applyingLimits ||
+      this.animation !== undefined ||
+      this.window.isDestroyed()
+    )
+      return;
+    this.setLimits(this.window.getNormalBounds(), this.mode === 'compact');
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
       this.save();
     }, 250);
   };
+
+  private setLimits(bounds: Rectangle, fixedWidth: boolean): void {
+    const area = workAreaForBounds(bounds, displayAreas());
+    const minimum = modeGeometry[this.mode];
+    const maximumWidth = fixedWidth ? Math.min(440, area.width) : area.width;
+    const key = `${this.mode}:${String(maximumWidth)}:${String(area.height)}`;
+
+    if (key === this.limitsKey) return;
+    this.limitsKey = key;
+    // Cocoa retains its previous native maximum when Electron receives (0, 0).
+    this.applyingLimits = true;
+    try {
+      this.window.setMaximumSize(maximumWidth, area.height);
+      this.window.setMinimumSize(
+        Math.min(minimum.minWidth, area.width),
+        Math.min(minimum.minHeight, area.height)
+      );
+    } finally {
+      this.applyingLimits = false;
+    }
+  }
 
   save(): void {
     clearTimeout(this.timer);
@@ -90,11 +120,7 @@ export class WindowBounds {
 
     await restoreNormalWindow(this.window);
     this.mode = mode;
-    this.window.setMaximumSize(0, 0);
-    this.window.setMinimumSize(
-      Math.min(modeGeometry[mode].minWidth, target.width),
-      Math.min(modeGeometry[mode].minHeight, target.height)
-    );
+    this.setLimits(target, false);
     if (this.platform === 'darwin' && !reducedMotion) this.animate(this.window.getBounds(), target);
     else this.finish(target);
   }
@@ -124,9 +150,9 @@ export class WindowBounds {
   }
 
   private finish(target: Rectangle): void {
+    this.setLimits(target, this.mode === 'compact');
     this.window.setBounds(target);
     this.destination = undefined;
-    if (this.mode === 'compact') this.window.setMaximumSize(target.width, 0);
     this.save();
   }
 
@@ -138,11 +164,6 @@ export class WindowBounds {
       this.mode
     );
 
-    this.window.setMaximumSize(0, 0);
-    this.window.setMinimumSize(
-      Math.min(modeGeometry[this.mode].minWidth, target.width),
-      Math.min(modeGeometry[this.mode].minHeight, target.height)
-    );
     this.finish(target);
   }
 

@@ -17,6 +17,7 @@ import { initialBounds, windowGeometry } from './geometry';
 import { installRendererAssets } from './install-renderer-assets';
 import { loadWindowRenderer } from './load-window-renderer';
 import { registerNativeChrome } from './native-chrome';
+import { setPinnedWorkspaces } from './pinned-workspaces';
 
 export async function createMainWindow(
   windows: WindowRegistry,
@@ -90,8 +91,7 @@ export async function createMainWindow(
   });
 
   registerNativeChrome(window);
-  if (process.platform === 'darwin')
-    window.setVisibleOnAllWorkspaces(preferences.alwaysOnTop, { visibleOnFullScreen: true });
+  setPinnedWorkspaces(window, preferences.alwaysOnTop);
   created?.(window);
 
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));

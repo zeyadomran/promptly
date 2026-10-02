@@ -15,6 +15,9 @@ rectangle through SettingsService, never changing `defaultSizeMode`. Restores an
 display changes use Electron DIP work areas, retain negative coordinates on
 connected displays, and clamp the complete rectangle onto an available display.
 When the work area is smaller than the normal minimum, reachability takes priority.
+Native size limits use the selected display's current work area and refresh after
+mode changes, moves/resizes and display/DPI events. Explicit finite maxima replace
+Cocoa's retained Compact constraint; zero does not reset that native maximum.
 Settings starts at 800×640 with a 440×420 minimum and its layout changes at 640px;
 onboarding has the 760×510 window contract. P20 and P23 own their later full contents.
 
@@ -35,7 +38,12 @@ macOS keeps that window visible and close quits. Launching the app again recover
 the running instance. A native menu and the footer expose explicit Quit.
 
 One persisted `alwaysOnTop` value backs title controls, footer, Settings and native
-pinning. macOS uses `setVisibleOnAllWorkspaces` with `visibleOnFullScreen`; Windows
+pinning. macOS enables workspace/fullscreen collection hints only while pinned,
+with `skipTransformProcessType` so the Dock controller retains activation-policy
+ownership. Electron's native fullscreen placement requires UIElement policy,
+which Dock-hidden mode establishes. With the Dock visible, hints are configured
+but placement above another app's fullscreen Space is not guaranteed or verified.
+Windows
 uses native always-on-top behavior and cannot promise placement above exclusive
 fullscreen apps. The hidden native title bar retains macOS traffic lights and
 Windows caption controls. CSS reserves their hit regions, drags only the title
@@ -71,6 +79,15 @@ Physical monitor unplug/replug at mixed DPI, macOS Spaces with a different app i
 fullscreen, native caption/traffic-light pointer hit targets, drag/resize while
 the macOS animation runs, VoiceOver and Narrator remain manual platform checks.
 Automated geometry tests and event reconciliation are not physical monitor evidence.
+
+Electron 44.5.1 native implementation references:
+
+- [Workspace process transformation](https://github.com/electron/electron/blob/v44.5.1/shell/browser/native_window_mac.mm#L1339-L1356)
+  invokes DockHide for `visibleOnFullScreen` unless transformation is skipped.
+- [Cocoa size constraints](https://github.com/electron/electron/blob/v44.5.1/shell/browser/native_window_mac.mm#L777-L784)
+  leave the existing NSWindow maximum untouched when no maximum is present.
+- [Native bounds constraints](https://github.com/electron/electron/blob/v44.5.1/shell/browser/native_window_mac.mm#L730-L749)
+  apply minimum/maximum limits before updating the Cocoa frame.
 
 Native behavior follows Electron's [BrowserWindow](https://www.electronjs.org/docs/latest/api/browser-window),
 [app](https://www.electronjs.org/docs/latest/api/app) and

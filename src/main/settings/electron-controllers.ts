@@ -2,6 +2,7 @@ import { app, BrowserWindow, nativeTheme } from 'electron';
 
 import type { Settings } from '../../shared/contracts/settings';
 import { updateNativeChrome } from '../windows/native-chrome';
+import { setPinnedWorkspaces } from '../windows/pinned-workspaces';
 import type { SettingsControllers } from './controllers';
 import { createDockController } from './dock-controller';
 
@@ -35,8 +36,7 @@ export function electronSettingsControllers(
         apply: (settings: Settings) => {
           for (const window of BrowserWindow.getAllWindows()) {
             window.setAlwaysOnTop(settings.alwaysOnTop);
-            if (process.platform === 'darwin')
-              window.setVisibleOnAllWorkspaces(settings.alwaysOnTop, { visibleOnFullScreen: true });
+            setPinnedWorkspaces(window, settings.alwaysOnTop);
             if (window.isAlwaysOnTop() !== settings.alwaysOnTop)
               throw new Error('Pin was rejected.');
           }

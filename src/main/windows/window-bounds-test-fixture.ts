@@ -17,8 +17,8 @@ export function windowBoundsFixture(platform: NodeJS.Platform = 'win32') {
     setBounds: (next: Rectangle) => {
       rectangle = next;
     },
-    setMinimumSize: () => undefined,
-    setMaximumSize: () => undefined,
+    setMinimumSize: (_width: number, _height: number) => undefined,
+    setMaximumSize: (_width: number, _height: number) => undefined,
     isFullScreen: () => false,
     isMaximized: () => false
   };
