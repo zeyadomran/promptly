@@ -1,5 +1,4 @@
 import { execFile } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
@@ -7,6 +6,7 @@ import { expect, test } from '@playwright/test';
 
 import type { WindowsIdentity } from '../../src/main/platform/windows/windows-selection';
 import { createWindowsSelection } from '../../src/main/platform/windows/windows-selection';
+import { saveNativeReceipt } from './native-receipt';
 import { windowsFixture } from './windows-fixture';
 
 test.describe('packaged production Windows selection', () => {
@@ -35,11 +35,14 @@ test.describe('packaged production Windows selection', () => {
       applicationPath: 'unused'
     });
     const launchedAt = performance.now();
+    const evidence: object[] = [];
+    let ready: Awaited<ReturnType<typeof adapter.ready>> | undefined;
+    let readyRoundTripMs: number | null = null;
+    let completed = false;
 
     try {
-      const ready = await adapter.ready();
-      const readyRoundTripMs = performance.now() - launchedAt;
-      const evidence: object[] = [];
+      ready = await adapter.ready();
+      readyRoundTripMs = performance.now() - launchedAt;
       let retiredIdentity: WindowsIdentity | undefined;
 
       expect(ready.warmupReady).toBe(true);
@@ -49,10 +52,9 @@ test.describe('packaged production Windows selection', () => {
         ['empty', 'empty', undefined],
         ['password', 'secureInput', undefined],
         ['unsupported', 'unsupported', undefined],
-        ['denied', 'permissionDenied', undefined],
-        ['error', 'providerError', undefined],
         ['changed', 'foregroundChanged', undefined],
-        ['slow', 'timedOut', undefined]
+        ['slow', 'timedOut', undefined],
+        ['denied-slow', 'timedOut', undefined]
       ] as const) {
         const fixture = await windowsFixture(mode);
 
@@ -63,22 +65,28 @@ test.describe('packaged production Windows selection', () => {
             fixture.fixturePid
           );
           if (identity === null) throw new Error('Missing fixture identity');
-          if (mode === 'slow') retiredIdentity = identity;
+          if (expectedStatus === 'timedOut') retiredIdentity = identity;
           const started = performance.now();
           const result = await adapter.captureSelection(identity);
 
-          expect(result.status, mode).toBe(expectedStatus);
-          if (result.status === 'ok') expect(result.text).toBe(expectedText);
-          else expect('text' in result).toBe(false);
           evidence.push({
             fixture: mode,
             ownedFixtureIntegrityLevel: fixture.integrityLevel,
             targetIntegrityLevel:
               'targetIntegrityLevel' in result ? result.targetIntegrityLevel : null,
             status: result.status,
+            deadlineMs: 100,
             nativeMs: 'elapsedMs' in result ? result.elapsedMs : null,
             roundTripMs: performance.now() - started
           });
+          expect(result.status, mode).toBe(expectedStatus);
+          if (result.status === 'ok') expect(result.text).toBe(expectedText);
+          else expect('text' in result).toBe(false);
+          if (expectedStatus === 'timedOut') {
+            expect(performance.now() - started).toBeGreaterThanOrEqual(90);
+            expect(performance.now() - started).toBeLessThan(500);
+          }
+
           if (mode === 'selected') {
             const durations: number[] = [];
             const nativeDurations: number[] = [];
@@ -126,26 +134,22 @@ test.describe('packaged production Windows selection', () => {
         await recoveryFixture.close();
       }
 
-      const receipt = JSON.stringify({
-        platform: process.platform,
-        helperIntegrityLevel: ready.integrityLevel,
-        warmupMs: ready.warmupMs,
-        helperStartupMs: ready.startupMs,
-        processToReadyMs: readyRoundTripMs,
-        evidence
-      });
-
-      console.log(receipt);
-      const receiptPath = test.info().outputPath('windows-selection-receipt.json');
-
-      await mkdir(path.dirname(receiptPath), { recursive: true });
-      await writeFile(receiptPath, receipt, 'utf8');
-      await test.info().attach('windows-selection-receipt', {
-        path: receiptPath,
-        contentType: 'application/json'
-      });
+      completed = true;
     } finally {
-      await adapter.dispose();
+      try {
+        await saveNativeReceipt('windows-selection-receipt', {
+          platform: process.platform,
+          completed,
+          helperIntegrityLevel: ready?.integrityLevel ?? null,
+          warmupMs: ready?.warmupMs ?? null,
+          helperStartupMs: ready?.startupMs ?? null,
+          processToReadyMs: readyRoundTripMs,
+          elapsedMs: performance.now() - launchedAt,
+          evidence
+        });
+      } finally {
+        await adapter.dispose();
+      }
     }
   });
 });

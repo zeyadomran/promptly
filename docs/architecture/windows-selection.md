@@ -108,6 +108,19 @@ capture fixtures passing. Receipts are printed and written to a Playwright outpu
 JSON file for CI artifact retention. Inherited-context success does not prove
 an actual medium-integrity app can read a high-integrity target.
 
+[Later hosted CI](https://github.com/zeyadomran/promptly/actions/runs/36974533857)
+returned `timedOut` for a freshly initialized simulated denied WPF provider under
+the production 100-ms budget; earlier CI measured that denial at about 93.6 ms.
+The failed run did not retain its numeric receipt, so its exact latency is unknown.
+Native error-classification tests now use a separate, explicit 5-second **test-only**
+transport deadline to assert `permissionDenied` and `providerError` exactly.
+Production capture remains fixed at 100 ms: a deliberately delayed denied provider
+must time out without text, kill the helper, reject its stale identity and recover
+through a new process. A late permission exception cannot replace a timeout result.
+These cases do not qualify timely denied-app capture or full-pipeline latency.
+Fixture results are recorded before assertions and saved in `finally`, including
+incomplete runs, so failed assertions retain observed status/timing evidence.
+
 Before answering capabilities, the helper reads only
 `AutomationElement.RootElement.Current.ProcessId` to initialize UIA/COM without
 querying selected text or focused controls. A failed warmup fails readiness; a

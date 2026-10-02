@@ -19,7 +19,8 @@ internal sealed class SelectionPeer : FrameworkElementAutomationPeer, ITextProvi
     }
     public ITextRangeProvider[] GetSelection()
     {
-        if (Control.Mode == "denied") throw new UnauthorizedAccessException();
+        if (Control.Mode == "denied-slow") Thread.Sleep(1000);
+        if (Control.Mode == "denied" || Control.Mode == "denied-slow") throw new UnauthorizedAccessException();
         if (Control.Mode == "error") throw new InvalidOperationException("Owned fixture provider failure");
         if (Control.Mode == "slow") Thread.Sleep(10000);
         if (Control.Mode == "changed")

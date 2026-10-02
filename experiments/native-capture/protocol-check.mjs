@@ -13,7 +13,7 @@ const executable = path.join(
 const helper = openHelper(executable);
 
 try {
-  const capabilities = await helper.request('capabilities');
+  const capabilities = await helper.ready();
 
   assert.equal(capabilities.status, 'ok');
   assert.equal(capabilities.platform, process.platform);
@@ -50,6 +50,7 @@ try {
       architecture: arch(),
       nodeVersion: process.version,
       nativeRuntime: capabilities.runtime ?? 'system-frameworks',
+      helperStartup: helper.startupReceipt,
       accessibilityAllowed: capabilities.accessibility ?? true,
       clipboardCounterUnchanged: unchanged,
       clipboardMetadataStatus: before.status,
