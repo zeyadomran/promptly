@@ -17,9 +17,26 @@ production default binding or supported-key restriction changed.
 At `b47f2c80070e1a7f600d2adfa2b093c112def706`, the owned K control received one
 Carbon callback while the F11 control received none. The byte-identical receipts
 are [K](macos-b47-k-control.json), [F11](macos-b47-f11-control.json), and the
-[failed product result](macos-b47-command-final.json). This qualifies neither the
-new Electron K/J flow nor physical function-key support. Actual product delivery
-remains required in fresh hosted CI; J has not yet been qualified.
+[failed product result](macos-b47-command-final.json). That control did not qualify
+the new Electron K/J flow or physical function-key support.
+
+At `60e3e9c893ca13d26e8fb688f63e58ce475184b7`, hosted run
+[37026563074](https://github.com/zeyadomran/promptly/actions/runs/37026563074)
+passed the actual product shortcut flow on Windows (5 seconds) and macOS
+(14.2 seconds). The unchanged durable pin and hide/show assertions passed;
+final [Windows](windows-60e3-shortcut-final.json) and
+[macOS](macos-60e3-shortcut-final.json) receipts retain the committed pin and
+visible main window. This qualifies the fixed hosted synthetic-input flow,
+including macOS K/J on that runner's layout, not physical hardware or arbitrary
+keyboard layouts. Earlier F11 failures remain historical and unexplained.
+
+Both hosted preference-restoration receipts report `restorationOk: true` and
+matching initial/restored values: [Windows](windows-60e3-packaged-transfer-restoration.json)
+and [macOS](macos-60e3-packaged-transfer-restoration.json). These small receipts and
+the successful owned-input receipts are copied byte-for-byte from the CI artifact.
+The overall run still failed the separate native selection flow (Windows
+110.50 ms, macOS 274.31 ms); successful shortcut delivery does not qualify that
+flow or make the combined CI green.
 
 The new macOS native input slice cannot run safely on the local Windows host.
 No local red/green runtime result is claimed for it. The connected capture
