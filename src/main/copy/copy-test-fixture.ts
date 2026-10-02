@@ -1,52 +1,41 @@
+import type { DesktopResult } from '../../shared/contracts/result';
 import { LibraryMutations } from '../storage/library-mutations';
-import { transferStore } from '../storage/transfer/transfer-test-fixture';
-import { type CopyEffects, CopyService } from './service';
+import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
+import { testStorage } from '../storage/storage-test-fixture';
+import { CopyService } from './service';
 
-export function copyFixture<W extends CopyEffects['writeText'], H extends CopyEffects['hide']>(
-  mocks: { writeText: W; hide: H },
-  text = 'stored text'
-) {
-  const store = transferStore(() => new Date('2026-10-02T10:00:00.000Z'));
+export function copyFixture(writeText: (text: string) => Promise<void>, text = 'stored text') {
+  const store = testStorage(() => new Date('2026-10-02T10:00:00.000Z'));
   const id = store.invoke('createSnippet', { text }).snippet.id;
-  let alive = true;
-  let retire: () => void = () => undefined;
-  const owner = {
-    id: 1,
-    isAlive: () => alive,
-    onClose: (listener: () => void) => {
-      retire = listener;
-      return () => {
-        retire = () => undefined;
-      };
-    }
-  };
-  const mutations = new LibraryMutations();
   const settings = store.invoke('getSettings', {}).settings;
-  const { writeText, hide } = mocks;
-  const originalCall = store.port.call.bind(store.port);
-  const service = new CopyService(store.port, mutations, {
+  const mutations = new LibraryMutations();
+  let alive = true;
+  let visible = true;
+  let retire: () => void = () => undefined;
+  const service = new CopyService({
+    call: <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
+      Promise.resolve(store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>)
+  }, mutations, {
     platform: 'win32',
-    owner: (senderId) => (senderId === owner.id ? owner : undefined),
+    owner: (senderId) => senderId !== 1 ? undefined : {
+      id: 1,
+      isAlive: () => alive,
+      onClose: (listener) => {
+        retire = listener;
+        return () => { retire = () => undefined; };
+      }
+    },
     settings: () => settings,
     writeText,
-    hide
+    hide: () => { visible = false; return Promise.resolve(true); }
   });
 
   return {
-    store,
-    id,
-    service,
-    mutations,
-    settings,
-    writeText,
-    hide,
-    originalCall,
+    store, id, service, mutations, settings,
+    visible: () => visible,
     copy: (format: 'text' | 'markdown' = 'text') =>
-      service.services.copySnippet({ id, format }, { senderId: owner.id }),
-    retire: () => {
-      alive = false;
-      retire();
-    },
+      service.services.copySnippet({ id, format }, { senderId: 1 }),
+    retire: () => { alive = false; retire(); },
     dispose: async () => {
       await service.close();
       await mutations.close();

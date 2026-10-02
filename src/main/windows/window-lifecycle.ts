@@ -108,6 +108,19 @@ export class WindowLifecycle {
     if (window !== undefined) concealWindow(window, this.recovery);
   }
 
+  async hideAfterCopy(senderId: number): Promise<boolean> {
+    const result = await this.enqueue(async () => {
+      const window = this.windows.get('main');
+
+      if (window === undefined || window.isDestroyed() || window.webContents.id !== senderId)
+        throw new Error('The copy window is no longer available.');
+      this.hide();
+      return this.state();
+    });
+
+    return result.ok && !result.value.visible;
+  }
+
   async toggle(): Promise<void> {
     const window = this.windows.get('main');
 

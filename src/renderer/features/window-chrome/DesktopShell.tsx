@@ -1,5 +1,3 @@
-import { useEffect } from 'react';
-
 import { PinStatus } from '../../components/shared/PinStatus';
 import { Button } from '../../components/ui/button';
 import { TooltipProvider } from '../../components/ui/tooltip';
@@ -16,19 +14,6 @@ export function DesktopShell() {
   const settingsWindow = window.location.hash === '#settings';
   const onboardingWindow = window.location.hash === '#onboarding';
 
-  useEffect(() => {
-    const keyboard = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === ',') {
-        event.preventDefault();
-        void window.promptly.openDesktopWindow({ kind: 'settings' });
-      }
-    };
-
-    window.addEventListener('keydown', keyboard);
-    return () => {
-      window.removeEventListener('keydown', keyboard);
-    };
-  }, []);
   return (
     <TooltipProvider>
       <div className="desktop-shell">

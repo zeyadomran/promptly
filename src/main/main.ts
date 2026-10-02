@@ -2,6 +2,8 @@ import path from 'node:path';
 
 import { app, ipcMain, Menu, nativeTheme } from 'electron';
 
+import { createDesktopCopy } from './copy/desktop-copy';
+import type { CopyService } from './copy/service';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { closeLibraryResources } from './lifecycle/close-library-resources';
 import { closeNativeResources } from './lifecycle/close-native-resources';
@@ -39,11 +41,12 @@ let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let macosSelection: MacosSelection | undefined;
 let transfer: StorageTransfer | undefined;
+let copy: CopyService | undefined;
 const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources(transfer, () =>
+    return closeLibraryResources(copy, () => closeLibraryResources(transfer, () =>
       closeWindowResources(lifecycle, () =>
         closeSettingsStorage(settings, storage, {
           close: () =>
@@ -54,7 +57,7 @@ const shutdown = createDesktopShutdown({
             ])
         })
       )
-    );
+    ));
   },
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
@@ -121,19 +124,18 @@ if (primaryInstance)
         )
       );
       await settings.initialize();
-      transfer = new StorageTransfer(
-        storage,
-        mutations,
-        nativeTransferDialogs(
+      const dialogs = nativeTransferDialogs(
           app.getPath('userData'),
           path.join(app.getPath('userData'), 'promptly.sqlite')
-        )
       );
+      transfer = new StorageTransfer(storage, mutations, dialogs);
+      copy = createDesktopCopy(storage, mutations, dialogs, settings, () => lifecycle);
       desktop = installDesktopIpc(
         ipcMain,
         {
           ...storageDesktopServices(storage, mutations),
           ...transfer.services,
+          ...copy.services,
           ...settings.services,
           ...shortcutServices(keyboard.shortcuts),
           ...macosPermissionServices(macosSelection),

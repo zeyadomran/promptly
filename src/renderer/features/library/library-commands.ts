@@ -2,7 +2,7 @@ import { createContext, useContext } from 'react';
 
 /** Issue19 supplies execution/feedback. Absence never pretends a copy succeeded. */
 export interface LibraryCommandsPort {
-  copy(id: string): Promise<void>;
+  copy(id: string, format?: 'text' | 'markdown'): Promise<void>;
   copiedId: string | null;
   error: string | undefined;
 }
