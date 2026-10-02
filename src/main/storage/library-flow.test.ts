@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { allSnippets } from './storage-test-fixture';
 import { transferStore } from './transfer/transfer-test-fixture';
 
+// Hosted flow took 8.269s; this is an aggregate real-disk runner budget, not app latency.
 it('round-trips an edited tagged library through duplicate, undo, backup and database reopen', () => {
   const store = transferStore();
   const text = 'Full text\0雪🙂\r\n' + 'unchopped '.repeat(30);
@@ -96,4 +97,4 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
   } finally {
     store.dispose();
   }
-});
+}, 15_000);
