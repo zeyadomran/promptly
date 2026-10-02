@@ -6,13 +6,34 @@ uploads JSON and visible common-query screenshots even on failure. The strict
 **maximum <50 ms** gate is unchanged. Both OS results at the final integrated
 head remain required; local timing alone does not establish that.
 
-The next [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
-preview Windows CI failure (85.4ms), passing Mac receipt (49.2ms), profiler
-diagnostics and rejected numeric transport. Native highlighting and active-filter
-compilation are implemented and strict checks pass (149 tests/37 files before
-the native-helper main merge). Full integrated local theme/CSP checks and fresh
-ordinary CI at this performance-fix head are pending. The older local receipt
-below describes `2455ea9`, not proof that the new changes pass both CI machines.
+The [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
+preview Windows CI failure (85.4 ms), passing Mac receipt (49.2 ms), profiler
+diagnostics and rejected numeric transport. The native-helper/shutdown main
+`9b13dd0` is merged. Fresh ordinary CI at this performance-fix head is pending;
+local success does not establish both-OS qualification.
+
+## Native highlights and compiled filters, 2026-10-02
+
+The implementation at `10b47c36144180d1e3c289804ba8789ea42afa68` passed clean
+`npm ci`, strict check (196 tests/46 files), normal package, all 17 packaged
+smokes, both design tests and the two-process production CSP test. The CSP test
+verified actual native highlight background pixels in both light and dark themes;
+unauthorized styles were rejected. Normal packaging was restored afterward.
+
+The new [ordinary Windows receipt](windows-native-highlights-benchmark.json)
+records query max 18.3 ms, rapid typing 7.4 ms, capture/edit/tag/delete refresh
+8.1/7.1/10.0/5.4 ms and complete-highlight paint 10.3 ms. Startup/index load was
+132.3 ms. The 703-range regression checks every range's actual background pixels
+and original selectable text. These are unprofiled measurements with original
+strict schemas at all four response boundaries; numeric transport is absent.
+The [inspected screenshot](windows-native-highlights-visible.png) shows the
+simultaneously visible list and wrapped complete preview with native highlights.
+Hardware, full runtime, first-use/warm p50/p95/max and per-boundary validation
+costs are in JSON. The unchanged maximum <50 ms gate still requires fresh
+Windows and Mac CI. Final P15/P16 UI qualification remains outside this fixture.
+
+The earlier local receipt below remains as historical evidence for `2455ea9`.
+It does not prove the performance changes pass both CI machines.
 
 ## Corrected visible fixture after settings integration, 2026-10-02
 
