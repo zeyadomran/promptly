@@ -21,15 +21,14 @@ Vite transforms TSX with its built-in JSX support. React Fast Refresh is deferre
 No fonts, scripts, or other assets are fetched from a CDN by the app.
 
 ```sh
-npm run check        # TypeScript, lint, architecture, formatting, unit/React tests
+npm run check        # TypeScript, lint, architecture, formatting, functional tests
 npm run format       # Format maintained source and docs
 npm run package      # Forge: local runnable package in out/, no installers/signing
-npm run test:smoke   # Launch the packaged app on the host OS
 ```
 
-The smoke test requires the preceding package step and a desktop session. Playwright
-uses Electron directly and needs no browser download. macOS runner launch evidence
-is distinct from signed distribution or native capture qualification.
+CI runs public service tests and packages the application on Windows and macOS.
+GUI and native OS interactions are manual release checks described in
+[the test policy](docs/testing.md); automated tests do not qualify those interactions.
 
 ## Process boundaries
 

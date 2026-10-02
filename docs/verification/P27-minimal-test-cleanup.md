@@ -17,3 +17,19 @@ Run 37026078094 at 2e12291 passed all shared shell/window/Settings/storage flows
 Microsoft documents ContentRendered as occurring after window content is rendered: https://learn.microsoft.com/en-us/dotnet/api/system.windows.window.contentrendered?view=netframework-4.8.1. Apple documents cooperative activation as yield then target activation: https://developer.apple.com/documentation/appkit/passing-control-from-one-app-to-another-with-cooperative-activation. These correct fixture preconditions; neither establishes the cause of the prior timeout. Independent PR41/PR45 runs also retained cold capture timeouts despite matched owned identities. Those production qualifications remain open pending new actual evidence.
 
 Focused Windows verification of the readiness delta passed once: rendered/owned foreground/activation accepted were true; typed identity returned ok (16.08 ms) and ordinary capture returned ok (19.46 ms). Full static checks remained green. This is one functional receipt, not proof that the unrelated hosted cold timeouts are solved. No owned processes remained.
+
+## Windowless UIA helper threading
+
+Run 37027337906 at 360e844 passed all macOS flows. Windows again proved rendered/owned foreground/activation readiness and a successful identity (38.14 ms), but the ordinary capture timed out (102.41 ms). Thus the earlier readiness correction is not a demonstrated capture-deadline repair.
+
+The Windows production helper now declares MTAThread on Main, following Microsoft's windowless UIA client guidance: https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-threading and https://learn.microsoft.com/en-us/dotnet/api/system.mtathreadattribute. All UIA calls stay on one long-lived serial helper thread; there are no helper-owned windows, WPF/Forms dispatchers, OLE clipboard/dialog operations, event subscriptions or cross-thread automation objects. The owned WPF provider fixture remains STA. This is a COM threading correction, not an attributed cause or a performance claim. The same single cold capture seam, 100 ms runtime deadline and failure behavior remain.
+
+MTA checkpoint validation: production C# warnings-as-errors compilation and Windows packaging passed; the compiled entry point carries MTAThread. The unchanged ordinary owned packaged capture passed once (identity ok21.13 ms, capture ok19.72 ms), with rendered/foreground readiness true. This local result does not establish the hosted timeout cause or performance repair; fresh hosted CI remains required. No owned processes remained.
+
+## Functional-only strategy (2026-10-02)
+
+The user's revised strategy retires all automated GUI/native E2E definitions and their exclusive fixtures/builders, Playwright configuration/dependency, copied-ASAR test dependency and CI smoke/artifact steps. Production native helpers/builds, package resources, CSP and strict static gates remain. Six public functional cases now cover the real SQLite library flow, import atomicity/collisions, durable Settings save/rollback, recovery-aware window visibility, hung provider retirement and forged/retired macOS identities. Search and shortcut branches integrate their distinct functional cases later.
+
+No GUI/native OS qualification is claimed by this change. Earlier failures above remain historical unresolved evidence. The MTA threading correction remains independent of the retired timing gate. The durable policy and manual release boundaries are in `docs/testing.md`; no owned GUI or native-preference session is used by functional validation.
+
+Final functional-only local validation: `npm run check` passed TypeScript, strict ESLint, architecture (189 handwritten modules), Prettier and all six functional cases; `npm run package` built the actual Windows native helper and production Electron/Vite package. No GUI fixture, actual native preference mutation, clipboard or input delivery was run. Hosted static/package results remain required separately.
