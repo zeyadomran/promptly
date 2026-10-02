@@ -3,7 +3,10 @@ import { pathToFileURL } from 'node:url';
 
 import { build } from 'vite';
 
-export async function buildIpcFixture(rendererUrl?: string): Promise<void> {
+export async function buildIpcFixture(
+  rendererUrl?: string,
+  mainEntry = 'tests/e2e/fixtures/ipc-main.ts'
+): Promise<void> {
   const url = rendererUrl ?? pathToFileURL(path.resolve('.vite/ipc-fixture/index.html')).href;
 
   await build({
@@ -22,11 +25,11 @@ export async function buildIpcFixture(rendererUrl?: string): Promise<void> {
       outDir: '.vite/build',
       emptyOutDir: false,
       lib: {
-        entry: 'tests/e2e/fixtures/ipc-main.ts',
+        entry: mainEntry,
         formats: ['cjs'],
         fileName: () => 'ipc-fixture.cjs'
       },
-      rollupOptions: { external: ['electron', 'node:path', 'node:url'] }
+      rollupOptions: { external: ['electron', /^node:/] }
     }
   });
 }
