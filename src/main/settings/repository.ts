@@ -1,0 +1,57 @@
+import {
+  defaultSettings,
+  type SettingsPatch,
+  settingsSchema,
+  type SettingsSnapshot
+} from '../../shared/contracts/settings';
+import type { StorageContext } from '../storage/context';
+import { StorageError } from '../storage/context';
+
+/** Only the worker owns SQL. Missing keys migrate to defaults; corrupt keys fail closed. */
+export class SettingsRepository {
+  constructor(private readonly context: StorageContext) {
+    this.read();
+  }
+
+  read(): SettingsSnapshot {
+    const values: Record<string, unknown> = {};
+    const defaults = defaultSettings();
+
+    for (const row of this.context.db.prepare('SELECT key, value FROM settings').all()) {
+      const key = row['key'];
+
+      if (typeof key !== 'string' || !(key in defaults)) continue;
+      try {
+        if (typeof row['value'] !== 'string') throw new Error('Invalid JSON');
+        values[key] = JSON.parse(row['value']) as unknown;
+      } catch {
+        throw new StorageError(
+          'INTERNAL',
+          `Stored preference ${key} is corrupt. Restore the database from backup.`
+        );
+      }
+    }
+
+    // Earlier preference rows may have represented the hide override as a boolean.
+    if (typeof values['hideAfterCopy'] === 'boolean')
+      values['hideAfterCopy'] = values['hideAfterCopy'] ? 'always' : 'never';
+    const parsed = settingsSchema.safeParse({ ...defaults, ...values });
+
+    if (!parsed.success)
+      throw new StorageError(
+        'INTERNAL',
+        'Stored preferences are invalid. Restore the database from backup.'
+      );
+    return { revision: this.context.revision(), settings: parsed.data };
+  }
+
+  write(patch: SettingsPatch): SettingsSnapshot {
+    const settings = settingsSchema.parse({ ...this.read().settings, ...patch });
+    const write = this.context.db.prepare(
+      'INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
+    );
+
+    for (const [key, value] of Object.entries(settings)) write.run(key, JSON.stringify(value));
+    return { revision: this.context.revision(), settings };
+  }
+}

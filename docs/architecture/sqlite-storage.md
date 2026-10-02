@@ -48,8 +48,9 @@ Combined cleanup must await every resource's settlement, for example with
 `StorageClient(workerFile, databaseFile, onChange)` exposes `ready: Promise<number>`,
 `call(operation, input)` with typed validated results, and idempotent `close()`.
 `storageDesktopServices(client)` installs snippet/tag CRUD, duplicate, delete/undo,
-tag relations, tag merge, and list queries. Missing native capture, clipboard,
-and settings operations continue to return `UNAVAILABLE`.
+tag relations, tag merge, and list queries. Missing native capture and clipboard
+operations continue to return `UNAVAILABLE`. P05's separate main settings service
+connects durable preferences and reversible native effects; see [settings](settings.md).
 
 Main-only commands include:
 
@@ -63,10 +64,11 @@ Main-only commands include:
   preferences. The destructive renderer workflow belongs to P23.
 - `getRevision({})`: authoritative persisted revision.
 
-P05 can extend `storageOperations` and `StorageEngine` handlers for the existing
-`settings(key, value)` table and reuse `StorageContext.transaction` and its revision.
-It must coordinate OS side effects/rollback in its main service. Settings service
-commands should publish `settings` invalidations after committing.
+P05 extends `storageOperations` and `StorageEngine` with `getSettings` and
+`updateSettings` for the existing `settings(key, value)` table. Settings transactions
+share the global revision and publish only `settings` invalidations after commit.
+Main serializes reversible native effects before the commit, and drains those
+accepted effects/commits before storage closes through `closeSettingsStorage`.
 
 ## Identity, queries, and undo
 

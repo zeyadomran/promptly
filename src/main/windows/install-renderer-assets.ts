@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import path from 'node:path';
 
-import { net, type Session } from 'electron';
+import { nativeTheme, net, type Session } from 'electron';
 
+import { settingsSchema } from '../../shared/contracts/settings';
 import { styleNoncePlaceholder } from '../../shared/style-nonce';
 import { rendererAssetPath } from './renderer-asset-path';
 
@@ -46,7 +47,14 @@ export function installRendererAssets(
     headers.delete('content-length');
     headers.set('content-type', 'text/html; charset=utf-8');
     headers.set('cache-control', 'no-store');
-    return new Response(html.replaceAll(styleNoncePlaceholder, nonce), { headers });
+    const theme = settingsSchema.shape.theme.parse(nativeTheme.themeSource);
+
+    return new Response(
+      html
+        .replaceAll(styleNoncePlaceholder, nonce)
+        .replace('<html ', `<html data-theme="${theme}" `),
+      { headers }
+    );
   });
   sessionNonces.set(session, nonce);
   return nonce;

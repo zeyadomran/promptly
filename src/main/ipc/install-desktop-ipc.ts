@@ -11,17 +11,29 @@ import {
   unsubscribeChannel
 } from '../../shared/contracts/operations';
 import { failure } from '../../shared/contracts/result';
+import { type SettingsSnapshot, settingsSnapshotSchema } from '../../shared/contracts/settings';
+import { settingsBootstrapChannel } from '../../shared/settings-bootstrap';
 import { dispatchOperation } from './dispatch-operation';
 import { WindowRegistry } from './window-registry';
 
 export function installDesktopIpc(
   ipc: IpcMain,
   services: Partial<DesktopOperations> = {},
-  initialRevision = 0
+  initialRevision = 0,
+  bootstrap?: () => SettingsSnapshot
 ) {
   const windows = new WindowRegistry();
   const names = Object.keys(operations) as OperationName[];
   let revision = revisionSchema.parse(initialRevision);
+
+  if (bootstrap !== undefined)
+    ipc.on(settingsBootstrapChannel, (event, request: unknown) => {
+      event.returnValue = !windows.isAuthorized(event)
+        ? failure('UNAUTHORIZED', 'This frame cannot receive initial preferences.')
+        : !operations.getSettings.request.safeParse(request).success
+          ? failure('INVALID_REQUEST', 'Invalid bootstrap request.')
+          : { ok: true, value: settingsSnapshotSchema.parse(bootstrap()) };
+    });
 
   for (const name of names) {
     ipc.handle(operationChannel(name), (event, request: unknown) =>
@@ -54,6 +66,7 @@ export function installDesktopIpc(
       windows.broadcast(changeChannel, change);
     },
     dispose(): void {
+      ipc.removeAllListeners(settingsBootstrapChannel);
       for (const name of names) ipc.removeHandler(operationChannel(name));
       ipc.removeHandler(subscribeChannel);
       ipc.removeHandler(unsubscribeChannel);
