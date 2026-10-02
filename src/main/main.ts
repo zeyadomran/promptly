@@ -1,9 +1,15 @@
+import path from 'node:path';
+
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { createQuitCoordinator } from './lifecycle/quit-coordinator';
+import { StorageClient } from './storage/client';
+import { storageDesktopServices } from './storage/desktop-services';
 import { createMainWindow } from './windows/create-main-window';
 
-const desktop = installDesktopIpc(ipcMain);
+let desktop: ReturnType<typeof installDesktopIpc>;
+let storage: StorageClient | undefined;
 
 function openWindow(): void {
   void createMainWindow(desktop.windows).catch((error: unknown) => {
@@ -12,12 +18,41 @@ function openWindow(): void {
   });
 }
 
-void app.whenReady().then(() => {
-  openWindow();
-  app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) openWindow();
+void app
+  .whenReady()
+  .then(async () => {
+    storage = new StorageClient(
+      path.join(__dirname, 'storage-worker.cjs'),
+      path.join(app.getPath('userData'), 'promptly.sqlite'),
+      (change) => {
+        desktop.publish(change);
+      }
+    );
+    const revision = await storage.ready;
+
+    desktop = installDesktopIpc(ipcMain, storageDesktopServices(storage), revision);
+    openWindow();
+    app.on('activate', () => {
+      if (BrowserWindow.getAllWindows().length === 0) openWindow();
+    });
+  })
+  .catch((error: unknown) => {
+    console.error('Unable to initialize Promptly:', error);
+    app.exit(1);
   });
-});
+
+app.on(
+  'before-quit',
+  createQuitCoordinator({
+    cleanup: () => storage?.close() ?? Promise.resolve(),
+    onError: (error) => {
+      console.error('Unable to close local storage:', error);
+    },
+    quit: () => {
+      app.quit();
+    }
+  })
+);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

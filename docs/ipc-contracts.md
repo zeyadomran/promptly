@@ -11,6 +11,11 @@ storage, settings, clipboard, and native capture services can be connected witho
 changing renderer privileges. Missing services return `UNAVAILABLE`. The P02
 production shell intentionally has no fake successful persistence or capture.
 
+P04 connects the durable snippet/tag services through a SQLite worker. Its main-only
+capture/copy-statistics commands and current search boundary are documented in
+[SQLite storage](architecture/sqlite-storage.md). Native capture, clipboard, and
+settings bridge methods remain unavailable until their services are connected.
+
 Every successful reply carries the authoritative revision. Services publish a
 `ChangeEvent` **after** a durable commit through the installer's `publish` method.
 Revisions must strictly increase across snippets, tags, and settings. Events
