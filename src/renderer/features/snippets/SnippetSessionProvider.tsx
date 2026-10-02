@@ -32,9 +32,8 @@ export function SnippetSessionProvider({
     };
   }, [session]);
   useEffect(() => {
-    if (library.selectedId !== null || library.selectedIndex < 0)
-      session.select(library.selectedId);
-  }, [session, library.selectedId, library.selectedIndex]);
+    session.select(library.selectedId, library.loading || library.total > 0);
+  }, [session, library.selectedId, library.loading, library.total]);
   useEffect(() => {
     if (mode === 'compact') session.warnModeChange();
   }, [mode, session]);

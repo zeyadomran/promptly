@@ -16,6 +16,7 @@ export class SnippetSession {
   };
   private selectedId: string | null = null;
   private generation = 0;
+  private refreshVersion = 0;
   private closed = false;
   private listeners = new Set<() => void>();
 
@@ -40,7 +41,9 @@ export class SnippetSession {
     this.closed = false;
     if (!this.state.editing) void this.load(this.selectedId);
   }
-  select(id: string | null): void {
+  select(id: string | null, pending = false): void {
+    // Retiring command eligibility while resolving a page is not new selection intent.
+    if (id === null && pending) return;
     if (this.closed || id === this.selectedId) return;
     this.selectedId = id;
     if (this.dirty || this.state.pending) {
@@ -123,6 +126,7 @@ export class SnippetSession {
 
     if (snippet === null) return;
     const generation = this.generation;
+    const refresh = ++this.refreshVersion;
 
     void this.bridge
       .getSnippet({ id: snippet.id })
@@ -130,6 +134,7 @@ export class SnippetSession {
         if (
           this.closed ||
           generation !== this.generation ||
+          refresh !== this.refreshVersion ||
           this.state.snippet?.id !== snippet.id ||
           !this.state.editing
         )
@@ -148,7 +153,7 @@ export class SnippetSession {
           });
       })
       .catch(() => {
-        if (generation === this.generation)
+        if (generation === this.generation && refresh === this.refreshVersion)
           this.report('Unable to refresh the saved snippet. Your draft is kept.');
       });
   }

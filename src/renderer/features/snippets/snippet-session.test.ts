@@ -65,6 +65,12 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     expect(records.get(first.id)?.text).toBe('Original 雪🙂');
     session.edit();
     session.change('Preserved draft');
+    session.select(null, true);
+    expect(session.snapshot()).toMatchObject({
+      prompt: false,
+      draft: 'Preserved draft',
+      snippet: { id: first.id }
+    });
     session.select(second.id);
     expect(session.snapshot()).toMatchObject({
       prompt: true,
@@ -83,6 +89,9 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     expect(records.get(second.id)?.text).toBe('Other snippet');
     session.edit();
     session.change('Draft kept through clear and import');
+    hold = true;
+    session.refresh();
+    hold = false;
     missing = true;
     session.refresh();
     await vi.waitFor(() => {
@@ -90,6 +99,13 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
         missing: true,
         draft: 'Draft kept through clear and import'
       });
+    });
+    release?.();
+    await Promise.resolve();
+    expect(session.snapshot()).toMatchObject({
+      missing: true,
+      error: 'Snippet no longer exists.',
+      draft: 'Draft kept through clear and import'
     });
     expect(await session.save()).toBe(false);
     missing = false;
