@@ -88,6 +88,49 @@ describe('serialized database worker', () => {
     }
   });
 
+  it('drains a saturated ordinary queue during shutdown and rejects any further work', async () => {
+    const filename = path.join(directory, 'saturated.sqlite');
+    const client = new StorageClient(workerFile, filename);
+
+    try {
+      await client.ready;
+      const writes = Array.from({ length: 1000 }, (_, index) =>
+        client.call('createSnippet', { text: `Accepted ${index}` })
+      );
+      const completion = Promise.allSettled(writes);
+
+      await Promise.resolve();
+      await expect(client.call('createSnippet', { text: 'Queue overflow' })).rejects.toThrow(
+        'queue is full'
+      );
+      const closing = client.close();
+
+      await expect(client.call('createSnippet', { text: 'After shutdown' })).rejects.toThrow(
+        'closed'
+      );
+      await closing;
+      const results = await completion;
+
+      expect(results).toHaveLength(1000);
+      expect(results.every((result) => result.status === 'fulfilled' && result.value.ok)).toBe(
+        true
+      );
+      const reopened = new StorageClient(workerFile, filename);
+
+      try {
+        expect(await reopened.ready).toBe(1000);
+        expect(await reopened.call('searchSnippets', query)).toMatchObject({
+          ok: true,
+          value: { revision: 1000, total: 1000 }
+        });
+      } finally {
+        await reopened.close();
+      }
+    } finally {
+      await client.close();
+    }
+  }, 10_000);
+
   it('fails startup and shutdown predictably when storage cannot be opened', async () => {
     const client = new StorageClient(
       workerFile,

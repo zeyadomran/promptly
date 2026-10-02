@@ -87,7 +87,9 @@ export class StorageClient {
     input: unknown,
     timeout = 30_000
   ): Promise<unknown> {
-    if (this.pending.size >= 1000) return Promise.reject(new Error('Local storage queue is full.'));
+    // Reserve one control slot so shutdown can drain a saturated ordinary queue.
+    if (operation !== 'close' && this.pending.size >= 1000)
+      return Promise.reject(new Error('Local storage queue is full.'));
     const id = this.nextId++;
 
     const response = this.register(id, timeout);

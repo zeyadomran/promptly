@@ -24,6 +24,8 @@ Timeout or worker exit rejects pending requests and stops the worker. Shutdown
 drains submitted writes, rejects new calls, closes SQLite, and terminates the
 thread. If a worker fails after a commit but before its reply, the caller must
 reopen/query authoritative data rather than assume its write did not commit.
+The ordinary queue is capped at 1,000 pending requests; shutdown reserves one
+control slot so a saturated queue can drain within the same five-second deadline.
 
 ## Main service interfaces
 
