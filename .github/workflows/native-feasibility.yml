@@ -36,3 +36,5 @@ jobs:
         run: sh experiments/native-capture/build-macos.sh
       - name: Verify protocol and controlled fixture selection
         run: node experiments/native-capture/protocol-check.mjs --fixtures
+      - name: Verify strict options and escaped synthetic payload boundaries
+        run: node experiments/native-capture/protocol-safety-check.mjs

@@ -2,19 +2,11 @@ import AppKit
 import ApplicationServices
 import Foundation
 
-let outputLock = NSLock()
-func emit(_ response: [String: Any]) {
-    outputLock.lock()
-    defer { outputLock.unlock() }
-    guard JSONSerialization.isValidJSONObject(response),
-          let data = try? JSONSerialization.data(withJSONObject: response, options: [.sortedKeys]),
-          let line = String(data: data, encoding: .utf8) else { return }
-    print(line)
-    fflush(stdout)
-}
+let protocolFixtures = CommandLine.arguments.contains("--protocol-fixtures")
+var nativeReads = 0
 
 func respond(_ request: [String: Any]) -> [String: Any] {
-    guard request["v"] as? Int == 1, let id = request["id"] as? String, id.count <= 128,
+    guard jsonInteger(request["v"]) == 1, let id = request["id"] as? String, id.count <= 128,
           let command = request["command"] as? String else { return ["v": 1, "id": "invalid", "status": "invalidRequest"] }
     var result: [String: Any]
     switch command {
@@ -23,10 +15,16 @@ func respond(_ request: [String: Any]) -> [String: Any] {
                   "clipboardFallback": false, "accessibility": AXIsProcessTrusted(),
                   "inputMonitoring": CGPreflightListenEventAccess(), "hook": "CGEventTap.listenOnly"]
     case "capture":
+        guard let options = captureOptions(request) else { return ["v": 1, "id": id, "status": "invalidRequest"] }
+        nativeReads += 1
         let start = ProcessInfo.processInfo.systemUptime
-        result = readSelection(expectedPid: (request["expectedPid"] as? NSNumber)?.int32Value ?? 0,
-                               includeText: request["includeText"] as? Bool ?? false)
+        result = readSelection(expectedPid: options.pid, includeText: options.includeText)
         result["elapsedMs"] = (ProcessInfo.processInfo.systemUptime - start) * 1000
+    case "fixturePayload" where protocolFixtures: result = fixturePayload(request)
+    case "fixtureStats" where protocolFixtures: result = ["status": "ok", "nativeReads": nativeReads]
+    case "fixtureOptions" where protocolFixtures:
+        guard let options = captureOptions(request) else { return ["v": 1, "id": id, "status": "invalidRequest"] }
+        result = ["status": "ok", "expectedPid": options.pid, "includeText": options.includeText]
     case "clipboardMetadata": result = clipboardMetadata()
     case "fallback":
         result = ["status": "unsupported", "reason": "faithful-all-format-snapshot-unproven",
@@ -56,8 +54,9 @@ DispatchQueue.global().async {
             continue
         }
         DispatchQueue.main.sync {
-            emit(respond(request))
-            if request["command"] as? String == "stop" { stopKeyboardHook(); exit(0) }
+            let response = respond(request)
+            emit(response)
+            if request["command"] as? String == "stop" && response["status"] as? String == "ok" { stopKeyboardHook(); exit(0) }
         }
     }
     DispatchQueue.main.async { stopKeyboardHook(); exit(0) }

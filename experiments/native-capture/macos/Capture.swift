@@ -27,7 +27,7 @@ func readSelection(expectedPid: Int32, includeText: Bool) -> [String: Any] {
     var selected: CFTypeRef?
     let error = AXUIElementCopyAttributeValue(focused, kAXSelectedTextAttribute as CFString, &selected)
     if error == .success, let text = selected as? String {
-        if text.utf16.count > 1048576 { return ["status": "selectionTooLarge"] }
+        if text.utf16.count > selectionUnits { return ["status": "selectionTooLarge"] }
         result["status"] = text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "empty" : "ok"
         result["characterCount"] = text.utf16.count
         if includeText && result["status"] as? String == "ok" { result["text"] = text }

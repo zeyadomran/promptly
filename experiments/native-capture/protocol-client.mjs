@@ -2,14 +2,16 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createInterface } from 'node:readline';
 
-export function openHelper(executable) {
-  const child = spawn(executable, [], { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
+import { frameBytes } from './protocol-limits.mjs';
+
+export function openHelper(executable, args = []) {
+  const child = spawn(executable, args, { stdio: ['pipe', 'pipe', 'pipe'], windowsHide: true });
   const pending = new Map();
   let sequence = 0;
   const lines = createInterface({ input: child.stdout });
 
   lines.on('line', (line) => {
-    if (line.length > 2097152) {
+    if (Buffer.byteLength(line, 'utf8') > frameBytes) {
       child.kill();
       return;
     }

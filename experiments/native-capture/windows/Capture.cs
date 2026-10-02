@@ -38,12 +38,12 @@ internal static class Capture
                     foreach (var range in ranges)
                     {
                         // One extra character distinguishes a full selection from truncation.
-                        var part = range.GetText(1048577);
-                        if (part.Length > 1048576) return Result("selectionTooLarge");
+                        var part = range.GetText(Transport.SelectionUnits + 1);
+                        if (part.Length > Transport.SelectionUnits) return Result("selectionTooLarge");
                         parts.Add(part);
                     }
                     var text = String.Join("\n", parts);
-                    if (text.Length > 1048576) return Result("selectionTooLarge");
+                    if (text.Length > Transport.SelectionUnits) return Result("selectionTooLarge");
                     result["status"] = String.IsNullOrWhiteSpace(text) ? "empty" : "ok";
                     result["characterCount"] = text.Length;
                     if (includeText && (string)result["status"] == "ok") result["text"] = text;
