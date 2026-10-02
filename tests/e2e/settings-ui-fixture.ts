@@ -11,7 +11,8 @@ import { closeSettingsFixture } from './close-settings-fixture';
 /** Real renderer, IPC, SQLite, lifecycle, theme and pin; only host login/Dock operations are substituted. */
 export async function launchSettingsUiFixture(
   native = false,
-  attachNativeReceipt?: (receipt: Buffer) => Promise<void>
+  attachNativeReceipt?: (receipt: Buffer) => Promise<void>,
+  storage = false
 ) {
   if (native && attachNativeReceipt === undefined)
     throw new Error('Native qualification requires a retained receipt destination.');
@@ -26,6 +27,7 @@ export async function launchSettingsUiFixture(
   );
 
   env['PROMPTLY_SETTINGS_UI_PROFILE'] = profile;
+  if (storage) env['PROMPTLY_STORAGE_UI'] = '1';
   if (native) env['PROMPTLY_SETTINGS_UI_NATIVE'] = '1';
   let application: ElectronApplication | undefined;
   const dispose = () =>
@@ -62,6 +64,7 @@ export async function launchSettingsUiFixture(
 
     return {
       ...launched,
+      profile,
       restart: async () => {
         await application?.close();
         return start();

@@ -9,13 +9,17 @@ import { TagRepository } from '../snippets/tag-repository';
 import { StorageContext, StorageError } from './context';
 import type { StorageHandlers, StorageOperation, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
+import { TransferRepository } from './transfer/repository';
 
 const reads = new Set<StorageOperation>([
   'getSnippet',
   'searchSnippets',
   'listTags',
   'getRevision',
-  'getSettings'
+  'getSettings',
+  'exportLibraryData',
+  'prepareLibraryImport',
+  'discardLibraryImport'
 ]);
 
 export class StorageEngine {
@@ -27,6 +31,7 @@ export class StorageEngine {
     const reader = new SnippetReader(this.context);
     const writes = new SnippetWrites(reader);
     const deletion = new SnippetDelete(writes);
+    const transfer = new TransferRepository(writes);
     const tags = new TagRepository(reader);
     let settings: SettingsRepository;
 
@@ -49,7 +54,18 @@ export class StorageEngine {
       recordSuccessfulCopy: (input) => writes.recordCopy(input),
       deleteSnippet: (input) => deletion.delete(input),
       undoDeleteSnippet: (input) => deletion.undo(input),
-      clearLibrary: () => deletion.clear(),
+      clearLibrary: () => {
+        const result = deletion.clear();
+
+        this.context.afterCommit(() => {
+          transfer.clearPlans();
+        });
+        return result;
+      },
+      exportLibraryData: (input) => transfer.export(input),
+      prepareLibraryImport: (input) => transfer.preview(input),
+      commitLibraryImport: (input) => transfer.import(input),
+      discardLibraryImport: (input) => transfer.discard(input),
       getRevision: () => ({ revision: this.context.revision() }),
       listTags: () => tags.list(),
       createTag: (input) => tags.create(input),
@@ -77,7 +93,7 @@ export class StorageEngine {
       const action = () => {
         const value = handler(request.data);
         const started = performance.now();
-        const parsed = resultSchema(schema.response).parse({ ok: true, value });
+        const parsed = resultSchema<unknown>(schema.response).parse({ ok: true, value });
 
         if (operation === 'searchSnippets') recordSearchValidation(parsed, 'worker', started);
         return parsed;
@@ -117,7 +133,8 @@ export class StorageEngine {
       'setSnippetTags',
       'deleteTag',
       'mergeTags',
-      'clearLibrary'
+      'clearLibrary',
+      'commitLibraryImport'
     ];
 
     return {

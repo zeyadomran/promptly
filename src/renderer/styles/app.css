@@ -6,6 +6,7 @@
 @import './highlights.css';
 @import './window-chrome.css';
 @import './settings.css';
+@import './storage.css';
 
 :root {
   color: var(--foreground);

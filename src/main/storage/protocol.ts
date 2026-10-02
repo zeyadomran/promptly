@@ -1,3 +1,5 @@
+import { importPreviewSchema } from '../../shared/contracts/backup/operations';
+import { exportDataSchema, importFileSchema } from '../../shared/contracts/backup/worker';
 import type { ChangeEvent } from '../../shared/contracts/domain';
 import {
   captureResultSchema,
@@ -28,6 +30,19 @@ export const storageOperations = {
   captureSnippet: { request: captureInputSchema, response: captureResultSchema },
   recordSuccessfulCopy: { request: operations.getSnippet.request, response: snippetSnapshotSchema },
   clearLibrary: { request: operations.listTags.request, response: revisionSnapshotSchema },
+  exportLibraryData: {
+    request: operations.exportLibrary.request,
+    response: exportDataSchema
+  },
+  prepareLibraryImport: {
+    request: importFileSchema,
+    response: importPreviewSchema
+  },
+  commitLibraryImport: operations.confirmLibraryImport,
+  discardLibraryImport: {
+    request: operations.cancelLibraryImport.request,
+    response: operations.cancelLibraryImport.response
+  },
   getRevision: { request: operations.listTags.request, response: revisionSnapshotSchema }
 } as const;
 
