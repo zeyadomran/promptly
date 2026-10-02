@@ -7,11 +7,6 @@ import { backupSchema } from '../../src/shared/contracts/backup/format';
 import { launchOwnedTransferPackage } from './storage-packaged-fixture';
 
 test('packaged production transfer commits and restores through the actual main, preload and worker', async () => {
-  // Production startup applies native login preferences. Only an ephemeral hosted OS may run this lane.
-  test.skip(
-    process.env['GITHUB_ACTIONS'] !== 'true' ||
-      process.env['RUNNER_ENVIRONMENT'] !== 'github-hosted'
-  );
   const owned = await launchOwnedTransferPackage();
   const failures: unknown[] = [];
 
@@ -20,8 +15,49 @@ test('packaged production transfer commits and restores through the actual main,
     let page = await application.firstWindow();
     const text = 'Packaged full text\u0000😀\n' + 'unchopped '.repeat(200);
 
+    const created = await page.evaluate(
+      (value) => window.promptly.createSnippet({ text: value }),
+      text
+    );
+
+    if (!created.ok) throw new Error('Creation failed');
+    const tag = await page.evaluate(() =>
+      window.promptly.createTag({ name: 'owned', color: 'blue' })
+    );
+
+    if (!tag.ok) throw new Error('Tag creation failed');
     expect(
-      await page.evaluate((value) => window.promptly.createSnippet({ text: value }), text)
+      await page.evaluate(
+        ({ id, tagId }) => window.promptly.setSnippetTags({ id, tagIds: [tagId] }),
+        { id: created.value.snippet.id, tagId: tag.value.tag.id }
+      )
+    ).toMatchObject({ ok: true });
+    expect(
+      await page.evaluate(
+        ({ id, text: value }) => window.promptly.updateSnippet({ id, text: value }),
+        {
+          id: created.value.snippet.id,
+          text: text + 'edited'
+        }
+      )
+    ).toMatchObject({ ok: true });
+    expect(
+      await page.evaluate(
+        (id) => window.promptly.duplicateSnippet({ id }),
+        created.value.snippet.id
+      )
+    ).toMatchObject({ ok: true });
+    const deleted = await page.evaluate(
+      (id) => window.promptly.deleteSnippet({ id }),
+      created.value.snippet.id
+    );
+
+    if (!deleted.ok) throw new Error('Delete failed');
+    expect(
+      await page.evaluate(
+        (undoToken) => window.promptly.undoDeleteSnippet({ undoToken }),
+        deleted.value.undoToken
+      )
     ).toMatchObject({ ok: true });
     expect(
       await page.evaluate(() => window.promptly.openDesktopWindow({ kind: 'settings' }))
@@ -42,9 +78,15 @@ test('packaged production transfer commits and restores through the actual main,
     await expect(settings.getByRole('status')).toContainText('packaged-backup.json exported');
     const bytes = await readFile(filename);
 
-    expect(backupSchema.parse(JSON.parse(bytes.toString('utf8'))).snippets[0]?.text).toBe(text);
+    expect(backupSchema.parse(JSON.parse(bytes.toString('utf8'))).snippets[0]?.text).toBe(
+      text + 'edited'
+    );
     await settings.getByRole('button', { name: 'Clear all…' }).click();
     owned.stage('typed-clear');
+    await settings.getByRole('textbox', { name: 'Type CLEAR ALL to confirm' }).fill('clear all');
+    await expect(
+      settings.getByRole('dialog').getByRole('button', { name: 'Clear library', exact: true })
+    ).toBeDisabled();
     await settings.getByRole('textbox', { name: 'Type CLEAR ALL to confirm' }).fill('CLEAR ALL');
     await settings
       .getByRole('dialog')
@@ -70,7 +112,10 @@ test('packaged production transfer commits and restores through the actual main,
       })
     );
 
-    expect(library).toMatchObject({ ok: true, value: { items: [{ text }] } });
+    expect(library).toMatchObject({
+      ok: true,
+      value: { items: [{ text: text + 'edited' }, { text: text + 'edited' }] }
+    });
     const receipt = test.info().outputPath('packaged-transfer.json');
     const { writeFile } = await import('node:fs/promises');
 

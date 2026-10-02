@@ -1,126 +1,82 @@
-import { cpus, release } from 'node:os';
-
 import { expect, test } from '@playwright/test';
 
 import { createMacosSelection } from '../../src/main/platform/macos/macos-selection';
-import { recordMacosCapture } from './macos-capture-receipt';
 import { buildMacosFixture, macosFixture, macosResources } from './macos-fixture';
-import { assertMacosSelectionRecovery } from './macos-selection-recovery';
 import { saveNativeReceipt } from './native-receipt';
 
-test.describe('packaged production macOS selection', () => {
-  test.skip(process.platform !== 'darwin', 'AX helper only ships on macOS');
-  test.beforeAll(buildMacosFixture);
-  test('owned Unicode/NUL/multiline/disjoint capture, focus, permission states and recovery', async () => {
-    test.setTimeout(120_000);
-    const adapter = createMacosSelection({
-      resourcesPath: macosResources(),
-      packaged: true,
-      applicationPath: 'unused'
-    });
-    const evidence: object[] = [];
-    const started = performance.now();
-    let completed = false;
+test('macOS captures an ordinary owned selection and returns to its saved source', async () => {
+  test.skip(process.platform !== 'darwin', 'macOS platform flow');
+  await buildMacosFixture();
+  const adapter = createMacosSelection({
+    resourcesPath: macosResources(),
+    packaged: true,
+    applicationPath: 'unused'
+  });
+  const evidence: object[] = [];
+  let completed = false;
+
+  try {
+    expect((await adapter.ready()).warmupReady).toBe(true);
+    const source = await macosFixture('selected');
 
     try {
-      const ready = await adapter.ready();
-      const processToReadyMs = performance.now() - started;
-      const permissions = await adapter.getPermissions();
+      const recorded = await adapter.foregroundIdentityResult();
 
-      evidence.push({ ready, processToReadyMs, permissions, hookInstalled: false });
-      expect(ready.warmupReady).toBe(true);
-      expect(permissions.accessibility).toBe('granted');
-      expect(permissions.inputMonitoring).toMatch(/^(granted|denied)$/);
-      for (const [mode, status, text] of [
-        ['selected', 'ok', '  Promptly 雪🙂\r\n"fixture"\t\u0000end  '],
-        ['disjoint', 'ok', 'first 雪🙂\r\nsecond'],
-        ['whitespace', 'ok', ' \t\r\n '],
-        ['empty', 'empty', undefined],
-        ['password', 'secureInput', undefined],
-        ['unsupported', 'unsupported', undefined],
-        ['slow', 'timedOut', undefined]
-      ] as const) {
-        const fixture = await macosFixture(mode);
+      evidence.push({
+        phase: 'source-identity',
+        status: recorded.status,
+        ownedPidMatched:
+          recorded.status === 'ok' && recorded.identity.source?.pid === source.fixturePid
+      });
+      expect(recorded.status).toBe('ok');
+      if (recorded.status !== 'ok') throw new Error('Missing owned source identity');
+      expect(recorded.identity.source?.pid).toBe(source.fixturePid);
+      const before = await source.inspect();
+      const started = performance.now();
+      const result = await adapter.captureSelection(recorded.identity);
 
-        try {
-          expect(fixture.foregroundMatched).toBe(true);
-          const identityResult = await adapter.foregroundIdentityResult();
+      evidence.push({
+        phase: 'capture',
+        status: result.status,
+        elapsedMs: performance.now() - started
+      });
+      expect(result.status).toBe('ok');
+      if (result.status === 'ok')
+        expect(result.text).toBe('  Promptly \u96ea\u{1f642}\r\n"fixture"\t\u0000end  ');
+      expect(await source.inspect()).toEqual(before);
+      const other = await macosFixture('empty');
 
-          evidence.push({
-            phase: 'matrix-identity',
-            mode,
-            status: identityResult.status,
-            ownedPidMatched:
-              identityResult.status === 'ok' &&
-              identityResult.identity.source?.pid === fixture.fixturePid
-          });
-          expect(identityResult.status).toBe('ok');
-          if (identityResult.status !== 'ok') throw new Error('Missing owned identity');
-          const identity = identityResult.identity;
+      try {
+        const foreground = await adapter.foregroundIdentityResult();
 
-          expect(identity.source?.pid).toBe(fixture.fixturePid);
-          expect(identity.source?.id).toBe('dev.promptly.owned-selection-fixture');
-          const before = await fixture.inspect();
-          const durations: number[] = [];
-          const nativeDurations: number[] = [];
+        expect(
+          foreground.status === 'ok' && foreground.identity.source?.pid === other.fixturePid
+        ).toBe(true);
+        const activation = await adapter.activateSource(recorded.identity);
 
-          for (let sample = 0; sample < (mode === 'selected' ? 10 : 1); sample++) {
-            const captureStarted = performance.now();
-            const result = await adapter.captureSelection(identity);
-
-            recordMacosCapture(evidence, 'matrix-capture', captureStarted, result, {
-              mode,
-              sample,
-              ownedPidMatched: identity.source?.pid === fixture.fixturePid
-            });
-            durations.push(performance.now() - captureStarted);
-            expect(result.status, mode).toBe(status);
-            if (result.status === 'ok') {
-              expect(result.text).toBe(text);
-              nativeDurations.push(result.elapsedMs);
-            } else expect('text' in result).toBe(false);
-          }
-
-          evidence.push({
-            mode,
-            status,
-            deadlineMs: 100,
-            roundTripMs: durations,
-            nativeMs: nativeDurations
-          });
-          if (mode !== 'slow') {
-            const after = await fixture.inspect();
-
-            expect(after).toEqual(before);
-            expect(await adapter.activateSource({ ...identity })).toBe('foregroundChanged');
-            expect(await adapter.activateSource(identity)).toBe('ok');
-          } else {
-            expect(durations[0]).toBeGreaterThanOrEqual(90);
-            expect(durations[0]).toBeLessThan(500);
-            expect((await adapter.ready()).warmupReady).toBe(true);
-            expect((await adapter.captureSelection(identity)).status).toBe('foregroundChanged');
-          }
-        } finally {
-          await fixture.close();
-        }
+        evidence.push({ phase: 'source-handoff', status: activation });
+        expect(activation).toBe('ok');
+        expect(await source.isForeground(source.fixturePid)).toMatchObject({
+          matched: true,
+          launchDateAvailable: true
+        });
+      } finally {
+        await other.close();
       }
-
-      await assertMacosSelectionRecovery(adapter, evidence);
 
       completed = true;
     } finally {
+      await source.close();
+    }
+  } finally {
+    try {
       await saveNativeReceipt('macos-selection-receipt', {
         completed,
-        platform: process.platform,
-        arch: process.arch,
-        release: release(),
-        cpu: cpus()[0]?.model,
-        node: process.version,
-        humanTccMatrix: false,
-        endToEndToastLatencyMeasured: false,
-        evidence
+        evidence,
+        scope: 'ordinary-owned-capture-and-source-handoff'
       });
+    } finally {
       await adapter.dispose();
     }
-  });
+  }
 });

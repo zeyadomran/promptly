@@ -9,6 +9,7 @@ import { observeStartupProcess } from '../observed-startup-process';
 import { writeSettingsReceipt } from './settings-receipt';
 
 test('owned unsupported database fails startup with retained exit diagnostics before any window', async () => {
+  test.skip(process.platform !== 'win32', 'The shared fatal-startup flow runs once on Windows.');
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
   const executable =
     process.platform === 'darwin'

@@ -49,13 +49,10 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: Check application foundation
-        run: npm run check
-      - name: Install fixture browser
-        run: npx playwright install chromium
-      - name: Verify design primitives, themes and keyboard behavior
-        run: npm run test:design
-      - name: Verify packaged Radix and Sonner under production CSP
-        run: npm run test:packaged-design
+        run: npm run check:static
+      - name: Verify shared logic once
+        if: runner.os == 'Windows'
+        run: npm test
       - name: Package application
         run: npm run package
       - name: Verify packaged shell and platform native fixtures

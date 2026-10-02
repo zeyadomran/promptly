@@ -1,10 +1,8 @@
-import path from 'node:path';
-
 import { expect, test } from '@playwright/test';
 
-import { launchIsolatedElectron } from '../isolated-electron';
 import { writeWindowReceipt } from './native-window-receipt';
 import { createShortcutDriver } from './shortcut-driver';
+import { launchOwnedTransferPackage } from './storage-packaged-fixture';
 
 test('real OS shortcut delivery toggles visibility and persists pin while capture is paused', async () => {
   test.skip(
@@ -14,19 +12,8 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
       process.env['RUNNER_OS'] !== (process.platform === 'darwin' ? 'macOS' : 'Windows'),
     'Native input is restricted to owned GitHub-hosted runners.'
   );
-  const executable = path.resolve(
-    'out',
-    `Promptly-${process.platform}-${process.arch}`,
-    process.platform === 'darwin' ? 'Promptly.app/Contents/MacOS/Promptly' : 'Promptly.exe'
-  );
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      (entry): entry is [string, string] =>
-        entry[1] !== undefined && entry[0] !== 'ELECTRON_RUN_AS_NODE'
-    )
-  );
-  const isolated = await launchIsolatedElectron(executable, env);
-  const application = isolated.application;
+  const owned = await launchOwnedTransferPackage();
+  const application = owned.application;
   let receiptPage: Awaited<ReturnType<typeof application.firstWindow>> | undefined;
   let failure: unknown;
 
@@ -99,7 +86,7 @@ test('real OS shortcut delivery toggles visibility and persists pin while captur
   }
 
   try {
-    await isolated.dispose();
+    await owned.dispose(failure);
   } catch (error) {
     cleanupErrors.push(error);
   }

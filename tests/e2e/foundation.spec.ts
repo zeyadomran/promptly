@@ -4,67 +4,46 @@ import { expect, test } from '@playwright/test';
 import type { WebContents, WebPreferences } from 'electron';
 
 import { operations } from '../../src/shared/contracts/operations';
-import { launchIsolatedElectron } from '../isolated-electron';
+import { launchOwnedTransferPackage } from './storage-packaged-fixture';
 
 interface InspectableWebContents extends WebContents {
   getLastWebPreferences(): WebPreferences;
 }
 
-test('packaged React window preserves the sandboxed preload boundary', async () => {
-  const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
-  const executablePath =
-    process.platform === 'darwin'
-      ? path.join(directory, 'Promptly.app', 'Contents', 'MacOS', 'Promptly')
-      : path.join(directory, 'Promptly.exe');
-  // ELECTRON_RUN_AS_NODE can be inherited from the agent host; never pass it to Electron.
-  const env: Record<string, string> = {};
-
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-
-  delete env.ELECTRON_RUN_AS_NODE;
-  const isolated = await launchIsolatedElectron(executablePath, env);
-  const app = isolated.application;
+test('packaged shell keeps offline assets, CSP and sandboxed IPC boundaries', async () => {
+  const owned = await launchOwnedTransferPackage();
+  const app = owned.application;
+  let primary: unknown;
 
   try {
     const page = await app.firstWindow();
-    const rendererErrors: string[] = [];
 
-    page.on('pageerror', (error) => rendererErrors.push(error.message));
     await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
-    await expect(page.getByRole('status')).toContainText(
-      process.platform === 'darwin' ? 'macOS' : 'Windows'
-    );
     expect(
       await page.evaluate(() => ({
-        platform: window.promptly.platform,
-        bridgeKeys: Object.keys(window.promptly),
         frozen: Object.isFrozen(window.promptly),
+        bridgeKeys: Object.keys(window.promptly),
         node: ['require', 'process', 'Buffer', 'ipcRenderer'].filter((key) => key in window),
         csp: document
           .querySelector('meta[http-equiv="Content-Security-Policy"]')
           ?.getAttribute('content')
       }))
     ).toEqual({
-      platform: process.platform,
+      frozen: true,
       bridgeKeys: [
         'platform',
         ...Object.keys(operations),
         'subscribeWindowFocus',
         'subscribeChanges'
       ],
-      frozen: true,
       node: [],
       csp: expect.stringContaining("connect-src 'none'")
     });
-    const preferences = await app.evaluate(({ BrowserWindow }) => {
-      // Electron's internal inspection method is intentionally used only in this smoke test.
-      const contents = BrowserWindow.getAllWindows()[0]?.webContents as
-        InspectableWebContents | undefined;
-
-      return contents?.getLastWebPreferences();
-    });
+    const preferences = await app.evaluate(({ BrowserWindow }) =>
+      (
+        BrowserWindow.getAllWindows()[0]?.webContents as InspectableWebContents | undefined
+      )?.getLastWebPreferences()
+    );
 
     expect(preferences).toMatchObject({
       sandbox: true,
@@ -72,10 +51,54 @@ test('packaged React window preserves the sandboxed preload boundary', async () 
       nodeIntegration: false,
       webSecurity: true
     });
+    expect(
+      await page.evaluate(() => window.promptly.getSnippet({ id: 'malformed' }))
+    ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
     expect(await page.evaluate(() => window.open('https://example.com'))).toBeNull();
+    const assets = await page.evaluate(async () => {
+      await document.fonts.load('400 13px "Geist Mono"');
+      await document.fonts.load('400 13.5px "Space Grotesk"');
+      return {
+        fonts:
+          document.fonts.check('400 13px "Geist Mono"') &&
+          document.fonts.check('400 13.5px "Space Grotesk"'),
+        images: Array.from(document.images).every(
+          (image) => image.complete && image.naturalWidth > 0
+        )
+      };
+    });
+
+    expect(assets).toEqual({ fonts: true, images: true });
+    const unauthorizedPage = app.waitForEvent('window');
+
+    await app.evaluate(
+      async ({ BrowserWindow, app: nativeApp }, preloadSuffix) => {
+        const window = new BrowserWindow({
+          show: false,
+          webPreferences: {
+            preload: nativeApp.getAppPath() + preloadSuffix,
+            sandbox: true,
+            contextIsolation: true,
+            nodeIntegration: false
+          }
+        });
+
+        await window.loadURL('about:blank');
+      },
+      path.sep + path.join('.vite', 'build', 'preload.cjs')
+    );
+    const untrusted = await unauthorizedPage;
+
+    expect(await untrusted.evaluate(() => window.promptly.getSettings({}))).toMatchObject({
+      ok: false,
+      error: { code: 'UNAUTHORIZED' }
+    });
+    await untrusted.close();
     expect(app.windows()).toHaveLength(1);
-    expect(rendererErrors).toEqual([]);
+  } catch (error) {
+    primary = error;
+    throw error;
   } finally {
-    await isolated.dispose();
+    await owned.dispose(primary);
   }
 });

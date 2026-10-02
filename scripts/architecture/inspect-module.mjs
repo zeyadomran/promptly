@@ -16,11 +16,7 @@ const rendererPackages = new Set([
   'sonner',
   'get-nonce'
 ]);
-const testPackages = new Set([
-  'vitest',
-  '@testing-library/react',
-  '@testing-library/jest-dom/vitest'
-]);
+const testPackages = new Set(['vitest', 'vite']);
 const browserGlobals = new Set([
   'require',
   'process',

@@ -10,7 +10,7 @@
     "exactOptionalPropertyTypes": true,
     "jsx": "react-jsx",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "types": ["node", "vite/client", "@testing-library/jest-dom"],
+    "types": ["node", "vite/client"],
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "noEmit": true,
