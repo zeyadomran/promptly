@@ -133,3 +133,41 @@ the generated corpus/profile tree. Four mode-specific regressions verify launch
 arguments, real directory identity and rejection of a different existing directory
 without deleting it. The previous diagnostic-only isolation statements describe
 the earlier version; they do not describe the corrected current harness.
+
+
+Main f2d90 integration initially clamped the regular split-view fixture to the
+production Compact width440. The [retained screenshot](incomplete/p13-compact-constraint.png)
+and [failed assertion context](incomplete/p13-compact-constraint-context.md) show
+the squeezed selected preview; a late query highlight was outside the viewport.
+No timing receipt was emitted because visibility assertions failed first. The
+fixture now initializes through actual Regular settings and the production
+bootstrap/window factory, retaining native geometry constraints and its original
+1000x640 simultaneously visible split view. No warming, sleep or gate changes.
+
+Astra's separate850f Mac [ordinary receipt](incomplete/macos-native-highlights-ci-failure-850f41e.json)
+failed first `i`148.7ms (frame126.3) and cold `e`51.5ms (preload17ms). The separate
+[diagnostic receipt](macos-startup-trace-diagnostic-850f41e.json) first `i`33.7ms,
+query max49.2ms did not reproduce the cold stall. Its trace showed GPU
+CALayerTreeCoordinator::ApplyBackpressure97.47ms ending53ms before first input,
+with window show123.75ms before input, foreground/visibility confirmed, and no
+long tasks. This is a measured startup presentation lead, not proven causation
+for the ordinary failure. Profile correction and natural CI are the next controlled
+experiment; no scheduling workaround is implemented.
+
+
+Local current-main Regular-fixture runs verified the actual canonical generated
+profile in both modes: [ordinary receipt](windows-all-mode-profile-regular.json)
+and [diagnostic receipt](windows-all-mode-profile-regular-trace.json). Complete
+visible text, every703 highlight pixels and unchanged strict gate passed in each;
+these local results still do not qualify the CI machines. Fresh ordinary CI must
+establish the corrected harness behavior before any further performance change.
+
+
+Astra also measured850f Windows ordinary warm `re`101.3ms (bridge82.2,
+worker2.89). Diagnostic first `i`78.4ms had main IPC receive+1.187 to reply+42.866ms,
+renderer reply+51.232, commit+54.044 and frames+63/+77.6ms. No long task or focus
+loss explained the gap; many short main wakeups were present. Request-correlated
+worker receive/send marks are missing, so the await span remains unattributed.
+Only if fresh all-mode-owned-profile/Regular-fixture CI still fails should the
+next bounded diagnostic add main-post/worker-receive/worker-send/main-receive
+markers. No such instrumentation or scheduling change is included in this fix.

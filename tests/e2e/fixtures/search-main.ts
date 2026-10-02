@@ -8,6 +8,7 @@ import { createQuitCoordinator } from '../../../src/main/lifecycle/quit-coordina
 import { StorageClient } from '../../../src/main/storage/client';
 import { storageDesktopServices } from '../../../src/main/storage/desktop-services';
 import { createMainWindow } from '../../../src/main/windows/create-main-window';
+import { defaultSettings, type SettingsSnapshot } from '../../../src/shared/contracts/settings';
 import { searchFixtureIpc, startSearchStartupTrace } from './search-startup-trace';
 
 let storage: StorageClient | undefined;
@@ -47,9 +48,18 @@ void app.whenReady().then(async () => {
       database: path.basename(filename)
     })
   );
-  const desktop = installDesktopIpc(searchFixtureIpc(), storageDesktopServices(storage), revision);
+  const initial: SettingsSnapshot = {
+    revision,
+    settings: { ...defaultSettings(), defaultSizeMode: 'regular' }
+  };
+  const desktop = installDesktopIpc(
+    searchFixtureIpc(),
+    storageDesktopServices(storage),
+    revision,
+    () => initial
+  );
 
-  const window = await createMainWindow(desktop.windows);
+  const window = await createMainWindow(desktop.windows, initial);
 
   window.setContentSize(1000, 640);
   app.focus({ steal: true });
