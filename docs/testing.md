@@ -23,7 +23,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `shortcuts/transactions.test.ts` | Rejected OS binding replacement preserves authoritative preferences and the previous live command |
 | `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 
-There are ten functional cases. Absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Shortcut cases exercise public services with injected external OS effects; actual native shortcut delivery remains a manual release check. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
+Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
 
 ## Manual release checks
 
