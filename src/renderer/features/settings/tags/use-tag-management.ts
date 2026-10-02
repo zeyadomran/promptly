@@ -56,6 +56,17 @@ export function useTagManagement() {
     };
   }, [refresh]);
 
+  const retireUnconfirmed = () => {
+    if (active.current) {
+      readVersion.current++;
+      uncertain.current = true;
+      setBlocked(true);
+      setError('Unable to confirm this change. Refresh the tag list before making another change.');
+    }
+
+    return true;
+  };
+
   const run = async <T>(
     action: () => Promise<DesktopResult<T>>,
     notice: string,
@@ -71,6 +82,8 @@ export function useTagManagement() {
 
       if (!active.current) return result.ok;
       if (!result.ok) {
+        if (result.error.code === 'UNAVAILABLE' || result.error.code === 'INTERNAL')
+          return retireUnconfirmed();
         setError(
           result.error.code === 'CONFLICT' && conflictMessage !== undefined
             ? conflictMessage
@@ -84,16 +97,7 @@ export function useTagManagement() {
       await refresh();
       return true;
     } catch {
-      if (active.current) {
-        readVersion.current++;
-        uncertain.current = true;
-        setBlocked(true);
-        setError(
-          'Unable to confirm this change. Refresh the tag list before making another change.'
-        );
-      }
-
-      return true;
+      return retireUnconfirmed();
     } finally {
       busy.current = false;
       if (active.current) setPending(false);
