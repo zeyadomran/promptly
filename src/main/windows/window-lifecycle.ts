@@ -1,4 +1,4 @@
-import { type BrowserWindow, screen } from 'electron';
+import { app, type BrowserWindow, screen } from 'electron';
 
 import { failure } from '../../shared/contracts/result';
 import { shouldHideAfterCopy } from '../../shared/contracts/settings';
@@ -38,6 +38,10 @@ export class WindowLifecycle {
 
   async show(kind: WindowKind = 'main'): Promise<BrowserWindow> {
     if (this.isClosing()) throw new Error('Promptly is shutting down.');
+    if (kind === 'main') kind = this.rootKind();
+    // App-wide runtime accessibility remains enabled through quit; never disable active assistive support.
+    if (kind === 'onboarding' && !app.isAccessibilitySupportEnabled())
+      app.setAccessibilitySupportEnabled(true);
     let window = this.windows.get(kind);
 
     const loading = this.opening.get(kind);
@@ -93,7 +97,7 @@ export class WindowLifecycle {
   }
 
   hide(): void {
-    const window = this.windows.get('main');
+    const window = this.windows.get(this.rootKind());
 
     if (window !== undefined) concealWindow(window, this.recovery);
   }
@@ -114,23 +118,28 @@ export class WindowLifecycle {
   }
 
   async toggle(): Promise<void> {
-    const window = this.windows.get('main');
+    const window = this.windows.get(this.rootKind());
 
     if (window?.isVisible() === true && !window.isMinimized()) this.hide();
     else await this.show();
   }
 
   recoverVisibility(): void {
-    const window = this.windows.get('main');
+    const window = this.windows.get(this.rootKind());
 
     if (window === undefined || window.isDestroyed())
-      throw new Error('Promptly cannot restore its main window.');
+      throw new Error('Promptly cannot restore its window.');
     if (window.isMinimized()) window.restore();
     window.show();
-    if (!window.isVisible()) throw new Error('Promptly could not restore its main window.');
+    if (!window.isVisible()) throw new Error('Promptly could not restore its window.');
   }
 
-  private state(kind: WindowKind = 'main'): WindowState {
+  private rootKind(): WindowKind {
+    return this.settings.current.settings.onboardingComplete ? 'main' : 'onboarding';
+  }
+
+  private state(kind: WindowKind = this.rootKind()): WindowState {
+    if (kind === 'main') kind = this.rootKind();
     const window = this.windows.get(kind);
 
     return {
@@ -164,7 +173,8 @@ export class WindowLifecycle {
       tray: this.recovery.trayAvailable(),
       trayController: this.recovery.trayControllerAvailable?.() === true,
       shortcut: this.recovery.shortcutAvailable(),
-      mainReachable: this.state().visible || this.windows.get('main')?.isMinimized() === true
+      mainReachable:
+        this.state().visible || this.windows.get(this.rootKind())?.isMinimized() === true
     }),
     enqueue: (action) => this.enqueue(action),
     show: (kind) => this.show(kind),

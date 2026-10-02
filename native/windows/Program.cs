@@ -45,6 +45,7 @@ internal static class Program
                         var identity = SourceIdentity.Record();
                         result = identity == null ? Protocol.Result("foregroundChanged") : identity.Result("ok");
                         if (identity != null) result["bounds"] = identity.Bounds();
+                        if (identity != null) result["windowHandle"] = identity.Window.ToInt64().ToString("x16");
                     }
                     else if (command == "activate")
                     {

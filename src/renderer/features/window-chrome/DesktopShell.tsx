@@ -1,7 +1,7 @@
-import { PinStatus } from '../../components/shared/PinStatus';
-import { Button } from '../../components/ui/button';
 import { TooltipProvider } from '../../components/ui/tooltip';
-import { FoundationScreen, LibraryWindow } from '../library';
+import { LibraryWindow } from '../library';
+import { OnboardingTitleBar } from '../onboarding/OnboardingTitleBar';
+import { OnboardingWindow } from '../onboarding/OnboardingWindow';
 import { SettingsTitleBar } from '../settings/components/SettingsTitleBar';
 import { SettingsWindow } from '../settings/components/SettingsWindow';
 import { usePreferences } from '../settings/settings-context';
@@ -19,13 +19,14 @@ export function DesktopShell() {
       <div className="desktop-shell">
         {settingsWindow ? (
           <SettingsTitleBar />
+        ) : onboardingWindow ? (
+          <OnboardingTitleBar />
         ) : (
           <WindowTitleBar
             mode={mode}
             setMode={(next) => {
               void setMode(next);
             }}
-            {...(onboardingWindow ? { title: 'Set up Promptly' } : {})}
           />
         )}
         <div className="desktop-content">
@@ -34,28 +35,16 @@ export function DesktopShell() {
           ) : !onboardingWindow ? (
             <LibraryWindow mode={mode} onModeChange={setMode} />
           ) : (
-            <FoundationScreen platform={window.promptly.platform} />
+            <OnboardingWindow />
           )}
         </div>
-        {!settingsWindow && (error ?? preferences.error?.message) !== undefined && (
-          <p className="px-4 text-destructive" role="alert">
-            {error ?? preferences.error?.message}
-          </p>
-        )}
-        {!settingsWindow && onboardingWindow && (
-          <footer className="window-footer">
-            <PinStatus pinned={preferences.settings.alwaysOnTop} />
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                void window.promptly.quitApplication({});
-              }}
-            >
-              Quit Promptly
-            </Button>
-          </footer>
-        )}
+        {!settingsWindow &&
+          !onboardingWindow &&
+          (error ?? preferences.error?.message) !== undefined && (
+            <p className="px-4 text-destructive" role="alert">
+              {error ?? preferences.error?.message}
+            </p>
+          )}
       </div>
     </TooltipProvider>
   );

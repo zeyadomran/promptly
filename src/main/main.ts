@@ -7,6 +7,7 @@ import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { createLibraryServices } from './library-services';
 import { closeDesktopResources } from './lifecycle/close-desktop-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
+import { desktopOnboarding } from './onboarding/desktop-onboarding';
 import {
   observeSelectionStartup,
   selectionLaunchOptions
@@ -39,6 +40,7 @@ let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let library: ReturnType<typeof createLibraryServices> | undefined;
 let tray: TrayCoordinator | undefined;
 let confirmation: ReturnType<typeof desktopConfirmation> | undefined;
+let onboarding: ReturnType<typeof desktopOnboarding> | undefined;
 const mutations = new LibraryMutations();
 
 observeOrdinaryWindowClosure();
@@ -48,6 +50,7 @@ const shutdown = createDesktopShutdown({
       keyboard,
       library,
       confirmation,
+      onboarding,
       lifecycle,
       settings,
       storage,
@@ -90,10 +93,8 @@ if (primaryInstance)
   void app
     .whenReady()
     .then(async () => {
-      if (process.platform === 'win32') {
-        windowsSelection = createWindowsSelection(selectionLaunchOptions());
-        observeSelectionStartup(windowsSelection.ready(), 'Windows');
-      }
+      windowsSelection = createWindowsSelection(selectionLaunchOptions());
+      observeSelectionStartup(windowsSelection.ready(), 'Windows');
 
       storage = new StorageClient(
         path.join(__dirname, 'storage-worker.cjs'),
@@ -136,6 +137,14 @@ if (primaryInstance)
         () => lifecycle
       );
       confirmation = desktopConfirmation(library.capture.service, settings);
+      onboarding = desktopOnboarding(
+        library.capture.service,
+        settings,
+        dialogs.owner,
+        () => lifecycle
+      );
+      const recorders = recorderServices(keyboard.shortcuts);
+
       desktop = installDesktopIpc(
         ipcMain,
         {
@@ -151,7 +160,7 @@ if (primaryInstance)
           if (settings === undefined) throw new Error('Preferences unavailable.');
           return settings.current;
         },
-        recorderServices(keyboard.shortcuts)
+        (sender) => ({ ...recorders(sender), ...onboarding?.services(sender) })
       );
       lifecycle = new WindowLifecycle(
         desktop.windows,

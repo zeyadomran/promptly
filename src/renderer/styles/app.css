@@ -12,6 +12,7 @@
 @import './tag-picker.css';
 @import './tag-management.css';
 @import './storage.css';
+@import './onboarding.css';
 
 :root {
   color: var(--foreground);
