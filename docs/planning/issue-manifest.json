@@ -1,0 +1,712 @@
+[
+  {
+    "key": "P01",
+    "title": "Bootstrap Electron, React, TypeScript, and the modular project structure",
+    "phase": 1,
+    "deps": [],
+    "refs": "SPEC §§1,9; user stack and modularity requirements",
+    "files": "src/main/, src/preload/, src/renderer/, src/shared/, forge.config.ts, package.json",
+    "goal": "Establish a runnable desktop foundation with strict boundaries and small, reusable modules.",
+    "scope": [
+      "Use Electron + React + TypeScript + Vite, Tailwind, npm with a committed lockfile, and Electron Forge for packaging; verify compatible stable versions during implementation.",
+      "Create feature folders and enforce renderer/main import boundaries. Every React component, including extracted shadcn subcomponents, gets its own implementation file; preserve accessible primitive composition and provide explicit re-export entrypoints.",
+      "Aim for 50–150 lines per handwritten module; flag files over 200 lines for extraction or a justified review exception. Keep orchestration thin and business logic outside JSX.",
+      "Add lint, format, typecheck, test, dev, and package scripts; build a minimal Vitest/React Testing Library harness."
+    ],
+    "checks": [
+      "A clean clone installs reproducibly and launches a React window on macOS and Windows.",
+      "Renderer code cannot import Node, Electron main, database, or native adapters.",
+      "Component-per-file and module-boundary checks run locally; no starter demo remains."
+    ],
+    "verify": "Clean install, typecheck/lint, launch smoke on both platforms, and one meaningful preload-boundary smoke test."
+  },
+  {
+    "key": "P02",
+    "title": "Define domain contracts and a secure typed IPC bridge",
+    "phase": 1,
+    "deps": [
+      "P01"
+    ],
+    "refs": "SPEC §§1,6,9",
+    "files": "src/shared/contracts/, src/main/ipc/, src/preload/, src/renderer/lib/desktop-client.ts",
+    "goal": "Give React narrow, validated access to desktop operations without exposing privileged APIs.",
+    "scope": [
+      "Define Snippet, Tag, Settings, CaptureResult, paginated search DTOs, typed errors, and change events, with runtime validation at process boundaries.",
+      "Expose named operations through contextBridge; prohibit raw ipcRenderer, arbitrary channels, filesystem paths, and shell commands from the renderer.",
+      "Enable context isolation, renderer sandboxing, nodeIntegration=false, restrictive CSP, local bundled content, sender validation, and controlled navigation/external links.",
+      "Provide subscribe/unsubscribe lifecycle and revisioned change notifications; renderers refetch authoritative data and reject stale search responses."
+    ],
+    "checks": [
+      "Malformed requests and unauthorized senders are rejected.",
+      "A script-shaped snippet is rendered as text and cannot execute.",
+      "Multiple windows receive updates without duplicate listeners; closing a window disposes subscriptions."
+    ],
+    "verify": "Contract rejection tests, preload allowlist tests, renderer XSS fixture, and window lifecycle smoke."
+  },
+  {
+    "key": "P03",
+    "title": "Validate native capture, keyboard hooks, and clipboard feasibility on both OSes",
+    "phase": 1,
+    "deps": [
+      "P01"
+    ],
+    "refs": "SPEC §§2,9",
+    "files": "docs/architecture/native-capture-decision.md, experiments/native-capture/",
+    "goal": "Resolve the platform risks before committing the production capture implementation.",
+    "scope": [
+      "Build a disposable capture harness for macOS AXSelectedText and Windows UI Automation TextPattern, foreground app identity, modifier hooks, and clipboard fallback.",
+      "Compare maintained native packages against small packaged native helpers; record licenses, supported Electron ABI/architectures, permissions, helper lifecycle, and rebuild/signing needs. Select adapters behind stable interfaces.",
+      "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and macOS Secure Input. Validate terminal-specific Copy behavior; Ctrl+C must not interrupt a running command.",
+      "Investigate multi-format clipboard snapshots, ownership/change counters, unsupported/lazy formats, failure restoration, and crash behavior. If faithful restoration cannot be established, skip destructive fallback.",
+      "Measure capture-to-feedback on each path; identify any extra macOS Input Monitoring requirement imposed by the chosen hook. Confirm Alt+Space availability instead of assuming it."
+    ],
+    "checks": [
+      "A documented support matrix contains real observations from macOS and Windows, with OS/architecture and app versions.",
+      "Adapter choice and packaging proof exist for both platforms; unsupported paths return explicit errors without overwriting the clipboard.",
+      "The ADR records outstanding release blockers, including failures of the under-150-ms target; no untested claim of universal capture."
+    ],
+    "verify": "Human-in-the-loop runs on real machines, format round trips and concurrent-copy tests, foreground-window assertions, latency traces."
+  },
+  {
+    "key": "P04",
+    "title": "Implement SQLite persistence, migrations, and snippet repositories",
+    "phase": 1,
+    "deps": [
+      "P02"
+    ],
+    "refs": "SPEC §§1,2,3,5",
+    "files": "src/main/storage/, src/main/snippets/, src/shared/domain/",
+    "goal": "Persist complete snippets and tag relationships locally with transactional behavior.",
+    "scope": [
+      "Store SQLite in Electron userData, with versioned migrations, foreign keys, parameterized queries, and serialized writes outside blocking UI work.",
+      "Persist all specified snippet/tag fields plus the tag join table. Add optional platform app identity for safe source-app activation; sourceApp remains nullable display metadata.",
+      "Implement capture upsert, get/list, edit, explicit duplicate, delete/undo, and successful-copy statistics. Hash plus exact-text comparison may accelerate lookup; do not make text globally unique because explicit Duplicate is allowed.",
+      "Use updatedAt descending for Newest (so recapture resurfaces a snippet), createdAt ascending for Oldest, copyCount descending, and lastCopiedAt descending/nulls last, each with stable ID tie-breaking.",
+      "Preserve tags and createdAt on recapture. Duplicate creates a new ID with copied tags and zero copy statistics. Bound undo snapshots and clear them on data erasure."
+    ],
+    "checks": [
+      "Data, full Unicode/multiline text, tags, and copy counts survive relaunch.",
+      "Recapture reuses a deterministic existing ID; deliberate duplicates remain possible.",
+      "Migration failure preserves the previous database; writes and relationship changes are atomic."
+    ],
+    "verify": "Temporary-database integration tests for migrations, rollback, reopen, concurrent capture, long text, duplicates, and delete/undo."
+  },
+  {
+    "key": "P05",
+    "title": "Persist settings and broadcast immediate preference changes",
+    "phase": 1,
+    "deps": [
+      "P02",
+      "P04"
+    ],
+    "refs": "SPEC §§3,6",
+    "files": "src/main/settings/, src/shared/contracts/settings/, src/renderer/features/settings/hooks/",
+    "goal": "Keep every preference consistent across windows and launches.",
+    "scope": [
+      "Define defaults for theme/system, compact startup mode, pin=false, normalization=true, toast=true, Shift double-tap/300 ms, show/hide Alt+Space or Option+Space, and optional pin shortcut.",
+      "Persist login/tray/dock options, per-mode bounds, onboarding completion, shortcut configuration, and validated 150–600 ms timing.",
+      "Represent hide-after-copy as an explicit override or automatic default: auto hides when unpinned and stays open when pinned; explicit user choices remain stable.",
+      "Apply through typed services and notify all windows immediately. Roll back failed OS operations and leave the last working preference active.",
+      "Use one persisted pin state for title-bar and Appearance controls; distinguish remembered per-mode geometry from preferred startup mode."
+    ],
+    "checks": [
+      "No Save button is required; valid changes survive restart.",
+      "Invalid values do not corrupt preferences; failed side effects show a useful error.",
+      "Open main/settings/toast renderers converge on updated theme and preferences."
+    ],
+    "verify": "Defaults/migration/validation tests and multi-window update and failed-operation rollback tests."
+  },
+  {
+    "key": "P06",
+    "title": "Build the shadcn design foundation, themes, and shared components",
+    "phase": 2,
+    "deps": [
+      "P01"
+    ],
+    "refs": "DESIGN §§1–3,5–6; screenshots 1.1–4.2",
+    "files": "src/renderer/components/ui/, src/renderer/components/shared/, src/renderer/styles/, src/renderer/assets/",
+    "goal": "Turn the provided visual system into reusable components used by every screen.",
+    "scope": [
+      "Initialize real shadcn primitives using the Radix base for the specified Sonner behavior; match New York/zinc styling with semantic tokens rather than accepting unrelated preset visuals.",
+      "Bundle Space Grotesk 400/500/600 and Geist Mono 400/500 locally with license files; no Google Fonts runtime calls. Use lucide-react and supplied logos/tray source assets.",
+      "Define light/dark/system tokens, eight tag hues in the specified order, search highlights, spacing, typography, radii, focus rings, and reduced-motion rules.",
+      "Add only needed primitives and split each React implementation into its own file, retaining normal composition through re-exports. Build Logo, ShortcutKey, TagDot, PinStatus, HighlightedText, and SettingsField as separate reusable components.",
+      "Use local fixtures to inspect component states; avoid adding an unnecessary full component workbench dependency."
+    ],
+    "checks": [
+      "Light/dark/system switching has no color transition flash and follows OS theme changes.",
+      "Fonts and assets render offline; shared components match supplied reference measurements.",
+      "Icon-only actions have labels/tooltips and overlays have accessible titles."
+    ],
+    "verify": "Visual fixture inspection against screenshots, offline font/network check, keyboard/focus checks, and safe text-highlighting tests."
+  },
+  {
+    "key": "P07",
+    "title": "Implement global shortcuts and the double-tap modifier state machine",
+    "phase": 2,
+    "deps": [
+      "P03",
+      "P05"
+    ],
+    "refs": "SPEC §2 Trigger, §3 Keyboard navigation, §6 Shortcuts",
+    "files": "src/main/shortcuts/, src/main/platform/keyboard/",
+    "goal": "Trigger capture reliably while another application is focused.",
+    "scope": [
+      "Use Electron globalShortcut for combinations and the validated native hook for modifier taps. Support Shift, Command/Ctrl, and Option/Alt.",
+      "Define a tap as press/release; trigger on the second completed tap within the configured window. Cancel on intervening keys, other modifiers, holds/repeats, pause, sleep, or hook reset.",
+      "Register capture, show/hide, and optional pin combinations with platform display labels; detect duplicates within Promptly and actual registration failures.",
+      "Replace bindings transactionally, retaining previous valid bindings on failure. Suspend relevant capture during recorder use without leaving it disabled afterward.",
+      "Handle resume/restart and unregister hooks/accelerators on quit. Pausing capture must not disable show/hide or pin."
+    ],
+    "checks": [
+      "Normal typing and Shift-modified shortcuts do not cause false captures.",
+      "300 ms default and 150/600 ms boundaries behave deterministically.",
+      "Failed/conflicting registration has honest status; no claim to identify every owning app."
+    ],
+    "verify": "Fake-clock event-sequence tests plus real background-hook, sleep/resume, and conflict checks on both platforms."
+  },
+  {
+    "key": "P08",
+    "title": "Implement macOS selection capture, permissions, and source app identity",
+    "phase": 2,
+    "deps": [
+      "P03",
+      "P02"
+    ],
+    "refs": "SPEC §2 Capture behavior and Permissions",
+    "files": "src/main/platform/macos/, native/macos/",
+    "goal": "Read selected text on macOS without taking focus or requiring clipboard mutation on the preferred path.",
+    "scope": [
+      "Implement the selected AX/native adapter; record frontmost app identity before any Promptly window operation.",
+      "Read selected text with bounded execution and typed results: success, empty, unsupported, denied, timed out, and protected input.",
+      "Expose Accessibility status and System Settings navigation; handle permission revocation and any additional permission actually required by the selected hook.",
+      "Expose source activation only from validated OS application identity; never execute commands derived from snippet text."
+    ],
+    "checks": [
+      "Supported editors, browsers, and terminals return complete selected text with source metadata.",
+      "Denied/revoked permission does not crash or trigger unsafe fallback.",
+      "The frontmost application and its selection remain undisturbed."
+    ],
+    "verify": "macOS native integration matrix, permission grant/revoke cycles, Unicode/multiline selection, and focus checks."
+  },
+  {
+    "key": "P09",
+    "title": "Implement Windows selection capture and foreground application identity",
+    "phase": 2,
+    "deps": [
+      "P03",
+      "P02"
+    ],
+    "refs": "SPEC §2 Capture behavior and Permissions",
+    "files": "src/main/platform/windows/, native/windows/",
+    "goal": "Read text selections through UI Automation with clear behavior for unsupported applications.",
+    "scope": [
+      "Implement the selected Windows UI Automation TextPattern adapter and GetSelection text ranges; record foreground process/app identity.",
+      "Bound potentially stalled UI Automation calls off the Electron main thread; specify deterministic joining of disjoint selections.",
+      "Handle unsupported providers, protected fields, elevated-process restrictions, and stale foreground handles without automatic elevation.",
+      "Provide safe source-app activation by validated OS identity and structured diagnostics without snippet content."
+    ],
+    "checks": [
+      "Supported editors, browsers, and terminals return complete text and nullable source metadata.",
+      "No-selection and unavailable-provider cases are distinct; no unrelated clipboard text is returned as a selection.",
+      "No focus change, elevation prompt, or main-process freeze occurs."
+    ],
+    "verify": "Windows native integration matrix with Notepad, browser, Cursor/VS Code, Windows Terminal, and elevated/unsupported controls."
+  },
+  {
+    "key": "P10",
+    "title": "Implement clipboard-preserving Copy fallback with concurrency protection",
+    "phase": 2,
+    "deps": [
+      "P03",
+      "P08",
+      "P09"
+    ],
+    "refs": "SPEC §2 Capture behavior, §9 Never lose the clipboard",
+    "files": "src/main/capture/clipboard-fallback/, src/main/platform/clipboard/",
+    "goal": "Capture supported selections through Copy only when the original clipboard can be preserved.",
+    "scope": [
+      "Snapshot all restorable clipboard representations using the proven native adapter; distinguish empty clipboard from unavailable data. Do not reduce rich clipboard contents to plain text.",
+      "Serialize app clipboard operations, inject the correct Copy action for the source app, wait for an observed clipboard change, read text, and restore in a finally path.",
+      "Use clipboard ownership/change counters to avoid restoring over a newer user/external copy; do not infer freshness from text equality alone.",
+      "Bound waits and memory, prevent nested capture, ignore stale clipboard content after timeout, and refuse fallback for formats or applications that cannot be handled safely.",
+      "Validate helper failures/crashes and document the recovery model. Never persist clipboard snapshots or print their contents in diagnostics."
+    ],
+    "checks": [
+      "Text, HTML/RTF, images, file lists, and supported custom formats round-trip unchanged in the validated matrix.",
+      "A concurrent user copy wins; timeout, empty selection, error, and cancellation do not replace the clipboard with stale data.",
+      "A running terminal command cannot be interrupted by an assumed Ctrl+C copy action."
+    ],
+    "verify": "Native round-trip fixtures, unsupported/lazy formats, concurrent-copy races, injected errors/timeouts/helper termination, and terminal checks."
+  },
+  {
+    "key": "P11",
+    "title": "Connect the capture pipeline with normalization and deduplication",
+    "phase": 2,
+    "deps": [
+      "P04",
+      "P05",
+      "P07",
+      "P08",
+      "P09",
+      "P10"
+    ],
+    "refs": "SPEC §2",
+    "files": "src/main/capture/, src/shared/domain/normalize-snippet.ts",
+    "goal": "Turn a shortcut into one durable saved snippet while preserving source app focus.",
+    "scope": [
+      "Orchestrate foreground identity, preferred selection API, safe fallback, empty-text rejection, normalization, persistence, and result events.",
+      "Normalize only when enabled: trim edges and remove a recognized first-line terminal prompt prefix; retain subsequent lines/indentation and avoid blanket replacement of code symbols.",
+      "Deduplicate exact post-normalization text transactionally, preserve existing tags/createdAt, update updatedAt, and emit Already saved.",
+      "Serialize/coalesce repeated triggers; handle pause, permission loss, cancellation, storage error, and unsupported capture without false success.",
+      "Instrument trigger-to-persistence and trigger-to-feedback timestamps without logging snippet text."
+    ],
+    "checks": [
+      "A saved result is emitted only after durable success; recapture creates no extra automatic duplicate.",
+      "Whitespace-only text is ignored; disabled normalization preserves exact selected content.",
+      "Capture never calls show/focus on main or settings windows."
+    ],
+    "verify": "Pipeline integration tests using fake adapters for failure branches, real shortcut-to-SQLite smoke on both OSes, and normalization fixtures."
+  },
+  {
+    "key": "P12",
+    "title": "Show the focus-safe save toast in a dedicated overlay window",
+    "phase": 2,
+    "deps": [
+      "P06",
+      "P11",
+      "P13"
+    ],
+    "refs": "SPEC §2 Confirmation; DESIGN §3 Save toast, §5 Motion",
+    "files": "src/main/windows/toast-window.ts, src/renderer/features/capture-toast/",
+    "goal": "Confirm captures even when the main window is hidden without stealing focus.",
+    "scope": [
+      "Host Sonner content in a dedicated non-activating, non-focusable overlay with a narrow preload API; renderer Sonner alone cannot appear over other apps when main is hidden.",
+      "Match the 290 px reference, logo, Saved to Promptly/Already saved title, one-line preview, relative time, and ~2500 ms dismissal. No actions or tagging controls.",
+      "Respect show-confirmation and light/dark/system settings; position within the active display work area and handle DPI/multi-monitor changes.",
+      "Bound burst behavior and timers; test full-screen/Spaces limitations and avoid focus or taskbar entries."
+    ],
+    "checks": [
+      "Keyboard focus and keystrokes remain in the source app during appearance and dismissal.",
+      "Main hidden/minimized and pinned/unpinned cases all show the correct toast when enabled.",
+      "No toast window leaks after repeated captures; disabled confirmation creates no visible overlay."
+    ],
+    "verify": "Native foreground-window assertions, 100-capture burst/lifecycle checks, and screenshot comparison in both themes."
+  },
+  {
+    "key": "P13",
+    "title": "Implement desktop window lifecycle, size modes, and pin behavior",
+    "phase": 2,
+    "deps": [
+      "P05",
+      "P06"
+    ],
+    "refs": "SPEC §3; DESIGN §§3,4.1–4.4,5",
+    "files": "src/main/windows/, src/renderer/features/window-chrome/",
+    "goal": "Provide native-feeling compact, regular, onboarding, and settings windows.",
+    "scope": [
+      "Implement single-instance launch, open/show/hide/reactivate, tray-aware close, and explicit Quit cleanup; keep a recovery route when tray/dock visibility is changed.",
+      "Compact starts near 440 px wide with minimum height 420; Regular defaults to 1000×640 with minimum 760×480. Persist distinct bounds and clamp restored windows to available displays.",
+      "Use native macOS traffic lights and Windows caption controls with safe draggable/non-draggable title-bar regions.",
+      "Implement persisted pin behavior and fullscreen-space support where available, platform-aware theme/size/pin controls, and ~180 ms resize animation only when supported and reduced motion permits.",
+      "Onboarding uses its 760×510 layout; settings can resize across 640 px. Show/hide shortcut opens the current mode and focuses search."
+    ],
+    "checks": [
+      "Mode toggles retain independent geometry without moving a window offscreen.",
+      "Pin state agrees across title bar, footer, settings, and OS behavior after restart.",
+      "Closing/hiding, a second launch, display disconnect, and Quit produce predictable lifecycle behavior."
+    ],
+    "verify": "Packaged desktop smoke for both platforms, multi-monitor/DPI restoration, title-bar hit regions, and reduced-motion checks."
+  },
+  {
+    "key": "P14",
+    "title": "Implement substring search, filter syntax, sorting, and paginated queries",
+    "phase": 3,
+    "deps": [
+      "P04",
+      "P02"
+    ],
+    "refs": "SPEC §4",
+    "files": "src/main/search/, src/shared/search/, src/renderer/features/search/hooks/",
+    "goal": "Return correct, responsive search results for at least 10,000 snippets.",
+    "scope": [
+      "Parse tag: and from: alongside free text; define quoted names, incomplete tokens, literal punctuation, unknown filters, and escaping without exposing raw SQL/FTS syntax.",
+      "Use case-insensitive substring semantics, AND across selected tags and tag: tokens, intersection with source/free text, All reset, and Regular Untagged.",
+      "Evaluate FTS5 trigram plus a correct short-query path or an in-memory index; ordinary token FTS alone does not fulfill substring matching. Verify Unicode behavior and 1–2-character searches.",
+      "Implement all four stable sorts, counts, pagination, stale-response protection, and shared match ranges for safe renderer highlighting.",
+      "Budget the full input-to-painted-results path under 50 ms at 10k; debounce must fit inside that budget, not add 50 ms to a 50 ms query."
+    ],
+    "checks": [
+      "Substring, punctuation, Unicode, AND-tag intersection, Untagged, all sorts, and combined syntax have documented correct results.",
+      "Capture/edit/tag/delete/import changes invalidate the index and counts consistently.",
+      "Benchmarks include short/worst-case queries and rapid typing, not only query execution."
+    ],
+    "verify": "Parser/repository fixtures, literal wildcard tests, index consistency tests, and reproducible 10k end-to-end benchmark."
+  },
+  {
+    "key": "P15",
+    "title": "Build the compact library with virtualized snippet rows",
+    "phase": 3,
+    "deps": [
+      "P06",
+      "P13",
+      "P14"
+    ],
+    "refs": "SPEC §3a, §4 Empty states; DESIGN §4.2; screenshots 2.1,2.2",
+    "files": "src/renderer/features/library/components/CompactLibrary.tsx, CompactSnippetRow.tsx, SnippetList.tsx, LibraryFooter.tsx, SearchInput.tsx, TagFilterBar.tsx",
+    "goal": "Deliver the default 440 px browsing surface using shared list state and components.",
+    "scope": [
+      "Compose the title bar, autofocus search, horizontal tag chips with All and create affordance, virtualized list, and count/pin footer.",
+      "Create separate reusable row, tag-dot group, metadata, copy status, search, and empty-state files; compact layout uses two-line monospace clamps.",
+      "Keep selection by snippet ID across refreshes and ensure keyboard-selected rows stay mounted/in view; provide clear no-selection behavior.",
+      "Render safe highlight ranges, nullable source metadata, no snippets and no results states, and a compact accessible sort control consistent with the design system.",
+      "Wire row click/Enter copy and tag creation through shared command interfaces delivered by dependent integration work; completion of the release tracker requires those integrations."
+    ],
+    "checks": [
+      "Light and dark layouts match screenshots without horizontal window overflow.",
+      "10k snippets scroll smoothly with bounded mounted rows and stable selection.",
+      "Counts, pin status, no-results reset, and the configured-shortcut empty-state copy are correct."
+    ],
+    "verify": "Component interaction tests for filtering/selection/virtualization and visual comparisons at 440 px and minimum height."
+  },
+  {
+    "key": "P16",
+    "title": "Build the regular split view and snippet editing/actions",
+    "phase": 3,
+    "deps": [
+      "P15",
+      "P04"
+    ],
+    "refs": "SPEC §3b; DESIGN §4.3; screenshots 3.1,3.2",
+    "files": "src/renderer/features/library/components/RegularLibrary.tsx, RegularSnippetRow.tsx, src/renderer/features/snippets/components/",
+    "goal": "Add full-text preview and snippet management while reusing library state.",
+    "scope": [
+      "Implement the 1.15fr/1fr list-preview split, wrapping chips, filter hint, dense single-line rows, relative times, keyboard footer, and full highlighted text.",
+      "Separate SnippetPreview, SnippetEditor, SnippetActions, SnippetMoreMenu, and PreviewTagBar into individual files; reuse search/filter/query state across modes.",
+      "Implement inline edit with explicit apply/cancel and keyboard behavior, Delete with bounded Undo, explicit Duplicate, safe Open source app, and Copy as Markdown code block.",
+      "Use a Markdown fence longer than any backtick run in the snippet. Disable source activation with an explanation when no usable platform identity exists.",
+      "Preserve selection when changing modes; tag/remove/copy/edit controls must not bubble into accidental row copy."
+    ],
+    "checks": [
+      "Full text remains intact and selectable; canceling an edit changes nothing.",
+      "Edit, duplicate, delete/undo update storage, counts, preview, and search results consistently.",
+      "No selection, deleted selection, long text, and narrow Regular minimum size have usable states."
+    ],
+    "verify": "Management integration tests, nested-backtick fixture, source activation failures, and light/dark visual checks."
+  },
+  {
+    "key": "P17",
+    "title": "Unify copy commands, keyboard navigation, and hide-after-copy behavior",
+    "phase": 3,
+    "deps": [
+      "P15",
+      "P16",
+      "P05"
+    ],
+    "refs": "SPEC §3 Copy behavior and Keyboard navigation",
+    "files": "src/main/snippets/copy-snippet.ts, src/renderer/features/library/hooks/, src/renderer/features/commands/",
+    "goal": "Make all library copy paths and shortcuts behave consistently.",
+    "scope": [
+      "Route row click, Enter, preview Copy, Markdown copy, and later tray copy through one copy service using full stored text.",
+      "Record copyCount/lastCopiedAt only after clipboard write succeeds; update counts immediately and keep the visible Copied state for ~1500 ms when the window remains open.",
+      "Apply auto/explicit hide-after-copy preferences; clicking a regular row selects it before any optional hide.",
+      "Implement arrows, Enter, Cmd/Ctrl+F, Cmd/Ctrl+T, Delete/Backspace with Undo, Cmd/Ctrl+comma, and Esc clear-then-hide.",
+      "Scope shortcuts by focus/overlay: arrows/Enter in search may navigate/copy, but Delete/Backspace edits text; editor, IME, menus, dialogs, and tag picker keep their own keys. Emit the tag-picker command for P18."
+    ],
+    "checks": [
+      "One gesture produces one clipboard write and one statistic increment.",
+      "Text editing never deletes snippets, and dialogs/IME are not interrupted.",
+      "Copy errors leave counters unchanged and do not hide the window."
+    ],
+    "verify": "Keyboard interaction matrix, fake-timer copy feedback tests, clipboard failure tests, and pinned/unpinned/override behavior."
+  },
+  {
+    "key": "P18",
+    "title": "Implement tag creation, filtering, and the reusable multi-select picker",
+    "phase": 3,
+    "deps": [
+      "P04",
+      "P06",
+      "P17"
+    ],
+    "refs": "SPEC §§4–5",
+    "files": "src/main/tags/, src/renderer/features/tags/components/TagPicker.tsx, TagChip.tsx, TagBadge.tsx, CreateTagForm.tsx",
+    "goal": "Reuse one accessible tagging workflow across compact, regular, and keyboard entry points.",
+    "scope": [
+      "Normalize tag names with trimming and documented case folding; enforce case-insensitive uniqueness and lowercase display with deterministic palette cycling.",
+      "Build searchable Command-in-Popover multi-select with create-if-missing, selected checks, keyboard support, and a shared tag repository.",
+      "Connect Compact +, Regular New tag, preview Add tag, and Cmd/Ctrl+T; remove associations through badge × without row-copy propagation.",
+      "Keep tag chips/counts and AND filtering synchronized after capture, edits, and assignments; leave tagging out of capture toasts."
+    ],
+    "checks": [
+      "All creation paths enforce the same uniqueness and palette rules.",
+      "Creating/assigning/removing tags refreshes both layouts and Settings counts.",
+      "Focus returns to the trigger and picker Enter/Esc do not copy or hide the library."
+    ],
+    "verify": "Case-collision/concurrent-create repository tests and full picker keyboard/assignment/filter tests."
+  },
+  {
+    "key": "P19",
+    "title": "Add tag management with rename, recolor, merge, and delete",
+    "phase": 4,
+    "deps": [
+      "P18",
+      "P20"
+    ],
+    "refs": "SPEC §5 Settings Tags",
+    "files": "src/main/tags/management/, src/renderer/features/settings/tags/",
+    "goal": "Maintain the tag library without losing associated snippets.",
+    "scope": [
+      "Build the Settings Tags table with counts, creation, rename, palette selection, merge target picker, and delete confirmation.",
+      "Handle rename collisions clearly; merge in one transaction, union associations without duplicate joins, and remove the source tag.",
+      "Delete only the tag and its associations; retain every snippet and update active filters, badges, counts, and search syntax results.",
+      "Use individual component files for rows, editor, color picker, merge dialog, and delete dialog."
+    ],
+    "checks": [
+      "Merge preserves all unique snippet memberships and recalculates counts.",
+      "Rename/recolor is reflected in every open window immediately.",
+      "Deleting an active filter tag cannot strand the user in an unexplained empty state."
+    ],
+    "verify": "Transactional merge/rollback tests, name collisions, deleting tags with many snippets, and dialog keyboard checks."
+  },
+  {
+    "key": "P20",
+    "title": "Build responsive settings, general preferences, and appearance controls",
+    "phase": 4,
+    "deps": [
+      "P05",
+      "P06",
+      "P13"
+    ],
+    "refs": "SPEC §6; DESIGN §4.4; screenshots 4.1,4.2",
+    "files": "src/renderer/features/settings/components/, src/main/platform/startup/",
+    "goal": "Provide a reusable responsive shell for all five settings sections.",
+    "scope": [
+      "Implement side navigation at >=640 px and horizontally scrollable tabs below 640 px; stack labels/descriptions and controls while keeping switch rows inline.",
+      "Create separate SettingsWindow, SettingsNavigation, SettingsSection, SettingsRow, GeneralSettings, and AppearanceSettings files; mount Tags, Shortcuts, and Storage sections through clear feature entrypoints.",
+      "Wire launch at login, tray visibility, macOS Dock visibility, hide-after-copy override/default, startup size mode, theme, and pin to immediate settings services.",
+      "Provide platform-specific visibility and permission status; ensure a working way to reopen Promptly before hiding tray/Dock routes.",
+      "Handle rejected native preference changes with inline errors and rollback, without a Save button."
+    ],
+    "checks": [
+      "639/640 px breakpoint behavior matches reference layouts and keyboard focus survives resizing.",
+      "Every listed General/Appearance preference persists and takes effect immediately.",
+      "macOS-only controls are absent on Windows; close/back returns to the expected window."
+    ],
+    "verify": "Responsive screenshots at 440/639/640/900 px, keyboard navigation, relaunch persistence, and native login/tray/Dock checks."
+  },
+  {
+    "key": "P21",
+    "title": "Implement shared shortcut recording and shortcut settings",
+    "phase": 4,
+    "deps": [
+      "P07",
+      "P20"
+    ],
+    "refs": "SPEC §6 Shortcuts, §7 Choose shortcut; DESIGN §3 Shortcut recorder",
+    "files": "src/renderer/features/shortcuts/components/, src/shared/shortcuts/",
+    "goal": "Let users safely configure capture and window shortcuts with one reusable recorder.",
+    "scope": [
+      "Build ShortcutRecorder, ShortcutKeycaps, CaptureShortcutMode, ModifierSelector, and ShortcutConflictStatus as separate files for Settings and onboarding reuse.",
+      "Support recording/cancel/clear where optional, key-combination validation, platform key labels, double-tap mode selection, and 150–600 ms slider.",
+      "Show known reserved/system conflicts and actual registration failures; say availability is limited to detectable conflicts rather than claiming every app was checked.",
+      "Wire show/hide, optional pin, confirmation toast, and normalization settings; preserve previous bindings after failure and suppress recording-triggered capture.",
+      "Explain Windows Alt+Space conflict when detected and offer a tested alternate such as Ctrl+Alt+Space without silently replacing the user's choice."
+    ],
+    "checks": [
+      "Recorder is fully keyboard usable with a clear Press a key state and Escape cancellation.",
+      "Invalid/conflicting bindings do not replace working shortcuts.",
+      "Onboarding and Settings share the same validation and components."
+    ],
+    "verify": "Recorder event-sequence tests, duplicate bindings, platform key mapping, registration failure, and real shortcut rebind smoke."
+  },
+  {
+    "key": "P22",
+    "title": "Add storage location, JSON/Markdown export, JSON import, and clear all",
+    "phase": 4,
+    "deps": [
+      "P04",
+      "P20"
+    ],
+    "refs": "SPEC §6 Storage",
+    "files": "src/main/storage/transfer/, src/renderer/features/settings/storage/, src/shared/contracts/backup/",
+    "goal": "Make local data portable and give users a safe, explicit erase workflow.",
+    "scope": [
+      "Reveal the real data directory using platform APIs and native file dialogs.",
+      "Define a versioned JSON format covering snippets/tags/relationships/copy metadata; preserve full text and timestamps. Keep machine-specific paths, window bounds, and native app identifiers out of portable backups.",
+      "Export JSON round-trip data and readable Markdown with robust code fences. Use atomic file writes and useful cancellation/error states.",
+      "Validate imports before writes, bound file size, reject unsupported versions/malformed records, preview counts/conflicts, and import transactionally. Preserve deliberate duplicate texts; remap conflicting IDs and coalesce tag names without losing associations.",
+      "Use typed confirmation for Clear all; erase library data/indexes/undo snapshots while retaining preferences/onboarding (explicit proposed v1 behavior). Coordinate with capture to prevent repopulation during erase."
+    ],
+    "checks": [
+      "Export/import into a fresh profile restores full snippets, tags, timestamps, and copy metadata.",
+      "Malformed/canceled/failed imports leave existing data unchanged and never execute imported text.",
+      "Clear all requires the exact confirmation and updates every window/tray with no recoverable in-app undo."
+    ],
+    "verify": "Round-trip fixtures, duplicate text/ID collisions, Unicode/large files, disk-full/rollback, canceled dialogs, and erase/capture race tests."
+  },
+  {
+    "key": "P23",
+    "title": "Build first-launch onboarding with a real practice capture",
+    "phase": 4,
+    "deps": [
+      "P11",
+      "P12",
+      "P15",
+      "P20",
+      "P21"
+    ],
+    "refs": "SPEC §7; DESIGN §4.1; screenshots 1.1–1.4",
+    "files": "src/renderer/features/onboarding/, src/main/onboarding/",
+    "goal": "Take new users from first launch to a successful capture using the real pipeline.",
+    "scope": [
+      "Build separate stepper, WelcomeStep, PermissionStep, ShortcutStep, TryCaptureStep, and footer components matching 760×510 references.",
+      "On macOS, show actual Accessibility status, deep-link to settings, poll ~1 s while visible, stop polling on teardown, and auto-advance after permission. Skip the permission step on Windows and adjust step numbering.",
+      "Reuse shortcut recording/validation; display a selectable sample prompt and route its capture through the production capture pipeline.",
+      "Show the real toast and Saved. Nice. only after successful persistence; enable Open Promptly on success and retain a Skip route.",
+      "Persist completion, open Compact on finish, and retain a successfully captured practice snippet. Skip creates no fabricated snippet; missing permissions remain recoverable in Settings."
+    ],
+    "checks": [
+      "First-run flow differs correctly by OS and does not repeat after completion.",
+      "Practice success is backed by stored data, with no duplicate synthetic event or fake toast.",
+      "Back/skip/restart/revoked-permission paths remain usable and clean up polling/listeners."
+    ],
+    "verify": "First-run profile tests, real permission grant flow, practice selection/shortcut capture, and skip/relaunch matrix."
+  },
+  {
+    "key": "P24",
+    "title": "Implement tray/menu bar, recent snippets, and pause capture",
+    "phase": 4,
+    "deps": [
+      "P07",
+      "P11",
+      "P17",
+      "P20"
+    ],
+    "refs": "SPEC §8, §6 General",
+    "files": "src/main/tray/, src/main/lifecycle/",
+    "goal": "Keep Promptly available in the background with useful native tray commands.",
+    "scope": [
+      "Generate platform-appropriate monochrome template/tray assets from the supplied SVG, including a paused state.",
+      "Build Open Promptly, five most recently updated snippets, Pause/Resume capture, Settings, and Quit menu items; truncate labels but copy full stored text.",
+      "Route recent-item copy through the shared successful-copy service and refresh menu data after mutations/import/clear.",
+      "Disable only save capture while paused; keep open/pin shortcuts functional. Respect tray visibility preferences and maintain an alternative reopen path.",
+      "Dispose tray, shortcut hooks, helpers, timers, and database resources on explicit Quit."
+    ],
+    "checks": [
+      "Recent items reflect capture/recapture/edit/delete and always copy full text.",
+      "Paused state is visible and capture does not fire; resuming reinstates the selected shortcut.",
+      "Quit exits fully, while normal hide/close preserves intended background behavior."
+    ],
+    "verify": "Native tray checks on both OSes, recent-item/copy-count integration, pause/resume, and leaked-process checks."
+  },
+  {
+    "key": "P25",
+    "title": "Extend CI for application checks and macOS/Windows build smoke",
+    "phase": 1,
+    "deps": [
+      "P01"
+    ],
+    "refs": "Repository .github/README.md; SPEC §9",
+    "files": ".github/workflows/, .github/dependabot.yml, test configuration",
+    "goal": "Catch module, behavior, and platform build regressions as implementation lands.",
+    "scope": [
+      "Preserve the existing Workflow validation job and pinned Actions conventions; add reproducible npm install, formatting/lint, strict types, unit/integration tests, and production build.",
+      "Add Windows/macOS native build/package smoke once adapters land; keep OS permission/UI-dependent tests in a documented separate lane.",
+      "Add npm Dependabot coverage and JavaScript/TypeScript CodeQL configuration only where supported; preserve the existing eligibility gate rather than assuming private scanning is enabled.",
+      "Add Electron integration test harness and artifact retention for failures. Introduce required checks only after successful runs under repository policy."
+    ],
+    "checks": [
+      "Existing workflow validation still passes; app checks fail on genuine type/import/test/build errors.",
+      "Clean macOS/Windows builds use the lockfile and load required native modules.",
+      "CI documentation distinguishes automated tests from real permission/fullscreen/native manual tests."
+    ],
+    "verify": "Actionlint, clean build matrix, and a temporary intentionally failing check during setup; document required-check names."
+  },
+  {
+    "key": "P26",
+    "title": "Package macOS and Windows installers with native modules and signing support",
+    "phase": 5,
+    "deps": [
+      "P03",
+      "P24",
+      "P25",
+      "P23",
+      "P22",
+      "P19"
+    ],
+    "refs": "SPEC §§1,9; platform decisions from P03",
+    "files": "forge.config.ts, packaging/, .github/workflows/release.yml, docs/releasing.md",
+    "goal": "Produce installable offline builds whose native features work outside development.",
+    "scope": [
+      "Choose and document minimum OS versions and release architectures after the native spike; target macOS arm64/x64 and Windows x64, with Windows arm64 deferred unless validated.",
+      "Configure Forge installers, app identity/icons, native ABI rebuilds/helper bundling, ASAR exclusions, and locally bundled fonts/assets.",
+      "Add macOS signing/notarization and Windows signing configuration using supplied CI secrets; unsigned artifacts must be clearly development-only when credentials are unavailable.",
+      "Define clean install/upgrade/uninstall behavior that preserves the user database on upgrade and avoids unexpected data removal; include licenses.",
+      "Stage artifacts and manual release workflow; no cloud updater, telemetry, or auto-publish feature is required for v1."
+    ],
+    "checks": [
+      "Packaged apps launch and capture/search/copy with no dev server or network dependency.",
+      "Native permissions attach to the actual packaged app identity, and helpers/modules load on each supported architecture.",
+      "Signing/notarization status and any credential blockers are explicit; unsigned test builds are not described as production-ready."
+    ],
+    "verify": "Clean-machine install/upgrade smoke, native module load, offline start, signatures/notarization verification when credentials exist, and database preservation."
+  },
+  {
+    "key": "P27",
+    "title": "Audit design fidelity, keyboard accessibility, and assistive technology",
+    "phase": 5,
+    "deps": [
+      "P16",
+      "P17",
+      "P18",
+      "P19",
+      "P20",
+      "P21",
+      "P22",
+      "P23",
+      "P24"
+    ],
+    "refs": "DESIGN §§1–6; SPEC §9 Accessibility",
+    "files": "tests/visual/, tests/accessibility/, docs/qa/design-accessibility.md",
+    "goal": "Verify the complete interface against the supplied designs and accessible behavior.",
+    "scope": [
+      "Compare all ten supplied screenshots: four onboarding, compact light/dark, regular light/dark, wide/narrow settings; also cover new Settings subsections using the same tokens.",
+      "Check 4.5:1 text contrast, visible focus, icon labels/tooltips, dialogs, tag dots with text alternatives, OS key labels, reduced motion, and high DPI.",
+      "Verify virtualized list roles/active-descendant behavior, selection independent of copy, focus return, screen-reader announcements, and complete keyboard flows.",
+      "Test VoiceOver and NVDA on real systems; record intentional Windows chrome and accessibility-driven differences from reference pixels."
+    ],
+    "checks": [
+      "All reference screens have reviewed comparison artifacts and unresolved differences are filed.",
+      "No critical keyboard traps, inaccessible icon controls, or unlabeled overlays remain.",
+      "Settings remains usable around 640 px and with enlarged text; light/dark highlights retain contrast."
+    ],
+    "verify": "Automated accessibility scan plus manual keyboard, VoiceOver/NVDA, contrast measurement, and screenshot review."
+  },
+  {
+    "key": "P28",
+    "title": "Verify end-to-end reliability, performance budgets, and release readiness",
+    "phase": 5,
+    "deps": [
+      "P26",
+      "P27"
+    ],
+    "refs": "SPEC §9 and all v1 workflows",
+    "files": "tests/e2e/, benchmarks/, docs/qa/release-checklist.md",
+    "goal": "Demonstrate that Promptly meets its native safety and responsiveness requirements in packaged builds.",
+    "scope": [
+      "Run the complete highlight→shortcut→capture→toast→search→tag→copy flow on both OSes, including hidden/minimized/pinned states and real applications.",
+      "Benchmark 10k+ realistic snippets and long-text outliers: full input-to-painted results under 50 ms, trigger-to-toast under 150 ms; report p50/p95/max, sample counts, OS/hardware, warm/cold state, and accessibility/fallback paths separately.",
+      "Measure idle total process-tree RSS and CPU over a defined interval, repeated window/capture cycles, and startup; propose a numeric memory budget from measured Electron baselines because the spec gives none.",
+      "Exercise clipboard multi-format preservation/concurrent copy, permission revocation, unsupported apps, restart, database failure, display changes, sleep/resume, and offline usage.",
+      "Confirm every issue acceptance criterion and install/signing check; record failures as release blockers instead of silently weakening requirements."
+    ],
+    "checks": [
+      "A reproducible evidence report covers both supported platforms and packaged artifacts.",
+      "Clipboard loss, false capture, focus theft, data loss, and unmet performance targets have no unresolved release blockers.",
+      "Final checklist links automated results and manual evidence; account/signing/hardware gaps remain explicitly incomplete."
+    ],
+    "verify": "Full regression suite, native matrix, reproducible latency/memory traces, offline network observation, and clean-machine release rehearsal."
+  }
+]
+
