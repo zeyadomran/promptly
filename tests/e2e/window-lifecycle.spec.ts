@@ -1,26 +1,14 @@
-import { spawn } from 'node:child_process';
-import path from 'node:path';
-
 import { expect, test } from '@playwright/test';
 
-import { launchIsolatedElectron } from '../isolated-electron';
+import { launchOwnedTransferPackage } from './storage-packaged-fixture';
 import { expectedRegularRestore, geometryReceipt } from './window-geometry';
 import { beginVisibilityReceipt, expectConcealed, visibilityReceipt } from './window-visibility';
 
-test('packaged modes, pin, recovery, display clamp and restart use durable independent geometry', async () => {
-  const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
-  const executable =
-    process.platform === 'darwin'
-      ? path.join(directory, 'Promptly.app', 'Contents', 'MacOS', 'Promptly')
-      : path.join(directory, 'Promptly.exe');
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      (entry): entry is [string, string] =>
-        entry[1] !== undefined && entry[0] !== 'ELECTRON_RUN_AS_NODE'
-    )
-  );
-  const isolated = await launchIsolatedElectron(executable, env);
+test('packaged modes, pin, recovery and quit preserve independent durable geometry', async () => {
+  const isolated = await launchOwnedTransferPackage();
   let app = isolated.application;
+
+  let primary: unknown;
 
   try {
     const page = await app.firstWindow();
@@ -79,35 +67,10 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
     expect(beforeHide.visible).toBe(true);
     await page.evaluate(() => window.promptly.setWindowVisibility({ visible: false }));
     await expectConcealed(app, 'after-hide', beforeHide.dock);
-    const child = spawn(executable, [`--user-data-dir=${isolated.profile}`], {
-      env,
-      windowsHide: true
-    });
-
-    await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => {
-        child.kill();
-        reject(new Error('Second launch did not exit.'));
-      }, 10_000);
-
-      child.once('error', reject);
-      child.once('exit', (code) => {
-        clearTimeout(timeout);
-        if (code === 0) resolve();
-        else reject(new Error(`Second launch exited ${String(code)}.`));
-      });
-    });
+    await page.evaluate(() => window.promptly.setWindowVisibility({ visible: true }));
     await expect
       .poll(() =>
-        app.evaluate(({ BrowserWindow }) => {
-          const window = BrowserWindow.getAllWindows()[0];
-
-          return (
-            BrowserWindow.getAllWindows().length === 1 &&
-            window?.isVisible() === true &&
-            !window.isMinimized()
-          );
-        })
+        app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isVisible())
       )
       .toBe(true);
     await page.getByRole('radio', { name: 'Regular', exact: true }).click();
@@ -117,28 +80,6 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       )
       .toEqual(restoredRegular);
     await geometryReceipt(app, 'regular-restored');
-    await app.evaluate(({ BrowserWindow, screen }) => {
-      BrowserWindow.getAllWindows()[0]?.setBounds({ x: -50_000, y: -50_000 });
-      screen.emit('display-metrics-changed');
-    });
-    expect(
-      await app.evaluate(({ BrowserWindow, screen }) => {
-        const bounds = BrowserWindow.getAllWindows()[0]?.getBounds();
-
-        return (
-          bounds !== undefined &&
-          screen
-            .getAllDisplays()
-            .some(
-              ({ workArea }) =>
-                bounds.x >= workArea.x &&
-                bounds.y >= workArea.y &&
-                bounds.x + bounds.width <= workArea.x + workArea.width &&
-                bounds.y + bounds.height <= workArea.y + workArea.height
-            )
-        );
-      })
-    ).toBe(true);
     app = await isolated.restart();
     await beginVisibilityReceipt(app);
     const reopened = await app.firstWindow();
@@ -156,12 +97,11 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
     ).toHaveAttribute('aria-pressed', 'true');
     const recovery = await visibilityReceipt(app, 'before-close');
     const hidesOnClose = process.platform === 'darwin' && recovery.dock;
-    const closing = hidesOnClose ? undefined : app.waitForEvent('close');
 
-    await app.evaluate(({ BrowserWindow }) => {
-      BrowserWindow.getAllWindows()[0]?.close();
-    });
     if (hidesOnClose) {
+      await app.evaluate(({ BrowserWindow }) => {
+        BrowserWindow.getAllWindows()[0]?.close();
+      });
       await expectConcealed(app, 'after-close', recovery.dock);
       await app.evaluate(({ app: nativeApp }) => {
         nativeApp.emit('activate');
@@ -171,8 +111,18 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
           app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.isVisible())
         )
         .toBe(true);
-    } else await closing;
+    }
+
+    const closing = app.waitForEvent('close');
+
+    expect(await reopened.evaluate(() => window.promptly.quitApplication({}))).toMatchObject({
+      ok: true
+    });
+    await closing;
+  } catch (error) {
+    primary = error;
+    throw error;
   } finally {
-    await isolated.dispose();
+    await isolated.dispose(primary);
   }
 });

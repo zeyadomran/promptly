@@ -7,11 +7,6 @@ import { emptyStyleHash, sonnerStyleHash } from './scripts/sonner-style-hash';
 import { styleNoncePlaceholder } from './src/shared/style-nonce';
 
 export default defineConfig(({ command }) => ({
-  define: {
-    'import.meta.env.PROMPTLY_DESIGN_FIXTURE': JSON.stringify(
-      process.env['PROMPTLY_DESIGN_FIXTURE'] ?? ''
-    )
-  },
   resolve: { alias: { '@': fileURLToPath(new URL('./src/renderer', import.meta.url)) } },
   plugins: [
     tailwindcss(),

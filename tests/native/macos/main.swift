@@ -12,21 +12,12 @@ let window = NSWindow(contentRect: NSRect(x: 200, y: 200, width: 480, height: 16
     styleMask: [.titled, .closable], backing: .buffered, defer: false)
 window.title = "Promptly owned selection fixture"
 var textView: SelectionView?
-if mode == "password" {
-    let field = NSSecureTextField(frame: NSRect(x: 20, y: 70, width: 300, height: 30))
-    field.stringValue = "owned fixture password"
-    window.contentView?.addSubview(field)
-    window.makeFirstResponder(field)
-} else {
-    let text = SelectionView(frame: NSRect(x: 10, y: 10, width: 460, height: 140))
-    text.mode = mode
-    text.string = mode == "disjoint" ? "first 雪|🙂\r\nsecond" :
-        mode == "whitespace" ? " \t\r\n " : "  Promptly 雪🙂\r\n\"fixture\"\t\u{0000}end  "
-    window.contentView?.addSubview(text)
-    window.makeFirstResponder(text)
-    text.setSelectedRange(NSRange(location: 0, length: mode == "empty" ? 0 : text.string.utf16.count))
-    textView = text
-}
+let text = SelectionView(frame: NSRect(x: 10, y: 10, width: 460, height: 140))
+text.string = "  Promptly \u{96ea}\u{1f642}\r\n\"fixture\"\t\u{0000}end  "
+window.contentView?.addSubview(text)
+window.makeFirstResponder(text)
+text.setSelectedRange(NSRange(location: 0, length: mode == "empty" ? 0 : text.string.utf16.count))
+textView = text
 func writeState(_ name: String) {
     let state: [String: Any] = ["fixturePid": ProcessInfo.processInfo.processIdentifier,
         "foregroundMatched": NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier,

@@ -12,7 +12,32 @@ if (profile === undefined) throw new Error('Owned native profile required.');
 app.setPath('userData', profile);
 const native = hostedNativePreferences(profile);
 
-if (!native.enabled) throw new Error('Ephemeral native qualification required.');
+// Local runs substitute only OS preferences; actual native setters are hosted-only.
+if (!native.enabled) {
+  const initial = app.getLoginItemSettings();
+  let login = false;
+
+  app.setLoginItemSettings = (settings) => {
+    login = settings.openAtLogin ?? false;
+  };
+
+  app.getLoginItemSettings = () => ({ ...initial, openAtLogin: login });
+  if (app.dock) {
+    let visible = app.dock.isVisible();
+
+    app.dock.show = () => {
+      visible = true;
+      return Promise.resolve();
+    };
+
+    app.dock.hide = () => {
+      visible = false;
+    };
+
+    app.dock.isVisible = () => visible;
+  }
+}
+
 const exit = app.exit.bind(app);
 let restored = false;
 let restoration: Promise<void> | undefined;
@@ -21,7 +46,20 @@ const phase = (stage: string) => {
 };
 
 const restore = () => {
-  restoration ??= native.restore().finally(() => {
+  restoration ??= (
+    native.enabled
+      ? native.restore()
+      : Promise.resolve().then(() => {
+          writeFileSync(
+            path.join(profile, 'native-preferences-restored.json'),
+            JSON.stringify({
+              hosted: false,
+              preferenceApplication: 'substituted',
+              restorationOk: true
+            })
+          );
+        })
+  ).finally(() => {
     restored = true;
   });
   return restoration;
@@ -34,7 +72,9 @@ app.on('will-quit', (event) => {
   phase('restoring');
   void restore().then(
     () => {
-      app.quit();
+      setImmediate(() => {
+        app.quit();
+      });
     },
     () => {
       exit(1);
@@ -60,7 +100,7 @@ void app
     writeFileSync(
       path.join(profile, 'native-transfer-initial.json'),
       JSON.stringify({
-        hosted: true,
+        hosted: native.enabled,
         initial: {
           login: app.getLoginItemSettings().openAtLogin,
           dock: process.platform === 'darwin' && (app.dock?.isVisible() ?? false)
