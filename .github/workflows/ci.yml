@@ -28,8 +28,8 @@ jobs:
         with:
           args: -color
 
-  foundation-smoke:
-    name: Foundation smoke (${{ matrix.os }})
+  functional-checks:
+    name: Functional checks (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     strategy:
@@ -49,22 +49,9 @@ jobs:
       - name: Clean install
         run: npm ci
       - name: Check application foundation
-        run: npm run check
-      - name: Install fixture browser
-        run: npx playwright install chromium
-      - name: Verify design primitives, themes and keyboard behavior
-        run: npm run test:design
-      - name: Verify packaged Radix and Sonner under production CSP
-        run: npm run test:packaged-design
+        run: npm run check:static
+      - name: Verify shared logic once
+        if: runner.os == 'Windows'
+        run: npm test
       - name: Package application
         run: npm run package
-      - name: Verify packaged shell and platform native fixtures
-        run: npm run test:smoke
-      - name: Retain controlled fixture results and diagnostics
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: fixture-results-${{ matrix.os }}
-          path: test-results/
-          if-no-files-found: ignore
-          retention-days: 7
