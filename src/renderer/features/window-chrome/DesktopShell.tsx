@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
-
 import { PinStatus } from '../../components/shared/PinStatus';
 import { Button } from '../../components/ui/button';
 import { TooltipProvider } from '../../components/ui/tooltip';
-import { FoundationScreen } from '../library';
+import { FoundationScreen, LibraryWindow } from '../library';
 import { SettingsTitleBar } from '../settings/components/SettingsTitleBar';
 import { SettingsWindow } from '../settings/components/SettingsWindow';
 import { usePreferences } from '../settings/settings-context';
@@ -16,19 +14,6 @@ export function DesktopShell() {
   const settingsWindow = window.location.hash === '#settings';
   const onboardingWindow = window.location.hash === '#onboarding';
 
-  useEffect(() => {
-    const keyboard = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === ',') {
-        event.preventDefault();
-        void window.promptly.openDesktopWindow({ kind: 'settings' });
-      }
-    };
-
-    window.addEventListener('keydown', keyboard);
-    return () => {
-      window.removeEventListener('keydown', keyboard);
-    };
-  }, []);
   return (
     <TooltipProvider>
       <div className="desktop-shell">
@@ -46,6 +31,8 @@ export function DesktopShell() {
         <div className="desktop-content">
           {settingsWindow ? (
             <SettingsWindow />
+          ) : !onboardingWindow ? (
+            <LibraryWindow mode={mode} />
           ) : (
             <FoundationScreen platform={window.promptly.platform} />
           )}
@@ -55,7 +42,7 @@ export function DesktopShell() {
             {error ?? preferences.error?.message}
           </p>
         )}
-        {!settingsWindow && (
+        {!settingsWindow && (onboardingWindow || mode === 'regular') && (
           <footer className="window-footer">
             <PinStatus pinned={preferences.settings.alwaysOnTop} />
             <Button
