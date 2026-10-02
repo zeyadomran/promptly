@@ -41,7 +41,10 @@ import CoreGraphics
     private var hotKey: EventHotKeyRef?
     private var port: CFMachPort?
     private var source: CFRunLoopSource?
-    private var carbonPressed = 0
+    private var observations = CarbonObservations()
+    private var localMonitor: Any?
+    private var localMonitorInstalled = false
+    private var localMonitorRemoved = false
     private var sessionDown = 0
     private var sessionUp = 0
     private var tapDisabled = 0
@@ -67,12 +70,19 @@ import CoreGraphics
         var type = EventTypeSpec(eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed))
         handlerStatus = InstallEventHandler(GetApplicationEventTarget(), { _, event, context in
-            guard let context, let event else { return OSStatus(eventNotHandledErr) }
+            guard let context else { return OSStatus(eventNotHandledErr) }
             let owner = Unmanaged<CarbonCounters>.fromOpaque(context).takeUnretainedValue()
             return MainActor.assumeIsolated { owner.receiveCarbon(event) }
         }, 1, &type, pointer, &handler)
         registrationStatus = RegisterEventHotKey(103, UInt32(controlKey) | UInt32(optionKey),
             EventHotKeyID(signature: 0x50724F62, id: 1), GetApplicationEventTarget(), 0, &hotKey)
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
+            MainActor.assumeIsolated {
+                if let self { self.receiveLocal(event) }
+            }
+            return event
+        }
+        localMonitorInstalled = localMonitor != nil
         listening = CGPreflightListenEventAccess()
         if listening {
             let mask = (CGEventMask(1) << CGEventType.keyDown.rawValue)
@@ -94,14 +104,28 @@ import CoreGraphics
         }
     }
 
-    private func receiveCarbon(_ event: EventRef) -> OSStatus {
+    private func receiveCarbon(_ event: EventRef?) -> OSStatus {
+        observations.enterCarbon()
         var identifier = EventHotKeyID()
-        let status = GetEventParameter(event, EventParamName(kEventParamDirectObject),
+        let status = event.map { GetEventParameter($0, EventParamName(kEventParamDirectObject),
             EventParamType(typeEventHotKeyID), nil, numericCast(MemoryLayout<EventHotKeyID>.size), nil, &identifier)
-        guard status == noErr else { return status }
-        guard identifier.signature == 0x50724F62, identifier.id == 1 else { return OSStatus(eventNotHandledErr) }
-        carbonPressed = min(1024, carbonPressed + 1)
+        } ?? OSStatus(eventNotHandledErr)
+        guard observations.decodeCarbon(succeeded: status == noErr,
+            signature: identifier.signature, id: identifier.id) else {
+            return status == noErr ? OSStatus(eventNotHandledErr) : status
+        }
         return noErr
+    }
+
+    private func receiveLocal(_ event: NSEvent) {
+        // Gate the fixed chord before inspecting any characters. Never retain arbitrary text/flags.
+        guard event.keyCode == 103,
+              event.modifierFlags.intersection([.control, .option]) == [.control, .option],
+              event.modifierFlags.intersection([.command, .shift]).isEmpty else { return }
+        observations.recordLocal(down: event.type == .keyDown,
+            f11Character: event.charactersIgnoringModifiers?.utf16.elementsEqual([UInt16(NSF11FunctionKey)]) == true,
+            function: event.modifierFlags.contains(.function),
+            numericPad: event.modifierFlags.contains(.numericPad))
     }
 
     private func receiveSession(_ type: CGEventType, _ event: CGEvent) {
@@ -118,6 +142,11 @@ import CoreGraphics
     }
 
     func stop() {
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
+            localMonitorRemoved = true
+        }
+        localMonitor = nil
         if let hotKey { UnregisterEventHotKey(hotKey) }
         if let handler { RemoveEventHandler(handler) }
         if let port { CGEvent.tapEnable(tap: port, enable: false); CFMachPortInvalidate(port) }
@@ -131,7 +160,12 @@ import CoreGraphics
             "foregroundMatched": NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier,
             "handlerStatus": handlerStatus, "registrationStatus": registrationStatus,
             "listening": listening, "tapInstalled": tapInstalled,
-            "carbonPressed": carbonPressed, "sessionDown": sessionDown, "sessionUp": sessionUp,
+            "carbonPressed": observations.carbonPressed, "handlerEntered": observations.handlerEntered,
+            "parameterFailed": observations.parameterFailed, "idMismatch": observations.idMismatch,
+            "localDown": observations.localDown, "localUp": observations.localUp,
+            "localF11Character": observations.localF11Character, "localFunction": observations.localFunction,
+            "localNumericPad": observations.localNumericPad, "localMonitorInstalled": localMonitorInstalled,
+            "localMonitorRemoved": localMonitorRemoved, "sessionDown": sessionDown, "sessionUp": sessionUp,
             "tapDisabled": tapDisabled, "elapsedMs": (ProcessInfo.processInfo.systemUptime - started) * 1000]
         if let data = try? JSONSerialization.data(withJSONObject: receipt) {
             try? data.write(to: URL(fileURLWithPath: directory + "/" + phase + ".json"), options: .atomic)

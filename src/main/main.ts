@@ -3,13 +3,17 @@ import path from 'node:path';
 import { app, ipcMain, Menu, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
-import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeLibraryResources } from './lifecycle/close-library-resources';
+import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import { createMacosSelection, type MacosSelection } from './platform/macos/macos-selection';
 import { macosPermissionServices } from './platform/macos/permission-services';
+import {
+  observeSelectionStartup,
+  selectionLaunchOptions
+} from './platform/native/selection-options';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import {
@@ -84,25 +88,13 @@ if (primaryInstance)
     .whenReady()
     .then(async () => {
       if (process.platform === 'darwin') {
-        macosSelection = createMacosSelection({
-          resourcesPath: process.resourcesPath,
-          packaged: app.isPackaged,
-          applicationPath: app.getAppPath()
-        });
-        void macosSelection.ready().catch(() => {
-          console.warn('macOS selection helper unavailable');
-        });
+        macosSelection = createMacosSelection(selectionLaunchOptions());
+        observeSelectionStartup(macosSelection.ready(), 'macOS');
       }
 
       if (process.platform === 'win32') {
-        windowsSelection = createWindowsSelection({
-          resourcesPath: process.resourcesPath,
-          packaged: app.isPackaged,
-          applicationPath: app.getAppPath()
-        });
-        void windowsSelection.ready().catch(() => {
-          console.warn('Windows selection helper unavailable');
-        });
+        windowsSelection = createWindowsSelection(selectionLaunchOptions());
+        observeSelectionStartup(windowsSelection.ready(), 'Windows');
       }
 
       storage = new StorageClient(

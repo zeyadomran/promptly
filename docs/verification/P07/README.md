@@ -225,3 +225,59 @@ same one platform skip. The native driver, input/tap guards and all product gate
 are unchanged. Packaging was not repeated for this test-only copy correction.
 Fresh macOS CI must verify topology and whether the resource crash is repaired;
 its observed cause and product delivery remain unqualified.
+
+## Carbon callback and local dispatch discriminator
+
+At `a0f0a84`, public hosted Mac [run 37009871264](https://github.com/zeyadomran/promptly/actions/runs/37009871264)
+kept the copied Electron launcher and session tap healthy. The fresh fixed-chord
+tap observed exactly one down and one up, enabled with no disablements; child,
+launcher and Carbon owner cleanup verified exit. The Carbon control had actual
+foreground, successful handler/registration and guarded sent input, but zero
+successful decoded Carbon callbacks. Product callbacks still remained zero and
+pin false. Byte-identical [control](macos-a0-carbon-control.json) and [failed
+product](macos-a0-command-final.json) receipts are retained. Their SHA-256 hashes
+are respectively `1a751d380e301ba6bb39a1cd019cb90c82425dc320b3711e38097c5d23e5f61f`
+and `ba7b836fa9fcb20a3b3e335c841b24941969969bfc3e8ecf5cfa944dd9b8587f`.
+This proves that the copied context now reached the observation stage; it does
+not identify the product delivery failure's cause.
+
+The owned control now records bounded `handlerEntered` before parameter decoding,
+`parameterFailed` for missing/undecodable events and `idMismatch` for decoded
+unexpected signature/ID. The existing `carbonPressed` count and native callback
+return statuses are preserved. Each count saturates at 1024. A pure Swift seam
+tests entry-before-decode, failed parameters, mismatched signature/ID, successful
+decode, local observations and saturation without AppKit input or permissions.
+That native regression requires macOS and is skipped on Windows.
+
+A local AppKit monitor accepts only keycode 103 with Control/Option and no
+Command/Shift before reading character identity. It retains only bounded down/up
+counts and booleans indicating whether F11 identity, function or numeric-pad
+classification was observed; it never retains arbitrary characters or raw flags.
+It returns the exact original NSEvent, preserving dispatch, and normal final
+cleanup removes it before writing the receipt. Installation is required before
+probe input; final removal is required and any failure remains in settled cleanup
+evidence. Final counters still persist on driver/assertion failures. The existing
+session readiness, secure-input, permission, foreground and death guards remain.
+
+Apple documents that [local monitors](https://developer.apple.com/documentation/appkit/nsevent/addlocalmonitorforevents(matching:handler:))
+observe application dispatch and may return an unchanged event. Events consumed
+before `sendEvent` or by nested tracking loops need not reach this monitor, so
+zero local counts alone do not establish an earlier nondelivery cause. AppKit
+[function classification](https://developer.apple.com/documentation/appkit/nsevent/modifierflags-swift.struct/function)
+includes F/navigation keys; it does not by itself establish physical Fn state or
+a Carbon registration requirement. No Fn guess or injection-driver change is made.
+
+Main `896a8a` is integrated normally, preserving sender-scoped transfer/recorder
+IPC and transfer-before-window/settings/native retirement. The shared selection
+launch/readiness setup was extracted to keep bootstrap within the existing module
+size limit, with identical native options and readiness logging. No product gate,
+driver, TCC/signing permission, timing deadline or fixture lifetime is weakened.
+No local native input or monitor was launched. Exact-head hosted compilation,
+observation and real product delivery remain required before merge.
+
+Local Windows validation for this delta passed: clean install (451 packages,
+zero audit findings); full strict checks (424 passed, three native/platform skips,
+92 test files, 406 handwritten modules), including schema/privacy/hosted/ownership
+regressions; package. The hosted Carbon case was explicitly discovered and skipped
+without creating a control, tap, launcher or input. The pure Swift regression and
+AppKit control compilation/runtime are unrun locally and required on fresh Mac CI.

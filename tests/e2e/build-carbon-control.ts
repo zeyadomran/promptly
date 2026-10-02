@@ -22,6 +22,7 @@ export async function buildCarbonControl(buildDirectory: string) {
     '-warnings-as-errors',
     '-parse-as-library',
     path.resolve('tests/native/keyboard/macos/CarbonControl.swift'),
+    path.resolve('tests/native/keyboard/macos/CarbonObservations.swift'),
     '-framework',
     'AppKit',
     '-framework',

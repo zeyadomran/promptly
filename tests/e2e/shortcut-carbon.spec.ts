@@ -46,7 +46,8 @@ test('owned AppKit Carbon control partitions fixed shortcut delivery', async ({
     expect(observed).toMatchObject({
       foregroundMatched: true,
       handlerStatus: 0,
-      registrationStatus: 0
+      registrationStatus: 0,
+      localMonitorInstalled: true
     });
     sessionBeforeInput = await sidecar.inspect();
     observationAvailable =
@@ -84,6 +85,7 @@ test('owned AppKit Carbon control partitions fixed shortcut delivery', async ({
       // Retain counters even after partial delivery or a failed foreground/assertion guard.
       try {
         final = await control.final();
+        expect(final).toMatchObject({ localMonitorRemoved: true });
       } catch (error) {
         cleanupFailures.push(error);
       }
@@ -121,7 +123,8 @@ test('owned AppKit Carbon control partitions fixed shortcut delivery', async ({
         cleanupVerified: cleanup !== undefined,
         cleanupFailureCount: cleanupFailures.length,
         qualification: false,
-        scope: 'one fixed Control+Option F11 chord; passive session tap; bounded scalar counts'
+        scope:
+          'one fixed Control+Option F11 chord; passive session tap and unchanged-return local monitor; bounded scalar counts/booleans'
       });
     } catch (error) {
       cleanupFailures.push(error);
