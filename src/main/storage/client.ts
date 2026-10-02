@@ -86,7 +86,7 @@ export class StorageClient {
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
     const started = performance.now();
-    const result = resultSchema(storageOperations[name].response).parse(response);
+    const result = resultSchema<unknown>(storageOperations[name].response).parse(response);
 
     if (name === 'searchSnippets') recordSearchValidation(result, 'workerReceiver', started);
     return result as DesktopResult<StorageResponse<K>>;
@@ -131,11 +131,12 @@ export class StorageClient {
       return Promise.reject(new Error('Local storage queue is full.'));
     const id = this.nextId++;
 
-    const diagnostic = this.onBoundary !== undefined && operation === 'searchSnippets';
+    const diagnostic = operation === 'searchSnippets' && this.diagnostics?.recording === true;
     const response = this.register(id, timeout, diagnostic);
+    const posted = diagnostic ? storageTimestamp() : undefined;
 
-    if (diagnostic) this.diagnostics?.post(id, storageTimestamp());
     this.worker.postMessage({ id, operation, input, ...(diagnostic ? { diagnostic: true } : {}) });
+    if (posted !== undefined) this.diagnostics?.post(id, posted);
     return response;
   }
 

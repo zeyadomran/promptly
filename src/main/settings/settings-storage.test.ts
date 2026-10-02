@@ -79,14 +79,14 @@ describe('durable settings', () => {
 
   it('migrates legacy boolean overrides and missing keys while preserving explicit preferences and revision', () => {
     store.engine.context.db.exec(
-      "DELETE FROM settings; PRAGMA user_version = 1; INSERT INTO settings VALUES ('hideAfterCopy', 'false'); INSERT INTO settings VALUES ('theme', '\"dark\"'); UPDATE metadata SET revision = 27;"
+      "ALTER TABLE snippets DROP COLUMN textUtf16; DELETE FROM settings; PRAGMA user_version = 1; INSERT INTO settings VALUES ('hideAfterCopy', 'false'); INSERT INTO settings VALUES ('theme', '\"dark\"'); UPDATE metadata SET revision = 27;"
     );
     store.reopen();
     expect(store.invoke('getSettings', {})).toEqual({
       revision: 27,
       settings: { ...defaultSettings(), hideAfterCopy: 'never', theme: 'dark' }
     });
-    expect(store.engine.context.db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(2);
+    expect(store.engine.context.db.prepare('PRAGMA user_version').get()?.['user_version']).toBe(3);
     store.reopen();
     expect(store.invoke('getSettings', {}).settings.hideAfterCopy).toBe('never');
   });

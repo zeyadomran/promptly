@@ -78,6 +78,13 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
+    getStorageLocation: (request) => call('getStorageLocation', request),
+    revealStorageLocation: (request) => call('revealStorageLocation', request),
+    exportLibrary: (request) => call('exportLibrary', request),
+    previewLibraryImport: (request) => call('previewLibraryImport', request),
+    confirmLibraryImport: (request) => call('confirmLibraryImport', request),
+    cancelLibraryImport: (request) => call('cancelLibraryImport', request),
+    clearLibrary: (request) => call('clearLibrary', request),
     getWindowState: (request) => call('getWindowState', request),
     getWindowRecovery: (request) => call('getWindowRecovery', request),
     returnToMainWindow: (request) => call('returnToMainWindow', request),

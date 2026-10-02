@@ -122,3 +122,21 @@ batch transactions. Complete highlights have shared, repository, DOM and package
 regressions. Production smokes use distinct generated temporary profiles and
 assert Electron's actual userData resolves to the same real directory; normal
 production defaults are unchanged. No real user database is altered or deleted.
+
+## Current deferred worker diagnostics and main integration
+
+Main `896a8a` storage transfer is integrated, preserving exact UTF-16 reads, dirty
+index refresh after imports/clear and unchanged settings-only index behavior.
+[Diagnosis](diagnosis.md#deferred-request-correlated-worker-boundaries) describes
+the original observer contamination, its deferred bounded scalar correction, the
+retained seeder integration failure and new receipts. The ordinary local query
+maximum is 15.4 ms; the separate diagnostic query maximum is 18.2 ms. Neither resolves
+the retained hosted-runner failures or qualifies final P15/P16 layouts. The original
+workload and maximum less than 50 ms gate remain unchanged.
+
+Final local validation: clean install; strict check (352 tests passed, one platform
+skip, 87 files, 394 modules); Windows package; 23 packaged checks passed with seven
+platform/hosted skips and the retained seeder failure, followed by the corrected
+search case; separate diagnostic search; two design cases; two-process production
+CSP. All owned processes closed and the normal package was restored. No local
+macOS result or fresh hosted performance pass is claimed.

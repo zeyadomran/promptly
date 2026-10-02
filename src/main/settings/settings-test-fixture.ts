@@ -18,9 +18,9 @@ export function testSettings(
       const reply = store.engine.run(1, name, input);
 
       return Promise.resolve(
-        resultSchema(storageOperations[name].response).parse(reply.result) as DesktopResult<
-          StorageResponse<K>
-        >
+        resultSchema<unknown>(storageOperations[name].response).parse(
+          reply.result
+        ) as DesktopResult<StorageResponse<K>>
       );
     }
   };

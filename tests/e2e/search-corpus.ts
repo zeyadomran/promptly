@@ -10,32 +10,39 @@ export function searchCorpusText(index: number): string {
 
 export function seedSearchCorpus(filename: string) {
   const db = new DatabaseSync(filename);
-
-  migrate(db);
-  const write = db.prepare('INSERT INTO snippets VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-  const timestamp = '2026-10-02T00:00:00.000Z';
   let characters = 0;
 
-  db.exec('BEGIN IMMEDIATE');
-  for (let index = 0; index < 10_000; index += 1) {
-    const text = searchCorpusText(index);
-    const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
-
-    characters += text.length;
-    write.run(
-      id,
-      text,
-      createHash('sha256').update(text).digest('hex'),
-      timestamp,
-      timestamp,
-      index % 2 === 0 ? 'Windows Terminal' : 'Cursor',
-      index % 2 === 0 ? 'terminal.exe' : 'Cursor.exe',
-      null,
-      index % 4
+  try {
+    migrate(db);
+    const write = db.prepare(
+      'INSERT INTO snippets (id, text, textHash, createdAt, updatedAt, sourceApp, sourceAppId, lastCopiedAt, copyCount, textUtf16) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
     );
+    const timestamp = '2026-10-02T00:00:00.000Z';
+
+    db.exec('BEGIN IMMEDIATE');
+    for (let index = 0; index < 10_000; index += 1) {
+      const text = searchCorpusText(index);
+      const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
+
+      characters += text.length;
+      write.run(
+        id,
+        text,
+        createHash('sha256').update(text).digest('hex'),
+        timestamp,
+        timestamp,
+        index % 2 === 0 ? 'Windows Terminal' : 'Cursor',
+        index % 2 === 0 ? 'terminal.exe' : 'Cursor.exe',
+        null,
+        index % 4,
+        Buffer.from(text, 'utf16le')
+      );
+    }
+
+    db.exec('COMMIT');
+  } finally {
+    db.close();
   }
 
-  db.exec('COMMIT');
-  db.close();
   return { count: 10_000, characters, databaseBytes: statSync(filename).size };
 }

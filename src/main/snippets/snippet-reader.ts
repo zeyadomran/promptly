@@ -3,10 +3,10 @@ import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { SearchLibrary } from '../search/search-library';
 import type { StorageContext } from '../storage/context';
 import { StorageError } from '../storage/context';
-import { decodeSqlText, tagColumns } from '../storage/sql-text';
+import { decodeSnippetText, decodeSqlText, tagColumns } from '../storage/sql-text';
 
 const columns =
-  'id, CAST(text AS BLOB) AS text, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
+  'id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
 
 export class SnippetReader {
   private readonly search: SearchLibrary;
@@ -26,9 +26,11 @@ export class SnippetReader {
       .all(id)
       .map((tag) => tagSchema.parse({ ...tag, name: decodeSqlText(tag['name']) }));
 
+    const { textUtf16: _bytes, ...record } = row;
+
     return snippetSchema.parse({
-      ...row,
-      text: decodeSqlText(row['text']),
+      ...record,
+      text: decodeSnippetText(row['textUtf16'], row['text']),
       sourceApp: decodeSqlText(row['sourceApp']),
       tags
     });

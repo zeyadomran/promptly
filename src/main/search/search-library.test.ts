@@ -110,7 +110,9 @@ describe('worker substring library', () => {
         const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
 
         store.engine.context.db
-          .prepare('INSERT INTO snippets VALUES (?, ?, ?, ?, ?, NULL, NULL, NULL, 0)')
+          .prepare(
+            'INSERT INTO snippets (id, text, textHash, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)'
+          )
           .run(
             id,
             `import ${String(index)}`,
