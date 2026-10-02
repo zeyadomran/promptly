@@ -24,15 +24,17 @@ Dependabot alerts and security updates are enabled in repository settings.
 Dependabot checks GitHub Actions every Monday at 09:00 Toronto time, groups version
 updates, and uses the Conventional Commit prefix `ci`.
 
-This repository does not yet contain application code or package manifests.
-Add the relevant Dependabot ecosystems, application CI checks, and CodeQL languages
-when the application stack is introduced. Require new CI checks in branch
+The Electron/React foundation uses npm with a committed lockfile. Dependabot checks
+npm packages weekly and groups related Forge, React, and Tailwind updates.
+Foundation smoke jobs clean-install, check, package, and launch the app on Windows
+and macOS. These are the P01 launch checks; P25 owns the broader application CI,
+native-module matrix, and retained build artifacts. Require new CI checks in branch
 protection only after verifying they run successfully.
 
 ## CodeQL availability
 
 The CodeQL workflow is prepared for push, pull request, manual, and weekly runs.
-It currently targets GitHub Actions.
+It targets GitHub Actions and JavaScript/TypeScript.
 
 **CodeQL analysis is currently skipped.** GitHub rejected default setup with HTTP
 403 for this personal private repository. Private CodeQL scanning requires an

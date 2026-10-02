@@ -13,3 +13,20 @@ updates:
         patterns: ['*']
     commit-message:
       prefix: ci
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: '09:00'
+      timezone: America/Toronto
+    open-pull-requests-limit: 5
+    groups:
+      electron-forge:
+        patterns: ['@electron-forge/*']
+      react:
+        patterns: ['react', 'react-dom', '@types/react', '@types/react-dom']
+      tailwind:
+        patterns: ['tailwindcss', '@tailwindcss/*']
+    commit-message:
+      prefix: build

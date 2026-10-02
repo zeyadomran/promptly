@@ -1,0 +1,9 @@
+node_modules
+.vite
+out
+package-lock.json
+test-results
+playwright-report
+docs/**/*
+!docs/dependency-compatibility.md
+.github/pull_request_template.md
