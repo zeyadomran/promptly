@@ -48,7 +48,12 @@ test('packaged React window preserves the sandboxed preload boundary', async () 
       }))
     ).toEqual({
       platform: process.platform,
-      bridgeKeys: ['platform', ...Object.keys(operations), 'subscribeChanges'],
+      bridgeKeys: [
+        'platform',
+        ...Object.keys(operations),
+        'subscribeWindowFocus',
+        'subscribeChanges'
+      ],
       frozen: true,
       node: [],
       csp: expect.stringContaining("connect-src 'none'")

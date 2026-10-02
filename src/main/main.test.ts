@@ -10,6 +10,7 @@ const owned = vi.hoisted(() => ({
   nativeDispose: vi.fn<() => Promise<void>>(),
   foreground: vi.fn<() => Promise<{ status: 'foregroundChanged' }>>(),
   window: vi.fn<() => Promise<void>>(),
+  windowClose: vi.fn<() => Promise<void>>(),
   quit: vi.fn(),
   exit: vi.fn()
 }));
@@ -22,11 +23,13 @@ vi.mock('electron', () => ({
     getPath: () => 'owned-test-profile',
     getAppPath: () => 'owned-test-application',
     isPackaged: false,
+    requestSingleInstanceLock: () => true,
     quit: owned.quit,
     exit: owned.exit
   },
   BrowserWindow: { getAllWindows: () => [] },
   ipcMain: {},
+  Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: vi.fn() },
   nativeTheme: { on: vi.fn() },
   shell: { openExternal: vi.fn() }
 }));
@@ -65,7 +68,12 @@ vi.mock('./settings/service', () => ({
 vi.mock('./ipc/install-desktop-ipc', () => ({
   installDesktopIpc: () => ({ windows: {}, publish: vi.fn() })
 }));
-vi.mock('./windows/create-main-window', () => ({ createMainWindow: owned.window }));
+vi.mock('./windows/window-lifecycle', () => ({
+  WindowLifecycle: class {
+    show = owned.window;
+    close = owned.windowClose;
+  }
+}));
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -92,6 +100,7 @@ it
     );
     owned.settingsClose.mockResolvedValue();
     owned.foreground.mockResolvedValue({ status: 'foregroundChanged' });
+    owned.windowClose.mockResolvedValue();
     owned.storageClose.mockResolvedValue();
     owned.nativeDispose.mockImplementation(
       () =>
@@ -121,5 +130,64 @@ it
       expect(owned.exit).toHaveBeenCalledExactlyOnceWith(1);
     });
     expect(owned.quit).not.toHaveBeenCalled();
+  }
+);
+
+it.skipIf(process.platform !== 'win32').each(['normal', 'fatal'] as const)(
+  'actual main %s shutdown drains geometry then settings before storage and native resources',
+  async (path) => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    owned.events.clear();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let geometryDone: (() => void) | undefined;
+    let settingsDone: (() => void) | undefined;
+
+    owned.ready.mockResolvedValue(0);
+    owned.window.mockResolvedValue();
+    owned.settingsInitialize.mockResolvedValue();
+    owned.storageClose.mockResolvedValue();
+    owned.nativeDispose.mockResolvedValue();
+    owned.windowClose.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          geometryDone = resolve;
+        })
+    );
+    owned.settingsClose.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          settingsDone = resolve;
+        })
+    );
+    await import('./main');
+    await vi.waitFor(() => {
+      expect(owned.window).toHaveBeenCalledOnce();
+    });
+    const event = { preventDefault: vi.fn() };
+
+    if (path === 'fatal') {
+      owned.window.mockRejectedValueOnce(new Error('Owned reopen failure'));
+      owned.events.get('activate')?.(event);
+    } else owned.events.get('before-quit')?.(event);
+    await vi.waitFor(() => {
+      expect(owned.windowClose).toHaveBeenCalledOnce();
+    });
+    expect(owned.settingsClose).not.toHaveBeenCalled();
+    expect(owned.storageClose).not.toHaveBeenCalled();
+    expect(owned.nativeDispose).not.toHaveBeenCalled();
+    geometryDone?.();
+    await vi.waitFor(() => {
+      expect(owned.settingsClose).toHaveBeenCalledOnce();
+    });
+    expect(owned.storageClose).not.toHaveBeenCalled();
+    expect(owned.nativeDispose).not.toHaveBeenCalled();
+    settingsDone?.();
+    await vi.waitFor(() => {
+      if (path === 'fatal') expect(owned.exit).toHaveBeenCalledExactlyOnceWith(1);
+      else expect(owned.quit).toHaveBeenCalledOnce();
+    });
+    expect(owned.storageClose).toHaveBeenCalledOnce();
+    expect(owned.nativeDispose).toHaveBeenCalledOnce();
   }
 );

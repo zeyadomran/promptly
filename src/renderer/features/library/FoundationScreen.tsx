@@ -10,7 +10,7 @@ export function FoundationScreen({ platform }: FoundationScreenProps) {
     platform === 'darwin' ? 'macOS' : platform === 'win32' ? 'Windows' : 'this platform';
 
   return (
-    <main className="flex min-h-screen items-center justify-center p-8">
+    <main className="flex h-full items-center justify-center p-8">
       <section className="flex max-w-sm flex-col gap-4" aria-labelledby="app-title">
         <Logo />
         <p className="text-xs font-semibold tracking-widest text-muted-foreground">

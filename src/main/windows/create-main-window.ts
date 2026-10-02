@@ -1,28 +1,40 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { BrowserWindow, nativeTheme, session } from 'electron';
+import { BrowserWindow, nativeTheme, screen, session } from 'electron';
 
 import {
   defaultSettings,
   type SettingsSnapshot,
   settingsSnapshotSchema
 } from '../../shared/contracts/settings';
+import type { WindowKind } from '../../shared/contracts/window';
 import { settingsArgumentPrefix } from '../../shared/settings-bootstrap';
 import { liveSettingsArgument } from '../../shared/settings-bootstrap';
 import { styleNonceArgumentPrefix } from '../../shared/style-nonce';
 import type { WindowRegistry } from '../ipc/window-registry';
+import { initialBounds, windowGeometry } from './geometry';
 import { installRendererAssets } from './install-renderer-assets';
+import { loadWindowRenderer } from './load-window-renderer';
+import { registerNativeChrome } from './native-chrome';
+import { setPinnedWorkspaces } from './pinned-workspaces';
 
 export async function createMainWindow(
   windows: WindowRegistry,
-  initial?: SettingsSnapshot
+  initial?: SettingsSnapshot,
+  kind: WindowKind = 'main',
+  created?: (window: BrowserWindow) => void
 ): Promise<BrowserWindow> {
   const snapshot = settingsSnapshotSchema.parse(
     initial ?? { revision: 0, settings: defaultSettings() }
   );
   const preferences = snapshot.settings;
-  const bounds = preferences.rememberedBounds[preferences.defaultSizeMode];
+  const areas = [
+    screen.getPrimaryDisplay(),
+    ...screen.getAllDisplays().filter((display) => display.id !== screen.getPrimaryDisplay().id)
+  ].map((display) => display.workArea);
+  const bounds = initialBounds(preferences, areas, kind);
+  const geometry = windowGeometry(kind, preferences.defaultSizeMode);
   const isolatedSession = session.fromPartition('promptly');
   const devUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const bundledPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
@@ -38,12 +50,25 @@ export async function createMainWindow(
   isolatedSession.setPermissionCheckHandler(() => false);
 
   const window = new BrowserWindow({
-    title: 'Promptly',
-    width: preferences.defaultSizeMode === 'compact' ? 440 : 900,
-    height: 640,
+    title:
+      kind === 'settings' ? 'Settings' : kind === 'onboarding' ? 'Set up Promptly' : 'Promptly',
     ...bounds,
-    minWidth: 400,
-    minHeight: 320,
+    minWidth: Math.min(geometry.minWidth, bounds.width),
+    minHeight: Math.min(geometry.minHeight, bounds.height),
+    ...(kind === 'main' && preferences.defaultSizeMode === 'compact'
+      ? { maxWidth: bounds.width }
+      : {}),
+    titleBarStyle: 'hidden',
+    autoHideMenuBar: true,
+    ...(process.platform === 'win32'
+      ? {
+          titleBarOverlay: {
+            height: 40,
+            color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
+            symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
+          }
+        }
+      : {}),
     show: false,
     alwaysOnTop: preferences.alwaysOnTop,
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
@@ -65,6 +90,10 @@ export async function createMainWindow(
     }
   });
 
+  registerNativeChrome(window);
+  setPinnedWorkspaces(window, preferences.alwaysOnTop);
+  created?.(window);
+
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => {
     event.preventDefault();
@@ -72,16 +101,23 @@ export async function createMainWindow(
   window.webContents.on('will-attach-webview', (event) => {
     event.preventDefault();
   });
-  window.once('ready-to-show', () => {
-    window.show();
-  });
-
-  const url = new URL(
+  const rendererUrl = new URL(
     devUrl !== undefined && devUrl !== '' ? devUrl : pathToFileURL(bundledPath).href
-  ).href;
+  );
+
+  if (kind !== 'main') rendererUrl.hash = kind;
+  const url = rendererUrl.href;
 
   windows.register(window.webContents, url);
-  await window.loadURL(url);
+  try {
+    await loadWindowRenderer(window, url);
+    if (window.isDestroyed()) throw new Error('Window closed before initialization completed.');
+    window.show();
+  } catch (error) {
+    // A registered but failed window must never become a reusable blank recovery route.
+    if (!window.isDestroyed()) window.destroy();
+    throw error;
+  }
 
   return window;
 }

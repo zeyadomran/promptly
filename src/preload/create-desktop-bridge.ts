@@ -18,6 +18,7 @@ import { failure, resultSchema } from '../shared/contracts/result';
 export interface BridgeTransport {
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
+  listenFocus?: (listener: () => void) => () => void;
 }
 
 export function createDesktopBridge(
@@ -28,6 +29,7 @@ export function createDesktopBridge(
   let stopListening: (() => void) | undefined;
   let generation = 0;
   let disposed = false;
+  const focusStops = new Set<() => void>();
 
   async function call<K extends OperationName>(
     name: K,
@@ -72,6 +74,11 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
+    getWindowState: (request) => call('getWindowState', request),
+    setWindowMode: (request) => call('setWindowMode', request),
+    setWindowVisibility: (request) => call('setWindowVisibility', request),
+    openDesktopWindow: (request) => call('openDesktopWindow', request),
+    quitApplication: (request) => call('quitApplication', request),
     searchSnippets: (request) => call('searchSnippets', request),
     getSnippet: (request) => call('getSnippet', request),
     createSnippet: (request) => call('createSnippet', request),
@@ -91,6 +98,17 @@ export function createDesktopBridge(
     getMacosPermissions: (request) => call('getMacosPermissions', request),
     openMacosPermissionSettings: (request) => call('openMacosPermissionSettings', request),
     captureSelection: (request) => call('captureSelection', request),
+    subscribeWindowFocus(listener) {
+      if (disposed || transport.listenFocus === undefined) return () => undefined;
+      const stopFocus = transport.listenFocus(listener);
+      const unsubscribe = () => {
+        stopFocus();
+        focusStops.delete(unsubscribe);
+      };
+
+      focusStops.add(unsubscribe);
+      return unsubscribe;
+    },
     subscribeChanges(listener) {
       if (disposed) return () => undefined;
       // Ownership belongs to this registration, even when callbacks are identical.
@@ -134,6 +152,7 @@ export function createDesktopBridge(
     bridge,
     dispose: (): void => {
       disposed = true;
+      for (const stopFocus of focusStops) stopFocus();
       listeners.clear();
       stop();
     }

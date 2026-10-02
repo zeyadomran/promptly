@@ -23,8 +23,8 @@ export async function launchIsolatedElectron(
 ) {
   // Electron/Chromium can canonicalize /var to /private/var on macOS.
   const profile = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-smoke-profile-')));
-  const started = performance.now();
-  const sequence = ++launchSequence;
+  let started = performance.now();
+  let sequence = ++launchSequence;
   let application: ElectronApplication | undefined;
   let observation: ReturnType<typeof observeElectronStartup> | undefined;
   let stage = 'profile-setup';
@@ -56,8 +56,7 @@ export async function launchIsolatedElectron(
     }
   }
 
-  try {
-    await prepare?.(profile);
+  async function launch() {
     stage = 'electron-launch';
     application = await electron.launch({
       executablePath,
@@ -78,6 +77,11 @@ export async function launchIsolatedElectron(
     console.log(`Packaged profile isolation: ${JSON.stringify(receipt)}`);
     stage = 'ready';
     await save('ready');
+  }
+
+  try {
+    await prepare?.(profile);
+    await launch();
   } catch (error) {
     const status = error instanceof Error && error.name === 'TimeoutError' ? 'timedOut' : 'failed';
 
@@ -95,18 +99,48 @@ export async function launchIsolatedElectron(
   }
 
   return {
-    application,
+    get application() {
+      if (application === undefined) throw new Error('Owned Electron process unavailable.');
+      return application;
+    },
+    profile,
+    restart: async () => {
+      await application?.close();
+      observation?.stage('closed');
+      await save('closed');
+      observation?.detach();
+      started = performance.now();
+      sequence = ++launchSequence;
+      try {
+        await launch();
+      } catch (error) {
+        const status =
+          error instanceof Error && error.name === 'TimeoutError' ? 'timedOut' : 'failed';
+
+        try {
+          await release();
+        } finally {
+          await save(status);
+          observation?.detach();
+        }
+
+        throw error;
+      }
+
+      if (application === undefined) throw new Error('Owned restart unavailable.');
+      return application;
+    },
     dispose: async () => {
       try {
         await release();
-        observation.stage('closed');
+        observation?.stage('closed');
         return await save('closed');
       } catch (error) {
-        observation.stage('cleanup-failed');
+        observation?.stage('cleanup-failed');
         await save('cleanupFailed');
         throw error;
       } finally {
-        observation.detach();
+        observation?.detach();
       }
     }
   };
