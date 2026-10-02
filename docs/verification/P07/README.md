@@ -1,18 +1,20 @@
 # P07 shortcut qualification
 
-## Current minimal verification
+## Current functional verification
 
-The user-approved cleanup retains one actual product shortcut flow and three
-distinct logic cases: physical double-tap cancellation, rejected OS registration
-rollback, and shutdown invalidation of a late resume. Carbon/session probes and
-their exclusive native runners, copied launchers and infrastructure suites are
-retired. The sections below and all raw receipts are historical evidence.
+The user-approved functional-only strategy retains three public behavioral cases:
+physical double-tap cancellation, rejected OS registration rollback, and shutdown
+invalidation of a late resume. Automated GUI/native E2E, shortcut input drivers,
+Carbon/session probes and their exclusive infrastructure are retired. Production
+keyboard helpers, ownership guards, registration semantics and deadlines remain
+unchanged. Native delivery is a manual release check; these injected functional
+cases do not qualify real OS callbacks, permissions or window activation. All raw
+receipts below remain historical evidence.
 
-The product flow keeps capture paused and requires durable pin plus actual
-hide/show results. Windows retains Control+Alt+F11/F10; the owned macOS fixture
-uses Control+Alt+K/J with SDK physical key constants. Native input is restricted
-to GitHub-hosted runners and freshly verified owned foreground processes. No
-production default binding or supported-key restriction changed.
+The retired product flow kept capture paused and required durable pin plus actual
+hide/show results. It used Windows Control+Alt+F11/F10 and macOS Control+Alt+K/J
+with SDK physical key constants, restricted to owned GitHub-hosted runners.
+No production default binding or supported-key restriction changed.
 
 At `b47f2c80070e1a7f600d2adfa2b093c112def706`, the owned K control received one
 Carbon callback while the F11 control received none. The byte-identical receipts
@@ -26,9 +28,14 @@ passed the actual product shortcut flow on Windows (5 seconds) and macOS
 (14.2 seconds). The unchanged durable pin and hide/show assertions passed;
 final [Windows](windows-60e3-shortcut-final.json) and
 [macOS](macos-60e3-shortcut-final.json) receipts retain the committed pin and
-visible main window. This qualifies the fixed hosted synthetic-input flow,
-including macOS K/J on that runner's layout, not physical hardware or arbitrary
-keyboard layouts. Earlier F11 failures remain historical and unexplained.
+visible main window. This demonstrates one successful fixed hosted input flow,
+including macOS K/J on that runner's layout; it does not establish robust physical
+hardware or arbitrary keyboard-layout support. Earlier F11 failures remain
+historical and unexplained. Later run
+[37027480831](https://github.com/zeyadomran/promptly/actions/runs/37027480831)
+at `2755e15` failed the second macOS open send with `inputDenied` after pin passed.
+Posted release completion was an investigation lead, not a proven cause or fix;
+the new functional-only strategy retired that driver before any correction.
 
 Both hosted preference-restoration receipts report `restorationOk: true` and
 matching initial/restored values: [Windows](windows-60e3-packaged-transfer-restoration.json)
