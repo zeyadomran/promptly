@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, ipcMain, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from '../../../src/main/ipc/install-desktop-ipc';
+import { closeLibraryResources } from '../../../src/main/lifecycle/close-library-resources';
 import { closeSettingsStorage } from '../../../src/main/lifecycle/close-settings-storage';
 import { closeWindowResources } from '../../../src/main/lifecycle/close-window-resources';
 import { createDesktopShutdown } from '../../../src/main/lifecycle/desktop-shutdown';
@@ -16,6 +17,7 @@ import { storageDesktopServices } from '../../../src/main/storage/desktop-servic
 import { lifecycleServices } from '../../../src/main/windows/lifecycle-services';
 import { WindowLifecycle } from '../../../src/main/windows/window-lifecycle';
 import { hostedNativePreferences } from './settings-native-preferences';
+import { ownedTransferServices } from './storage-transfer-services';
 
 const profile = process.env['PROMPTLY_SETTINGS_UI_PROFILE'];
 
@@ -25,6 +27,7 @@ const nativePreferences = hostedNativePreferences(profile);
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
+let library: ReturnType<typeof ownedTransferServices> | undefined;
 let login = false;
 let dock = true;
 let rejectLogin = false;
@@ -49,7 +52,9 @@ events.on('owned-settings-receipt', (reply: (receipt: object) => void) => {
 const shutdown = createDesktopShutdown({
   cleanup: async () => {
     const settled = await Promise.allSettled([
-      closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage))
+      closeLibraryResources(library?.transfer, () =>
+        closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage))
+      )
     ]);
 
     settled.push(...(await Promise.allSettled([nativePreferences.restore()])));
@@ -73,7 +78,7 @@ void app
   .then(async () => {
     nativePreferences.capture();
     storage = new StorageClient(
-      path.resolve('.vite/build/storage-worker.cjs'),
+      path.join(__dirname, 'storage-worker.cjs'),
       path.join(profile, 'settings.sqlite'),
       (change) => {
         desktop.publish(change);
@@ -108,10 +113,13 @@ void app
       )
     );
     await settings.initialize();
+    if (process.env['PROMPTLY_STORAGE_UI'] === '1')
+      library = ownedTransferServices(storage, profile);
     const desktop = installDesktopIpc(
       ipcMain,
       {
-        ...storageDesktopServices(storage),
+        ...storageDesktopServices(storage, library?.mutations),
+        ...library?.transfer.services,
         ...settings.services,
         ...lifecycleServices(() => lifecycle)
       },

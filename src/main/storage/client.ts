@@ -71,7 +71,7 @@ export class StorageClient {
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
 
-    return resultSchema(storageOperations[name].response).parse(response) as DesktopResult<
+    return resultSchema<unknown>(storageOperations[name].response).parse(response) as DesktopResult<
       StorageResponse<K>
     >;
   }

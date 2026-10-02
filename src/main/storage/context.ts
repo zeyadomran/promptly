@@ -7,9 +7,10 @@ import { UndoCache } from './undo-cache';
 export class StorageError extends Error {
   constructor(
     readonly code: DesktopError['code'],
-    message: string
+    message: string,
+    options?: ErrorOptions
   ) {
-    super(message);
+    super(message, options);
   }
 }
 
