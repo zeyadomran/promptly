@@ -7,6 +7,8 @@ import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
+import { createMacosSelection, type MacosSelection } from './platform/macos/macos-selection';
+import { macosPermissionServices } from './platform/macos/permission-services';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import {
@@ -27,6 +29,7 @@ let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
+let macosSelection: MacosSelection | undefined;
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
@@ -35,7 +38,8 @@ const shutdown = createDesktopShutdown({
         close: () =>
           closeNativeResources([
             keyboard,
-            { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
+            { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
+            { close: () => macosSelection?.dispose() ?? Promise.resolve() }
           ])
       })
     );
@@ -58,7 +62,10 @@ app.on('second-instance', () => {
 });
 
 function openWindow(): void {
-  void lifecycle?.show().catch((error: unknown) => {
+  void (async () => {
+    await macosSelection?.foregroundIdentityResult();
+    await lifecycle?.show();
+  })().catch((error: unknown) => {
     console.error('Unable to open Promptly:', error);
     shutdown.fatal();
   });
@@ -68,6 +75,17 @@ if (primaryInstance)
   void app
     .whenReady()
     .then(async () => {
+      if (process.platform === 'darwin') {
+        macosSelection = createMacosSelection({
+          resourcesPath: process.resourcesPath,
+          packaged: app.isPackaged,
+          applicationPath: app.getAppPath()
+        });
+        void macosSelection.ready().catch(() => {
+          console.warn('macOS selection helper unavailable');
+        });
+      }
+
       if (process.platform === 'win32') {
         windowsSelection = createWindowsSelection({
           resourcesPath: process.resourcesPath,
@@ -109,6 +127,7 @@ if (primaryInstance)
           ...storageDesktopServices(storage),
           ...settings.services,
           ...shortcutServices(keyboard.shortcuts),
+          ...macosPermissionServices(macosSelection),
           ...lifecycleServices(() => lifecycle)
         },
         revision,

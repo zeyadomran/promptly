@@ -13,6 +13,7 @@ import {
   tagSchema,
   tagSummarySchema
 } from './domain';
+import { macosPermissionSnapshotSchema } from './macos-selection';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
@@ -101,6 +102,11 @@ export const operations = {
   setShortcutRecording: {
     request: z.strictObject({ active: z.boolean() }),
     response: shortcutStatusSchema
+  },
+  getMacosPermissions: { request: emptySchema, response: macosPermissionSnapshotSchema },
+  openMacosPermissionSettings: {
+    request: z.strictObject({ permission: z.enum(['accessibility', 'inputMonitoring']) }),
+    response: z.strictObject({ opened: z.literal(true) })
   },
   captureSelection: { request: emptySchema, response: captureResultSchema }
 } as const;

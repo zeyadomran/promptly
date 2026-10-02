@@ -100,6 +100,8 @@ export function createDesktopBridge(
     getShortcutStatus: (request) => call('getShortcutStatus', request),
     setCapturePaused: (request) => call('setCapturePaused', request),
     setShortcutRecording: (request) => call('setShortcutRecording', request),
+    getMacosPermissions: (request) => call('getMacosPermissions', request),
+    openMacosPermissionSettings: (request) => call('openMacosPermissionSettings', request),
     captureSelection: (request) => call('captureSelection', request),
     subscribeWindowFocus(listener) {
       if (disposed || transport.listenFocus === undefined) return () => undefined;

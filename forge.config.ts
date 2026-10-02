@@ -16,7 +16,10 @@ const config: ForgeConfig = {
             path.resolve('native/keyboard/windows/out/promptly-keyboard.exe')
           ]
         : process.platform === 'darwin'
-          ? [path.resolve('native/keyboard/macos/out/promptly-keyboard')]
+          ? [
+              path.resolve('native/keyboard/macos/out/promptly-keyboard'),
+              path.resolve('native/macos/out/promptly-macos')
+            ]
           : []
   },
   hooks: {
@@ -46,8 +49,10 @@ const config: ForgeConfig = {
         );
       }
 
-      if (process.platform === 'darwin')
+      if (process.platform === 'darwin') {
         await promisify(execFile)('/bin/sh', [path.resolve('native/keyboard/macos/build.sh')]);
+        await promisify(execFile)('sh', [path.resolve('native/macos/build.sh')]);
+      }
     }
   },
   makers: [],

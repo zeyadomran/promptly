@@ -87,71 +87,60 @@ vi.mock('./shortcuts/ipc-services', () => ({
   recorderServices: () => () => ({})
 }));
 
-
 afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it.skipIf(process.platform !== 'win32').each(['normal', 'fatal'] as const)(
-  'actual main %s shutdown drains geometry then settings before storage and native resources',
-  async (path) => {
+it
+  .skipIf(!['win32', 'darwin'].includes(process.platform))
+  .each(['storage', 'settings', 'window'] as const)(
+  'actual main fatal %s path waits for the warming native helper to close',
+  async (failure) => {
     vi.resetModules();
     vi.clearAllMocks();
     owned.events.clear();
-    vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    let geometryDone: (() => void) | undefined;
-    let settingsDone: (() => void) | undefined;
+    const error = new Error('Owned initialization failure');
+    const report = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    let finishNative: (() => void) | undefined;
 
-    owned.ready.mockResolvedValue(0);
-    owned.window.mockResolvedValue();
-    owned.settingsInitialize.mockResolvedValue();
-    owned.storageClose.mockResolvedValue();
-    owned.nativeDispose.mockResolvedValue();
-    owned.keyboardClose.mockResolvedValue();
-    owned.windowClose.mockImplementation(
-      () =>
-        new Promise<void>((resolve) => {
-          geometryDone = resolve;
-        })
+    owned.ready.mockImplementation(() =>
+      failure === 'storage' ? Promise.reject(error) : Promise.resolve(0)
     );
-    owned.settingsClose.mockImplementation(
+    owned.window.mockRejectedValue(error);
+    owned.settingsInitialize.mockImplementation(() =>
+      failure === 'settings' ? Promise.reject(error) : Promise.resolve()
+    );
+    owned.settingsClose.mockResolvedValue();
+    owned.foreground.mockResolvedValue({ status: 'foregroundChanged' });
+    owned.windowClose.mockResolvedValue();
+    owned.storageClose.mockResolvedValue();
+    owned.nativeDispose.mockImplementation(
       () =>
         new Promise<void>((resolve) => {
-          settingsDone = resolve;
+          finishNative = resolve;
         })
     );
     await import('./main');
     await vi.waitFor(() => {
-      expect(owned.window).toHaveBeenCalledOnce();
+      expect(owned.nativeDispose).toHaveBeenCalledOnce();
     });
-    const event = { preventDefault: vi.fn() };
-
-    if (path === 'fatal') {
-      owned.window.mockRejectedValueOnce(new Error('Owned reopen failure'));
-      owned.events.get('activate')?.(event);
-    } else owned.events.get('before-quit')?.(event);
-    await vi.waitFor(() => {
-      expect(owned.windowClose).toHaveBeenCalledOnce();
-    });
-    expect(owned.settingsClose).not.toHaveBeenCalled();
-    expect(owned.storageClose).not.toHaveBeenCalled();
-    expect(owned.nativeDispose).not.toHaveBeenCalled();
-    expect(owned.stopCommands).toHaveBeenCalled();
-    expect(owned.keyboardClose).not.toHaveBeenCalled();
-    geometryDone?.();
-    await vi.waitFor(() => {
-      expect(owned.settingsClose).toHaveBeenCalledOnce();
-    });
-    expect(owned.storageClose).not.toHaveBeenCalled();
-    expect(owned.nativeDispose).not.toHaveBeenCalled();
-    expect(owned.keyboardClose).not.toHaveBeenCalled();
-    settingsDone?.();
-    await vi.waitFor(() => {
-      if (path === 'fatal') expect(owned.exit).toHaveBeenCalledExactlyOnceWith(1);
-      else expect(owned.quit).toHaveBeenCalledOnce();
-    });
+    expect(report).toHaveBeenCalledWith(
+      failure !== 'window' ? 'Unable to initialize Promptly:' : 'Unable to open Promptly:',
+      error
+    );
     expect(owned.storageClose).toHaveBeenCalledOnce();
+    expect(owned.exit).not.toHaveBeenCalled();
+    const preventDefault = vi.fn();
+
+    owned.events.get('before-quit')?.({ preventDefault });
+    owned.events.get('before-quit')?.({ preventDefault });
+    expect(preventDefault).toHaveBeenCalledTimes(2);
     expect(owned.nativeDispose).toHaveBeenCalledOnce();
-    expect(owned.keyboardClose).toHaveBeenCalledOnce();
+    if (finishNative === undefined) throw new Error('Missing warming helper cleanup');
+    finishNative();
+    await vi.waitFor(() => {
+      expect(owned.exit).toHaveBeenCalledExactlyOnceWith(1);
+    });
+    expect(owned.quit).not.toHaveBeenCalled();
   }
 );
