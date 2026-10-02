@@ -12,6 +12,8 @@ export class ShortcutRecordingSession {
   private tail: Promise<void> = Promise.resolve();
   private request = 0;
   private active = false;
+  private candidateKey = '';
+  private candidateReleased = false;
   private commit: ((accelerator: string) => Promise<void>) | undefined;
   private listener: (snapshot: RecordingSnapshot) => void = () => undefined;
   snapshot: RecordingSnapshot = {
@@ -100,6 +102,8 @@ export class ShortcutRecordingSession {
       return true;
     }
 
+    this.candidateKey = event.code || event.key.toLowerCase();
+    this.candidateReleased = false;
     this.publish({ ...this.snapshot, candidate: accelerator, error: undefined });
     return true;
   }
@@ -108,8 +112,11 @@ export class ShortcutRecordingSession {
     if (!['starting', 'recording'].includes(this.snapshot.phase)) return false;
     const accelerator = this.snapshot.candidate;
 
+    if ((event.code || event.key.toLowerCase()) === this.candidateKey)
+      this.candidateReleased = true;
     if (
       accelerator === undefined ||
+      !this.candidateReleased ||
       event.ctrlKey ||
       event.altKey ||
       event.metaKey ||

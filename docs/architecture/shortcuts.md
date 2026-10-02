@@ -20,12 +20,17 @@ The shared P21 recorder controls now wire Settings to that scoped API. A rendere
 owns one recording session across its capture/open/pin controls. IPC transitions
 serialize, newer requests retire older acquires, and key input is accepted only
 after main acknowledges suppression. Composition, AltGr text, repeats and lone
-modifiers never become bindings. A valid chord waits for modifier release before
+modifiers never become bindings. A valid chord waits for its captured key and all modifiers to be released before
 suppression ends and the settings transaction starts. Escape, Tab/Shift+Tab,
 recorder blur, window blur, hidden context and unmount cancel and release ownership.
 
 Shared accelerator validation, alias identity and known Windows reservations are
-used in both renderer and main. Settings shows committed bindings and actual
+used in both renderer and main. Recorder characters follow the logical keyboard
+layout; supported numpad keys keep distinct `num*` identities. Only unsupported
+Option-produced glyphs on letter positions use a base-letter fallback. The
+[Electron accelerator list](https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts)
+defines the supported logical punctuation and distinct numpad names.
+Settings shows committed bindings and actual
 registration/listener status; native registration errors survive the settings
 transaction. Windows Alt+Space has an explanatory warning and an explicit
 Ctrl+Alt+Space attempt. No alternate is silently chosen, no other app is scanned,

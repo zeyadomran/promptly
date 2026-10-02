@@ -21,17 +21,12 @@ const namedKeys = new Map([
   ['ArrowRight', 'Right'],
   ['+', 'Plus']
 ]);
-const punctuation = new Map([
-  ['Semicolon', ';'],
-  ['Equal', '='],
-  ['Comma', ','],
-  ['Minus', '-'],
-  ['Period', '.'],
-  ['Slash', '/'],
-  ['Backquote', '`'],
-  ['BracketLeft', '['],
-  ['BracketRight', ']'],
-  ['Backslash', '\\']
+const numpadKeys = new Map([
+  ['NumpadDecimal', 'numdec'],
+  ['NumpadAdd', 'numadd'],
+  ['NumpadSubtract', 'numsub'],
+  ['NumpadMultiply', 'nummult'],
+  ['NumpadDivide', 'numdiv']
 ]);
 
 export function recordedAccelerator(event: ShortcutKeyEvent): string | undefined {
@@ -50,15 +45,21 @@ export function recordedAccelerator(event: ShortcutKeyEvent): string | undefined
     event.altKey ? 'Alt' : '',
     event.shiftKey ? 'Shift' : ''
   ].filter(Boolean);
-  // Modified characters (Option+S, Shift+1) need the base key, not the produced text.
-  const key = /^Key[A-Z]$/.test(event.code)
-    ? /^[a-z]$/i.test(event.key)
-      ? event.key.toUpperCase()
-      : event.code.slice(3)
-    : /^Digit[0-9]$/.test(event.code)
-      ? event.code.slice(5)
-      : (punctuation.get(event.code) ?? namedKeys.get(event.key) ?? event.key);
-  const accelerator = [...modifiers, key].join('+');
+  // Layout-resolved characters win over US physical key positions. Numpad keys
+  // have distinct supported accelerator names even when their glyphs match.
+  const key = /^Numpad[0-9]$/.test(event.code)
+    ? `num${event.code.slice(6)}`
+    : (numpadKeys.get(event.code) ?? namedKeys.get(event.key) ?? event.key.toUpperCase());
+  let accelerator = [...modifiers, key].join('+');
+
+  // Option can produce a glyph such as ß for S. Only fall back for an unsupported
+  // modified character on a letter key; never substitute a punctuation position.
+  if (
+    !acceleratorSchema.safeParse(accelerator).success &&
+    event.altKey &&
+    /^Key[A-Z]$/.test(event.code)
+  )
+    accelerator = [...modifiers, event.code.slice(3)].join('+');
 
   return acceleratorSchema.safeParse(accelerator).success ? accelerator : undefined;
 }

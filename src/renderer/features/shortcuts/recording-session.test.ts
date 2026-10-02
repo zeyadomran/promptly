@@ -4,6 +4,7 @@ import { ShortcutRecordingSession } from './recording-session';
 
 it('records a combination only after suppression, releases before saving and cancels stale sessions', async () => {
   let suppressed = false;
+  let deferAcquire = true;
   let finishStart: (() => void) | undefined;
   let signalAcquire: () => void = () => undefined;
   let acquired = new Promise<void>((resolve) => {
@@ -12,7 +13,7 @@ it('records a combination only after suppression, releases before saving and can
   const saved: string[] = [];
   const session = new ShortcutRecordingSession(async (active) => {
     suppressed = active;
-    if (active) {
+    if (active && deferAcquire) {
       const acknowledgment = new Promise<void>((resolve) => {
         finishStart = resolve;
       });
@@ -56,8 +57,10 @@ it('records a combination only after suppression, releases before saving and can
   session.handleKey(key);
   expect(saved).toEqual([]);
   expect(suppressed).toBe(true);
-  session.handleKeyUp(key);
+  session.handleKeyUp({ ...key, key: 'Control', code: 'ControlLeft', ctrlKey: false });
+  await session.settled();
   expect(saved).toEqual([]);
+  expect(suppressed).toBe(true);
   session.handleKeyUp({ ...key, ctrlKey: false });
   await session.settled();
   expect(saved).toEqual(['Control+S']);
@@ -88,16 +91,28 @@ it('records a combination only after suppression, releases before saving and can
   expect(saved).toEqual(['Control+S', 'Super+Alt+S']);
   expect(suppressed).toBe(false);
 
-  acquired = new Promise<void>((resolve) => {
-    signalAcquire = resolve;
-  });
-  const escape = session.start('open', commit);
+  deferAcquire = false;
+  await session.start('capture', commit);
+  session.handleKey({ ...key, key: 'm', code: 'Semicolon' });
+  session.handleKeyUp({ ...key, key: 'm', code: 'Semicolon', ctrlKey: false });
+  await session.settled();
+  expect(saved).toEqual(['Control+S', 'Super+Alt+S', 'Control+M']);
 
-  await acquired;
-  finishStart?.();
-  await escape;
+  await session.start('capture', commit);
+  session.handleKey({ ...key, key: ';', code: 'KeyM' });
+  session.handleKeyUp({ ...key, key: ';', code: 'KeyM', ctrlKey: false });
+  await session.settled();
+  expect(saved.at(-1)).toBe('Control+;');
+
+  await session.start('pin', commit);
+  session.handleKey({ ...key, key: '1', code: 'Numpad1' });
+  session.handleKeyUp({ ...key, key: '1', code: 'Numpad1', ctrlKey: false });
+  await session.settled();
+  expect(saved.at(-1)).toBe('Control+num1');
+
+  await session.start('open', commit);
   session.handleKey({ ...key, key: 'Escape' });
   await session.settled();
-  expect(saved).toHaveLength(2);
+  expect(saved).toHaveLength(5);
   expect(suppressed).toBe(false);
 });
