@@ -1,10 +1,16 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
 import { expect, it } from 'vitest';
 
+import { loginPreferences } from './login-preferences';
 import { testSettings } from './settings-test-fixture';
 
 it('persists settings across reopen and rolls back rejected native effects', async () => {
   let theme = 'system';
   let pinned = false;
+  const loginEntries = new Map<string, boolean>();
+  let login: ReturnType<typeof loginPreferences>;
   const fixture = testSettings({
     unavailable: [],
     available: [
@@ -13,6 +19,15 @@ it('persists settings across reopen and rolls back rejected native effects', asy
         name: 'theme',
         apply: (settings) => {
           theme = settings.theme;
+          return Promise.resolve();
+        }
+      },
+      {
+        keys: ['launchAtLogin'],
+        name: 'launch at login',
+        apply: (settings) => {
+          login.setLogin(settings.launchAtLogin);
+          if (login.getLogin() !== settings.launchAtLogin) throw new Error('Login was rejected.');
           return Promise.resolve();
         }
       },
@@ -29,6 +44,32 @@ it('persists settings across reopen and rolls back rejected native effects', asy
   });
 
   try {
+    const fixtureDirectory = path.dirname(fixture.store.filename);
+    const applicationDirectory = path.join(fixtureDirectory, 'Promptly');
+    const installedExecutable = path.join(applicationDirectory, 'app-0.1.0', 'Promptly.exe');
+    const stableExecutable = path.join(applicationDirectory, 'Promptly.exe');
+
+    mkdirSync(path.dirname(installedExecutable), { recursive: true });
+    writeFileSync(installedExecutable, 'owned fixture, not executed');
+    writeFileSync(stableExecutable, 'owned fixture, not executed');
+    writeFileSync(path.join(applicationDirectory, 'Update.exe'), 'owned fixture, not executed');
+    const application = {
+      isPackaged: true,
+      setLoginItemSettings: ({
+        path: target,
+        openAtLogin
+      }: {
+        path: string;
+        openAtLogin: boolean;
+      }) => {
+        loginEntries.set(target, openAtLogin);
+      },
+      getLoginItemSettings: ({ path: target }: { path: string }) => ({
+        openAtLogin: loginEntries.get(target) ?? false
+      })
+    };
+
+    login = loginPreferences(application, installedExecutable);
     fixture.store.engine.context.db
       .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
       .run('showDockIcon', 'false');
@@ -70,6 +111,29 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       revision: 1,
       settings: { theme: 'light', alwaysOnTop: false }
     });
+    expect(await fixture.service.services.updateSettings({ launchAtLogin: true })).toMatchObject({
+      ok: true,
+      value: { settings: { launchAtLogin: true } }
+    });
+    expect(loginEntries.get(stableExecutable)).toBe(true);
+    expect(loginEntries.has(installedExecutable)).toBe(false);
+    const upgradedExecutable = path.join(applicationDirectory, 'app-0.2.0', 'Promptly.exe');
+
+    mkdirSync(path.dirname(upgradedExecutable));
+    writeFileSync(upgradedExecutable, 'owned fixture, not executed');
+    expect(loginPreferences(application, upgradedExecutable).getLogin()).toBe(true);
+    const unpackedExecutable = path.join(fixtureDirectory, 'unpacked', 'Promptly.exe');
+    const unpacked = loginPreferences(application, unpackedExecutable);
+
+    unpacked.setLogin(true);
+    expect(loginEntries.get(unpackedExecutable)).toBe(true);
+    const development = loginPreferences(
+      { ...application, isPackaged: false },
+      installedExecutable
+    );
+
+    development.setLogin(true);
+    expect(loginEntries.get(installedExecutable)).toBe(true);
   } finally {
     await fixture.service.close();
     fixture.store.dispose();
