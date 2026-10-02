@@ -12,12 +12,12 @@ Compared `docs/design-reference/screenshots/1.1-onboarding-welcome.png`, `1.3-on
 
 | Source finding | Correction |
 | --- | --- |
-| Light metadata and key hints used `#71717a` on opaque `#f4f4f5`, below 4.5:1. Destructive button text used `#dc2626` on `#fef2f2`, also below 4.5:1. | Darkened only the light `muted-foreground` and `destructive` tokens to `#6e6e77` and `#d92323`. Dark tokens, background colors and decorative tag/status colors are unchanged. |
+| Light metadata and key hints used `#71717a` on opaque `#f4f4f5`, below 4.5:1. Destructive button text used `#dc2626` on `#fef2f2`, also below 4.5:1. Review also found the focused destructive menu tint below 4.5:1 after the initial foreground correction. | Darkened only the light `muted-foreground` and `destructive` tokens to `#6e6e77` and `#d92323`. Destructive menu focus now uses the existing opaque `destructive-background` token, matching the buttons; the OS-dark opacity override was removed so explicit app themes use the same pair. Dark tokens and decorative tag/status colors are unchanged. |
 | `LibraryList` could reference `snippet-${selectedId}` while the virtual range contained a loading placeholder for that index. A validated selection can outlive page-cache eviction. | Set `aria-activedescendant` only when the range contains the selected index and its cached item renders the matching option ID. Navigation, bounded caching and copy eligibility are unchanged. |
 | More snippet actions and remove-tag icons had accessible names but no tooltip. | Composed the existing shared Tooltip with each existing button/trigger. Kept accessible names, disabled state and removal propagation guards. |
 | Onboarding source omitted the reference's separate sidebar background and rounded current-step fill. | Applied existing `sidebar` and `muted` tokens and an 8 px step radius. The three-column welcome cards and narrow single-column fallback remain. |
 
-Changed implementation paths: `src/renderer/styles/tokens.css`, `styles/onboarding.css`, `features/library/LibraryList.tsx`, `features/snippets/SnippetMoreMenu.tsx` and `features/tags/TagBadge.tsx` (all under `src/renderer`).
+Changed implementation paths: `src/renderer/styles/tokens.css`, `styles/onboarding.css`, `components/ui/dropdown-menu-item.tsx`, `features/library/LibraryList.tsx`, `features/snippets/SnippetMoreMenu.tsx` and `features/tags/TagBadge.tsx` (all under `src/renderer`).
 
 ### Contrast calculation
 
@@ -30,8 +30,22 @@ Ratios were calculated independently from the literal CSS colors using [WCAG rel
 | Muted text on sidebar `#fafafa` | 4.630:1 | 4.837:1 |
 | Destructive button on opaque `#fef2f2` | 4.415:1 | 4.554:1 |
 | Destructive button hover, `#fef2f2` at 80% over white | 4.495:1 | 4.638:1 |
+| Light destructive menu focus, old foreground tint at 10% over white → opaque `#fef2f2` | 4.137:1 | 4.554:1 |
 
-The hover background was composited first in sRGB (`0.8 × tint + 0.2 × white`), yielding channels `(254.2, 244.6, 244.6)` before luminance conversion. Normal-state text is opaque. Disabled controls and transient animation opacity are not represented by these normal/hover ratios. This is a calculation for these specific consumers, not a claim that every rendered contrast pair has been measured.
+The button hover background was composited first in sRGB (`0.8 × tint + 0.2 × white`), yielding channels `(254.2, 244.6, 244.6)` before luminance conversion. The original menu foreground `#dc2626` at 10% over white yielded `(251.5, 233.3, 233.3)`. The initial `#d92323` correction still yielded only 4.257:1 on its menu tint `(251.2, 233, 233)`, which prompted the shared focus-background correction.
+
+Rechecked all affected destructive button/menu pairs after that correction:
+
+| Theme / state | Opaque foreground | Resolved background, sRGB channels | Ratio |
+| --- | --- | --- | ---: |
+| Light button normal / menu focus | `#d92323` | `#fef2f2` | 4.554:1 |
+| Light button hover | `#d92323` | `(254.2, 244.6, 244.6)` | 4.638:1 |
+| Light menu normal | `#d92323` | `#ffffff` | 4.982:1 |
+| Dark button normal / menu focus | `#f87171` | `#450a0a` | 5.836:1 |
+| Dark button hover, 80% tint over `#09090b` | `#f87171` | `(57, 9.8, 10.2)` | 6.218:1 |
+| Dark menu normal | `#f87171` | `#09090b` | 7.192:1 |
+
+Menu focus now resolves directly from the same light/dark CSS tokens whether the app theme is explicit or follows System, without an independent OS-dark opacity rule. Normal-state text is opaque. Disabled controls and transient animation opacity are not represented by these normal/hover/focus ratios. This is a calculation for these specific consumers, not a claim that every rendered contrast pair has been measured.
 
 ## Existing source contracts inspected
 
