@@ -51,8 +51,8 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 ## Current priority
 
 - [x] #55 Remove macOS implementation and restrict builds to Windows x64.
-- Finish the Windows capture pipeline (#13) and tag management (#22), then capture feedback (#15), tray (#26), and onboarding (#25).
-- Windows clipboard safety (#12), packaging (#28), and manual accessibility/release qualification (#29/#30) remain open.
+- Windows capture (#13), tag management (#22), capture feedback (#15), tray (#26) and onboarding (#25) are implemented; their issues remain open for manual acceptance evidence.
+- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Clipboard fallback scope (#12), actual installation (#28), accessibility/native/performance release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
 
 ## Implementation issues
 
