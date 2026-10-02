@@ -33,7 +33,12 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
       tabIndex={0}
       aria-busy={state.loading}
       aria-activedescendant={
-        state.selectedId !== null && rows.some((row) => row.index === state.selectedIndex)
+        state.selectedId !== null &&
+        rows.some(
+          (row) =>
+            row.index === state.selectedIndex &&
+            state.cache.at(row.index)?.snippet.id === state.selectedId
+        )
           ? `snippet-${state.selectedId}`
           : undefined
       }
