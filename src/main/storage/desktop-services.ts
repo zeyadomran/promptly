@@ -4,7 +4,8 @@ import { LibraryMutations } from './library-mutations';
 
 export function storageDesktopServices(
   storage: StorageClient,
-  mutations = new LibraryMutations()
+  mutations = new LibraryMutations(),
+  onDeleted: (id: string) => void = () => undefined
 ): Partial<DesktopOperations> {
   return {
     searchSnippets: (input) => storage.call('searchSnippets', input),
@@ -12,7 +13,13 @@ export function storageDesktopServices(
     createSnippet: (input) => mutations.run(() => storage.call('createSnippet', input)),
     updateSnippet: (input) => mutations.run(() => storage.call('updateSnippet', input)),
     duplicateSnippet: (input) => mutations.run(() => storage.call('duplicateSnippet', input)),
-    deleteSnippet: (input) => mutations.run(() => storage.call('deleteSnippet', input)),
+    deleteSnippet: (input) =>
+      mutations.run(async () => {
+        const result = await storage.call('deleteSnippet', input);
+
+        if (result.ok) onDeleted(input.id);
+        return result;
+      }),
     undoDeleteSnippet: (input) => mutations.run(() => storage.call('undoDeleteSnippet', input)),
     setSnippetTags: (input) => mutations.run(() => storage.call('setSnippetTags', input)),
     listTags: () => storage.call('listTags', {}),

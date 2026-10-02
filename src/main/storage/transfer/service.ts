@@ -17,7 +17,8 @@ export class StorageTransfer {
   constructor(
     private readonly storage: Pick<StorageClient, 'call'>,
     private readonly mutations: LibraryMutations,
-    private readonly dialogs: TransferDialogs
+    private readonly dialogs: TransferDialogs,
+    private readonly onReplaced: () => void = () => undefined
   ) {
     this.requests = new TransferRequests(dialogs.owner);
     this.previews = new OwnedPreviews((token) =>
@@ -92,9 +93,12 @@ export class StorageTransfer {
       this.requests.run(context, async (scope) => {
         if (!this.previews.belongsTo(input.token, scope.owner))
           return failure('NOT_FOUND', 'This import preview is unavailable. Choose the file again.');
-        const result = await this.mutations.run(() => {
+        const result = await this.mutations.barrier(async () => {
           scope.signal.throwIfAborted();
-          return this.storage.call('commitLibraryImport', input);
+          const committed = await this.storage.call('commitLibraryImport', input);
+
+          if (committed.ok) this.onReplaced();
+          return committed;
         });
 
         if (result.ok || result.error.code === 'CONFLICT' || result.error.code === 'NOT_FOUND')
@@ -110,9 +114,12 @@ export class StorageTransfer {
       }),
     clearLibrary: (_input, context) =>
       this.requests.run(context, async (scope) => {
-        const result = await this.mutations.clear(() => {
+        const result = await this.mutations.barrier(async () => {
           scope.signal.throwIfAborted();
-          return this.storage.call('clearLibrary', {});
+          const committed = await this.storage.call('clearLibrary', {});
+
+          if (committed.ok) this.onReplaced();
+          return committed;
         });
 
         if (result.ok) await this.previews.clear();
