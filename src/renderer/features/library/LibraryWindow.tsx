@@ -8,7 +8,7 @@ import { LibraryProvider } from './LibraryProvider';
 export function LibraryWindow({ mode }: { mode: SizeMode }) {
   return (
     <LibraryProvider>
-      <LibraryCommandProvider>
+      <LibraryCommandProvider active={mode === 'compact'}>
         {mode === 'compact' ? (
           <CompactLibrary />
         ) : (

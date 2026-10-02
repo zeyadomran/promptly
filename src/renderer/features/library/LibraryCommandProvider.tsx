@@ -8,7 +8,13 @@ import { useLibrary } from './library-context';
 import { libraryKeyCommand } from './library-keyboard';
 import { LibraryUndoToast } from './LibraryUndoToast';
 
-export function LibraryCommandProvider({ children }: { children: ReactNode }) {
+export function LibraryCommandProvider({
+  children,
+  active
+}: {
+  children: ReactNode;
+  active: boolean;
+}) {
   const { model, selection } = useLibrary();
   const tags = useLibraryTagActions();
   const composing = useRef(false);
@@ -53,6 +59,8 @@ export function LibraryCommandProvider({ children }: { children: ReactNode }) {
         shift: event.shiftKey,
         composing: composing.current || event.isComposing || event.key === 'Process',
         prevented: event.defaultPrevented,
+        repeat: event.repeat,
+        active,
         focus: keyboardFocus(event),
         selected: model.snapshot().selectedId !== null,
         hasSearch: selection.hasSearch
@@ -101,7 +109,7 @@ export function LibraryCommandProvider({ children }: { children: ReactNode }) {
     };
 
     const unsubscribeFocus = window.promptly.subscribeWindowFocus(() => {
-      if (!composing.current && windowFocusMaySearch()) selection.focusSearch();
+      if (active && !composing.current && windowFocusMaySearch()) selection.focusSearch();
     });
 
     window.addEventListener('compositionstart', started);
@@ -113,12 +121,17 @@ export function LibraryCommandProvider({ children }: { children: ReactNode }) {
       window.removeEventListener('compositionend', finished);
       window.removeEventListener('keydown', keyboard);
     };
-  }, [commands, model, selection, tags]);
+  }, [active, commands, model, selection, tags]);
 
   return (
-    <LibraryCommandsContext value={{ ...state, copy: (id, format) => commands.copy(id, format) }}>
+    <LibraryCommandsContext
+      value={{
+        ...state,
+        copy: (id, format) => (active ? commands.copy(id, format) : Promise.resolve())
+      }}
+    >
       {children}
-      {undo !== undefined && (
+      {active && undo !== undefined && (
         <LibraryUndoToast
           undo={undo.run}
           dismiss={() => {

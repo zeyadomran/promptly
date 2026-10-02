@@ -48,7 +48,10 @@ that history is not new qualification evidence.
 
 The single library keyboard owner respects composed focus paths, IME, text editors and
 overlays. Search keeps Delete/Backspace; arrows and Enter can navigate/copy a validated
-selection. Cmd/Ctrl+T reports unavailable until the tag-picker port is supplied. Native
+selection. Only rendered Compact mode admits library data commands until Regular has
+its own implemented UI; the Regular placeholder keeps scoped Settings/Escape routing.
+Repeated keydown may navigate arrows but never replays copy/delete or other commands.
+Cmd/Ctrl+T reports unavailable until the tag-picker port is supplied. Native
 window-focus notifications preserve active editor/modal/composition ownership. Delete
 offers the real worker undo token through a CSS-styled notification, with no clipboard
 or statistics retry. Full UI accessibility, platform clipboard fidelity and the future

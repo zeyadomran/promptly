@@ -11,12 +11,25 @@ it('routes library navigation and copy while preserving text, IME, and overlay o
     shift: false,
     composing: false,
     prevented: false,
+    repeat: false,
+    active: true,
     focus: 'search' as const,
     selected: true,
     hasSearch: true
   };
 
   expect(libraryKeyCommand(input)).toBe('copy');
+  expect(libraryKeyCommand({ ...input, repeat: true })).toBeUndefined();
+  expect(
+    libraryKeyCommand({ ...input, repeat: true, focus: 'library', key: 'Delete' })
+  ).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, active: false })).toBeUndefined();
+  expect(
+    libraryKeyCommand({ ...input, active: false, focus: 'library', key: 'Delete' })
+  ).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, active: false, ctrl: true, key: ',' })).toBe('settings');
+  expect(libraryKeyCommand({ ...input, active: false, key: 'Escape' })).toBe('hide');
+  expect(libraryKeyCommand({ ...input, repeat: true, key: 'ArrowDown' })).toBe('next');
   expect(libraryKeyCommand({ ...input, key: 'ArrowDown' })).toBe('next');
   expect(libraryKeyCommand({ ...input, key: 'Delete' })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, focus: 'library', key: 'Delete' })).toBe('delete');

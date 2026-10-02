@@ -18,6 +18,8 @@ export function libraryKeyCommand(input: {
   shift: boolean;
   composing: boolean;
   prevented: boolean;
+  repeat: boolean;
+  active: boolean;
   focus: LibraryFocus;
   selected: boolean;
   hasSearch: boolean;
@@ -25,14 +27,17 @@ export function libraryKeyCommand(input: {
   if (input.prevented || input.composing || input.focus === 'overlay' || input.focus === 'editor')
     return undefined;
   if (input.alt || input.shift) return undefined;
+  if (input.repeat && input.key !== 'ArrowDown' && input.key !== 'ArrowUp') return undefined;
   if (input.meta || input.ctrl) {
-    if (input.key.toLowerCase() === 'f') return 'focus-search';
     if (input.key === ',') return 'settings';
+    if (!input.active) return undefined;
+    if (input.key.toLowerCase() === 'f') return 'focus-search';
     if (input.key.toLowerCase() === 't' && input.selected) return 'tag';
     return undefined;
   }
 
-  if (input.key === 'Escape') return input.hasSearch ? 'clear-search' : 'hide';
+  if (input.key === 'Escape') return input.active && input.hasSearch ? 'clear-search' : 'hide';
+  if (!input.active) return undefined;
   if (input.focus === 'control') return undefined;
   if (input.key === 'ArrowDown') return 'next';
   if (input.key === 'ArrowUp') return 'previous';
