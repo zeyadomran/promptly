@@ -65,6 +65,14 @@ One shared quit coordinator distinguishes cleanup started from cleanup complete 
 prevents every repeated quit request while cleanup is pending. It awaits both
 storage close and native disposal with `allSettled`, then aggregates failures.
 A fast failure cannot release the quit gate while the other cleanup is pending.
+Fatal storage initialization and window creation failures use that same idempotent
+cleanup before calling `app.exit(1)`, which otherwise bypasses `before-quit`.
+Repeated fatal/ordinary quit requests cannot start another cleanup. An overall
+40-second cleanup watchdog bounds a service that never settles, allowing the
+storage client's accepted 30-second writes and 5-second close request to drain.
+Native disposal retains its earlier 250-ms EOF-to-kill watchdog, including when
+the helper is blocked before its input loop during UIA initialization.
+The final exit preserves code 1 for fatal failures; cleanup errors remain reported.
 
 Frames are byte-bounded at **6,356,992 UTF-8 bytes**, excluding LF. UTF-8 decoding
 is strict across fragments, malformed/partial EOF frames fail closed, and no stderr

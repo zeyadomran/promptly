@@ -4,7 +4,7 @@ import { app, BrowserWindow, ipcMain } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { closeDesktopServices } from './lifecycle/close-desktop-services';
-import { createQuitCoordinator } from './lifecycle/quit-coordinator';
+import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import { StorageClient } from './storage/client';
@@ -13,11 +13,27 @@ import { createMainWindow } from './windows/create-main-window';
 let desktop: ReturnType<typeof installDesktopIpc>;
 let storage: StorageClient | undefined;
 let windowsSelection: WindowsSelection | undefined;
+const shutdown = createDesktopShutdown({
+  cleanup: () =>
+    closeDesktopServices([
+      () => storage?.close() ?? Promise.resolve(),
+      () => windowsSelection?.dispose() ?? Promise.resolve()
+    ]),
+  onError: (error) => {
+    console.error('Unable to close desktop services:', error);
+  },
+  quit: () => {
+    app.quit();
+  },
+  exit: (code) => {
+    app.exit(code);
+  }
+});
 
 function openWindow(): void {
   void createMainWindow(desktop.windows).catch((error: unknown) => {
     console.error('Unable to open Promptly:', error);
-    app.exit(1);
+    shutdown.fatal();
   });
 }
 
@@ -53,24 +69,9 @@ void app
   })
   .catch((error: unknown) => {
     console.error('Unable to initialize Promptly:', error);
-    app.exit(1);
+    shutdown.fatal();
   });
-app.on(
-  'before-quit',
-  createQuitCoordinator({
-    cleanup: () =>
-      closeDesktopServices([
-        () => storage?.close() ?? Promise.resolve(),
-        () => windowsSelection?.dispose() ?? Promise.resolve()
-      ]),
-    onError: (error) => {
-      console.error('Unable to close desktop services:', error);
-    },
-    quit: () => {
-      app.quit();
-    }
-  })
-);
+app.on('before-quit', shutdown.beforeQuit);
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });

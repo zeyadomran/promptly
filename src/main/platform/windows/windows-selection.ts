@@ -16,6 +16,12 @@ export interface WindowsIdentity {
   readonly source: NativeSource | null;
 }
 export type WindowsCaptureResult = NativeCaptureReply | { status: TransportFailure };
+export type WindowsForegroundResult =
+  | { status: 'ok'; identity: WindowsIdentity }
+  | {
+      status:
+        Exclude<ReturnType<typeof nativeForegroundSchema.parse>['status'], 'ok'> | TransportFailure;
+    };
 export interface WindowsSelectionOptions {
   resourcesPath: string;
   packaged: boolean;
@@ -60,6 +66,12 @@ export class WindowsSelection {
   }
 
   async foregroundIdentity(): Promise<WindowsIdentity | null> {
+    const result = await this.foregroundIdentityResult();
+
+    return result.status === 'ok' ? result.identity : null;
+  }
+
+  async foregroundIdentityResult(): Promise<WindowsForegroundResult> {
     try {
       await this.ready();
       const result = await this.transport.request(
@@ -69,14 +81,14 @@ export class WindowsSelection {
         100
       );
 
-      if (result.status !== 'ok') return null;
+      if (result.status !== 'ok') return { status: result.status };
       const identity = Object.freeze({ token: result.identity, source: result.source });
 
       this.identities.add(identity);
-      return identity;
-    } catch {
+      return { status: 'ok', identity };
+    } catch (error) {
       this.readiness = undefined;
-      return null;
+      return { status: error instanceof NativeTransportError ? error.status : 'helperUnavailable' };
     }
   }
 
