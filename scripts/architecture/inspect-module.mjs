@@ -5,6 +5,7 @@ import { parseSync } from 'oxc-parser';
 import { componentNames, walk } from './ast.mjs';
 
 const rendererPackages = new Set([
+  '@tanstack/react-virtual',
   'react',
   'react-dom',
   'react-dom/client',
