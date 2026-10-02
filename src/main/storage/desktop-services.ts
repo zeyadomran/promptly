@@ -17,6 +17,8 @@ export function storageDesktopServices(
     setSnippetTags: (input) => mutations.run(() => storage.call('setSnippetTags', input)),
     listTags: () => storage.call('listTags', {}),
     createTag: (input) => mutations.run(() => storage.call('createTag', input)),
+    ensureTag: (input) => mutations.run(() => storage.call('ensureTag', input)),
+    setTagMembership: (input) => mutations.run(() => storage.call('setTagMembership', input)),
     updateTag: (input) => mutations.run(() => storage.call('updateTag', input)),
     deleteTag: (input) => mutations.run(() => storage.call('deleteTag', input)),
     mergeTags: (input) => mutations.run(() => storage.call('mergeTags', input))

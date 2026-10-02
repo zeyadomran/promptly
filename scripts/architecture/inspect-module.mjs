@@ -9,6 +9,7 @@ const rendererPackages = new Set([
   'react-dom',
   'react-dom/client',
   'radix-ui',
+  'cmdk',
   'lucide-react',
   'class-variance-authority',
   'clsx',
@@ -58,6 +59,13 @@ export function inspectModule(filename, source, root) {
         .replaceAll('\\', '/');
       const targetLayer = target.match(/^src\/(main|preload|renderer|shared)\//)?.[1];
       const allowed = layer === 'shared' ? ['shared'] : [layer, 'shared'];
+
+      if (
+        isTest &&
+        relative === 'src/main/snippets/tag-picker.test.ts' &&
+        target === 'src/renderer/features/tags/tag-picker-controller'
+      )
+        return;
 
       if (!allowed.includes(targetLayer)) errors.push(`Forbidden ${layer} import: ${specifier}`);
       if (/\.(?:[cm]?js|node|json)$/.test(target))

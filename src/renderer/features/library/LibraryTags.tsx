@@ -30,6 +30,8 @@ export function LibraryTags() {
           size="xs"
           className="library-tag-chip"
           aria-pressed={state.request.tagIds.includes(tag.id)}
+          aria-label={`${tag.name}, ${String(tag.snippetCount)} snippets`}
+          disabled={!state.request.tagIds.includes(tag.id) && state.request.tagIds.length >= 100}
           onClick={() => {
             const tagIds = state.request.tagIds.includes(tag.id)
               ? state.request.tagIds.filter((id) => id !== tag.id)
@@ -42,6 +44,17 @@ export function LibraryTags() {
           {tag.name}
         </Button>
       ))}
+      <Button
+        variant="ghost"
+        size="xs"
+        className="library-tag-chip"
+        aria-pressed={state.request.untagged}
+        onClick={() => {
+          model.query({ ...state.request, tagIds: [], untagged: !state.request.untagged });
+        }}
+      >
+        Untagged
+      </Button>
       <Tooltip>
         <TooltipTrigger asChild>
           <span>
@@ -51,8 +64,8 @@ export function LibraryTags() {
               className="library-create-tag"
               disabled={actions === undefined}
               aria-label="Create tag"
-              onClick={() => {
-                actions?.createTag();
+              onClick={(event) => {
+                actions?.createTag(event.currentTarget);
               }}
             >
               <Plus aria-hidden="true" />

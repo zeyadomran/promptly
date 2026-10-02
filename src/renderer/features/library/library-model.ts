@@ -73,8 +73,17 @@ export class LibraryModel {
     if (this.closed || version !== this.summaryVersion) return;
     if (total.ok) this.state.unfilteredTotal = total.value.total;
     else this.state.error = total.error;
-    if (tags.ok) this.state.tags = tags.value.tags;
-    else this.state.error = tags.error;
+    if (tags.ok) {
+      this.state.tags = tags.value.tags;
+      const available = new Set(tags.value.tags.map((tag) => tag.id));
+      const tagIds = this.state.request.tagIds.filter((id) => available.has(id));
+
+      if (tagIds.length !== this.state.request.tagIds.length) {
+        // Retain the cursor's desired snippet while removing filters deleted by another writer.
+        this.state.request = { ...this.state.request, tagIds };
+        this.invalidate();
+      }
+    } else this.state.error = tags.error;
     this.publish();
   }
 
