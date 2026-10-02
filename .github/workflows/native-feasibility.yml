@@ -34,6 +34,11 @@ jobs:
       - name: Compile macOS helper without signing
         if: runner.os == 'macOS'
         run: sh experiments/native-capture/build-macos.sh
+      - name: Compile production macOS selection and owned AppKit fixture
+        if: runner.os == 'macOS'
+        run: |
+          sh native/macos/build.sh
+          sh tests/native/macos/build.sh
       - name: Verify protocol and controlled fixture selection
         run: node experiments/native-capture/protocol-check.mjs --fixtures
       - name: Verify strict options and escaped synthetic payload boundaries
