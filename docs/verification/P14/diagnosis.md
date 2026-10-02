@@ -95,7 +95,7 @@ with a separate temporary output directory and separate artifact. Original
 ordinary failure and receipts remain intact. No product code, readiness waits,
 query samples, frame flags, deadlines or performance gate are changed.
 [Electron contentTracing](https://www.electronjs.org/docs/latest/api/content-tracing)
-records restricted timeline/compositor/IPC categories, bounded to32 MiB and10 s,
+records restricted timeline/compositor/IPC categories, with a32 MiB buffer and10 s limit,
 from before creation of the owned fixture window until two query passes finish
 (or the time limit). Fixture phase marks identify input, bridge request/reply,
 React commit and each frame callback. Main IPC receive/reply epoch timestamps,
@@ -104,3 +104,16 @@ font readiness, renderer visibility/focus, long tasks and passive frame cadence
 will distinguish startup/presentation readiness from runtime queue/CPU work.
 These instrumented measurements are explicitly nonqualifying. A robust fix must
 follow the resulting trace evidence; no root cause is claimed yet.
+
+
+Diagnostic launch uses a fresh generated userData directory beneath its owned
+corpus directory and asserts actual canonical `app.getPath('userData')` identity.
+The original ordinary launch remains unchanged. A local harness run verified the
+assertion and produced a valid21.6 MB trace spanning1.78 s, with484 phase marks
+and timeline/compositor events; these numbers establish harness operation only.
+Early assertion teardown now explicitly flushes the idempotent trace before
+closing the application. Sequential settled cleanup still releases application
+and temporary directory if flushing fails. If the test already failed, cleanup
+errors are reported without replacing the original failure. Three pure regressions
+cover flush/close/remove order, resource release after both flush/close errors,
+and retaining a prior ordinary gate failure when cleanup also fails.

@@ -49,14 +49,38 @@ export async function finishSearchTrace(application: ElectronApplication, testIn
   if (process.env['PROMPTLY_SEARCH_TRACE'] !== '1') return;
   const filename = testInfo.outputPath('search-chromium-trace.json');
 
-  await application.evaluate(
-    ({ app }) =>
-      new Promise<string>((resolve, reject) => {
-        app.emit('search-fixture:stop-trace', resolve, reject);
-      })
-  );
+  const recorded = await application.evaluate(({ app }) => {
+    if (app.listenerCount('search-fixture:stop-trace') === 0) return undefined;
+    return new Promise<string>((resolve, reject) => {
+      app.emit('search-fixture:stop-trace', resolve, reject);
+    });
+  });
+
+  if (recorded === undefined) return;
   await testInfo.attach('search-chromium-trace', {
     path: filename,
     contentType: 'application/json'
   });
+}
+
+/** Always release both resources even when diagnostic flushing or application close rejects. */
+export async function settleSearchCleanup(
+  operations: readonly (() => Promise<void>)[],
+  alreadyFailed = false
+) {
+  const errors: unknown[] = [];
+
+  for (const operation of operations) {
+    try {
+      await operation();
+    } catch (error) {
+      errors.push(error);
+    }
+  }
+
+  if (errors.length === 0) return;
+  const failure = new AggregateError(errors, 'Search fixture cleanup failed.');
+
+  if (alreadyFailed) console.error('Search fixture cleanup also failed:', failure);
+  else throw failure;
 }

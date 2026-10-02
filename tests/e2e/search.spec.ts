@@ -1,52 +1,34 @@
-import { mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { cpus, tmpdir, totalmem } from 'node:os';
-import path from 'node:path';
+import { rm, writeFile } from 'node:fs/promises';
+import { cpus, totalmem } from 'node:os';
 
-import { _electron as electron, expect, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
-import { buildIpcFixture } from './build-ipc-fixture';
+import { assertProfileIdentity } from '../profile-identity';
+import { launchSearchFixture } from './search-application';
 import { assertCompleteHighlights } from './search-complete-highlights';
-import { seedSearchCorpus } from './search-corpus';
 import { measureSearchInvalidations } from './search-invalidations';
 import { startSearchProfiler } from './search-profiler';
 import { summarizeSearchSamples } from './search-statistics';
-import { finishSearchTrace, prepareSearchTrace } from './search-trace';
+import { finishSearchTrace, prepareSearchTrace, settleSearchCleanup } from './search-trace';
 import { assertVisibleSearch } from './search-visibility';
 
 test('10k input-to-painted React results via named IPC and the packaged worker', async ({
   browserName
 }, testInfo) => {
   test.setTimeout(120_000);
-  await buildIpcFixture(undefined, 'tests/e2e/fixtures/search-main.ts', 'search');
-  const directory = await mkdtemp(path.join(tmpdir(), 'promptly-search-'));
-  const filename = path.join(directory, 'search.sqlite');
-  const corpus = seedSearchCorpus(filename);
-  const packaged = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
-  const asar =
-    process.platform === 'darwin'
-      ? path.join(packaged, 'Promptly.app/Contents/Resources/app.asar')
-      : path.join(packaged, 'resources/app.asar');
-  const env: Record<string, string> = {
-    PROMPTLY_SEARCH_DATABASE: filename,
-    PROMPTLY_SEARCH_TRACE_PATH: testInfo.outputPath('search-chromium-trace.json'),
-    PROMPTLY_SEARCH_WORKER: path.join(asar, '.vite/build/storage-worker.cjs')
-  };
+  const { application, consoleMessages, corpus, directory, traceProfile } =
+    await launchSearchFixture(testInfo);
+  let traceFinished = false;
+  let failed = false;
+  let traceProfileIdentity: Awaited<ReturnType<typeof assertProfileIdentity>> | undefined;
 
-  for (const [key, value] of Object.entries(process.env)) {
-    if (value !== undefined) env[key] = value;
-  }
-
-  delete env.ELECTRON_RUN_AS_NODE;
-  const application = await electron.launch({
-    args: [path.resolve('.vite/build/ipc-fixture.cjs')],
-    env
-  });
-  const consoleMessages: string[] = [];
-
-  application.process().stdout?.on('data', (data: Buffer) => {
-    consoleMessages.push(data.toString());
-  });
   try {
+    if (process.env['PROMPTLY_SEARCH_TRACE'] === '1') {
+      const actual = await application.evaluate(({ app }) => app.getPath('userData'));
+
+      traceProfileIdentity = await assertProfileIdentity(actual, traceProfile);
+    }
+
     const page = await application.firstWindow();
 
     await prepareSearchTrace(page);
@@ -134,7 +116,10 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
         }
       }
 
-      if (pass === 1) await finishSearchTrace(application, testInfo);
+      if (pass === 1) {
+        await finishSearchTrace(application, testInfo);
+        traceFinished = true;
+      }
     }
 
     await input.fill('');
@@ -154,6 +139,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
       browserName,
       diagnosticProfile: process.env['PROMPTLY_SEARCH_PROFILE'] === '1',
       diagnosticTrace: process.env['PROMPTLY_SEARCH_TRACE'] === '1',
+      traceProfileIdentity,
       hardware: {
         platform: process.platform,
         cpu: cpus()[0]?.model,
@@ -189,8 +175,19 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
         ...Object.values(statistics).map((stats) => stats.max)
       )
     ).toBeLessThan(50);
+  } catch (error) {
+    failed = true;
+    throw error;
   } finally {
-    await application.close();
-    await rm(directory, { recursive: true, force: true });
+    await settleSearchCleanup(
+      [
+        async () => {
+          if (!traceFinished) await finishSearchTrace(application, testInfo);
+        },
+        () => application.close(),
+        () => rm(directory, { recursive: true, force: true })
+      ],
+      failed
+    );
   }
 });
