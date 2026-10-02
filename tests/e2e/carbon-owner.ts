@@ -4,6 +4,8 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
+import { parseProbeChord, type ProbeChord } from './probe-chord';
+
 type ObserveCommand = (pid: number) => Promise<string | undefined>;
 async function command(pid: number): Promise<string | undefined> {
   try {
@@ -27,17 +29,19 @@ async function command(pid: number): Promise<string | undefined> {
 export async function retireCarbonOwner(
   executable: string,
   directory: string,
+  chord: ProbeChord,
   observe: ObserveCommand = command,
   signal: (pid: number, value: NodeJS.Signals) => void = (ownedPid, value) => {
     process.kill(ownedPid, value);
   }
 ) {
+  const selected = parseProbeChord(chord);
   const text = await readFile(path.join(directory, 'owner.pid'), 'utf8').catch(() => '');
 
   if (!/^[1-9][0-9]{0,9}$/.test(text) || Number(text) > 2147483647)
     return { status: 'ownerUnavailable' };
   const pid = Number(text);
-  const expected = `${executable} ${directory}`;
+  const expected = `${executable} ${directory} ${selected}`;
   const identity = async () => {
     try {
       const actual = await observe(pid);

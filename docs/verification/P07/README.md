@@ -317,3 +317,24 @@ zero despite matching session/local delivery leaves shared synthetic-to-Carbon
 recognition/dispatch unresolved. Neither observation qualifies product delivery or
 proves that a host is unsupported. Actual Swift compilation and both observations
 remain required on fresh hosted macOS CI; Windows local validation cannot prove them.
+
+Fallback native retirement now requires fresh exact executable, owned launch directory
+**and selected chord** before each signal. Both labels permit observed owned retirement;
+an otherwise matching process with the other label is rejected without signaling.
+This closes the two-chord argv mismatch found in review, preserving the existing
+identity checks before TERM/KILL and observed exit requirement.
+
+The immutable issue #27 / PR #48 checkpoint `87160c0` is integrated as a dependency,
+including the responsive Settings setup correction, worker fixture ownership and
+CI-only file scheduling. No changes were made to that issue's timing/workload policies.
+The main-test merge retained the existing startup/shutdown split and transplanted the
+new no-settings-before-storage-failure assertions into the startup tests.
+
+Final local Windows validation passed full strict checks: 449 tests passed, three
+native/platform skips in 97 files, all TypeScript targets, strict ESLint/Prettier and
+architecture (418 handwritten modules). The focused probe/schema/ownership lane passed
+61 tests with one appropriate Swift Windows skip. Packaging passed with identical
+product/build code before the final test-only retirement correction. Both hosted
+control cases were discovered and skipped locally without any process, tap or input.
+Actual Mac compilation/observations and product delivery remain unrun for this delta;
+fresh exact-head hosted CI and review are required. Existing failures are retained.

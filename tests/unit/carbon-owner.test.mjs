@@ -24,7 +24,9 @@ test.each(['0', '-1', '42\nprivate', '2147483648'])(
     const observe = vi.fn();
     const signal = vi.fn();
 
-    expect(await retireCarbonOwner(executable, directory, observe, signal)).toEqual({
+    expect(
+      await retireCarbonOwner(executable, directory, 'ctrl-option-f11', observe, signal)
+    ).toEqual({
       status: 'ownerUnavailable'
     });
     expect(observe).not.toHaveBeenCalled();
@@ -32,21 +34,24 @@ test.each(['0', '-1', '42\nprivate', '2147483648'])(
   }
 );
 
-test('exact executable plus fresh launch directory permits one signal and requires observed exit', async () => {
-  await writeFile(path.join(directory, 'owner.pid'), '42');
-  const observe = vi
-    .fn()
-    .mockResolvedValueOnce(`${executable} ${directory}`)
-    .mockResolvedValueOnce(undefined);
-  const signal = vi.fn();
+test.each(['ctrl-option-f11', 'ctrl-option-k'])(
+  'exact executable, fresh directory and %s permit a signal followed by observed exit',
+  async (chord) => {
+    await writeFile(path.join(directory, 'owner.pid'), '42');
+    const observe = vi
+      .fn()
+      .mockResolvedValueOnce(`${executable} ${directory} ${chord}`)
+      .mockResolvedValueOnce(undefined);
+    const signal = vi.fn();
 
-  expect(await retireCarbonOwner(executable, directory, observe, signal)).toEqual({
-    status: 'exited',
-    pid: 42
-  });
-  expect(observe.mock.calls).toEqual([[42], [42]]);
-  expect(signal.mock.calls).toEqual([[42, 'SIGTERM']]);
-});
+    expect(await retireCarbonOwner(executable, directory, chord, observe, signal)).toEqual({
+      status: 'exited',
+      pid: 42
+    });
+    expect(observe.mock.calls).toEqual([[42], [42]]);
+    expect(signal.mock.calls).toEqual([[42, 'SIGTERM']]);
+  }
+);
 
 test.each(['different owned executable', `${executable} /different-launch-token`])(
   'stale owner sidecar cannot signal %s',
@@ -55,7 +60,9 @@ test.each(['different owned executable', `${executable} /different-launch-token`
     const observe = vi.fn().mockResolvedValue(actual);
     const signal = vi.fn();
 
-    expect(await retireCarbonOwner(executable, directory, observe, signal)).toEqual({
+    expect(
+      await retireCarbonOwner(executable, directory, 'ctrl-option-f11', observe, signal)
+    ).toEqual({
       status: 'identityChanged',
       pid: 42
     });
@@ -67,11 +74,13 @@ test('identity changes after the first signal are never signaled again', async (
   await writeFile(path.join(directory, 'owner.pid'), '42');
   const observe = vi
     .fn()
-    .mockResolvedValueOnce(`${executable} ${directory}`)
+    .mockResolvedValueOnce(`${executable} ${directory} ctrl-option-f11`)
     .mockResolvedValueOnce('other process');
   const signal = vi.fn();
 
-  expect(await retireCarbonOwner(executable, directory, observe, signal)).toEqual({
+  expect(
+    await retireCarbonOwner(executable, directory, 'ctrl-option-f11', observe, signal)
+  ).toEqual({
     status: 'identityChanged',
     pid: 42
   });
@@ -82,7 +91,7 @@ test('an observation failure records no private command output and never signals
   await writeFile(path.join(directory, 'owner.pid'), '42');
   const observe = vi.fn().mockRejectedValue(new Error('private command output'));
   const signal = vi.fn();
-  const result = await retireCarbonOwner(executable, directory, observe, signal);
+  const result = await retireCarbonOwner(executable, directory, 'ctrl-option-f11', observe, signal);
 
   expect(result).toEqual({ status: 'identityUnavailable', pid: 42 });
   expect(JSON.stringify(result)).not.toContain('private');
@@ -91,13 +100,31 @@ test('an observation failure records no private command output and never signals
 
 test('failed signal is reported without claiming termination', async () => {
   await writeFile(path.join(directory, 'owner.pid'), '42');
-  const observe = vi.fn().mockResolvedValue(`${executable} ${directory}`);
+  const observe = vi.fn().mockResolvedValue(`${executable} ${directory} ctrl-option-f11`);
   const signal = vi.fn(() => {
     throw new Error('owned fake refuses termination');
   });
 
-  expect(await retireCarbonOwner(executable, directory, observe, signal)).toEqual({
+  expect(
+    await retireCarbonOwner(executable, directory, 'ctrl-option-f11', observe, signal)
+  ).toEqual({
     status: 'signalFailed',
     pid: 42
   });
 });
+
+test.each(['ctrl-option-f11', 'ctrl-option-k'])(
+  'a different allowlisted chord cannot authorize retirement of %s',
+  async (chord) => {
+    await writeFile(path.join(directory, 'owner.pid'), '42');
+    const other = chord === 'ctrl-option-f11' ? 'ctrl-option-k' : 'ctrl-option-f11';
+    const observe = vi.fn().mockResolvedValue(`${executable} ${directory} ${other}`);
+    const signal = vi.fn();
+
+    expect(await retireCarbonOwner(executable, directory, chord, observe, signal)).toEqual({
+      status: 'identityChanged',
+      pid: 42
+    });
+    expect(signal).not.toHaveBeenCalled();
+  }
+);

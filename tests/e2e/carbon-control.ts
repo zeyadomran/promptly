@@ -75,7 +75,7 @@ export async function launchCarbonControl(
 
   async function close() {
     await Promise.race([closed, delay(6000)]);
-    const owner = await retireCarbonOwner(nativeExecutable, directory);
+    const owner = await retireCarbonOwner(nativeExecutable, directory, selected);
 
     if (exitCode === undefined) child.kill();
     await Promise.race([closed, delay(1000)]);
