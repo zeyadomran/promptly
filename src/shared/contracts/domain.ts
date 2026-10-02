@@ -54,6 +54,14 @@ export const searchRequestSchema = z.strictObject({
   offset: z.number().int().nonnegative().max(1_000_000),
   limit: z.number().int().min(1).max(200)
 });
+export const searchValidationTimingsSchema = z.strictObject({
+  worker: z.number().nonnegative().optional(),
+  workerReceiver: z.number().nonnegative().optional(),
+  desktopDispatcher: z.number().nonnegative().optional(),
+  preload: z.number().nonnegative().optional()
+});
+export type SearchValidationTimings = z.infer<typeof searchValidationTimingsSchema>;
+
 export const searchPageSchema = z.strictObject({
   revision: revisionSchema,
   items: z.array(snippetSchema).max(200),
@@ -61,6 +69,7 @@ export const searchPageSchema = z.strictObject({
   offset: z.number().int().nonnegative(),
   hasMore: z.boolean(),
   searchDurationMs: z.number().nonnegative().optional(),
+  validationTimings: searchValidationTimingsSchema.optional(),
   matches: z
     .record(
       idSchema,

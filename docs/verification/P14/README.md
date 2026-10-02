@@ -6,6 +6,14 @@ uploads JSON and visible common-query screenshots even on failure. The strict
 **maximum <50 ms** gate is unchanged. Both OS results at the final integrated
 head remain required; local timing alone does not establish that.
 
+The next [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
+preview Windows CI failure (85.4ms), passing Mac receipt (49.2ms), profiler
+diagnostics and rejected numeric transport. Native highlighting and active-filter
+compilation are implemented and strict checks pass (149 tests/37 files before
+the native-helper main merge). Full integrated local theme/CSP checks and fresh
+ordinary CI at this performance-fix head are pending. The older local receipt
+below describes `2455ea9`, not proof that the new changes pass both CI machines.
+
 ## Corrected visible fixture after settings integration, 2026-10-02
 
 [Windows receipt](windows-search-benchmark.json) contains 110 input samples,

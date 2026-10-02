@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import { expect } from '@playwright/test';
 
+import { readHighlightCoverage } from './highlight-coverage';
 import { searchCorpusText } from './search-corpus';
 
 export async function assertVisibleSearch(page: Page, query: string) {
@@ -16,7 +17,14 @@ export async function assertVisibleSearch(page: Page, query: string) {
   await expect(selected.locator('pre')).toHaveText(
     searchCorpusText(query === 'needle-9999' ? 9999 : 0)
   );
-  if (query !== '') await expect(selected.locator('mark').first()).toBeInViewport();
+  if (query !== '') {
+    const coverage = await readHighlightCoverage(selected);
+
+    expect(coverage.length).toBeGreaterThan(0);
+    expect(coverage[0]?.visible).toBe(true);
+    expect(coverage[0]?.background).toBe('rgb(67, 53, 13)');
+  }
+
   const geometry = await selected.evaluate((element) => {
     const body = element.querySelector('pre');
     const bounds = element.getBoundingClientRect();

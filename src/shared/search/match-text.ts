@@ -3,6 +3,13 @@ export interface MatchRange {
   end: number;
 }
 
+export function isScalarBoundary(text: string, offset: number): boolean {
+  const previous = text.charCodeAt(offset - 1);
+  const current = text.charCodeAt(offset);
+
+  return !(previous >= 0xd800 && previous <= 0xdbff && current >= 0xdc00 && current <= 0xdfff);
+}
+
 /** Locale-independent, per-code-point Unicode lowercase; no accent normalization. */
 export function foldText(text: string): string {
   if (!/[^\p{ASCII}]/u.test(text)) return text.toLowerCase();

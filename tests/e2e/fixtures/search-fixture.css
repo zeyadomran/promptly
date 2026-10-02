@@ -1,4 +1,5 @@
 @import '../../../src/renderer/styles/fonts.css';
+@import '../../../src/renderer/styles/highlights.css';
 
 html,
 body,
@@ -10,6 +11,8 @@ body,
   box-sizing: border-box;
 }
 body {
+  --highlight: #43350d;
+  --foreground: #fafafa;
   background: #09090b;
   color: #fafafa;
   font-family: 'Space Grotesk', sans-serif;

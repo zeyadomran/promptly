@@ -4,6 +4,7 @@ import type { ChangeEvent } from '../../shared/contracts/domain';
 import { changeEventSchema, revisionSnapshotSchema } from '../../shared/contracts/domain';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { resultSchema } from '../../shared/contracts/result';
+import { recordSearchValidation } from '../../shared/search/measure-validation';
 import type { StorageOperation, StorageRequest, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
 
@@ -70,10 +71,11 @@ export class StorageClient {
     if (this.failure !== undefined) throw this.failure;
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
+    const started = performance.now();
+    const result = resultSchema(storageOperations[name].response).parse(response);
 
-    return resultSchema(storageOperations[name].response).parse(response) as DesktopResult<
-      StorageResponse<K>
-    >;
+    if (name === 'searchSnippets') recordSearchValidation(result, 'workerReceiver', started);
+    return result as DesktopResult<StorageResponse<K>>;
   }
 
   close(): Promise<void> {

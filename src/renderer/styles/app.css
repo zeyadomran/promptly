@@ -3,6 +3,7 @@
 @import './fonts.css';
 @import './tokens.css';
 @import './components.css';
+@import './highlights.css';
 
 :root {
   color: var(--foreground);

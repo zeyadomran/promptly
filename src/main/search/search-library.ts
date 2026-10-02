@@ -1,7 +1,7 @@
 import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/domain';
-import { foldText, matchRanges } from '../../shared/search/match-text';
-import { parseQuery } from '../../shared/search/parse-query';
+import { matchRanges } from '../../shared/search/match-text';
 import type { StorageContext } from '../storage/context';
+import { compileSearchFilter } from './search-filter';
 import type { SearchEntry } from './search-snapshot';
 import { SearchSnapshot } from './search-snapshot';
 
@@ -41,28 +41,18 @@ export class SearchLibrary {
       this.sorted.set(request.sort, entries);
     }
 
-    const parsed = parseQuery(request.query);
-    const text = parsed.text.map(foldText);
-    const tags = parsed.tags.map(foldText);
-    const sources = parsed.sources.map(foldText);
+    const filter = compileSearchFilter(request);
     const items: Snippet[] = [];
     let total = 0;
 
     for (const entry of entries) {
-      if (
-        (request.untagged && entry.tagIds.size !== 0) ||
-        !request.tagIds.every((id) => entry.tagIds.has(id)) ||
-        !tags.every((name) => entry.tagNames.has(name)) ||
-        !sources.every((source) => entry.sources.some((value) => value.includes(source))) ||
-        !text.every((term) => entry.text.includes(term))
-      )
-        continue;
+      if (!filter.matches(entry)) continue;
       if (total >= request.offset && items.length < request.limit) items.push(entry.snippet);
       total += 1;
     }
 
     const matches = Object.fromEntries(
-      items.map((item) => [item.id, matchRanges(item.text, text)])
+      items.map((item) => [item.id, matchRanges(item.text, filter.text)])
     );
 
     return {

@@ -7,6 +7,7 @@ import type {
 import { operations } from '../../shared/contracts/operations';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { failure, resultSchema } from '../../shared/contracts/result';
+import { recordSearchValidation } from '../../shared/search/measure-validation';
 
 export async function dispatchOperation<K extends OperationName>(
   services: Partial<DesktopOperations>,
@@ -26,10 +27,13 @@ export async function dispatchOperation<K extends OperationName>(
     return failure('UNAVAILABLE', 'This desktop operation is not available yet.');
   try {
     const response: unknown = await handler(request.data as OperationRequest<K>);
+    const started = performance.now();
     const parsed = resultSchema(schema.response).safeParse(response);
 
     if (!parsed.success)
       return failure('INTERNAL', 'The desktop service returned an invalid response.');
+    if (name === 'searchSnippets')
+      recordSearchValidation(parsed.data, 'desktopDispatcher', started);
     return parsed.data as DesktopResult<OperationResponse<K>>;
   } catch {
     // Never transport exception messages, SQL, paths, or stacks across the privilege boundary.

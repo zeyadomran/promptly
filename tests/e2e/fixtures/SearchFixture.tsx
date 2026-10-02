@@ -7,7 +7,7 @@ import { FixtureResult } from './FixtureResult';
 export function SearchFixture() {
   const [query, setQuery] = useState('');
   const inputAt = useRef<number | undefined>(undefined);
-  const timings = useRef({ bridgeMs: 0, workerMs: 0, replyAt: 0 });
+  const timings = useRef({ bridgeMs: 0, workerMs: 0, replyAt: 0, validation: '{}' });
   const bridge = useMemo(
     () => ({
       searchSnippets: async (request: Parameters<typeof window.promptly.searchSnippets>[0]) => {
@@ -17,6 +17,7 @@ export function SearchFixture() {
         timings.current = {
           bridgeMs: performance.now() - started,
           workerMs: reply.ok ? (reply.value.searchDurationMs ?? 0) : 0,
+          validation: JSON.stringify(reply.ok ? reply.value.validationTimings : {}),
           replyAt: performance.now()
         };
         return reply;
@@ -44,6 +45,7 @@ export function SearchFixture() {
     workerMs: number;
     commitMs: number;
     paintWaitMs: number;
+    validation: string;
   }>();
 
   useLayoutEffect(() => {
@@ -62,6 +64,7 @@ export function SearchFixture() {
             ms: performance.now() - started,
             bridgeMs: timings.current.bridgeMs,
             workerMs: timings.current.workerMs,
+            validation: timings.current.validation,
             commitMs: committed - timings.current.replyAt,
             paintWaitMs: performance.now() - committed
           });
@@ -104,6 +107,7 @@ export function SearchFixture() {
         data-worker-ms={paint?.workerMs}
         data-commit-ms={paint?.commitMs}
         data-paint-wait-ms={paint?.paintWaitMs}
+        data-validation-ms={paint?.validation}
         hidden
       >
         {paint?.ms}

@@ -8,6 +8,7 @@ import { buildIpcFixture } from './build-ipc-fixture';
 import { assertCompleteHighlights } from './search-complete-highlights';
 import { seedSearchCorpus } from './search-corpus';
 import { measureSearchInvalidations } from './search-invalidations';
+import { startSearchProfiler } from './search-profiler';
 import { summarizeSearchSamples } from './search-statistics';
 import { assertVisibleSearch } from './search-visibility';
 
@@ -45,6 +46,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
   });
   try {
     const page = await application.firstWindow();
+    const finishProfile = await startSearchProfiler(page, testInfo);
 
     await expect(page.getByTestId('ready')).toHaveText('0');
     await expect(page.getByTestId('total')).toHaveText('10000');
@@ -85,7 +87,13 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
     const samples: Record<string, number[]> = {};
     const phases: Record<
       string,
-      { bridge: number; worker: number; reactCommit: number; frameWait: number }[]
+      {
+        bridge: number;
+        worker: number;
+        reactCommit: number;
+        frameWait: number;
+        validation: unknown;
+      }[]
     > = {};
     const input = page.getByRole('textbox', { name: 'Search' });
 
@@ -100,7 +108,10 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
           bridge: Number(await page.getByTestId('paint').getAttribute('data-bridge-ms')),
           worker: Number(await page.getByTestId('paint').getAttribute('data-worker-ms')),
           reactCommit: Number(await page.getByTestId('paint').getAttribute('data-commit-ms')),
-          frameWait: Number(await page.getByTestId('paint').getAttribute('data-paint-wait-ms'))
+          frameWait: Number(await page.getByTestId('paint').getAttribute('data-paint-wait-ms')),
+          validation: JSON.parse(
+            (await page.getByTestId('paint').getAttribute('data-validation-ms')) ?? '{}'
+          ) as unknown
         });
         if (query === 'no-match-zzzz') await expect(page.getByTestId('total')).toHaveText('0');
         if (query === 'needle-9999') await expect(page.getByTestId('total')).toHaveText('1');
@@ -130,9 +141,12 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
     const invalidations = await measureSearchInvalidations(application, page);
     const completeHighlightPaint = await assertCompleteHighlights(page);
 
+    await finishProfile();
+
     const statistics = summarizeSearchSamples(samples);
     const evidence = {
       browserName,
+      diagnosticProfile: process.env['PROMPTLY_SEARCH_PROFILE'] === '1',
       hardware: {
         platform: process.platform,
         cpu: cpus()[0]?.model,

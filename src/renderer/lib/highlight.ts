@@ -1,4 +1,4 @@
-import { foldText, matchRanges } from '../../shared/search/match-text';
+import { foldText, isScalarBoundary, matchRanges } from '../../shared/search/match-text';
 
 export interface HighlightRange {
   start: number;
@@ -17,11 +17,11 @@ export function findTextMatches(text: string, query: string): HighlightRange[] {
   return matchRanges(text, [foldText(query)]);
 }
 
-/** Invalid offsets are ignored and intersecting ranges are merged before rendering. */
-export function splitHighlightedText(
+/** Ignore invalid/scalar-splitting offsets; merge adjacent/intersecting coverage. */
+export function normalizeHighlightRanges(
   text: string,
   ranges: readonly HighlightRange[]
-): TextSegment[] {
+): HighlightRange[] {
   const valid = ranges
     .filter(
       ({ start, end }) =>
@@ -29,7 +29,9 @@ export function splitHighlightedText(
         Number.isInteger(end) &&
         start >= 0 &&
         end <= text.length &&
-        end > start
+        end > start &&
+        isScalarBoundary(text, start) &&
+        isScalarBoundary(text, end)
     )
     .map((range) => ({ ...range }))
     .sort((left, right) => left.start - right.start);
@@ -43,10 +45,18 @@ export function splitHighlightedText(
     else merged.push(range);
   }
 
+  return merged;
+}
+
+/** Invalid offsets are ignored and intersecting ranges are merged before rendering. */
+export function splitHighlightedText(
+  text: string,
+  ranges: readonly HighlightRange[]
+): TextSegment[] {
   const segments: TextSegment[] = [];
   let cursor = 0;
 
-  for (const range of merged) {
+  for (const range of normalizeHighlightRanges(text, ranges)) {
     if (range.start > cursor)
       segments.push({
         start: cursor,

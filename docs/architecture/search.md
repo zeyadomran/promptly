@@ -46,10 +46,20 @@ of matched text, including later terms and later positions. Adjacent/overlapping
 spans are compressed before transport without losing coverage; Unicode scalar
 boundaries remain intact. `HighlightedText` safely renders the complete union and
 React escapes every segment. There is no occurrence-count truncation.
+When CSS Custom Highlight and StaticRange are available, `HighlightedText`
+renders one escaped text node and registers the complete range union. A pooled
+document registry keeps independent component ownership through updates/unmount;
+other highlight names are untouched. Static external CSS applies existing theme
+colors under CSP. Unsupported runtimes retain the escaped `<mark>` fallback.
+Invalid and surrogate-splitting offsets are ignored in both paths. Native
+highlighting does not split or otherwise alter selectable snippet text.
 The shared renderer helper uses exactly the worker's fold/range rules. Full text
 still travels in each returned `Snippet`; preview rendering does not truncate
 storage or search. Optional `searchDurationMs` measures worker snapshot refresh,
 ordering, matching and range generation, excluding response validation and IPC.
+Optional `validationTimings` measures the worker, worker receiver, main dispatcher
+and preload response schemas independently; every original boundary still
+validates the entire response. The numeric transport experiment was rejected.
 
 ## Index choice and consistency
 
@@ -76,6 +86,8 @@ All four sorts use ascending UUID ties: newest by updated time descending, oldes
 by creation ascending, most copied by count descending, recently copied by copy
 time descending with nulls last. Sort arrays are cached until affected entries
 change. Counts cover every matched item; offset/limit and hasMore use that count.
+Active filter predicates compile once per query; the scan does not allocate
+callbacks for empty chip/tag/source restrictions for each of 10,000 entries.
 
 The renderer client coalesces same-turn requests in a microtask and keeps one
 active IPC plus one latest queued request. Superseded results are cancelled

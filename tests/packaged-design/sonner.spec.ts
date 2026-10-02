@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { expect, test } from '@playwright/test';
 
+import { assertHighlightPaint } from '../e2e/assert-highlight-paint';
 import { launchIsolatedElectron } from '../isolated-electron';
 
 test('packaged libraries render under CSP while unauthorized styles are rejected', async () => {
@@ -69,7 +70,17 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     });
 
     expect(deniedAsset).toBe(403);
+    await page.getByRole('radio', { name: 'Light', exact: true }).click();
+    const highlighted = page
+      .getByRole('region', { name: 'Compact component fixture' })
+      .locator('p')
+      .filter({ hasText: 'Read the failing tests first' });
+    const lightHighlight = await assertHighlightPaint(page, highlighted);
+
     await page.getByRole('radio', { name: 'Dark', exact: true }).click();
+    const darkHighlight = await assertHighlightPaint(page, highlighted);
+
+    expect(darkHighlight).not.toBe(lightHighlight);
     await page.getByRole('button', { name: 'Show toast fixture' }).click();
     const toast = page.locator('[data-sonner-toast]');
 
