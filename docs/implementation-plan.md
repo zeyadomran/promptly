@@ -14,7 +14,7 @@ The repository currently contains maintenance workflows and no package manifest 
 
 ## Architecture
 
-Use Electron Forge with a Vite/React renderer, strict TypeScript, npm and a committed lockfile. Select compatible stable dependency versions during P01. Native package/helper and SQLite binding selection is gated by P03, including packaged-app compatibility; do not assume an untested native npm package fulfills capture requirements.
+Use Electron Forge with a Vite/React renderer, strict TypeScript, npm and a committed lockfile. Select compatible stable dependency versions during P01. Native package/helper selection is gated by P03, including packaged-app compatibility; do not assume an untested native npm package fulfills capture requirements. Choose the SQLite binding in P04 and verify its packaged native-module compatibility in P25/P26.
 
 | Layer | Responsibility | Boundary |
 | --- | --- | --- |

@@ -46,5 +46,46 @@ Cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layou
 
 ## Implementation issues
 
-Issue links are being populated from the reviewed 28-item backlog.
+### Phase 1: Foundation and risk validation
+
+- [ ] [P01 — Bootstrap Electron, React, TypeScript, and the modular project structure](https://github.com/zeyadomran/promptly/issues/3)
+- [ ] [P02 — Define domain contracts and a secure typed IPC bridge](https://github.com/zeyadomran/promptly/issues/4)
+- [ ] [P03 — Validate native capture, keyboard hooks, and clipboard feasibility on both OSes](https://github.com/zeyadomran/promptly/issues/5)
+- [ ] [P04 — Implement SQLite persistence, migrations, and snippet repositories](https://github.com/zeyadomran/promptly/issues/6)
+- [ ] [P05 — Persist settings and broadcast immediate preference changes](https://github.com/zeyadomran/promptly/issues/7)
+- [ ] [P25 — Extend CI for application checks and macOS/Windows build smoke](https://github.com/zeyadomran/promptly/issues/27)
+
+### Phase 2: Desktop and capture
+
+- [ ] [P06 — Build the shadcn design foundation, themes, and shared components](https://github.com/zeyadomran/promptly/issues/8)
+- [ ] [P07 — Implement global shortcuts and the double-tap modifier state machine](https://github.com/zeyadomran/promptly/issues/9)
+- [ ] [P08 — Implement macOS selection capture, permissions, and source app identity](https://github.com/zeyadomran/promptly/issues/10)
+- [ ] [P09 — Implement Windows selection capture and foreground application identity](https://github.com/zeyadomran/promptly/issues/11)
+- [ ] [P10 — Implement clipboard-preserving Copy fallback with concurrency protection](https://github.com/zeyadomran/promptly/issues/12)
+- [ ] [P11 — Connect the capture pipeline with normalization and deduplication](https://github.com/zeyadomran/promptly/issues/13)
+- [ ] [P12 — Show the focus-safe save toast in a dedicated overlay window](https://github.com/zeyadomran/promptly/issues/15)
+- [ ] [P13 — Implement desktop window lifecycle, size modes, and pin behavior](https://github.com/zeyadomran/promptly/issues/14)
+
+### Phase 3: Search and library
+
+- [ ] [P14 — Implement substring search, filter syntax, sorting, and paginated queries](https://github.com/zeyadomran/promptly/issues/16)
+- [ ] [P15 — Build the compact library with virtualized snippet rows](https://github.com/zeyadomran/promptly/issues/17)
+- [ ] [P16 — Build the regular split view and snippet editing/actions](https://github.com/zeyadomran/promptly/issues/18)
+- [ ] [P17 — Unify copy commands, keyboard navigation, and hide-after-copy behavior](https://github.com/zeyadomran/promptly/issues/19)
+- [ ] [P18 — Implement tag creation, filtering, and the reusable multi-select picker](https://github.com/zeyadomran/promptly/issues/20)
+
+### Phase 4: Settings and daily workflows
+
+- [ ] [P19 — Add tag management with rename, recolor, merge, and delete](https://github.com/zeyadomran/promptly/issues/22)
+- [ ] [P20 — Build responsive settings, general preferences, and appearance controls](https://github.com/zeyadomran/promptly/issues/21)
+- [ ] [P21 — Implement shared shortcut recording and shortcut settings](https://github.com/zeyadomran/promptly/issues/23)
+- [ ] [P22 — Add storage location, JSON/Markdown export, JSON import, and clear all](https://github.com/zeyadomran/promptly/issues/24)
+- [ ] [P23 — Build first-launch onboarding with a real practice capture](https://github.com/zeyadomran/promptly/issues/25)
+- [ ] [P24 — Implement tray/menu bar, recent snippets, and pause capture](https://github.com/zeyadomran/promptly/issues/26)
+
+### Phase 5: Release readiness
+
+- [ ] [P26 — Package macOS and Windows installers with native modules and signing support](https://github.com/zeyadomran/promptly/issues/28)
+- [ ] [P27 — Audit design fidelity, keyboard accessibility, and assistive technology](https://github.com/zeyadomran/promptly/issues/29)
+- [ ] [P28 — Verify end-to-end reliability, performance budgets, and release readiness](https://github.com/zeyadomran/promptly/issues/30)
 
