@@ -42,7 +42,12 @@ including synchronous failures. A rollback failure reports a restart/recovery
 error rather than claiming the previous OS state was successfully restored.
 Further mutations remain unavailable until restart after a rollback failure.
 Controller implementations must use bounded native deadlines; synchronous
-Electron APIs and the awaited Dock show API are wired today.
+Electron APIs and a five-second Dock show deadline are wired today. The uncancelable
+native show promise is still observed after timeout; its late completion reconciles
+visibility to the latest controller target, including a rollback to hidden. Late
+recovery errors are reported and the Dock controller refuses further changes.
+Effect and commit rejection share one rollback path; any first rollback failure
+quarantines mutations immediately and is never retried automatically.
 
 Real adapters set native theme/window backgrounds, pin existing windows with
 verification, and login registration with readback. macOS additionally uses the

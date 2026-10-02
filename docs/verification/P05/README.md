@@ -14,6 +14,10 @@ conflicting serialized updates, unavailable services, and accepted-effect shutdo
 drain. Lifecycle tests ensure a drain failure still waits for database close.
 Renderer subscriber tests cover handshake races, stale responses, bounded retry,
 and disposal. Bootstrap and accelerator syntax tests reject malformed inputs.
+Fake-timer Dock tests cover stalled startup, accepted settings/shutdown drain at
+the native deadline, late show compensation after rollback, and late rejection
+handling. A SQLite trigger regression verifies a first rollback failure is attempted
+once, retains the durable revision, and quarantines all subsequent mutations.
 
 `settings.spec.ts` starts the actual production renderer three times (labeled
 main/settings/toast test roles) with sandboxed preload, the production IPC/window
@@ -42,3 +46,9 @@ packaging, and all 7 Electron smoke tests passed. The settings test additionally
 passed after strengthening the reload bootstrap assertion. Registry metadata
 reported every direct dependency current except the documented TypeScript 6.0.3
 compatibility exception (latest 7.0.2); no dependency pins or strict rules changed.
+
+Standards review follow-up: strict checks now pass 130 tests, including stalled
+Dock/late completion and first rollback failure regressions. Packaging, the
+packaged CSP test, and all 7 Electron smokes passed again. Packaged tests use
+fresh temporary profiles and verify `app.getPath('userData')` matches that profile,
+so schema migration tests never share a user's live preference database.

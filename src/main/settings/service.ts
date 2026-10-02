@@ -91,36 +91,38 @@ export class SettingsService {
         'The required tray or shortcut controller is not available yet. Your preferences were not changed.'
       );
     const applied: SettingsController[] = [];
+    let failed: DesktopResult<SettingsSnapshot>;
 
     try {
       await this.apply(next, previous.value, applied);
       const committed = await this.storage.call('updateSettings', parsed.data);
 
-      if (!committed.ok) {
-        await this.rollback(previous.value, applied);
+      if (committed.ok) {
+        this.snapshot = committed.value;
         return committed;
       }
 
-      this.snapshot = committed.value;
-      return committed;
+      failed = committed;
     } catch (error) {
-      try {
-        await this.rollback(previous.value, applied);
-      } catch {
-        this.effectsFailed = true;
-        return failure(
-          'INTERNAL',
-          'Preference rollback failed. Restart Promptly to restore the persisted preferences.'
-        );
-      }
-
-      return failure(
+      failed = failure(
         'CONFLICT',
         error instanceof Error
           ? error.message.slice(0, 256)
           : 'Unable to apply preference. Your previous preference remains active.'
       );
     }
+
+    try {
+      await this.rollback(previous.value, applied);
+    } catch {
+      this.effectsFailed = true;
+      return failure(
+        'INTERNAL',
+        'Preference rollback failed. Restart Promptly to restore the persisted preferences.'
+      );
+    }
+
+    return failed;
   }
 
   private async apply(

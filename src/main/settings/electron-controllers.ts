@@ -2,6 +2,7 @@ import { app, BrowserWindow, nativeTheme } from 'electron';
 
 import type { Settings } from '../../shared/contracts/settings';
 import type { SettingsControllers } from './controllers';
+import { createDockController } from './dock-controller';
 
 export function updateWindowBackgrounds(): void {
   for (const window of BrowserWindow.getAllWindows())
@@ -44,21 +45,7 @@ export function electronSettingsControllers(): SettingsControllers {
           return Promise.resolve();
         }
       },
-      ...(process.platform === 'darwin'
-        ? [
-            {
-              name: 'dock icon',
-              keys: ['showDockIcon'] as const,
-              apply: async (settings: Settings) => {
-                if (app.dock === undefined) throw new Error('Dock is unavailable.');
-                if (settings.showDockIcon) await app.dock.show();
-                else app.dock.hide();
-                if (app.dock.isVisible() !== settings.showDockIcon)
-                  throw new Error('Dock preference was rejected.');
-              }
-            }
-          ]
-        : [])
+      ...(process.platform === 'darwin' ? [createDockController(app.dock)] : [])
     ],
     unavailable: [
       'showInTray',
