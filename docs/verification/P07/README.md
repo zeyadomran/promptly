@@ -134,3 +134,22 @@ observations remain pending fresh hosted CI.
 The Windows package also passed. The hosted-only control test was discovered and
 explicitly skipped on Windows; no local Carbon process or synthetic input was
 started. Existing production/native delivery assertions are unchanged.
+
+Review additionally requires explicit `GITHUB_ACTIONS=true`,
+`RUNNER_ENVIRONMENT=github-hosted` and `RUNNER_OS=macOS`, as well as CI and the
+macOS platform, before test or launch. The native control mirrors those hosted
+markers. Inherited local `CI=true` and self-hosted runners cannot start this probe.
+All 27 focused scalar/owner/hosted-gate regressions passed. The prior `fb41c67`
+run remains separate evidence; the guarded head requires fresh CI observation.
+
+The `fb41c67` Mac run
+[37002571227](https://github.com/zeyadomran/promptly/actions/runs/37002571227)
+failed control compilation before launch because the SDK's Swift import exposes
+no `ByteCount` alias. The fixed-size event-ID buffer now uses Swift's public
+[`numericCast`](https://developer.apple.com/documentation/swift/numericcast(_:))
+with the destination type inferred from the imported `GetEventParameter`
+signature. No control counter observation exists for that failed build. The
+independent product-delivery failure remains retained and unqualified.
+Full strict checks passed after the hosted correction: 313 tests in 65 files,
+290 handwritten modules, TypeScript, ESLint and formatting. The Windows hosted
+control remains skipped; package content is unchanged by this follow-up.

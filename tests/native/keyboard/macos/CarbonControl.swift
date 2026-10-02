@@ -4,7 +4,11 @@ import CoreGraphics
 
 @MainActor @main struct CarbonControl {
     static func main() {
-        guard ProcessInfo.processInfo.environment["CI"] == "true",
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["CI"] == "true",
+              environment["GITHUB_ACTIONS"] == "true",
+              environment["RUNNER_ENVIRONMENT"] == "github-hosted",
+              environment["RUNNER_OS"] == "macOS",
               CommandLine.arguments.count == 2 else { exit(2) }
         let directory = CommandLine.arguments[1]
         try? String(ProcessInfo.processInfo.processIdentifier).write(
@@ -93,7 +97,7 @@ import CoreGraphics
     private func receiveCarbon(_ event: EventRef) -> OSStatus {
         var identifier = EventHotKeyID()
         let status = GetEventParameter(event, EventParamName(kEventParamDirectObject),
-            EventParamType(typeEventHotKeyID), nil, ByteCount(MemoryLayout<EventHotKeyID>.size), nil, &identifier)
+            EventParamType(typeEventHotKeyID), nil, numericCast(MemoryLayout<EventHotKeyID>.size), nil, &identifier)
         guard status == noErr else { return status }
         guard identifier.signature == 0x50724F62, identifier.id == 1 else { return OSStatus(eventNotHandledErr) }
         carbonPressed = min(1024, carbonPressed + 1)

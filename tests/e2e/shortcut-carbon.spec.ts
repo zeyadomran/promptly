@@ -2,15 +2,13 @@ import { expect, test } from '@playwright/test';
 import { z } from 'zod';
 
 import { launchCarbonControl } from './carbon-control';
+import { isHostedMacosProbe } from './carbon-hosted';
 import { writeWindowReceipt } from './native-window-receipt';
 
 test('owned AppKit Carbon control partitions fixed shortcut delivery', async ({
   browserName
 }, testInfo) => {
-  test.skip(
-    process.platform !== 'darwin' || process.env['CI'] !== 'true',
-    'Hosted owned macOS probe only'
-  );
+  test.skip(!isHostedMacosProbe(process.platform, process.env), 'Hosted owned macOS probe only');
   test.setTimeout(45_000);
   let control: Awaited<ReturnType<typeof launchCarbonControl>> | undefined;
   let ready: unknown;

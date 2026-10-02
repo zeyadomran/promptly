@@ -5,12 +5,15 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
+import { isHostedMacosProbe } from './carbon-hosted';
 import { retireCarbonOwner } from './carbon-owner';
 import { decodeCarbonState } from './carbon-state';
 
 const execute = promisify(execFile);
 
 export async function launchCarbonControl(buildDirectory: string) {
+  if (!isHostedMacosProbe(process.platform, process.env))
+    throw new Error('Carbon input probe requires hosted macOS');
   const bundle = path.join(buildDirectory, 'CarbonControl.app');
   const executable = path.join(bundle, 'Contents/MacOS/carbon-control');
   const driver = path.join(buildDirectory, 'carbon-shortcut-driver');
