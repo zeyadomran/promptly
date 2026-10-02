@@ -1,0 +1,146 @@
+{
+  "chord": "ctrl-option-k",
+  "browserName": "chromium",
+  "sessionContext": {
+    "chord": "ctrl-option-k",
+    "parent": "owned packaged Electron main",
+    "copiedBundle": true,
+    "differentBundlePathAndBootstrap": true,
+    "profileCanonicalMatch": true,
+    "identicalTccAttributionEstablished": false
+  },
+  "sessionReady": {
+    "chord": "ctrl-option-k",
+    "phase": "ready",
+    "pid": 9792,
+    "listening": true,
+    "tapInstalled": true,
+    "enabled": true,
+    "secureInput": false,
+    "down": 0,
+    "up": 0,
+    "disabled": 0,
+    "elapsedMs": 14.693666666687477
+  },
+  "sessionBeforeInput": {
+    "chord": "ctrl-option-k",
+    "phase": "inspect",
+    "pid": 9792,
+    "listening": true,
+    "tapInstalled": true,
+    "enabled": true,
+    "secureInput": false,
+    "down": 0,
+    "up": 0,
+    "disabled": 0,
+    "elapsedMs": 542.7724166666508
+  },
+  "sessionFinal": {
+    "chord": "ctrl-option-k",
+    "phase": "final",
+    "pid": 9792,
+    "listening": true,
+    "tapInstalled": true,
+    "enabled": true,
+    "secureInput": false,
+    "down": 1,
+    "up": 1,
+    "disabled": 0,
+    "elapsedMs": 741.7224166666756
+  },
+  "sessionCleanup": {
+    "child": {
+      "observedExit": true,
+      "exitCode": 0,
+      "signal": null
+    },
+    "launcher": {
+      "observedExit": true,
+      "exitCode": 0,
+      "signal": null
+    }
+  },
+  "sessionCleanupOutcomes": [
+    {
+      "stage": "child",
+      "status": "verified"
+    },
+    {
+      "stage": "launcher",
+      "status": "verified"
+    }
+  ],
+  "observationAvailable": true,
+  "probeInputAttempted": true,
+  "interpretation": "available fixed-chord observation; not product qualification",
+  "ready": {
+    "chord": "ctrl-option-k",
+    "phase": "ready",
+    "pid": 9794,
+    "foregroundMatched": true,
+    "handlerStatus": 0,
+    "registrationStatus": 0,
+    "listening": false,
+    "tapInstalled": false,
+    "carbonPressed": 0,
+    "handlerEntered": 0,
+    "parameterFailed": 0,
+    "idMismatch": 0,
+    "localDown": 0,
+    "localUp": 0,
+    "localF11Character": false,
+    "localKCharacter": false,
+    "localFunction": false,
+    "localNumericPad": false,
+    "localMonitorInstalled": true,
+    "localMonitorRemoved": false,
+    "sessionDown": 0,
+    "sessionUp": 0,
+    "tapDisabled": 0,
+    "elapsedMs": 144.61904166665818
+  },
+  "delivery": {
+    "status": "sent",
+    "ownedForeground": true,
+    "keysInjected": true
+  },
+  "final": {
+    "chord": "ctrl-option-k",
+    "phase": "final",
+    "pid": 9794,
+    "foregroundMatched": true,
+    "handlerStatus": 0,
+    "registrationStatus": 0,
+    "listening": false,
+    "tapInstalled": false,
+    "carbonPressed": 1,
+    "handlerEntered": 1,
+    "parameterFailed": 0,
+    "idMismatch": 0,
+    "localDown": 0,
+    "localUp": 0,
+    "localF11Character": false,
+    "localKCharacter": false,
+    "localFunction": false,
+    "localNumericPad": false,
+    "localMonitorInstalled": true,
+    "localMonitorRemoved": true,
+    "sessionDown": 0,
+    "sessionUp": 0,
+    "tapDisabled": 0,
+    "elapsedMs": 5215.800416666639
+  },
+  "cleanup": {
+    "owner": {
+      "status": "exited",
+      "pid": 9794
+    },
+    "launcherExitCode": 0
+  },
+  "failed": false,
+  "finalAvailable": true,
+  "cleanupVerified": true,
+  "cleanupFailureCount": 0,
+  "qualification": false,
+  "scope": "one allowlisted ctrl-option-k chord; passive session tap and unchanged-return local monitor; bounded scalar counts/booleans"
+}

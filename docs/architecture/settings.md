@@ -52,14 +52,15 @@ quarantines mutations immediately and is never retried automatically.
 Real adapters set native theme/window backgrounds, pin existing windows with
 verification, and login registration with readback. macOS additionally uses the
 Dock show/hide APIs with visibility readback. Windows Dock changes return
-`UNAVAILABLE`. Tray visibility and accelerator changes return `UNAVAILABLE` until
-P24/#26 and P07/#9 inject their real reversible controllers. Stored defaults are
+`UNAVAILABLE`. Tray visibility returns `UNAVAILABLE` until P24/#26 injects its
+controller. P07/#9 supplies the real reversible shortcut controller, with actual
+OS registration, duplicate detection and rollback quarantine. Stored defaults are
 requested configuration, not proof of a tray or registered shortcut. Timing
 150–600 ms, toast, normalization, onboarding, hide policy, and startup mode are
-validated durable configuration. P07 must consume timing updates and reset its
-state machine; P11 must consume normalization/toast preferences. Accelerator
-validation checks syntax; only the later controller can verify OS registration
-and conflicts. No native capture or clipboard success is synthesized here.
+validated durable configuration. The shortcut controller consumes timing updates
+and resets recognition; P11 must consume normalization/toast preferences.
+Accelerator validation checks syntax before the controller verifies registration.
+No native capture or clipboard success is synthesized here.
 
 If the worker dies after SQLite commits but before replying, the outcome cannot
 be inferred from the missing reply. Restart/reopen the authoritative database to

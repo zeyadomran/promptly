@@ -19,6 +19,9 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `windows/visibility.test.ts` | Reachability when an external recovery route appears or disappears |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `platform/macos/macos-selection.test.ts` | Forged and retired source identity rejection at the adapter boundary |
+| `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
+| `shortcuts/transactions.test.ts` | Rejected OS binding replacement preserves authoritative preferences and the previous live command |
+| `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 
 Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
 

@@ -7,6 +7,7 @@ export interface SettingsController {
   readonly keys: readonly (keyof Settings)[];
   readonly name: string;
   apply: (settings: Settings) => Promise<void>;
+  quarantine?: () => void;
 }
 
 export interface SettingsControllers {

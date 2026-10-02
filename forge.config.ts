@@ -11,9 +11,15 @@ const config: ForgeConfig = {
     executableName: 'Promptly',
     extraResource:
       process.platform === 'win32'
-        ? [path.resolve('native/windows/out/promptly-windows.exe')]
+        ? [
+            path.resolve('native/windows/out/promptly-windows.exe'),
+            path.resolve('native/keyboard/windows/out/promptly-keyboard.exe')
+          ]
         : process.platform === 'darwin'
-          ? [path.resolve('native/macos/out/promptly-macos')]
+          ? [
+              path.resolve('native/keyboard/macos/out/promptly-keyboard'),
+              path.resolve('native/macos/out/promptly-macos')
+            ]
           : []
   },
   hooks: {
@@ -30,9 +36,21 @@ const config: ForgeConfig = {
           ],
           { windowsHide: true }
         );
+        await promisify(execFile)(
+          'powershell.exe',
+          [
+            '-NoProfile',
+            '-ExecutionPolicy',
+            'Bypass',
+            '-File',
+            path.resolve('native/keyboard/windows/build.ps1')
+          ],
+          { windowsHide: true }
+        );
       }
 
       if (process.platform === 'darwin') {
+        await promisify(execFile)('/bin/sh', [path.resolve('native/keyboard/macos/build.sh')]);
         await promisify(execFile)('sh', [path.resolve('native/macos/build.sh')]);
       }
     }
