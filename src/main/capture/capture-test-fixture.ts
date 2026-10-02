@@ -1,17 +1,26 @@
 import type { DesktopResult } from '../../shared/contracts/result';
+import { CaptureTrigger } from '../shortcuts/capture-trigger';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
 import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { testStorage } from '../storage/storage-test-fixture';
 import { StorageTransfer } from '../storage/transfer/service';
-import type { CaptureEvent, CaptureNative } from './ports';
+import type { CaptureEvent, CaptureNative, CaptureReply } from './ports';
 import { CaptureService } from './service';
 import { CaptureSources } from './sources';
 
 export function captureFixture() {
   const store = testStorage();
   const mutations = new LibraryMutations();
-  const shortcuts = shortcutFixture((callback) => callback).shortcuts;
+  const keyboard = shortcutFixture((callback) => callback);
+  const shortcuts = keyboard.shortcuts;
+  const trigger = new CaptureTrigger();
+
+  keyboard.commands.capture = () => {
+    trigger.fire();
+    return undefined;
+  };
+
   const identity = { token: 'a'.repeat(32), source: { pid: 1, name: 'Terminal', id: 'terminal' } };
   const os: {
     text: string;
@@ -22,6 +31,7 @@ export function captureFixture() {
     selecting: boolean;
     integrity: number | null;
     activated: boolean;
+    importFilename: string | undefined;
   } = {
     text: '  ❯ echo 你好😀\r\n    $variable\r\n  > comparison\r\n  % formatting  ',
     normalize: true,
@@ -30,7 +40,8 @@ export function captureFixture() {
     failNative: false,
     selecting: false,
     integrity: 8192,
-    activated: false
+    activated: false,
+    importFilename: undefined
   };
   let time = 0;
   const events: CaptureEvent[] = [];
@@ -77,6 +88,17 @@ export function captureFixture() {
     }
   });
 
+  let triggered: Promise<CaptureReply> | undefined;
+
+  trigger.install(() => {
+    const capture = service.prepareCapture();
+
+    return async () => {
+      triggered = capture();
+      await triggered;
+    };
+  });
+
   const transfer = new StorageTransfer(
     { call },
     mutations,
@@ -84,7 +106,7 @@ export function captureFixture() {
       directory: '',
       protectedFiles: [],
       owner: (id) => ({ id, isAlive: () => true, onClose: () => () => undefined }),
-      open: () => Promise.resolve(undefined),
+      open: () => Promise.resolve(os.importFilename),
       save: () => Promise.resolve(undefined),
       reveal: () => undefined
     },
@@ -96,5 +118,18 @@ export function captureFixture() {
   service.subscribe((event) => {
     events.push(event);
   });
-  return { store, mutations, shortcuts, os, sources, transfer, service, events };
+  return {
+    store,
+    mutations,
+    shortcuts,
+    keyboard,
+    os,
+    sources,
+    transfer,
+    service,
+    events,
+    get triggered() {
+      return triggered;
+    }
+  };
 }

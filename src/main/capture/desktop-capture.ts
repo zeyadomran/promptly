@@ -25,8 +25,12 @@ export function createDesktopCapture(
   const uninstall =
     native === undefined
       ? () => undefined
-      : keyboard.capture.install(async () => {
-          await service.capture();
+      : keyboard.capture.install(() => {
+          const capture = service.prepareCapture();
+
+          return async () => {
+            await capture();
+          };
         });
 
   return {

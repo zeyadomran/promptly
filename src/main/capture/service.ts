@@ -28,8 +28,25 @@ export class CaptureService {
   }
 
   capture(): Promise<CaptureReply> {
+    return this.prepareCapture()();
+  }
+
+  /** Snapshot lightweight admission before a native callback defers its heavy work. */
+  prepareCapture(): () => Promise<CaptureReply> {
+    const triggeredAt = this.now();
     const admitted = this.effects.admit();
     const ticket = this.mutations.beginCapture();
+    const normalize = this.effects.normalize();
+
+    return () => this.start(admitted, ticket, normalize, triggeredAt);
+  }
+
+  private start(
+    admitted: (() => boolean) | undefined,
+    ticket: number | undefined,
+    normalize: boolean,
+    triggeredAt: number
+  ): Promise<CaptureReply> {
     const native = this.effects.native;
 
     if (this.closing || this.active !== undefined || admitted === undefined || ticket === undefined)
@@ -41,8 +58,7 @@ export class CaptureService {
           'Native capture is unavailable. Safe clipboard fallback is not implemented.'
         )
       );
-    const phases = { triggeredAt: this.now() };
-    const normalize = this.effects.normalize();
+    const phases = { triggeredAt };
     const current = () => !this.closing && admitted();
 
     this.active = this.run(native, ticket, normalize, current, phases)
@@ -72,6 +88,7 @@ export class CaptureService {
     current: () => boolean,
     phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt'>
   ): Promise<CaptureReply> {
+    if (!current()) return failure('CONFLICT', 'This capture was canceled.');
     const foreground = await native.foregroundIdentityResult();
 
     if (!current()) return failure('CONFLICT', 'This capture was canceled.');

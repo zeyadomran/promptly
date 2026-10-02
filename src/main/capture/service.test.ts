@@ -1,9 +1,11 @@
 import { expect, it } from 'vitest';
 
+import { assertImportRetirement, assertQueuedResetRetirement } from './capture-retirement-flow';
 import { captureFixture } from './capture-test-fixture';
 
 it('captures through native selection, durable normalization and the shared mutation lifetime', async () => {
-  const { store, mutations, shortcuts, os, sources, transfer, service, events } = captureFixture();
+  const fixture = captureFixture();
+  const { store, mutations, shortcuts, os, sources, transfer, service, events } = fixture;
   let release: () => void = () => undefined;
 
   service.subscribe(() => {
@@ -92,6 +94,7 @@ it('captures through native selection, durable normalization and the shared muta
     expect(await service.capture()).toMatchObject({ ok: false });
     expect(events.at(-1)?.preview).toBeUndefined();
     store.engine.context.db.exec('DROP TRIGGER reject_capture');
+    await assertQueuedResetRetirement(fixture, id);
     os.selected = new Promise<void>((resolve) => {
       release = resolve;
     });
@@ -116,7 +119,9 @@ it('captures through native selection, durable normalization and the shared muta
     release();
     expect(await cleared).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
     expect(sources.available(id)).toBe(false);
-    os.selected = Promise.resolve();
+    await assertImportRetirement(fixture, async () => {
+      await expect.poll(() => os.selecting).toBe(true);
+    });
     os.response = new Promise<void>((resolve) => {
       release = resolve;
     });
@@ -135,7 +140,7 @@ it('captures through native selection, durable normalization and the shared muta
             limit: 10
           }).total
       )
-      .toBe(1);
+      .toBe(3);
     const closing = service.close();
 
     expect(await service.capture()).toMatchObject({ ok: false });
@@ -154,7 +159,8 @@ it('captures through native selection, durable normalization and the shared muta
           limit: 10
         })
         .items.map((snippet) => snippet.text)
-    ).toEqual(['entered persistence']);
+        .sort()
+    ).toEqual(['Imported record', 'entered persistence', 'kept before import']);
     const event = events.at(-1);
 
     if (event?.selectedAt === undefined || event.persistedAt === undefined)

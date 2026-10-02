@@ -93,7 +93,7 @@ export class StorageTransfer {
       this.requests.run(context, async (scope) => {
         if (!this.previews.belongsTo(input.token, scope.owner))
           return failure('NOT_FOUND', 'This import preview is unavailable. Choose the file again.');
-        const result = await this.mutations.run(async () => {
+        const result = await this.mutations.barrier(async () => {
           scope.signal.throwIfAborted();
           const committed = await this.storage.call('commitLibraryImport', input);
 
@@ -114,7 +114,7 @@ export class StorageTransfer {
       }),
     clearLibrary: (_input, context) =>
       this.requests.run(context, async (scope) => {
-        const result = await this.mutations.clear(async () => {
+        const result = await this.mutations.barrier(async () => {
           scope.signal.throwIfAborted();
           const committed = await this.storage.call('clearLibrary', {});
 
