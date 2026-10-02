@@ -1,0 +1,114 @@
+.tag-management {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.tag-management p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12.5px;
+}
+.tag-management .settings-row-error {
+  color: var(--destructive);
+}
+.tag-management-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tag-management-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  text-align: left;
+}
+.tag-management-table th,
+.tag-management-table td {
+  padding: 14px 6px;
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+.tag-management-table thead th {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted-foreground);
+}
+.tag-management-table th:first-child {
+  width: 38%;
+  padding-left: 0;
+}
+.tag-management-table th:nth-child(2) {
+  width: 16%;
+}
+.tag-management-table td:last-child {
+  padding-right: 0;
+}
+.tag-management-table .tag-badge {
+  max-width: 100%;
+}
+.tag-management-table .tag-badge-name {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tag-management-count {
+  font-family: 'Geist Mono', monospace;
+  font-size: 12px;
+}
+.tag-management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+}
+.tag-management-delete {
+  color: var(--destructive);
+}
+.tag-management-notice,
+.tag-management-editor,
+.tag-management-field {
+  display: grid;
+  gap: 12px;
+}
+.tag-management-field {
+  font-size: 13px;
+}
+.tag-management-colors {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.tag-management-swatch {
+  display: block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+}
+.tag-management-select {
+  width: 100%;
+  min-width: 0;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+}
+.tag-management-select:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+@media (width < 640px) {
+  .tag-management-toolbar {
+    align-items: flex-start;
+  }
+  .tag-management-table th:first-child {
+    width: 35%;
+  }
+  .tag-management-table th:nth-child(2) {
+    width: 19%;
+  }
+  .tag-management-table th,
+  .tag-management-table td {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+}

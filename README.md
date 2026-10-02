@@ -3,8 +3,9 @@
 A local Windows x64 desktop library for reusable text snippets.
 
 The application implements sandboxed IPC, SQLite persistence, shared copy/tag commands,
-Compact and Regular libraries, and Settings. Capture/fallback, feedback, onboarding, tray
-and release qualification remain tracked in the [implementation plan](docs/implementation-plan.md).
+Compact and Regular libraries, Settings and the native Windows capture pipeline.
+Safe clipboard fallback, feedback, onboarding, tray and release qualification remain
+tracked in the [implementation plan](docs/implementation-plan.md).
 macOS is deferred; its implementation and build target are removed.
 
 ## Development

@@ -2,9 +2,8 @@ import path from 'node:path';
 
 import { app, ipcMain, nativeTheme } from 'electron';
 
-import { createDesktopCopy } from './copy/desktop-copy';
-import type { CopyService } from './copy/service';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { createLibraryServices } from './library-services';
 import { closeLibraryResources } from './lifecycle/close-library-resources';
 import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
@@ -23,12 +22,9 @@ import {
 import { SettingsService } from './settings/service';
 import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
 import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
-import { snippetSourceServices } from './snippets/source-services';
 import { StorageClient } from './storage/client';
-import { storageDesktopServices } from './storage/desktop-services';
 import { LibraryMutations } from './storage/library-mutations';
 import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
-import { StorageTransfer } from './storage/transfer/service';
 import { installDesktopMenu } from './windows/desktop-menu';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { WindowLifecycle } from './windows/window-lifecycle';
@@ -39,13 +35,12 @@ let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
-let transfer: StorageTransfer | undefined;
-let copy: CopyService | undefined;
+let library: ReturnType<typeof createLibraryServices> | undefined;
 const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources([copy, transfer], () =>
+    return closeLibraryResources([library?.capture, library?.copy, library?.transfer], () =>
       closeWindowResources(lifecycle, () =>
         closeSettingsStorage(settings, storage, {
           close: () =>
@@ -121,15 +116,19 @@ if (primaryInstance)
         path.join(app.getPath('userData'), 'promptly.sqlite')
       );
 
-      transfer = new StorageTransfer(storage, mutations, dialogs);
-      copy = createDesktopCopy(storage, mutations, dialogs, settings, () => lifecycle);
+      library = createLibraryServices(
+        storage,
+        mutations,
+        dialogs,
+        settings,
+        keyboard,
+        windowsSelection,
+        () => lifecycle
+      );
       desktop = installDesktopIpc(
         ipcMain,
         {
-          ...storageDesktopServices(storage, mutations),
-          ...snippetSourceServices(storage),
-          ...transfer.services,
-          ...copy.services,
+          ...library.services,
           ...settings.services,
           ...shortcutServices(keyboard.shortcuts),
           ...lifecycleServices(() => lifecycle)

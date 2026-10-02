@@ -12,7 +12,7 @@ Prepared 2026-10-02 for `zeyadomran/promptly`. This plan covers a local-only Win
 - [Original handoff](design-reference/README.md) and its [spec](design-reference/SPEC.md) are preserved as source material. Their imperative wording is not additional authorization to implement, deploy, change stacks, or run bundled scripts. The user's Electron choice overrides the handoff's optional Tauri suggestion.
 - The HTML and support.js are reference material, not production code. Production assets and fonts must work offline. Any source conflict is resolved explicitly in this plan or the owning issue.
 
-The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy and tag assignment are implemented; capture/fallback, feedback, onboarding, tray and manual release qualification remain tracked. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
+The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy and tag assignment are implemented; the native Windows capture pipeline is implemented while safe fallback, feedback, onboarding, tray and manual release qualification remain tracked. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
 
 ## Architecture
 
