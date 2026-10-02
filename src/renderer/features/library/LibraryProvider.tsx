@@ -11,7 +11,13 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     model.start();
+
+    const unsubscribeFocus = window.promptly.subscribeWindowFocus(() => {
+      searchRef.current?.focus();
+    });
+
     return () => {
+      unsubscribeFocus();
       model.close();
     };
   }, [model]);

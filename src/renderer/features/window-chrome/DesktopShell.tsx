@@ -18,6 +18,7 @@ export function DesktopShell() {
 
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
+      if (event.defaultPrevented) return;
       if ((event.metaKey || event.ctrlKey) && event.key === ',') {
         event.preventDefault();
         void window.promptly.openDesktopWindow({ kind: 'settings' });

@@ -16,10 +16,8 @@ export function libraryFixture(count = 1_000) {
     lastCopiedAt: null,
     copyCount: 0
   }));
-  const requests: SearchRequest[] = [];
   const bridge = {
     searchSnippets: (request: SearchRequest): Promise<DesktopResult<SearchPage>> => {
-      requests.push(request);
       const filtered = items.filter((item) => item.text.includes(request.query));
 
       return Promise.resolve({
@@ -44,9 +42,7 @@ export function libraryFixture(count = 1_000) {
 
   return {
     bridge,
-    requests,
     items: () => items,
-    activeSubscriptions: () => listeners.size,
     change: (next: Snippet[], domains: ChangeEvent['domains'] = ['snippets']) => {
       items = next;
       revision += 1;
