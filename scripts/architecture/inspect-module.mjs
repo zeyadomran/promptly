@@ -18,6 +18,7 @@ const rendererPackages = new Set([
 ]);
 const testPackages = new Set([
   'vitest',
+  'vite',
   '@testing-library/react',
   '@testing-library/jest-dom/vitest'
 ]);

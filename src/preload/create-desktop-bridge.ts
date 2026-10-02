@@ -14,7 +14,6 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
-import { recordSearchValidation } from '../shared/search/measure-validation';
 
 export interface BridgeTransport {
   invoke(channel: string, request: unknown): Promise<unknown>;
@@ -43,11 +42,8 @@ export function createDesktopBridge(
     if (!request.success) return failure('INVALID_REQUEST', 'The desktop request is malformed.');
     try {
       const reply = await transport.invoke(operationChannel(name), request.data);
-      const started = performance.now();
       const result = resultSchema<unknown>(operation.response).safeParse(reply);
 
-      if (name === 'searchSnippets' && result.success)
-        recordSearchValidation(result.data, 'preload', started);
       return result.success
         ? (result.data as DesktopResult<OperationResponse<K>>)
         : failure('INTERNAL', 'Invalid desktop response.');

@@ -1,10 +1,15 @@
 # P14 search evidence
 
-Run `npm ci`, `npm run check`, `npm run package`, then `npm run test:smoke`.
-The search test also runs alone after packaging. CI executes Windows/macOS and
-uploads JSON and visible common-query screenshots even on failure. The strict
-**maximum <50 ms** gate is unchanged. Both OS results at the final integrated
-head remain required; local timing alone does not establish that.
+This directory preserves historical evidence, including failed hosted latency
+receipts. The user-approved minimal test cleanup retired the search benchmark,
+Chromium tracing, pixel-check infrastructure and production timing hooks. The
+commands and gate descriptions below describe those historical runs, not the
+current test suite. No raw receipt was changed and no latency fix is claimed.
+
+Current search verification is one deterministic real-worker functional case in
+`src/main/search/search-library.test.ts`, covering literal/AND filters, sorted
+pagination, exact Unicode/NUL text and a committed edit invalidation. The original
+**maximum <50 ms** requirement remains unqualified on the hosted runners.
 
 The [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
 preview Windows CI failure (85.4 ms), passing Mac receipt (49.2 ms), profiler

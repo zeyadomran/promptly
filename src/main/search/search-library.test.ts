@@ -1,195 +1,110 @@
 // @vitest-environment node
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
-import { allSnippets, testStorage } from '../storage/storage-test-fixture';
+import { build } from 'vite';
+import { afterAll, beforeAll, expect, it } from 'vitest';
 
-describe('worker substring library', () => {
-  let store: ReturnType<typeof testStorage>;
+import type { SearchRequest } from '../../shared/contracts/domain';
+import { StorageClient } from '../storage/client';
+import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 
-  beforeEach(() => {
-    store = testStorage();
+let directory: string | undefined;
+let client: StorageClient | undefined;
+
+beforeAll(async () => {
+  directory = await mkdtemp(path.join(tmpdir(), 'promptly-search-contract-'));
+  await build({
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      outDir: directory,
+      emptyOutDir: false,
+      lib: {
+        entry: 'src/main/storage/storage-worker.ts',
+        formats: ['cjs'],
+        fileName: () => 'worker.cjs'
+      },
+      rollupOptions: { external: [/^node:/] }
+    }
   });
-  afterEach(() => {
-    store.dispose();
-  });
+  client = new StorageClient(
+    path.join(directory, 'worker.cjs'),
+    path.join(directory, 'data.sqlite')
+  );
+  await client.ready;
+}, 30_000);
 
-  function search(query: string, overrides = {}) {
-    return store.invoke('searchSnippets', { ...allSnippets, query, ...overrides });
+afterAll(async () => {
+  // close observes worker termination before its exclusively owned files are removed.
+  await client?.close();
+  if (directory !== undefined) await rm(directory, { recursive: true, force: true });
+}, 45_000);
+
+async function call<K extends StorageOperation>(
+  operation: K,
+  request: StorageRequest<K>
+): Promise<StorageResponse<K>> {
+  if (client === undefined) throw new Error('Search worker was not initialized.');
+  const result = await client.call(operation, request);
+
+  if (!result.ok) throw new Error(result.error.code);
+  return result.value;
+}
+
+it('searches literal text with AND filters, sorted pages and committed invalidation through a real worker', async () => {
+  const one = (await call('createTag', { name: 'code review' })).tag;
+  const two = (await call('createTag', { name: 'testing' })).tag;
+  const text = 'A review %b_c 你好\u0000tail';
+  const rows = [];
+
+  for (const [content, sourceApp] of [
+    [text, 'Terminal'],
+    ['B review %b_c', 'Terminal'],
+    ['C review %b_c', 'Terminal'],
+    ['D review %b_c', 'Editor']
+  ] as const) {
+    const captured = await call('captureSnippet', {
+      text: content,
+      sourceApp,
+      sourceAppId: `${sourceApp}.exe`
+    });
+
+    if (captured.status === 'empty') throw new Error('Expected owned snippet.');
+    rows.push(captured.snippet);
   }
 
-  it('preserves literal wildcard/FTS/SQL-shaped text, short terms, Unicode and NUL suffixes', () => {
-    const text = "👋İΣ 𐐀 你好 a%b_c (x)* prefix\u0000END Robert'); DROP TABLE snippets;--";
+  const [a, b, c, d] = rows;
 
-    store.invoke('createSnippet', { text });
-    for (const query of [
-      '👋',
-      'i',
-      'σ',
-      '𐐨',
-      '你好',
-      'a%',
-      '%',
-      '_',
-      '(x)*',
-      '\u0000end',
-      '"DROP TABLE"'
-    ])
-      expect(search(query).items[0]?.text, query).toBe(text);
-    expect(search('missing').total).toBe(0);
-    const page = search('i');
+  if (a === undefined || b === undefined || c === undefined || d === undefined)
+    throw new Error('Expected four owned snippets.');
+  for (const row of [a, b, d])
+    await call('setSnippetTags', { id: row.id, tagIds: [one.id, two.id] });
+  await call('setSnippetTags', { id: c.id, tagIds: [one.id] });
+  await call('recordSuccessfulCopy', { id: b.id });
+  const request: SearchRequest = {
+    query: 'tag:"CODE REVIEW" tag:testing from:terminal "%b_c" review',
+    tagIds: [one.id, two.id],
+    untagged: false,
+    sort: 'most-copied',
+    offset: 0,
+    limit: 1
+  };
+  const first = await call('searchSnippets', request);
+  const second = await call('searchSnippets', { ...request, offset: 1 });
 
-    expect(page.matches?.[page.items[0]?.id ?? '']).toContainEqual({ start: 2, end: 3 });
-    store.reopen();
-    expect(search('\u0000end').items[0]?.text).toBe(text);
+  expect(first).toMatchObject({ total: 2, offset: 0, hasMore: true, items: [{ id: b.id }] });
+  expect(second).toMatchObject({
+    total: 2,
+    offset: 1,
+    hasMore: false,
+    items: [{ id: a.id, text }]
   });
+  expect(second.matches?.[a.id]).toContainEqual({ start: 9, end: 13 });
+  await call('updateSnippet', { id: b.id, text: 'B changed' });
+  const changed = await call('searchSnippets', request);
 
-  it('intersects AND tag IDs, exact tag names, text and source name/identifier; reset and Untagged', () => {
-    const a = store.invoke('createTag', { name: 'code review' }).tag;
-    const b = store.invoke('createTag', { name: 'testing' }).tag;
-    const captured = store.invoke('captureSnippet', {
-      text: 'flaky test case',
-      sourceApp: 'Windows Terminal',
-      sourceAppId: 'terminal.exe'
-    });
-
-    if (captured.status === 'empty') throw new Error('Expected snippet.');
-    store.invoke('setSnippetTags', { id: captured.snippet.id, tagIds: [a.id, b.id] });
-    store.invoke('createSnippet', { text: 'flaky test case' });
-    expect(
-      search('tag:"CODE REVIEW" tag:testing from:TERMINAL.EXE flaky "test case"', {
-        tagIds: [a.id]
-      }).total
-    ).toBe(1);
-    expect(search('tag:review').total).toBe(0);
-    expect(search('from:terminal flaky', { untagged: true }).total).toBe(0);
-    expect(search('', { untagged: true }).total).toBe(1);
-    expect(search('', { untagged: true, tagIds: [a.id] }).total).toBe(0);
-    expect(search('').total).toBe(2);
-  });
-
-  it('refreshes committed changes, failed writes, tag rename/delete/merge, undo and clear', () => {
-    const snippet = store.invoke('createSnippet', { text: 'before' }).snippet;
-    const tag = store.invoke('createTag', { name: 'original' }).tag;
-    const target = store.invoke('createTag', { name: 'target' }).tag;
-
-    expect(search('before').total).toBe(1);
-    store.invoke('updateSnippet', { id: snippet.id, text: 'after' });
-    expect(search('before').total).toBe(0);
-    expect(search('after').total).toBe(1);
-    store.invoke('setSnippetTags', { id: snippet.id, tagIds: [tag.id] });
-    expect(search('tag:original').total).toBe(1);
-    store.invoke('updateTag', { id: tag.id, name: 'renamed', color: 'red' });
-    expect(search('tag:original').total).toBe(0);
-    expect(search('tag:renamed').items[0]?.tags[0]?.color).toBe('red');
-    store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id });
-    expect(search('tag:target').total).toBe(1);
-    store.invoke('deleteTag', { id: target.id });
-    expect(search('', { untagged: true }).total).toBe(1);
-    store.engine.context.db.exec(
-      `CREATE TRIGGER reject_update BEFORE UPDATE ON snippets BEGIN SELECT RAISE(ABORT, 'no'); END;`
-    );
-    expect(
-      store.engine.run(1, 'updateSnippet', { id: snippet.id, text: 'rejected' }).result.ok
-    ).toBe(false);
-    expect(search('after').total).toBe(1);
-    expect(search('rejected').total).toBe(0);
-    const deleted = store.invoke('deleteSnippet', { id: snippet.id });
-
-    expect(search('after').total).toBe(0);
-    store.invoke('undoDeleteSnippet', { undoToken: deleted.undoToken });
-    expect(search('after').total).toBe(1);
-    store.invoke('clearLibrary', {});
-    expect(search('').total).toBe(0);
-  });
-
-  it('keeps transactional batch imports and settings-only revisions coherent', () => {
-    expect(search('').total).toBe(0);
-    store.engine.context.transaction(() => {
-      for (let index = 0; index < 250; index += 1) {
-        // Future import paths use the same transactional repository write boundary.
-        const id = `00000000-0000-4000-8000-${String(index).padStart(12, '0')}`;
-
-        store.engine.context.db
-          .prepare(
-            'INSERT INTO snippets (id, text, textHash, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?)'
-          )
-          .run(
-            id,
-            `import ${String(index)}`,
-            'hash',
-            '2026-10-02T00:00:00.000Z',
-            '2026-10-02T00:00:00.000Z'
-          );
-      }
-    });
-    expect(search('import').total).toBe(250);
-    expect(search('import', { offset: 200 }).hasMore).toBe(false);
-    expect(() =>
-      store.engine.context.transaction(() => {
-        store.engine.context.db.exec('DELETE FROM snippets');
-        throw new Error('rollback');
-      })
-    ).toThrow('rollback');
-    expect(search('import').total).toBe(250);
-    store.engine.context.transaction(() => {
-      store.engine.context.db.prepare('INSERT INTO settings VALUES (?, ?)').run('test', 'true');
-    });
-    expect(search('import').revision).toBe(2);
-    expect(
-      store.engine.context.db.prepare('SELECT COUNT(*) AS n FROM search_dirty').get()?.['n']
-    ).toBe(0);
-  });
-
-  it('applies all stable sorts, null-last copies, exact counts and page boundaries', () => {
-    const a = store.invoke('createSnippet', { text: 'match a' }).snippet;
-    const b = store.invoke('createSnippet', { text: 'match b' }).snippet;
-    const c = store.invoke('createSnippet', { text: 'match c' }).snippet;
-
-    store.engine.context.transaction(() => {
-      const update = store.engine.context.db.prepare(
-        'UPDATE snippets SET createdAt = ?, updatedAt = ?, copyCount = ?, lastCopiedAt = ? WHERE id = ?'
-      );
-
-      update.run('2026-01-01T00:00:00.000Z', '2026-03-03T00:00:00.000Z', 1, null, a.id);
-      update.run(
-        '2026-02-02T00:00:00.000Z',
-        '2026-02-02T00:00:00.000Z',
-        3,
-        '2026-02-02T00:00:00.000Z',
-        b.id
-      );
-      update.run(
-        '2026-03-03T00:00:00.000Z',
-        '2026-01-01T00:00:00.000Z',
-        3,
-        '2026-03-03T00:00:00.000Z',
-        c.id
-      );
-    });
-    expect(search('match', { sort: 'newest' }).items.map((item) => item.id)).toEqual([
-      a.id,
-      b.id,
-      c.id
-    ]);
-    expect(search('match', { sort: 'oldest' }).items.map((item) => item.id)).toEqual([
-      a.id,
-      b.id,
-      c.id
-    ]);
-    expect(search('match', { sort: 'most-copied' }).items.map((item) => item.id)).toEqual(
-      [b.id, c.id].sort().concat(a.id)
-    );
-    expect(search('match', { sort: 'recently-copied' }).items.map((item) => item.id)).toEqual([
-      c.id,
-      b.id,
-      a.id
-    ]);
-    expect(search('match', { offset: 1, limit: 1 })).toMatchObject({
-      total: 3,
-      offset: 1,
-      hasMore: true,
-      items: [{ id: b.id }]
-    });
-    expect(search('match', { offset: 3 })).toMatchObject({ total: 3, hasMore: false, items: [] });
-  });
+  expect(changed).toMatchObject({ total: 1, hasMore: false, items: [{ id: a.id, text }] });
+  expect(changed.revision).toBeGreaterThan(first.revision);
 });

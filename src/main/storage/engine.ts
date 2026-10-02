@@ -1,6 +1,5 @@
 import type { ChangeEvent } from '../../shared/contracts/domain';
 import { failure, resultSchema } from '../../shared/contracts/result';
-import { recordSearchValidation } from '../../shared/search/measure-validation';
 import { SettingsRepository } from '../settings/repository';
 import { SnippetDelete } from '../snippets/snippet-delete';
 import { SnippetReader } from '../snippets/snippet-reader';
@@ -92,11 +91,8 @@ export class StorageEngine {
       const handler = this.handlers[operation] as (value: typeof request.data) => unknown;
       const action = () => {
         const value = handler(request.data);
-        const started = performance.now();
-        const parsed = resultSchema<unknown>(schema.response).parse({ ok: true, value });
 
-        if (operation === 'searchSnippets') recordSearchValidation(parsed, 'worker', started);
-        return parsed;
+        return resultSchema<unknown>(schema.response).parse({ ok: true, value });
       };
 
       const result = reads.has(operation) ? action() : this.context.transaction(action);
