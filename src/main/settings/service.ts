@@ -141,9 +141,10 @@ export class SettingsService {
       applied.push(controller);
       try {
         await controller.apply(next.settings);
-      } catch {
+      } catch (error) {
         throw new Error(
-          `Unable to apply ${controller.name}. Your previous preference remains active.`
+          `Unable to apply ${controller.name}. ${error instanceof Error ? error.message : 'Native registration failed.'} Your previous preference remains active.`,
+          { cause: error }
         );
       }
     }
