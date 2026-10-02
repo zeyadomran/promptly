@@ -1,4 +1,4 @@
-import { copyFile, cp, mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -7,6 +7,7 @@ import { _electron as electron, type ElectronApplication } from '@playwright/tes
 import { assertProfileIdentity } from '../profile-identity';
 import type { buildSessionSidecar } from './build-session-sidecar';
 import { isHostedMacosProbe } from './carbon-hosted';
+import { copySessionBundle } from './session-bundle';
 import { sessionDeadline } from './session-deadline';
 import { sessionLifetime } from './session-lifecycle';
 import { retireSession } from './session-retirement';
@@ -50,9 +51,10 @@ export async function launchSessionSidecar(
   }
 
   try {
-    await cp(path.resolve(`out/Promptly-darwin-${process.arch}/Promptly.app`), bundle, {
-      recursive: true
-    });
+    await copySessionBundle(
+      path.resolve(`out/Promptly-darwin-${process.arch}/Promptly.app`),
+      bundle
+    );
     // Only the fresh owned copy is modified; the normal distributable remains untouched.
     await rm(path.join(resources, 'app.asar'), { force: true });
     await mkdir(main, { recursive: true });

@@ -204,3 +204,24 @@ new deferred-bootstrap, hung-close and dual-failure cases exercise cleanup witho
 native input. The hosted-only control is skipped locally. Fresh hosted Swift
 compilation, tap availability and controlled counters remain pending; neither
 diagnostic outcome qualifies product delivery or physical/background behavior.
+
+At `07b0a25`, Mac [run 37008864110](https://github.com/zeyadomran/promptly/actions/runs/37008864110)
+(job 110843505180) failed the copied Electron launcher with ICU/GPU resource lookup
+errors after sidecar tap-ready success and before fresh inspection/control input.
+The byte-identical [failed control](macos-07-carbon-control-failed.json) and
+[final product command](macos-07-command-final-failed.json) receipts are retained.
+Windows foundation and both native lanes passed on that head. The failure is not
+rerun or counted as successful observation.
+
+Review established a copy topology defect: Node `fs.cp` defaults to rewriting
+relative symlinks against the source tree, so copied framework links pointed into
+the original bundle. The owned copy helper now explicitly sets
+`verbatimSymlinks: true`. A real relative framework-chain regression moves the
+original and verifies copied link text, canonical resource containment and readable
+ICU sentinel. This test requires Unix/macOS relative-symlink semantics and is
+skipped on Windows. Local strict checks passed: 382 tests plus one platform skip
+in 80 files, 363 handwritten modules; focused sidecar checks passed 27 with the
+same one platform skip. The native driver, input/tap guards and all product gates
+are unchanged. Packaging was not repeated for this test-only copy correction.
+Fresh macOS CI must verify topology and whether the resource crash is repaired;
+its observed cause and product delivery remain unqualified.
