@@ -4,16 +4,23 @@ import { fixtureMetadata, metadataBytes } from './fixture-metadata.mjs';
 export async function startPipeFixture(child, mode) {
   const lifecycle = fixtureLifecycle(child, mode);
   let buffer = '';
+  let reading = true;
+  let receivedBytes = 0;
   const read = (chunk) => {
-    buffer += chunk.toString('utf8');
-    if (Buffer.byteLength(buffer, 'utf8') > metadataBytes) {
+    if (!reading || !lifecycle.pending) return;
+    receivedBytes += chunk.length;
+    if (receivedBytes > metadataBytes) {
+      reading = false;
+      buffer = '';
       lifecycle.fail('metadataTooLarge');
       return;
     }
 
+    buffer += chunk.toString('utf8');
     const newline = buffer.indexOf('\n');
 
     if (newline === -1) return;
+    reading = false;
     try {
       lifecycle.accept(fixtureMetadata(buffer.slice(0, newline), child.pid));
     } catch {
@@ -21,7 +28,11 @@ export async function startPipeFixture(child, mode) {
     }
   };
 
-  const end = () => lifecycle.fail('outputClosed');
+  const end = () => {
+    reading = false;
+    buffer = '';
+    lifecycle.fail('outputClosed');
+  };
 
   child.stdout.on('data', read);
   child.stdout.on('end', end);

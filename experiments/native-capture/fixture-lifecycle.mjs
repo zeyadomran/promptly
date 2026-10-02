@@ -80,6 +80,9 @@ export function fixtureLifecycle(child, mode) {
 
   return {
     readiness,
+    get pending() {
+      return !settled;
+    },
     fail,
     receipt,
     accept(metadata) {

@@ -76,3 +76,36 @@ test.each(['end', 'close'])(
     expect(child.stdout.listenerCount('close')).toBe(0);
   }
 );
+
+test('oversized and later chunks are counted without decoding or accumulating them', async () => {
+  const child = ownedChild();
+  const readiness = startPipeFixture(child, 'selected');
+  const oversized = Buffer.alloc(4097);
+  const later = Buffer.alloc(8192);
+  const firstDecode = vi.spyOn(oversized, 'toString');
+  const lateDecode = vi.spyOn(later, 'toString');
+
+  child.stdout.emit('data', oversized);
+  child.stdout.emit('data', later);
+  const error = await readiness.catch((failure) => failure);
+
+  expect(error.receipt).toMatchObject({ status: 'metadataTooLarge', stdoutBytes: 12289 });
+  expect(firstDecode).not.toHaveBeenCalled();
+  expect(lateDecode).not.toHaveBeenCalled();
+  expect(error.cleanup.status).toBe('closed');
+});
+
+test('external stream failure stops decoding late chunks while cleanup settles', async () => {
+  const child = ownedChild();
+  const readiness = startPipeFixture(child, 'selected');
+  const later = Buffer.alloc(8192);
+  const decode = vi.spyOn(later, 'toString');
+
+  child.stdout.emit('error', Object.assign(new Error('private'), { code: 'EIO' }));
+  child.stdout.emit('data', later);
+  const error = await readiness.catch((failure) => failure);
+
+  expect(error.receipt).toMatchObject({ status: 'streamFailed', stdoutBytes: 8192 });
+  expect(decode).not.toHaveBeenCalled();
+  expect(error.cleanup.status).toBe('closed');
+});
