@@ -48,5 +48,5 @@ jobs:
         run: npm run check:static
       - name: Verify shared logic once
         run: npm test
-      - name: Package application
-        run: npm run package
+      - name: Build unsigned Windows installer (packages once)
+        run: npm run make

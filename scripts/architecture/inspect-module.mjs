@@ -74,6 +74,11 @@ export function inspectModule(filename, source, root) {
     }
 
     if (layer === 'main') {
+      if (
+        relative === 'src/main/lifecycle/application-startup.ts' &&
+        specifier === 'electron-squirrel-startup'
+      )
+        return;
       if (isTest && testPackages.has(specifier)) return;
       if (!specifier.startsWith('node:') && specifier !== 'electron')
         errors.push(`Unapproved main dependency: ${specifier}`);

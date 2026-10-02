@@ -1,6 +1,6 @@
 # Test policy
 
-CI uses functional service tests, strict static checks and actual Windows x64 packaging. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Functional tests run once on Windows CI, alongside static checks and packaging.
+CI uses functional service tests, strict static checks and actual unsigned Windows x64 installer construction. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Functional tests run once on Windows CI, alongside static checks and packaging.
 
 Keep application modules real and observe public service outcomes. Use a real owned SQLite database for persistence and reopen it to verify durable state. Inject external OS, time or database failure boundaries when necessary; avoid private-method, call-count and own-module mock assertions. Keep temporary files isolated and close owned providers/databases before deletion.
 
@@ -44,6 +44,7 @@ Before qualifying a release, use a packaged application with a fresh owned profi
 - Window mode/geometry/pin, hide/reactivate/second launch, reachable recovery, quit, multi-monitor and fullscreen behavior.
 - Settings persistence, native login/permission outcomes and responsive navigation.
 - Native chooser/reveal and library transfer UI; actual global shortcut delivery, physical modifier recognition, owned selection capture and source activation.
+- Unsigned install/upgrade/uninstall and database preservation, using [the release guide](releasing.md).
 - Windows tray visibility, taskbar theme/DPI icons, pause/resume, recent-item full-text copy, recovery after hiding and complete Quit drainage.
 
 Native preferences must be captured before application initialization and restored/read back after shutdown. Verify owned process death before deleting profiles; retain the tree if death is unverified. Use only owned selection/input/clipboard fixtures, never a user's data or desktop application. These checks are manual qualification work, not a replacement automated fixture framework.

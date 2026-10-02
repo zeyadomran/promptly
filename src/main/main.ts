@@ -5,6 +5,7 @@ import { app, ipcMain, nativeTheme } from 'electron';
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { createLibraryServices } from './library-services';
+import { ownApplication } from './lifecycle/application-startup';
 import { closeDesktopResources } from './lifecycle/close-desktop-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import { desktopOnboarding } from './onboarding/desktop-onboarding';
@@ -67,15 +68,8 @@ const shutdown = createDesktopShutdown({
     app.exit(code);
   }
 });
-const supported = process.platform === 'win32' && process.arch === 'x64';
-const primaryInstance = supported && app.requestSingleInstanceLock();
+const primaryInstance = ownApplication();
 
-if (!supported) {
-  console.error('Promptly supports Windows x64 only.');
-  app.exit(1);
-}
-
-if (!primaryInstance) app.quit();
 app.on('second-instance', () => {
   openWindow();
 });
