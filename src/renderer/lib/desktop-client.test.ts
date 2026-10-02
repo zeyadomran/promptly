@@ -37,6 +37,16 @@ function setup() {
 }
 
 describe('authoritative renderer queries', () => {
+  it('coalesces a same-turn typing burst into one latest IPC without a timer', async () => {
+    const { client, fetch, receive } = setup();
+
+    fetch.mockResolvedValue(page(1));
+    await Promise.all(['a', 'ab', 'abc'].map((query) => client.search({ ...request, query })));
+    expect(fetch).toHaveBeenCalledExactlyOnceWith({ ...request, query: 'abc' });
+    expect(receive).toHaveBeenCalledExactlyOnceWith(page(1), { ...request, query: 'abc' });
+    client.dispose();
+  });
+
   it('rejects late responses from previous search terms', async () => {
     const { client, fetch, receive } = setup();
     let finishFirst: ((value: DesktopResult<SearchPage>) => void) | undefined;
@@ -51,10 +61,12 @@ describe('authoritative renderer queries', () => {
       .mockResolvedValueOnce(page(2));
     const first = client.search(request);
 
-    await client.search({ ...request, query: 'newer' });
+    await Promise.resolve();
+    const second = client.search({ ...request, query: 'newer' });
+
     finishFirst?.(page(1));
-    await first;
-    expect(receive).toHaveBeenCalledExactlyOnceWith(page(2));
+    await Promise.all([first, second]);
+    expect(receive).toHaveBeenCalledExactlyOnceWith(page(2), { ...request, query: 'newer' });
   });
   it('refetches on revisioned library changes and rejects old snapshots', async () => {
     const { client, fetch, receive, emit } = setup();
@@ -67,7 +79,7 @@ describe('authoritative renderer queries', () => {
     receive.mockClear();
     emit({ revision: 4, domains: ['snippets'] });
     await vi.waitFor(() => {
-      expect(receive).toHaveBeenCalledExactlyOnceWith(page(4));
+      expect(receive).toHaveBeenCalledExactlyOnceWith(page(4), request);
     });
     expect(fetch).toHaveBeenCalledTimes(3);
     emit({ revision: 2, domains: ['snippets'] });
@@ -85,6 +97,8 @@ describe('authoritative renderer queries', () => {
         })
     );
     const pending = client.search(request);
+
+    await Promise.resolve();
 
     client.dispose();
     client.dispose();

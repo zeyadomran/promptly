@@ -5,15 +5,21 @@ import { build } from 'vite';
 
 export async function buildIpcFixture(
   rendererUrl?: string,
-  mainEntry = 'tests/e2e/fixtures/ipc-main.ts'
+  mainEntry = 'tests/e2e/fixtures/ipc-main.ts',
+  rendererName = 'index'
 ): Promise<void> {
-  const url = rendererUrl ?? pathToFileURL(path.resolve('.vite/ipc-fixture/index.html')).href;
+  const url =
+    rendererUrl ?? pathToFileURL(path.resolve(`.vite/ipc-fixture/${rendererName}.html`)).href;
 
   await build({
     configFile: false,
     root: path.resolve('tests/e2e/fixtures'),
     base: './',
-    build: { outDir: path.resolve('.vite/ipc-fixture'), emptyOutDir: true }
+    build: {
+      outDir: path.resolve('.vite/ipc-fixture'),
+      emptyOutDir: true,
+      rollupOptions: { input: path.resolve(`tests/e2e/fixtures/${rendererName}.html`) }
+    }
   });
   await build({
     configFile: false,

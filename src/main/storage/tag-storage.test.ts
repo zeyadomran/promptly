@@ -56,7 +56,7 @@ describe('transactional tags and list queries', () => {
     });
     expect(
       store.engine.run(1, 'searchSnippets', { ...allSnippets, query: 'from:terminal text' }).result
-    ).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    ).toMatchObject({ ok: true, value: { total: 0, items: [] } });
   });
 
   it('orders recapture by updatedAt, oldest by createdAt, and successful copy statistics', () => {

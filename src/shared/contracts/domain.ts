@@ -59,7 +59,21 @@ export const searchPageSchema = z.strictObject({
   items: z.array(snippetSchema).max(200),
   total: z.number().int().nonnegative(),
   offset: z.number().int().nonnegative(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
+  searchDurationMs: z.number().nonnegative().optional(),
+  matches: z
+    .record(
+      idSchema,
+      z
+        .array(
+          z.strictObject({
+            start: z.number().int().nonnegative(),
+            end: z.number().int().positive()
+          })
+        )
+        .max(512)
+    )
+    .optional()
 });
 export const snippetSnapshotSchema = z.strictObject({
   revision: revisionSchema,

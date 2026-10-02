@@ -12,13 +12,7 @@ export interface TextSegment extends HighlightRange {
 export function findTextMatches(text: string, query: string): HighlightRange[] {
   if (query.length === 0) return [];
 
-  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const matches = text.matchAll(new RegExp(escaped, 'giu'));
-
-  return Array.from(matches, (match) => ({
-    start: match.index,
-    end: match.index + match[0].length
-  }));
+  return matchRanges(text, [foldText(query)]);
 }
 
 /** Invalid offsets are ignored and intersecting ranges are merged before rendering. */
@@ -72,3 +66,5 @@ export function splitHighlightedText(
 
   return segments;
 }
+
+import { foldText, matchRanges } from '../../shared/search/match-text';

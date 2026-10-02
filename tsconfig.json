@@ -20,5 +20,5 @@
       "@/*": ["./src/renderer/*"]
     }
   },
-  "include": ["src", "tests/**/*.ts", "*.config.ts"]
+  "include": ["src", "tests/**/*.ts", "tests/**/*.tsx", "*.config.ts"]
 }

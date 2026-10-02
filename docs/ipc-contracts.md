@@ -38,7 +38,10 @@ views must follow the same invalidation pattern for settings/tag snapshots.
 ## Service integration rules
 
 - Search accepts query, AND tag IDs, untagged state, sort, offset, and a page size
-  of 1–200. Pagination responses include revision, items, total, offset, hasMore.
+  of 1–200. Pagination responses include revision, items, total, offset, hasMore,
+  optional UUID-keyed UTF-16 match ranges and worker search duration. See
+  [search semantics](architecture/search.md). Existing named bridge methods remain
+  compatible; the production worker supplies ranges and timing.
 - Snippet and tag IDs are UUIDs; timestamps are UTC ISO strings. Full snippet text
   is retained (bounded at one million characters). Tags use lowercase canonical
   names and the design palette: blue, green, red, purple, amber, teal, pink, lime.
