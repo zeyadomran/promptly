@@ -1,0 +1,52 @@
+import AppKit
+import Foundation
+
+let app = NSApplication.shared
+let mode = CommandLine.arguments[1]
+let directory = CommandLine.arguments[2]
+app.setActivationPolicy(.regular)
+let window = NSWindow(contentRect: NSRect(x: 200, y: 200, width: 480, height: 160),
+    styleMask: [.titled, .closable], backing: .buffered, defer: false)
+window.title = "Promptly owned selection fixture"
+var textView: SelectionView?
+if mode == "password" {
+    let field = NSSecureTextField(frame: NSRect(x: 20, y: 70, width: 300, height: 30))
+    field.stringValue = "owned fixture password"
+    window.contentView?.addSubview(field)
+    window.makeFirstResponder(field)
+} else {
+    let text = SelectionView(frame: NSRect(x: 10, y: 10, width: 460, height: 140))
+    text.mode = mode
+    text.string = mode == "disjoint" ? "first 雪|🙂\r\nsecond" :
+        mode == "whitespace" ? " \t\r\n " : "  Promptly 雪🙂\r\n\"fixture\"\t\u{0000}end  "
+    window.contentView?.addSubview(text)
+    window.makeFirstResponder(text)
+    text.setSelectedRange(NSRange(location: 0, length: mode == "empty" ? 0 : text.string.utf16.count))
+    textView = text
+}
+func writeState(_ name: String) {
+    let state: [String: Any] = ["fixturePid": ProcessInfo.processInfo.processIdentifier,
+        "foregroundMatched": NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier,
+        "selectionLocation": textView?.selectedRange().location ?? 0,
+        "selectionLength": textView?.selectedRange().length ?? 0,
+        "pasteboardChangeCount": NSPasteboard.general.changeCount]
+    if let data = try? JSONSerialization.data(withJSONObject: state) {
+        try? data.write(to: URL(fileURLWithPath: directory).appendingPathComponent(name), options: .atomic)
+    }
+}
+app.finishLaunching()
+DispatchQueue.main.async {
+    window.makeKeyAndOrderFront(nil)
+    if #available(macOS 14.0, *) { app.activate() }
+}
+DispatchQueue.main.asyncAfter(deadline: .now() + 1) { writeState("ready.json") }
+// Owned file signals permit state reads/clean shutdown without input injection or AppleScript.
+let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
+    if FileManager.default.fileExists(atPath: directory + "/inspect") {
+        try? FileManager.default.removeItem(atPath: directory + "/inspect")
+        writeState("state.json")
+    }
+    if FileManager.default.fileExists(atPath: directory + "/stop") { app.terminate(nil) }
+}
+DispatchQueue.main.asyncAfter(deadline: .now() + 60) { app.terminate(nil) }
+app.run()

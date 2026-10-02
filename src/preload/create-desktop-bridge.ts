@@ -40,7 +40,7 @@ export function createDesktopBridge(
     if (!request.success) return failure('INVALID_REQUEST', 'The desktop request is malformed.');
     try {
       const reply = await transport.invoke(operationChannel(name), request.data);
-      const result = resultSchema(operation.response).safeParse(reply);
+      const result = resultSchema<unknown>(operation.response).safeParse(reply);
 
       return result.success
         ? (result.data as DesktopResult<OperationResponse<K>>)
@@ -88,6 +88,8 @@ export function createDesktopBridge(
     mergeTags: (request) => call('mergeTags', request),
     getSettings: (request) => call('getSettings', request),
     updateSettings: (request) => call('updateSettings', request),
+    getMacosPermissions: (request) => call('getMacosPermissions', request),
+    openMacosPermissionSettings: (request) => call('openMacosPermissionSettings', request),
     captureSelection: (request) => call('captureSelection', request),
     subscribeChanges(listener) {
       if (disposed) return () => undefined;

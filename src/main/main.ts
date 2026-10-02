@@ -3,8 +3,11 @@ import path from 'node:path';
 import { app, BrowserWindow, ipcMain, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { closeDesktopServices } from './lifecycle/close-desktop-services';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
+import { createMacosSelection, type MacosSelection } from './platform/macos/macos-selection';
+import { macosPermissionServices } from './platform/macos/permission-services';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import {
@@ -20,10 +23,16 @@ let desktop: ReturnType<typeof installDesktopIpc>;
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let windowsSelection: WindowsSelection | undefined;
+let macosSelection: MacosSelection | undefined;
 const shutdown = createDesktopShutdown({
   cleanup: () =>
     closeSettingsStorage(settings, storage, {
-      close: () => windowsSelection?.dispose() ?? Promise.resolve()
+      close: async () => {
+        await closeDesktopServices([
+          () => windowsSelection?.dispose() ?? Promise.resolve(),
+          () => macosSelection?.dispose() ?? Promise.resolve()
+        ]);
+      }
     }),
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
@@ -37,7 +46,11 @@ const shutdown = createDesktopShutdown({
 });
 
 function openWindow(): void {
-  void createMainWindow(desktop.windows, settings?.current).catch((error: unknown) => {
+  void (async () => {
+    // Record the external app before showing/activating any Promptly window.
+    await macosSelection?.foregroundIdentityResult();
+    await createMainWindow(desktop.windows, settings?.current);
+  })().catch((error: unknown) => {
     console.error('Unable to open Promptly:', error);
     shutdown.fatal();
   });
@@ -46,6 +59,17 @@ function openWindow(): void {
 void app
   .whenReady()
   .then(async () => {
+    if (process.platform === 'darwin') {
+      macosSelection = createMacosSelection({
+        resourcesPath: process.resourcesPath,
+        packaged: app.isPackaged,
+        applicationPath: app.getAppPath()
+      });
+      void macosSelection.ready().catch(() => {
+        console.warn('macOS selection helper unavailable');
+      });
+    }
+
     if (process.platform === 'win32') {
       windowsSelection = createWindowsSelection({
         resourcesPath: process.resourcesPath,
@@ -70,7 +94,11 @@ void app
     await settings.initialize();
     desktop = installDesktopIpc(
       ipcMain,
-      { ...storageDesktopServices(storage), ...settings.services },
+      {
+        ...storageDesktopServices(storage),
+        ...settings.services,
+        ...macosPermissionServices(macosSelection)
+      },
       revision,
       () => {
         if (settings === undefined) throw new Error('Preferences unavailable.');
