@@ -7,6 +7,7 @@ const owned = vi.hoisted(() => ({
   storageClose: vi.fn<() => Promise<void>>(),
   settingsClose: vi.fn<() => Promise<void>>(),
   settingsInitialize: vi.fn<() => Promise<void>>(),
+  settingsControllers: vi.fn(() => ({})),
   nativeDispose: vi.fn<() => Promise<void>>(),
   keyboardClose: vi.fn<() => Promise<void>>(),
   stopCommands: vi.fn(),
@@ -56,7 +57,7 @@ vi.mock('./platform/macos/macos-selection', () => ({
 }));
 vi.mock('./storage/desktop-services', () => ({ storageDesktopServices: () => ({}) }));
 vi.mock('./settings/electron-controllers', () => ({
-  electronSettingsControllers: () => ({}),
+  electronSettingsControllers: owned.settingsControllers,
   updateWindowBackgrounds: vi.fn()
 }));
 vi.mock('./settings/service', () => ({
@@ -129,6 +130,12 @@ it
       error
     );
     expect(owned.storageClose).toHaveBeenCalledOnce();
+    if (failure === 'storage') {
+      expect(owned.settingsControllers).not.toHaveBeenCalled();
+      expect(owned.settingsInitialize).not.toHaveBeenCalled();
+      expect(owned.window).not.toHaveBeenCalled();
+    }
+
     expect(owned.exit).not.toHaveBeenCalled();
     const preventDefault = vi.fn();
 

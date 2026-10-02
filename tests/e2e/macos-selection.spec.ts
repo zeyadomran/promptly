@@ -3,7 +3,9 @@ import { cpus, release } from 'node:os';
 import { expect, test } from '@playwright/test';
 
 import { createMacosSelection } from '../../src/main/platform/macos/macos-selection';
+import { recordMacosCapture } from './macos-capture-receipt';
 import { buildMacosFixture, macosFixture, macosResources } from './macos-fixture';
+import { assertMacosSelectionRecovery } from './macos-selection-recovery';
 import { saveNativeReceipt } from './native-receipt';
 
 test.describe('packaged production macOS selection', () => {
@@ -25,10 +27,10 @@ test.describe('packaged production macOS selection', () => {
       const processToReadyMs = performance.now() - started;
       const permissions = await adapter.getPermissions();
 
+      evidence.push({ ready, processToReadyMs, permissions, hookInstalled: false });
       expect(ready.warmupReady).toBe(true);
       expect(permissions.accessibility).toBe('granted');
       expect(permissions.inputMonitoring).toMatch(/^(granted|denied)$/);
-      evidence.push({ ready, processToReadyMs, permissions, hookInstalled: false });
       for (const [mode, status, text] of [
         ['selected', 'ok', '  Promptly 雪🙂\r\n"fixture"\t\u0000end  '],
         ['disjoint', 'ok', 'first 雪🙂\r\nsecond'],
@@ -44,6 +46,14 @@ test.describe('packaged production macOS selection', () => {
           expect(fixture.foregroundMatched).toBe(true);
           const identityResult = await adapter.foregroundIdentityResult();
 
+          evidence.push({
+            phase: 'matrix-identity',
+            mode,
+            status: identityResult.status,
+            ownedPidMatched:
+              identityResult.status === 'ok' &&
+              identityResult.identity.source?.pid === fixture.fixturePid
+          });
           expect(identityResult.status).toBe('ok');
           if (identityResult.status !== 'ok') throw new Error('Missing owned identity');
           const identity = identityResult.identity;
@@ -58,6 +68,11 @@ test.describe('packaged production macOS selection', () => {
             const captureStarted = performance.now();
             const result = await adapter.captureSelection(identity);
 
+            recordMacosCapture(evidence, 'matrix-capture', captureStarted, result, {
+              mode,
+              sample,
+              ownedPidMatched: identity.source?.pid === fixture.fixturePid
+            });
             durations.push(performance.now() - captureStarted);
             expect(result.status, mode).toBe(status);
             if (result.status === 'ok') {
@@ -90,30 +105,7 @@ test.describe('packaged production macOS selection', () => {
         }
       }
 
-      const first = await macosFixture('selected');
-
-      try {
-        const identity = await adapter.foregroundIdentityResult();
-        const second = await macosFixture('empty');
-
-        try {
-          if (identity.status !== 'ok') throw new Error('Missing owned identity');
-          expect((await adapter.captureSelection(identity.identity)).status).toBe(
-            'foregroundChanged'
-          );
-          await first.close();
-          expect(await adapter.activateSource(identity.identity)).toBe('foregroundChanged');
-          const next = await adapter.foregroundIdentityResult();
-
-          if (next.status !== 'ok') throw new Error('Missing recovery identity');
-          expect(next.identity.source?.pid).toBe(second.fixturePid);
-          expect((await adapter.captureSelection(next.identity)).status).toBe('empty');
-        } finally {
-          await second.close();
-        }
-      } finally {
-        await first.close();
-      }
+      await assertMacosSelectionRecovery(adapter, evidence);
 
       completed = true;
     } finally {
