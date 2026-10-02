@@ -15,7 +15,8 @@ func capture(_ request: [String: Any]) -> [String: Any] {
     } else {
         // Direct protocol callers must still explicitly guard the expected foreground PID.
         guard let pid = jsonInteger(request["expectedPid"]),
-              NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else { return ["status": "foregroundChanged"] }
+              let app = NSWorkspace.shared.frontmostApplication,
+              Int64(app.processIdentifier) == pid else { return ["status": "foregroundChanged"] }
         identity = SourceIdentity.record()
     }
     guard let target = identity, target.valid(foreground: true),
