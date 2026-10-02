@@ -11,7 +11,7 @@ import {
   snippetSnapshotSchema,
   snippetTextSchema,
   tagColorSchema,
-  tagNameSchema,
+  tagInputNameSchema,
   tagSchema,
   tagSummarySchema
 } from './domain';
@@ -76,16 +76,24 @@ export const operations = {
     request: z.strictObject({ id: idSchema, tagIds: z.array(idSchema).max(100) }),
     response: snippetSnapshotSchema
   },
+  setTagMembership: {
+    request: z.strictObject({ id: idSchema, tagId: idSchema, assigned: z.boolean() }),
+    response: snippetSnapshotSchema
+  },
+  ensureTag: {
+    request: z.strictObject({ name: tagInputNameSchema, snippetId: idSchema.optional() }),
+    response: tagSnapshotSchema
+  },
   listTags: {
     request: emptySchema,
     response: z.strictObject({ revision: revisionSchema, tags: z.array(tagSummarySchema) })
   },
   createTag: {
-    request: z.strictObject({ name: tagNameSchema, color: tagColorSchema.optional() }),
+    request: z.strictObject({ name: tagInputNameSchema, color: tagColorSchema.optional() }),
     response: tagSnapshotSchema
   },
   updateTag: {
-    request: z.strictObject({ id: idSchema, name: tagNameSchema, color: tagColorSchema }),
+    request: z.strictObject({ id: idSchema, name: tagInputNameSchema, color: tagColorSchema }),
     response: tagSnapshotSchema
   },
   deleteTag: { request: idRequestSchema, response: revisionResponseSchema },

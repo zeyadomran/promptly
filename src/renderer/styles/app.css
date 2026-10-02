@@ -8,6 +8,7 @@
 @import './settings.css';
 @import './shortcuts.css';
 @import './library.css';
+@import './tag-picker.css';
 @import './storage.css';
 
 :root {

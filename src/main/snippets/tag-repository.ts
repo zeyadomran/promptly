@@ -50,6 +50,29 @@ export class TagRepository {
     return { revision: this.reader.context.revision(), tag: this.get(input.id) };
   }
 
+  ensure(input: StorageRequest<'ensureTag'>) {
+    // Validate the captured target before creating anything; clear/delete cannot leave an orphan.
+    if (input.snippetId !== undefined) this.reader.get(input.snippetId);
+    const row = this.reader.context.db
+      .prepare('SELECT id FROM tags WHERE name = ? COLLATE NOCASE')
+      .get(input.name);
+    const tag = typeof row?.['id'] === 'string' ? this.get(row['id']) : this.create(input).tag;
+
+    if (input.snippetId !== undefined)
+      this.membership({ id: input.snippetId, tagId: tag.id, assigned: true });
+    return { revision: this.reader.context.revision(), tag };
+  }
+
+  membership(input: StorageRequest<'setTagMembership'>) {
+    const snippet = this.reader.get(input.id);
+    const ids = snippet.tags.map((tag) => tag.id).filter((id) => id !== input.tagId);
+
+    if (input.assigned) ids.push(input.tagId);
+    if (ids.length > 100)
+      throw new StorageError('INVALID_REQUEST', 'A snippet can have at most 100 tags.');
+    return this.set({ id: input.id, tagIds: ids });
+  }
+
   delete(input: StorageRequest<'deleteTag'>) {
     this.get(input.id);
     this.reader.context.db.prepare('DELETE FROM tags WHERE id = ?').run(input.id);

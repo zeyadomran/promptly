@@ -7,8 +7,11 @@ export interface LibraryCommandsPort {
   error: string | undefined;
 }
 export interface LibraryTagActions {
-  createTag(): void;
-  editSelectedTags(id: string): void;
+  createTag(trigger?: HTMLElement): void;
+  editSelectedTags(id: string, trigger?: HTMLElement): void;
+  removeTag?(snippetId: string, tagId: string): Promise<void>;
+  readonly busy?: boolean;
+  readonly error?: string | undefined;
 }
 export const LibraryCommandsContext = createContext<LibraryCommandsPort | undefined>(undefined);
 export const LibraryTagActionsContext = createContext<LibraryTagActions | undefined>(undefined);
