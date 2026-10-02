@@ -61,14 +61,18 @@ test('cleanup timeout is bounded and never claims the child terminated', async (
   vi.useRealTimers();
 });
 
-test('a closed readiness pipe rejects immediately and observes owned termination', async () => {
-  const child = ownedChild();
-  const readiness = startPipeFixture(child, 'selected');
+test.each(['end', 'close'])(
+  'readiness pipe %s rejects immediately and observes owned termination',
+  async (event) => {
+    const child = ownedChild();
+    const readiness = startPipeFixture(child, 'selected');
 
-  child.stdout.emit('end');
-  const error = await readiness.catch((failure) => failure);
+    child.stdout.emit(event);
+    const error = await readiness.catch((failure) => failure);
 
-  expect(error.receipt.status).toBe('outputClosed');
-  expect(error.cleanup.status).toBe('closed');
-  expect(child.stdout.listenerCount('end')).toBe(0);
-});
+    expect(error.receipt.status).toBe('outputClosed');
+    expect(error.cleanup.status).toBe('closed');
+    expect(child.stdout.listenerCount('end')).toBe(0);
+    expect(child.stdout.listenerCount('close')).toBe(0);
+  }
+);

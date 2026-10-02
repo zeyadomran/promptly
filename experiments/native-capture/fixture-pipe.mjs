@@ -25,6 +25,7 @@ export async function startPipeFixture(child, mode) {
 
   child.stdout.on('data', read);
   child.stdout.on('end', end);
+  child.stdout.on('close', end);
   try {
     const metadata = await lifecycle.readiness;
 
@@ -57,5 +58,6 @@ export async function startPipeFixture(child, mode) {
     buffer = '';
     child.stdout.off('data', read);
     child.stdout.off('end', end);
+    child.stdout.off('close', end);
   }
 }

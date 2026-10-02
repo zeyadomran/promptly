@@ -14,7 +14,7 @@ exit reproduced the generic `AbortError` at 5,017.92 ms without any receipt.
 
 The follow-up was built from current main
 `f2d90ba9d23b27a8a28d76006254e5a5c90845df`. Local clean installation and strict
-type/lint/format/architecture checks passed, with 231 tests including 18 lifecycle
+type/lint/format/architecture checks passed, with 232 tests including 19 lifecycle
 regressions. They exercise actual owned Node subprocesses for early exit42, missing
 executable, malformed/wrong-PID/oversized metadata, silent five-second timeout,
 observed/idempotent close and forced termination. Controlled event/identity seams
