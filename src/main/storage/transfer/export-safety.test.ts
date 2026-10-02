@@ -1,5 +1,15 @@
 // @vitest-environment node
-import { mkdtemp, open, readdir, readFile, rename, rm, unlink, writeFile } from 'node:fs/promises';
+import {
+  mkdtemp,
+  open,
+  readdir,
+  readFile,
+  rename,
+  rm,
+  symlink,
+  unlink,
+  writeFile
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -8,6 +18,7 @@ import { afterEach, beforeEach, expect, it } from 'vitest';
 import type { PortableBackup } from '../../../shared/contracts/backup/format';
 import { atomicExport } from './atomic-export';
 import { encodeExport } from './encode-export';
+import { validateExportDestination } from './export-destination';
 
 let directory: string;
 let destination: string;
@@ -19,6 +30,25 @@ beforeEach(async () => {
 });
 afterEach(async () => {
   await rm(directory, { recursive: true, force: true });
+});
+
+it('protects the active DB and absent sidecars even through a canonical directory alias', async () => {
+  const database = path.join(directory, 'promptly.sqlite');
+  const alias = path.join(directory, 'alias');
+
+  await writeFile(database, 'owned database');
+  await symlink(directory, alias, process.platform === 'win32' ? 'junction' : 'dir');
+  const protectedFiles = [database, `${database}-wal`, `${database}-shm`];
+
+  for (const basename of ['promptly.sqlite', 'promptly.sqlite-wal', 'promptly.sqlite-shm']) {
+    await expect(
+      validateExportDestination(path.join(alias, basename), protectedFiles)
+    ).rejects.toThrow('active storage');
+  }
+
+  await expect(
+    validateExportDestination(path.join(alias, 'backup.json'), protectedFiles)
+  ).resolves.toBeUndefined();
 });
 
 it.each(['write', 'flush', 'replace'] as const)(

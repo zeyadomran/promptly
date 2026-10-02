@@ -4,7 +4,7 @@ import path from 'node:path';
 import { expect, test } from '@playwright/test';
 
 import { backupSchema } from '../../src/shared/contracts/backup/format';
-import { launchIsolatedElectron } from '../isolated-electron';
+import { launchOwnedTransferPackage } from './storage-packaged-fixture';
 
 test('packaged production transfer commits and restores through the actual main, preload and worker', async () => {
   // Production startup applies native login preferences. Only an ephemeral hosted OS may run this lane.
@@ -12,18 +12,8 @@ test('packaged production transfer commits and restores through the actual main,
     process.env['GITHUB_ACTIONS'] !== 'true' ||
       process.env['RUNNER_ENVIRONMENT'] !== 'github-hosted'
   );
-  const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
-  const executable =
-    process.platform === 'darwin'
-      ? path.join(directory, 'Promptly.app', 'Contents', 'MacOS', 'Promptly')
-      : path.join(directory, 'Promptly.exe');
-  const env = Object.fromEntries(
-    Object.entries(process.env).filter(
-      (entry): entry is [string, string] =>
-        entry[1] !== undefined && entry[0] !== 'ELECTRON_RUN_AS_NODE'
-    )
-  );
-  const owned = await launchIsolatedElectron(executable, env);
+  const owned = await launchOwnedTransferPackage();
+  const failures: unknown[] = [];
 
   try {
     let application = owned.application;
@@ -40,6 +30,7 @@ test('packaged production transfer commits and restores through the actual main,
 
     if (settings === undefined) throw new Error('Missing production Settings window.');
     await settings.getByRole('tab', { name: 'Storage' }).click();
+    owned.stage('export');
     // Substitute only native chooser completion. Product owner checks, serialization, atomic write and IPC stay real.
     const filename = path.join(owned.profile, 'packaged-backup.json');
 
@@ -53,6 +44,7 @@ test('packaged production transfer commits and restores through the actual main,
 
     expect(backupSchema.parse(JSON.parse(bytes.toString('utf8'))).snippets[0]?.text).toBe(text);
     await settings.getByRole('button', { name: 'Clear all…' }).click();
+    owned.stage('typed-clear');
     await settings.getByRole('textbox', { name: 'Type CLEAR ALL to confirm' }).fill('CLEAR ALL');
     await settings
       .getByRole('dialog')
@@ -60,9 +52,11 @@ test('packaged production transfer commits and restores through the actual main,
       .click();
     await expect(settings.getByRole('dialog')).not.toBeVisible();
     await settings.getByRole('button', { name: 'Import JSON…' }).click();
+    owned.stage('preview-and-import');
     await settings.getByRole('dialog').getByRole('button', { name: 'Import', exact: true }).click();
     await expect(settings.getByRole('dialog')).not.toBeVisible();
     await owned.restart();
+    owned.stage('durable-restart');
     application = owned.application;
     page = await application.firstWindow();
     const library = await page.evaluate(() =>
@@ -93,7 +87,19 @@ test('packaged production transfer commits and restores through the actual main,
     await test
       .info()
       .attach('packaged-transfer', { path: receipt, contentType: 'application/json' });
+    owned.stage('passed');
+  } catch (error) {
+    failures.push(error);
   } finally {
-    await owned.dispose();
+    try {
+      await owned.dispose();
+    } catch (cleanup) {
+      failures.push(cleanup);
+    }
   }
+
+  if (failures.length > 0)
+    throw new AggregateError(failures, 'Packaged transfer or restoration failed.', {
+      cause: failures[0]
+    });
 });

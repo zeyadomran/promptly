@@ -2,7 +2,9 @@ import { realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 async function identity(filename: string): Promise<string> {
-  const canonical = await realpath(filename).catch(() => path.resolve(filename));
+  const canonical = await realpath(filename).catch(async () =>
+    path.join(await realpath(path.dirname(filename)), path.basename(filename))
+  );
 
   return process.platform === 'win32' ? canonical.toLowerCase() : canonical;
 }

@@ -116,6 +116,17 @@ test('owned Storage UI exports, validates, cancels, imports and clears durably w
     ).toMatchObject({ ok: true, value: { items: [{ text }] } });
     await settings.getByRole('tab', { name: 'Storage' }).click();
     await resizeSettings(application, 900);
+    const reveal = settings.getByRole('button', { name: /Reveal in (Explorer|Finder)/u });
+
+    await expect(reveal).toBeEnabled();
+    await reveal.click();
+    expect(
+      await application.evaluate(
+        ({ app }) => new Promise<boolean>((resolve) => app.emit('owned-transfer-reveal', resolve))
+      )
+    ).toBe(true);
+    await expect(reveal).toBeEnabled();
+    await expect(reveal).toHaveCSS('opacity', '1');
     await settings.screenshot({
       path: test.info().outputPath('storage-light-900.png'),
       scale: 'css'
@@ -123,6 +134,25 @@ test('owned Storage UI exports, validates, cancels, imports and clears durably w
     expect(
       await settings.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)
     ).toBe(true);
+    const csp = await settings
+      .locator('meta[http-equiv="Content-Security-Policy"]')
+      .getAttribute('content');
+
+    expect(csp).toContain("'nonce-");
+    expect(csp).not.toContain('unsafe-inline');
+    await settings.getByRole('tab', { name: 'Appearance' }).click();
+    await settings
+      .getByRole('radiogroup', { name: 'Theme' })
+      .getByText('Dark', { exact: true })
+      .click();
+    await settings.getByRole('tab', { name: 'Storage' }).click();
+    await resizeSettings(application, 440);
+    await expect(settings.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(settings.getByRole('button', { name: 'Import JSON…' })).toBeEnabled();
+    await settings.screenshot({
+      path: test.info().outputPath('storage-dark-440.png'),
+      scale: 'css'
+    });
   } finally {
     await owned.dispose();
   }
