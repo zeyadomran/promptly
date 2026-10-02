@@ -31,7 +31,11 @@ Activation validates the same live identity, denies higher-integrity or unreadab
 It never launches a path, shell command, or application inferred from a name.
 
 Only safe nullable provenance `{pid,name,id}` leaves the helper: `id` is a bounded
-executable basename, without a path or document/window title. Persist only display
+executable basename, without a path or document/window title. `QueryFullProcessImageName`
+reads the actual basename through a minimum-query-rights handle whose creation time
+matches the recorded identity on that same handle; failures yield null provenance.
+It preserves non-`.exe` suffixes and extensionless images rather than inventing a suffix.
+Persist only display
 name and basename through a later main capture service. Live identity tokens are
 not portable or persisted. **A stored basename alone cannot activate after an app
 or helper restart.** The later Open source app operation must take a snippet ID,
@@ -57,9 +61,10 @@ The production main starts readiness early and prevents `before-quit` until that
 disposal finishes, so a blocked child is not stranded when Electron exits. It does
 not install a capture IPC method.
 
-The quit guard distinguishes cleanup started from cleanup complete and prevents
-every repeated quit request while cleanup is pending. Future storage integration
-must use one shared coordinator awaiting both cleanups, including when one fails.
+One shared quit coordinator distinguishes cleanup started from cleanup complete and
+prevents every repeated quit request while cleanup is pending. It awaits both
+storage close and native disposal with `allSettled`, then aggregates failures.
+A fast failure cannot release the quit gate while the other cleanup is pending.
 
 Frames are byte-bounded at **6,356,992 UTF-8 bytes**, excluding LF. UTF-8 decoding
 is strict across fragments, malformed/partial EOF frames fail closed, and no stderr
@@ -97,7 +102,10 @@ failed three positive owned-fixture cases with `permissionDenied`: the former gu
 accepted only `TokenElevation == 0`, regardless of the helper's context. That blanket
 guard is replaced by the relative integrity rule. Capabilities and owned fixture
 receipts now retain numeric integrity levels to verify the inherited CI context;
-these receipts contain no selection text. Inherited-context success does not prove
+these receipts contain no selection text. [Passing hosted Windows CI](https://github.com/zeyadomran/promptly/actions/runs/36972752336)
+recorded helper and owned targets at integrity level **12288**, with all positive
+capture fixtures passing. Receipts are printed and written to a Playwright output
+JSON file for CI artifact retention. Inherited-context success does not prove
 an actual medium-integrity app can read a high-integrity target.
 
 Before answering capabilities, the helper reads only
@@ -125,6 +133,7 @@ TypeScript 6.0.3 versus latest 7.0.2 compatibility exception.
 | Full one-Mi control-character payload, max+1 | Complete escaped frame decoded; overflow explicitly rejected (fixture-only 5-second deadline) |
 | Owned Chromium 152.0.7977.130 textarea in Electron 44.5.1 | Exact selected Unicode text via the packaged production helper; only verified fixture process tree may be captured |
 | Native malformed options, spike-only commands, EOF | Invalid requests; no test mode; clean EOF exits 0 |
+| Owned fixture renamed to `.exe`, `.com`, and extensionless image | Actual basename retained; normal exact selection succeeds for all three |
 | Transport crashes, invalid/oversized/partial frames, expired validation | Fail closed, bounded queue, late data dropped, fresh helper recovery, disposal |
 
 The Chromium fixture uses a separate **test-only** WPF focus driver to activate an

@@ -16,7 +16,10 @@ internal static class AccessPolicy
             var own = ProcessAccess.ReadIntegrity(pid, started);
             if (!own.HasValue || own != ProcessAccess.OwnIntegrity ||
                 ProcessAccess.ReadIntegrity(pid, started + 1).HasValue ||
-                ProcessAccess.ReadIntegrity(Int32.MaxValue, null).HasValue)
+                ProcessAccess.ReadIntegrity(Int32.MaxValue, null).HasValue ||
+                ProcessAccess.ImageBasename(pid, started) != "access-policy.exe" ||
+                ProcessAccess.ImageBasename(pid, started + 1) != null ||
+                ProcessAccess.ImageBasename(Int32.MaxValue, started) != null)
                 throw new InvalidOperationException("Native identity/token binding failed");
             Console.WriteLine("{\"integrityLevel\":" + own.Value + ",\"policyVerified\":true,\"staleCreationRejected\":true}");
         }

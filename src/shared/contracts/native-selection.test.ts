@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { nativeCaptureSchema, nativeForegroundSchema } from './native-selection';
+import {
+  nativeCaptureSchema,
+  nativeForegroundSchema,
+  nativeSourceSchema
+} from './native-selection';
 
 const selected = {
   v: 1,
@@ -15,6 +19,19 @@ const selected = {
 };
 
 describe('native selection reply validation', () => {
+  it.each(['editor.exe', 'editor.com', 'editor', 'éditeur.com'])(
+    'accepts the actual basename %s without inventing a suffix',
+    (id) => {
+      expect(nativeSourceSchema.parse({ pid: 1, name: 'editor', id }).id).toBe(id);
+    }
+  );
+
+  it.each(['.', '..', '../editor.com', 'C:\\editor.com', '/editor'])(
+    'rejects unsafe source identity %s',
+    (id) => {
+      expect(nativeSourceSchema.safeParse({ pid: 1, name: 'editor', id }).success).toBe(false);
+    }
+  );
   it('keeps exact text and nullable provenance', () => {
     expect(nativeCaptureSchema.parse(selected).status).toBe('ok');
     expect(nativeCaptureSchema.parse({ ...selected, text: '   ', characterCount: 3 }).status).toBe(

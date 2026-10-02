@@ -39,8 +39,9 @@ internal sealed class SourceIdentity
             try
             {
                 var name = process.ProcessName;
-                if (Regex.IsMatch(name, @"\A[A-Za-z0-9 _().-]{1,240}\z"))
-                    identity.Source = new { pid = pid, name = name, id = name + ".exe" };
+                var basename = ProcessAccess.ImageBasename(pid, identity.Started);
+                if (basename != null && Regex.IsMatch(name, @"\A[\p{L}\p{N}._ -]{1,255}\z"))
+                    identity.Source = new { pid = pid, name = name, id = basename };
             }
             catch (Exception) { identity.Source = null; }
             if (!identity.Valid(true)) return null;

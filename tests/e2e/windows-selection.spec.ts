@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { promisify } from 'node:util';
 
@@ -135,9 +136,14 @@ test.describe('packaged production Windows selection', () => {
       });
 
       console.log(receipt);
-      await test
-        .info()
-        .attach('windows-selection-receipt', { body: receipt, contentType: 'application/json' });
+      const receiptPath = test.info().outputPath('windows-selection-receipt.json');
+
+      await mkdir(path.dirname(receiptPath), { recursive: true });
+      await writeFile(receiptPath, receipt, 'utf8');
+      await test.info().attach('windows-selection-receipt', {
+        path: receiptPath,
+        contentType: 'application/json'
+      });
     } finally {
       await adapter.dispose();
     }

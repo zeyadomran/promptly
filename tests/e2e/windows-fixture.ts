@@ -4,11 +4,20 @@ import path from 'node:path';
 import readline from 'node:readline';
 
 /** Only launches owned controls; never samples the user's current app. */
-export async function windowsFixture(mode: string, arguments_: string[] = []) {
-  const child = spawn(path.resolve('tests/native/windows/out/fixture.exe'), [mode, ...arguments_], {
-    windowsHide: false,
-    stdio: 'pipe'
-  });
+export async function windowsFixture(
+  mode: string,
+  arguments_: string[] = [],
+  executable = 'fixture.exe'
+) {
+  const extensionless = executable === 'fixture-no-suffix';
+  const child = spawn(
+    path.resolve('tests/native/windows/out', extensionless ? 'fixture.exe' : executable),
+    extensionless ? ['launch-extensionless'] : [mode, ...arguments_],
+    {
+      windowsHide: false,
+      stdio: 'pipe'
+    }
+  );
   const lines = readline.createInterface({ input: child.stdout });
   let diagnostics = '';
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -35,7 +44,11 @@ export async function windowsFixture(mode: string, arguments_: string[] = []) {
             value === null ||
             !('fixturePid' in value) ||
             typeof value.fixturePid !== 'number' ||
-            value.fixturePid !== child.pid
+            !Number.isInteger(value.fixturePid) ||
+            value.fixturePid < 1 ||
+            (extensionless
+              ? !('launcherPid' in value) || value.launcherPid !== child.pid
+              : value.fixturePid !== child.pid)
           )
             throw new Error('Invalid fixture readiness');
           if (
@@ -62,13 +75,21 @@ export async function windowsFixture(mode: string, arguments_: string[] = []) {
         if (child.exitCode !== null || child.signalCode !== null) return;
         const exit = once(child, 'exit');
 
-        child.kill();
-        await exit;
+        if (extensionless) child.stdin.end();
+        else child.kill();
+        const watchdog = setTimeout(() => child.kill(), 5000);
+
+        try {
+          await exit;
+        } finally {
+          clearTimeout(watchdog);
+        }
       }
     };
   } catch (error) {
     lines.close();
-    child.kill();
+    if (extensionless) child.stdin.end();
+    else child.kill();
     throw error;
   } finally {
     clearTimeout(timer);

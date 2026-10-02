@@ -4,8 +4,11 @@ export const selectionUnits = 1_048_576;
 export const nativeFrameBytes = selectionUnits * 6 + 65_536;
 export const nativeSourceSchema = z.strictObject({
   pid: z.int().min(1).max(2_147_483_647),
-  name: z.string().regex(/^[A-Za-z0-9 _().-]{1,240}$/),
-  id: z.string().regex(/^[A-Za-z0-9 _().-]{1,240}\.exe$/)
+  name: z.string().regex(/^[\p{L}\p{N}._ -]{1,255}$/u),
+  id: z
+    .string()
+    .regex(/^[\p{L}\p{N}._ -]{1,255}$/u)
+    .refine((name) => name !== '.' && name !== '..')
 });
 const envelope = { v: z.literal(1), id: z.string().min(1).max(128) };
 const identity = z.string().regex(/^[a-f0-9]{32}$/);

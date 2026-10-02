@@ -23,6 +23,7 @@ internal static class Fixture
     private static void Main(string[] args)
     {
         var mode = args.Length == 0 ? "selected" : args[0];
+        if (mode == "launch-extensionless") { ExtensionlessFixture.Run(); return; }
         var app = new Application();
         var window = new Window { Title = "Promptly owned production fixture", Width = 500, Height = 180 };
         var control = new SelectionControl { Mode = mode, Window = window, Focusable = true };

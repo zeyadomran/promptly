@@ -3,10 +3,10 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   build: {
     lib: {
-      entry: 'src/main/main.ts',
+      entry: { main: 'src/main/main.ts', 'storage-worker': 'src/main/storage/storage-worker.ts' },
       formats: ['cjs'],
-      fileName: () => 'main.cjs'
+      fileName: (_format, entryName) => `${entryName}.cjs`
     },
-    rollupOptions: { external: ['electron', 'node:path', 'node:url'] }
+    rollupOptions: { external: ['electron', /^node:/] }
   }
 });

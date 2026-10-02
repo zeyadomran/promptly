@@ -34,7 +34,10 @@ const config: ForgeConfig = {
     new VitePlugin({
       build: [
         {
-          entry: 'src/main/main.ts',
+          entry: {
+            main: 'src/main/main.ts',
+            'storage-worker': 'src/main/storage/storage-worker.ts'
+          },
           config: 'vite.main.config.ts',
           target: 'main'
         },

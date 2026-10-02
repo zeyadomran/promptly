@@ -1,7 +1,7 @@
 import type { IpcMain } from 'electron';
 
 import type { ChangeEvent } from '../../shared/contracts/domain';
-import { changeEventSchema } from '../../shared/contracts/domain';
+import { changeEventSchema, revisionSchema } from '../../shared/contracts/domain';
 import type { DesktopOperations, OperationName } from '../../shared/contracts/operations';
 import {
   changeChannel,
@@ -14,10 +14,14 @@ import { failure } from '../../shared/contracts/result';
 import { dispatchOperation } from './dispatch-operation';
 import { WindowRegistry } from './window-registry';
 
-export function installDesktopIpc(ipc: IpcMain, services: Partial<DesktopOperations> = {}) {
+export function installDesktopIpc(
+  ipc: IpcMain,
+  services: Partial<DesktopOperations> = {},
+  initialRevision = 0
+) {
   const windows = new WindowRegistry();
   const names = Object.keys(operations) as OperationName[];
-  let revision = 0;
+  let revision = revisionSchema.parse(initialRevision);
 
   for (const name of names) {
     ipc.handle(operationChannel(name), (event, request: unknown) =>
