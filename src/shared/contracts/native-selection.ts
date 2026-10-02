@@ -63,6 +63,10 @@ export const nativeForegroundSchema = z.union([
     status: z.literal('ok'),
     identity,
     source: nativeSourceSchema.nullable(),
+    windowHandle: z
+      .string()
+      .regex(/^[a-f0-9]{16}$/)
+      .optional(),
     bounds: nativeBoundsSchema.nullable().optional()
   }),
   nativeFailureSchema

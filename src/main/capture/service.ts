@@ -3,7 +3,7 @@ import { failure } from '../../shared/contracts/result';
 import { normalizeSnippet } from '../../shared/domain/normalize-snippet';
 import type { StorageClient } from '../storage/client';
 import type { LibraryMutations } from '../storage/library-mutations';
-import type { CaptureEffects, CaptureEvent, CaptureReply } from './ports';
+import type { CaptureEffects, CaptureEvent, CapturePhases, CaptureReply } from './ports';
 
 export class CaptureService {
   private closing = false;
@@ -58,10 +58,7 @@ export class CaptureService {
           'Native capture is unavailable. Safe clipboard fallback is not implemented.'
         )
       );
-    const phases: Pick<
-      CaptureEvent,
-      'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'
-    > = { triggeredAt };
+    const phases: CapturePhases = { triggeredAt };
     const current = () => !this.closing && admitted();
 
     this.active = this.run(native, ticket, normalize, current, phases)
@@ -89,7 +86,7 @@ export class CaptureService {
     ticket: number,
     normalize: boolean,
     current: () => boolean,
-    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'>
+    phases: CapturePhases
   ): Promise<CaptureReply> {
     if (!current()) return failure('CONFLICT', 'This capture was canceled.');
     const foreground = await native.foregroundIdentityResult();
@@ -97,6 +94,8 @@ export class CaptureService {
     if (!current()) return failure('CONFLICT', 'This capture was canceled.');
     if (foreground.status !== 'ok') return this.nativeFailure(foreground.status);
     if (foreground.identity.bounds != null) phases.sourceBounds = foreground.identity.bounds;
+    if (foreground.identity.windowHandle !== undefined)
+      phases.sourceWindowHandle = foreground.identity.windowHandle;
     const selected = await native.captureSelection(foreground.identity);
 
     phases.selectedAt = this.now();
@@ -156,10 +155,7 @@ export class CaptureService {
     return this.effects.now?.() ?? performance.now();
   }
 
-  private publish(
-    result: CaptureReply,
-    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'>
-  ): void {
+  private publish(result: CaptureReply, phases: CapturePhases): void {
     const event: CaptureEvent = {
       ...phases,
       completedAt: this.now(),

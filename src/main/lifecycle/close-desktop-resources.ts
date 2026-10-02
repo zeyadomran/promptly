@@ -1,5 +1,6 @@
 import type { desktopConfirmation } from '../capture-toast/desktop-confirmation';
 import type { createLibraryServices } from '../library-services';
+import type { desktopOnboarding } from '../onboarding/desktop-onboarding';
 import type { WindowsSelection } from '../platform/windows/windows-selection';
 import type { SettingsService } from '../settings/service';
 import type { createDesktopShortcuts } from '../shortcuts/desktop-shortcuts';
@@ -15,6 +16,7 @@ interface DesktopResources {
   keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
   library: ReturnType<typeof createLibraryServices> | undefined;
   confirmation: ReturnType<typeof desktopConfirmation> | undefined;
+  onboarding: ReturnType<typeof desktopOnboarding> | undefined;
   lifecycle: WindowLifecycle | undefined;
   settings: SettingsService | undefined;
   storage: StorageClient | undefined;
@@ -24,8 +26,17 @@ interface DesktopResources {
 
 /** Retire commands now; drain writes/settings before disposing their native controllers/storage. */
 export function closeDesktopResources(resources: DesktopResources): Promise<void> {
-  const { keyboard, library, confirmation, lifecycle, settings, storage, tray, windowsSelection } =
-    resources;
+  const {
+    keyboard,
+    library,
+    confirmation,
+    onboarding,
+    lifecycle,
+    settings,
+    storage,
+    tray,
+    windowsSelection
+  } = resources;
 
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
@@ -36,6 +47,7 @@ export function closeDesktopResources(resources: DesktopResources): Promise<void
       library?.capture,
       library?.copy,
       library?.transfer,
+      onboarding,
       { close: () => confirmationClosing ?? Promise.resolve() }
     ],
     () =>

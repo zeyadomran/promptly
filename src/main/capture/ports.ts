@@ -26,7 +26,14 @@ export interface CaptureEvent {
   completedAt: number;
   /** Physical DWM source frame, main-only; never sent to a desktop renderer. */
   sourceBounds?: Readonly<{ x: number; y: number; width: number; height: number }>;
+  /** Main-only exact source window correlation for the tutorial; never transported to renderers. */
+  sourceWindowHandle?: string;
 }
+
+export type CapturePhases = Pick<
+  CaptureEvent,
+  'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds' | 'sourceWindowHandle'
+>;
 
 export interface CaptureEffects {
   native: CaptureNative | undefined;

@@ -15,6 +15,7 @@ import {
   tagSchema,
   tagSummarySchema
 } from './domain';
+import { onboardingStateSchema, onboardingStepSchema } from './onboarding';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
@@ -33,6 +34,15 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 
 export const operations = {
   ...transferOperations,
+  getOnboardingState: { request: emptySchema, response: onboardingStateSchema },
+  setOnboardingStep: {
+    request: z.strictObject({ step: onboardingStepSchema }),
+    response: onboardingStateSchema
+  },
+  finishOnboarding: {
+    request: z.strictObject({ skip: z.boolean() }),
+    response: onboardingStateSchema
+  },
   getWindowState: { request: emptySchema, response: windowStateSchema },
   getWindowRecovery: { request: emptySchema, response: windowRecoverySchema },
   returnToMainWindow: { request: emptySchema, response: windowStateSchema },

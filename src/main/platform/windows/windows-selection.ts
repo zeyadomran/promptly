@@ -19,6 +19,7 @@ export interface WindowsIdentity {
   readonly token: string;
   readonly source: NativeSource | null;
   readonly bounds?: Readonly<NativeBounds> | null;
+  readonly windowHandle?: string;
 }
 export type WindowsCaptureResult = NativeCaptureReply | { status: TransportFailure };
 export type WindowsForegroundResult =
@@ -90,6 +91,7 @@ export class WindowsSelection {
       const identity = Object.freeze({
         token: result.identity,
         source: result.source,
+        ...(result.windowHandle === undefined ? {} : { windowHandle: result.windowHandle }),
         ...(result.bounds === undefined
           ? {}
           : { bounds: result.bounds === null ? null : Object.freeze(result.bounds) })
