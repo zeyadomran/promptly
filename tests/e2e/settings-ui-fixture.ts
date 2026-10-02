@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { mkdtemp, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
@@ -6,12 +6,15 @@ import { _electron as electron, type ElectronApplication, expect } from '@playwr
 
 import { assertProfileIdentity } from '../profile-identity';
 import { buildIpcFixture } from './build-ipc-fixture';
+import { closeSettingsFixture } from './close-settings-fixture';
 
 /** Real renderer, IPC, SQLite, lifecycle, theme and pin; only host login/Dock operations are substituted. */
 export async function launchSettingsUiFixture(
   native = false,
   attachNativeReceipt?: (receipt: Buffer) => Promise<void>
 ) {
+  if (native && attachNativeReceipt === undefined)
+    throw new Error('Native qualification requires a retained receipt destination.');
   await buildIpcFixture(undefined, 'tests/e2e/fixtures/settings-ui-main.ts', true);
   const profile = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-settings-ui-')));
   const env = Object.fromEntries(
@@ -25,33 +28,13 @@ export async function launchSettingsUiFixture(
   env['PROMPTLY_SETTINGS_UI_PROFILE'] = profile;
   if (native) env['PROMPTLY_SETTINGS_UI_NATIVE'] = '1';
   let application: ElectronApplication | undefined;
-  const dispose = async () => {
-    const failures: unknown[] = [];
-
-    try {
-      await application?.close();
-    } catch (error) {
-      failures.push(error);
-    }
-
-    try {
-      if (native) {
-        const receipt = await readFile(path.join(profile, 'native-preferences-restored.json'));
-
-        // Preserve failure evidence before checking it or deleting this owned profile.
-        await attachNativeReceipt?.(receipt);
-        expect(JSON.parse(receipt.toString())).toMatchObject({ restorationOk: true });
-      }
-    } catch (error) {
-      failures.push(error);
-    } finally {
-      await rm(profile, { recursive: true, force: true }).catch((error: unknown) => {
-        failures.push(error);
-      });
-    }
-
-    if (failures.length > 0) throw new AggregateError(failures, 'Owned Settings cleanup failed.');
-  };
+  const dispose = () =>
+    closeSettingsFixture({
+      close: () => application?.close() ?? Promise.resolve(),
+      profile,
+      native,
+      ...(attachNativeReceipt === undefined ? {} : { retainReceipt: attachNativeReceipt })
+    });
 
   const start = async () => {
     const instance = await electron.launch({
