@@ -13,6 +13,7 @@ export interface LibrarySelectionPort {
   clearSearch(): void;
 }
 export interface LibrarySession {
+  scroll: Map<string, { top: number; index: number; reveal: number; query: string }>;
   model: LibraryModel;
   state: LibraryState;
   searchRef: RefObject<HTMLInputElement | null>;

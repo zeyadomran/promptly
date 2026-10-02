@@ -5,12 +5,13 @@ import { LibraryRow } from './LibraryRow';
 import { useLibraryRange } from './use-library-range';
 import { useVirtualStyles } from './use-virtual-styles';
 
-export function LibraryList() {
+export function LibraryList({ regular = false }: { regular?: boolean }) {
   const { state, model } = useLibrary();
   const { scroller, range } = useLibraryRange(
     state.total,
     state.selectedIndex,
-    state.revealVersion
+    state.revealVersion,
+    regular
   );
   const { rows, first, last } = range;
   const scope = useVirtualStyles(range.height, rows);
@@ -25,7 +26,7 @@ export function LibraryList() {
   }, [first, last, state.version, state.cache, model]);
   return (
     <div
-      className="library-scroller"
+      className={regular ? 'library-scroller regular-scroller' : 'library-scroller'}
       ref={scroller}
       role="listbox"
       aria-label="Snippets"
@@ -50,6 +51,7 @@ export function LibraryList() {
           ) : (
             <LibraryRow
               key={item.snippet.id}
+              regular={regular}
               snippet={item.snippet}
               ranges={item.ranges}
               index={row.index}

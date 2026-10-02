@@ -127,6 +127,10 @@ export function LibraryCommandProvider({
     <LibraryCommandsContext
       value={{
         ...state,
+        deleteSelected: () => (active ? commands.deleteSelected() : Promise.resolve()),
+        report: (error) => {
+          commands.report(error);
+        },
         copy: (id, format) => (active ? commands.copy(id, format) : Promise.resolve())
       }}
     >

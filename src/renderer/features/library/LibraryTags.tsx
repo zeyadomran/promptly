@@ -6,7 +6,7 @@ import { tagColorClasses } from '../../lib/tag-palette';
 import { useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
 
-export function LibraryTags() {
+export function LibraryTags({ regular = false }: { regular?: boolean }) {
   const { state, model } = useLibrary();
   const actions = useLibraryTagActions();
 
@@ -60,7 +60,7 @@ export function LibraryTags() {
           <span>
             <Button
               variant="ghost"
-              size="icon-xs"
+              size={regular ? 'xs' : 'icon-xs'}
               className="library-create-tag"
               disabled={actions === undefined}
               aria-label="Create tag"
@@ -69,6 +69,7 @@ export function LibraryTags() {
               }}
             >
               <Plus aria-hidden="true" />
+              {regular && 'New tag'}
             </Button>
           </span>
         </TooltipTrigger>

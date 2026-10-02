@@ -13,6 +13,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | File | Canonical behavior |
 | --- | --- |
 | `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights and committed invalidation |
+| `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
 | `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |

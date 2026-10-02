@@ -13,15 +13,17 @@ export interface VirtualRange {
 export function virtualRange(
   count: number,
   viewportHeight: number,
-  scrollTop: number
+  scrollTop: number,
+  rowHeight = ROW_HEIGHT,
+  rowStride = ROW_STRIDE
 ): VirtualRange {
-  const height = Math.max(0, count * ROW_STRIDE - (ROW_STRIDE - ROW_HEIGHT));
+  const height = Math.max(0, count * rowStride - (rowStride - rowHeight));
   const top = Math.max(0, Math.min(scrollTop, height - viewportHeight));
-  const first = Math.max(0, Math.floor(top / ROW_STRIDE) - OVERSCAN);
+  const first = Math.max(0, Math.floor(top / rowStride) - OVERSCAN);
   const last =
     viewportHeight <= 0
       ? -1
-      : Math.min(count - 1, Math.floor((top + viewportHeight - 1) / ROW_STRIDE) + OVERSCAN);
+      : Math.min(count - 1, Math.floor((top + viewportHeight - 1) / rowStride) + OVERSCAN);
 
   return {
     height,
@@ -30,14 +32,20 @@ export function virtualRange(
     rows: Array.from({ length: Math.max(0, last - first + 1) }, (_, offset) => {
       const index = first + offset;
 
-      return { index, start: index * ROW_STRIDE };
+      return { index, start: index * rowStride };
     })
   };
 }
 
-export function selectionScroll(index: number, viewportHeight: number, scrollTop: number): number {
-  const start = index * ROW_STRIDE;
-  const end = start + ROW_HEIGHT;
+export function selectionScroll(
+  index: number,
+  viewportHeight: number,
+  scrollTop: number,
+  rowHeight = ROW_HEIGHT,
+  rowStride = ROW_STRIDE
+): number {
+  const start = index * rowStride;
+  const end = start + rowHeight;
 
   if (start < scrollTop) return start;
   if (end > scrollTop + viewportHeight) return Math.max(0, end - viewportHeight);

@@ -1,0 +1,54 @@
+import { Button } from '../../components/ui/button';
+import { useLibraryCommands } from '../library/library-commands';
+import { useLibrary } from '../library/library-context';
+import { LibraryEmpty } from '../library/LibraryEmpty';
+import { LibraryList } from '../library/LibraryList';
+import { LibrarySearch } from '../library/LibrarySearch';
+import { LibraryTags } from '../library/LibraryTags';
+import { RegularFooter } from './RegularFooter';
+import { SnippetPreview } from './SnippetPreview';
+
+export function RegularLibrary() {
+  const { state, model } = useLibrary();
+  const commands = useLibraryCommands();
+
+  return (
+    <section className="regular-library" aria-label="Snippet library">
+      <header className="regular-library-header">
+        <LibrarySearch regular />
+        <LibraryTags regular />
+      </header>
+      {(state.error?.message ?? commands?.error) !== undefined && (
+        <p role="alert" className="library-error">
+          {state.error?.message ?? commands?.error}
+          {state.error !== undefined && (
+            <Button
+              variant="ghost"
+              size="xs"
+              onClick={() => {
+                model.refresh();
+              }}
+            >
+              Refresh library
+            </Button>
+          )}
+        </p>
+      )}
+      <div className="regular-library-split">
+        <div className="regular-library-results" aria-busy={state.loading}>
+          {state.loading && state.total === 0 ? (
+            <p role="status" className="library-empty">
+              Loading snippets…
+            </p>
+          ) : state.total === 0 ? (
+            <LibraryEmpty />
+          ) : (
+            <LibraryList regular />
+          )}
+        </div>
+        <SnippetPreview />
+      </div>
+      <RegularFooter />
+    </section>
+  );
+}

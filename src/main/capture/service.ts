@@ -84,8 +84,7 @@ export class CaptureService {
       return selected.status === 'empty' ? this.empty() : this.nativeFailure(selected.status);
     if (selected.identity !== foreground.identity.token)
       return this.nativeFailure('foregroundChanged');
-    if ('targetIntegrityLevel' in selected && selected.targetIntegrityLevel === null)
-      return this.nativeFailure('permissionDenied');
+    if (selected.targetIntegrityLevel === null) return this.nativeFailure('permissionDenied');
     if (selected.text.length > 1_000_000) return this.nativeFailure('selectionTooLarge');
     const text = normalizeSnippet(selected.text, normalize);
 
