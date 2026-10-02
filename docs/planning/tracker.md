@@ -1,8 +1,12 @@
+# Promptly v1 implementation roadmap
+
+> Current scope (2026-10-02): Windows x64 only. macOS is deferred and is not a dependency or release gate. #55 removes its implementation. Use minimal functional service tests, one canonical test per flow; native/UI qualification remains manual. This supersedes older cross-platform acceptance text and historical comments.
+
 # Promptly v1 implementation tracker
 
-Build the supplied local-only macOS and Windows app using **Electron + React + TypeScript + Tailwind + shadcn/ui**.
+Build the supplied local-only Windows app using **Electron + React + TypeScript + Tailwind + shadcn/ui**.
 
-The [implementation plan](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/implementation-plan.md) defines architecture, delivery order, proposed behavior for ambiguous requirements, and release gates. The [functional spec](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/app-functionality-spec.md), [visual spec](https://github.com/zeyadomran/promptly/blob/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/design-reference/DESIGN.md), and [ten supplied screenshots](https://github.com/zeyadomran/promptly/tree/9ae58db85e64afcb3b397e1467823a4bb0726c0a/docs/design-reference/screenshots) are preserved with the plan.
+The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/implementation-plan.md) defines architecture, delivery order, proposed behavior for ambiguous requirements, and release gates. The [functional spec](https://github.com/zeyadomran/promptly/blob/main/docs/app-functionality-spec.md), [visual spec](https://github.com/zeyadomran/promptly/blob/main/docs/design-reference/DESIGN.md), and [ten supplied screenshots](https://github.com/zeyadomran/promptly/blob/main/docs/design-reference/screenshots) are preserved with the plan.
 
 ## Required code structure
 
@@ -36,30 +40,36 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/9ae58db85e
 ## Release acceptance
 
 - [ ] All implementation issues below are complete with their own acceptance evidence.
-- [ ] Both OSes support the complete highlight → capture → search → tag → copy workflow in packaged builds.
+- [ ] Windows supports the complete highlight → capture → search → tag → copy workflow in packaged builds.
 - [ ] No clipboard loss, focus theft, false success, or unresolved data-loss defects.
 - [ ] Capture-to-toast under 150 ms and complete search updates under 50 ms at 10k snippets are measured; deviations remain blockers.
-- [ ] Light/dark/system themes, all ten design references, keyboard operation, VoiceOver/NVDA, and responsive Settings are verified.
+- [ ] Light/dark/system themes, all ten design references, keyboard operation, NVDA, and responsive Settings are verified.
 - [ ] Offline operation, installer/native-module compatibility, and release signing status are verified.
 
-Cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layouts, telemetry, and automatic updates remain outside v1.
+macOS support, Linux support, cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layouts, telemetry, and automatic updates remain outside v1.
+
+## Current priority
+
+- [ ] #55 Remove macOS implementation and restrict builds to Windows x64.
+- Finish the Windows capture pipeline (#13) and tag management (#22), then capture feedback (#15), tray (#26), and onboarding (#25).
+- Windows clipboard safety (#12), packaging (#28), and manual accessibility/release qualification (#29/#30) remain open.
 
 ## Implementation issues
 
 ### Phase 1: Foundation and risk validation
 
-- [ ] [P01 — Bootstrap Electron, React, TypeScript, and the modular project structure](https://github.com/zeyadomran/promptly/issues/3)
-- [ ] [P02 — Define domain contracts and a secure typed IPC bridge](https://github.com/zeyadomran/promptly/issues/4)
-- [ ] [P03 — Validate native capture, keyboard hooks, and clipboard feasibility on both OSes](https://github.com/zeyadomran/promptly/issues/5)
-- [ ] [P04 — Implement SQLite persistence, migrations, and snippet repositories](https://github.com/zeyadomran/promptly/issues/6)
-- [ ] [P05 — Persist settings and broadcast immediate preference changes](https://github.com/zeyadomran/promptly/issues/7)
-- [ ] [P25 — Extend CI for application checks and macOS/Windows build smoke](https://github.com/zeyadomran/promptly/issues/27)
+- [x] [P01 — Bootstrap Electron, React, TypeScript, and the modular project structure](https://github.com/zeyadomran/promptly/issues/3)
+- [x] [P02 — Define domain contracts and a secure typed IPC bridge](https://github.com/zeyadomran/promptly/issues/4)
+- [ ] [P03 — Validate native capture, keyboard hooks, and clipboard feasibility on Windows](https://github.com/zeyadomran/promptly/issues/5)
+- [x] [P04 — Implement SQLite persistence, migrations, and snippet repositories](https://github.com/zeyadomran/promptly/issues/6)
+- [x] [P05 — Persist settings and broadcast immediate preference changes](https://github.com/zeyadomran/promptly/issues/7)
+- [x] [P25 — Extend CI for application checks and Windows build smoke](https://github.com/zeyadomran/promptly/issues/27)
 
 ### Phase 2: Desktop and capture
 
-- [ ] [P06 — Build the shadcn design foundation, themes, and shared components](https://github.com/zeyadomran/promptly/issues/8)
+- [x] [P06 — Build the shadcn design foundation, themes, and shared components](https://github.com/zeyadomran/promptly/issues/8)
 - [ ] [P07 — Implement global shortcuts and the double-tap modifier state machine](https://github.com/zeyadomran/promptly/issues/9)
-- [ ] [P08 — Implement macOS selection capture, permissions, and source app identity](https://github.com/zeyadomran/promptly/issues/10)
+- Deferred: #10 macOS support is outside the current release; implementation is removed by #55.
 - [ ] [P09 — Implement Windows selection capture and foreground application identity](https://github.com/zeyadomran/promptly/issues/11)
 - [ ] [P10 — Implement clipboard-preserving Copy fallback with concurrency protection](https://github.com/zeyadomran/promptly/issues/12)
 - [ ] [P11 — Connect the capture pipeline with normalization and deduplication](https://github.com/zeyadomran/promptly/issues/13)
@@ -81,11 +91,10 @@ Cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layou
 - [ ] [P21 — Implement shared shortcut recording and shortcut settings](https://github.com/zeyadomran/promptly/issues/23)
 - [ ] [P22 — Add storage location, JSON/Markdown export, JSON import, and clear all](https://github.com/zeyadomran/promptly/issues/24)
 - [ ] [P23 — Build first-launch onboarding with a real practice capture](https://github.com/zeyadomran/promptly/issues/25)
-- [ ] [P24 — Implement tray/menu bar, recent snippets, and pause capture](https://github.com/zeyadomran/promptly/issues/26)
+- [ ] [P24 — Implement Windows system tray, recent snippets, and pause capture](https://github.com/zeyadomran/promptly/issues/26)
 
 ### Phase 5: Release readiness
 
-- [ ] [P26 — Package macOS and Windows installers with native modules and signing support](https://github.com/zeyadomran/promptly/issues/28)
+- [ ] [P26 — Package Windows installers with native modules](https://github.com/zeyadomran/promptly/issues/28)
 - [ ] [P27 — Audit design fidelity, keyboard accessibility, and assistive technology](https://github.com/zeyadomran/promptly/issues/29)
-- [ ] [P28 — Verify end-to-end reliability, performance budgets, and release readiness](https://github.com/zeyadomran/promptly/issues/30)
-
+- [ ] [P28 — Verify Windows reliability, performance budgets, and release readiness](https://github.com/zeyadomran/promptly/issues/30)

@@ -31,7 +31,7 @@ export function shortcutFixture(
     captureAvailable: () => true
   };
   const hook: KeyboardHook = {
-    health: { installed: true, accessibility: null, inputMonitoring: null },
+    health: { installed: true },
     start: spy(() => Promise.resolve()),
     stop: spy(() => Promise.resolve())
   };

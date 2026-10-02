@@ -3,31 +3,27 @@ import { expect, it } from 'vitest';
 import { concealWindow } from './visibility';
 
 it('keeps a reachable window when its external recovery route disappears', () => {
-  let visible = true;
+  let state = 'visible';
   let shortcutAvailable = false;
   const window = {
     hide: () => {
-      visible = false;
+      state = 'hidden';
     },
     minimize: () => {
-      visible = false;
-    },
-    show: () => {
-      visible = true;
+      state = 'minimized';
     }
   };
   const recovery = {
     trayAvailable: () => false,
-    dockAvailable: () => false,
     shortcutAvailable: () => shortcutAvailable
   };
 
-  concealWindow(window, recovery, 'darwin');
-  expect(visible).toBe(true);
+  concealWindow(window, recovery);
+  expect(state).toBe('minimized');
   shortcutAvailable = true;
-  concealWindow(window, recovery, 'darwin');
-  expect(visible).toBe(false);
+  concealWindow(window, recovery);
+  expect(state).toBe('hidden');
   shortcutAvailable = false;
-  concealWindow(window, recovery, 'darwin');
-  expect(visible).toBe(true);
+  concealWindow(window, recovery);
+  expect(state).toBe('minimized');
 });

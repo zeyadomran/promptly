@@ -1,4 +1,4 @@
-import { app, systemPreferences } from 'electron';
+import { app } from 'electron';
 
 import type { DesktopResult } from '../../shared/contracts/result';
 import type {
@@ -17,7 +17,7 @@ export function createWindowOperations(owner: {
   show: (kind?: WindowKind) => Promise<unknown>;
   hide: () => void;
   closeSettings: () => void;
-  switchMode: (mode: SizeMode, reducedMotion: boolean) => Promise<void>;
+  switchMode: (mode: SizeMode) => Promise<void>;
 }): WindowOperations {
   return {
     getWindowState: () => Promise.resolve({ ok: true, value: owner.state() }),
@@ -28,13 +28,10 @@ export function createWindowOperations(owner: {
         owner.closeSettings();
         return owner.state();
       }),
-    setWindowMode: ({ mode, reducedMotion }) =>
+    setWindowMode: ({ mode }) =>
       owner.enqueue(async () => {
         await owner.show();
-        await owner.switchMode(
-          mode,
-          reducedMotion || systemPreferences.getAnimationSettings().prefersReducedMotion
-        );
+        await owner.switchMode(mode);
         return owner.state();
       }),
     setWindowVisibility: ({ visible }) =>

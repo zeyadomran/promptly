@@ -10,8 +10,6 @@ import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
-import { createMacosSelection, type MacosSelection } from './platform/macos/macos-selection';
-import { macosPermissionServices } from './platform/macos/permission-services';
 import {
   observeSelectionStartup,
   selectionLaunchOptions
@@ -41,7 +39,6 @@ let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
-let macosSelection: MacosSelection | undefined;
 let transfer: StorageTransfer | undefined;
 let copy: CopyService | undefined;
 const mutations = new LibraryMutations();
@@ -54,8 +51,7 @@ const shutdown = createDesktopShutdown({
           close: () =>
             closeNativeResources([
               keyboard,
-              { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
-              { close: () => macosSelection?.dispose() ?? Promise.resolve() }
+              { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
             ])
         })
       )
@@ -71,7 +67,13 @@ const shutdown = createDesktopShutdown({
     app.exit(code);
   }
 });
-const primaryInstance = app.requestSingleInstanceLock();
+const supported = process.platform === 'win32' && process.arch === 'x64';
+const primaryInstance = supported && app.requestSingleInstanceLock();
+
+if (!supported) {
+  console.error('Promptly supports Windows x64 only.');
+  app.exit(1);
+}
 
 if (!primaryInstance) app.quit();
 app.on('second-instance', () => {
@@ -80,7 +82,6 @@ app.on('second-instance', () => {
 
 function openWindow(): void {
   void (async () => {
-    await macosSelection?.foregroundIdentityResult();
     await lifecycle?.show();
   })().catch((error: unknown) => {
     console.error('Unable to open Promptly:', error);
@@ -92,11 +93,6 @@ if (primaryInstance)
   void app
     .whenReady()
     .then(async () => {
-      if (process.platform === 'darwin') {
-        macosSelection = createMacosSelection(selectionLaunchOptions());
-        observeSelectionStartup(macosSelection.ready(), 'macOS');
-      }
-
       if (process.platform === 'win32') {
         windowsSelection = createWindowsSelection(selectionLaunchOptions());
         observeSelectionStartup(windowsSelection.ready(), 'Windows');
@@ -117,13 +113,7 @@ if (primaryInstance)
       );
       settings = new SettingsService(
         storage,
-        electronSettingsControllers(
-          () => {
-            lifecycle?.recoverVisibility();
-          },
-          undefined,
-          keyboard.shortcuts.controller
-        )
+        electronSettingsControllers(undefined, keyboard.shortcuts.controller)
       );
       await settings.initialize();
       const dialogs = nativeTransferDialogs(
@@ -142,7 +132,6 @@ if (primaryInstance)
           ...copy.services,
           ...settings.services,
           ...shortcutServices(keyboard.shortcuts),
-          ...macosPermissionServices(macosSelection),
           ...lifecycleServices(() => lifecycle)
         },
         revision,
@@ -157,8 +146,7 @@ if (primaryInstance)
         settings,
         {
           trayAvailable: () => false,
-          shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true,
-          dockAvailable: () => process.platform === 'darwin' && app.dock?.isVisible() === true
+          shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true
         },
         (error) => {
           console.error('Unable to save window geometry:', error);
@@ -182,5 +170,5 @@ app.on('before-quit', (event) => {
 });
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit();
+  app.quit();
 });

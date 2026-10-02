@@ -29,13 +29,9 @@ jobs:
           args: -color
 
   functional-checks:
-    name: Functional checks (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Functional checks (windows-latest)
+    runs-on: windows-latest
     timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest]
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -51,7 +47,6 @@ jobs:
       - name: Check application foundation
         run: npm run check:static
       - name: Verify shared logic once
-        if: runner.os == 'Windows'
         run: npm test
       - name: Package application
         run: npm run package

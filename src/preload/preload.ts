@@ -34,7 +34,7 @@ const { bridge, dispose } = createDesktopBridge(
       };
     }
   },
-  platform === 'darwin' || platform === 'win32' ? platform : 'unsupported'
+  platform === 'win32' ? platform : 'unsupported'
 );
 
 contextBridge.exposeInMainWorld('promptly', bridge);

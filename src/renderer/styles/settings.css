@@ -99,9 +99,6 @@
   .settings-titlebar {
     padding-left: 10px;
   }
-  .settings-titlebar[data-platform='darwin'] {
-    padding-left: 78px;
-  }
   .settings-titlebar[data-platform='win32'] {
     padding-right: 140px;
   }

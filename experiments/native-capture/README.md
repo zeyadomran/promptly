@@ -1,3 +1,5 @@
+> Historical research notes only. The disposable executables, scripts and automated native fixtures described below have been removed. Current Windows-only production helpers live under native/windows and native/keyboard/windows; no macOS runtime or build target remains. Historical receipts are retained in docs/verification.
+
 # Disposable native capture feasibility harness
 
 This is P03 research code, outside application modules. It compiles unsigned platform executables and checks a private stdio protocol. It never writes to the clipboard or injects Copy/keys. It is not universal selection support. See [the adapter decision and actual evidence matrix](../../docs/architecture/native-capture-decision.md).

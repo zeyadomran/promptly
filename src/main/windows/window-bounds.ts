@@ -16,8 +16,6 @@ export function displayAreas() {
 /** Owns stable normal geometry; maximize/fullscreen and animation frames never become preferences. */
 export class WindowBounds {
   private timer: ReturnType<typeof setTimeout> | undefined;
-  private animation: ReturnType<typeof setInterval> | undefined;
-  private destination: Rectangle | undefined;
   private tail: Promise<void> = Promise.resolve();
   private stopped = false;
   private saveError: Error | undefined;
@@ -28,8 +26,7 @@ export class WindowBounds {
     private readonly window: BrowserWindow,
     private readonly settings: SettingsService,
     public mode: SizeMode,
-    private readonly onError: (error: unknown) => void,
-    private readonly platform: NodeJS.Platform = process.platform
+    private readonly onError: (error: unknown) => void
   ) {
     window.on('move', this.changed);
     window.on('resize', this.changed);
@@ -38,20 +35,12 @@ export class WindowBounds {
   }
 
   private readonly interrupt = () => {
-    this.cancelAnimation();
-    this.destination = undefined;
     this.setLimits(this.window.getNormalBounds(), this.mode === 'compact');
     this.changed();
   };
 
   private readonly changed = () => {
-    if (
-      this.stopped ||
-      this.applyingLimits ||
-      this.animation !== undefined ||
-      this.window.isDestroyed()
-    )
-      return;
+    if (this.stopped || this.applyingLimits || this.window.isDestroyed()) return;
     this.setLimits(this.window.getNormalBounds(), this.mode === 'compact');
     clearTimeout(this.timer);
     this.timer = setTimeout(() => {
@@ -67,7 +56,6 @@ export class WindowBounds {
 
     if (key === this.limitsKey) return;
     this.limitsKey = key;
-    // Cocoa retains its previous native maximum when Electron receives (0, 0).
     this.applyingLimits = true;
     try {
       this.window.setMaximumSize(maximumWidth, area.height);
@@ -83,7 +71,7 @@ export class WindowBounds {
   save(): void {
     clearTimeout(this.timer);
     if (this.window.isDestroyed()) return;
-    const bounds = this.destination ?? this.window.getNormalBounds();
+    const bounds = this.window.getNormalBounds();
     const mode = this.mode;
 
     this.tail = this.tail
@@ -104,9 +92,8 @@ export class WindowBounds {
       });
   }
 
-  async switchMode(mode: SizeMode, reducedMotion: boolean): Promise<void> {
+  async switchMode(mode: SizeMode): Promise<void> {
     if (mode === this.mode) return;
-    this.cancelAnimation();
     this.save();
     await this.tail;
     if (this.saveError !== undefined) throw this.saveError;
@@ -121,60 +108,23 @@ export class WindowBounds {
     await restoreNormalWindow(this.window);
     this.mode = mode;
     this.setLimits(target, false);
-    if (this.platform === 'darwin' && !reducedMotion) this.animate(this.window.getBounds(), target);
-    else this.finish(target);
-  }
-
-  private animate(from: Rectangle, target: Rectangle): void {
-    const start = Date.now();
-
-    this.destination = target;
-
-    this.animation = setInterval(() => {
-      const progress = Math.min(1, (Date.now() - start) / 180);
-      const ease = 1 - (1 - progress) ** 3;
-      const interpolate = (key: keyof Rectangle) =>
-        Math.round(from[key] + (target[key] - from[key]) * ease);
-
-      if (progress === 1) {
-        this.cancelAnimation();
-        this.finish(target);
-      } else
-        this.window.setBounds({
-          x: interpolate('x'),
-          y: interpolate('y'),
-          width: interpolate('width'),
-          height: interpolate('height')
-        });
-    }, 16);
+    this.finish(target);
   }
 
   private finish(target: Rectangle): void {
     this.setLimits(target, this.mode === 'compact');
     this.window.setBounds(target);
-    this.destination = undefined;
     this.save();
   }
 
   reconcile(): void {
-    this.cancelAnimation();
-    const target = clampBounds(
-      this.destination ?? this.window.getNormalBounds(),
-      displayAreas(),
-      this.mode
-    );
+    const target = clampBounds(this.window.getNormalBounds(), displayAreas(), this.mode);
 
     this.finish(target);
   }
 
-  private cancelAnimation(): void {
-    clearInterval(this.animation);
-    this.animation = undefined;
-  }
-
   async close(): Promise<void> {
     this.stopped = true;
-    if (this.animation !== undefined) this.reconcile();
     this.save();
     await this.tail;
     if (this.saveError !== undefined) throw this.saveError;

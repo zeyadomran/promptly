@@ -27,8 +27,8 @@ define `writeText` as `Promise<void>`. The injected port matches this asynchrono
 Unpaired UTF-16 surrogates are rejected before writing because clipboard text travels
 through UTF-8. Windows embedded NUL is also rejected before writing:
 [CF_UNICODETEXT](https://learn.microsoft.com/en-us/windows/win32/dataxchg/standard-clipboard-formats)
-terminates at NUL. Stored text remains unchanged. macOS NUL roundtrip is **not qualified**
-by functional tests. Actual OS fidelity requires manual packaged release qualification.
+terminates at NUL. Stored text remains unchanged. Actual Windows OS fidelity requires manual packaged
+release qualification; macOS is outside the supported product scope.
 Before an owned manual write, fully materialize every type of every existing clipboard
 item: Electron 44.5.1 clipboard items read data lazily. If any type cannot be read or
 restored, do not write. Reconstruct the original items and verify restoration afterward.
@@ -48,11 +48,11 @@ that history is not new qualification evidence.
 
 The single library keyboard owner respects composed focus paths, IME, text editors and
 overlays. Search keeps Delete/Backspace; arrows and Enter can navigate/copy a validated
-selection. Only rendered Compact mode admits library data commands until Regular has
-its own implemented UI; the Regular placeholder keeps scoped Settings/Escape routing.
+selection. Rendered Compact and Regular library modes share command eligibility; no hidden
+selection may admit data commands.
 Repeated keydown may navigate arrows but never replays copy/delete or other commands.
-Cmd/Ctrl+T reports unavailable until the tag-picker port is supplied. Native
+Ctrl+T uses the shared tag-picker port. Native
 window-focus notifications preserve active editor/modal/composition ownership. Delete
 offers the real worker undo token through a CSS-styled notification, with no clipboard
-or statistics retry. Full UI accessibility, platform clipboard fidelity and the future
-Regular/tray/capture pipeline remain manual or later-feature qualification.
+or statistics retry. Full UI accessibility and Windows clipboard fidelity remain manual qualification;
+tray and safe capture fallback remain tracked features.

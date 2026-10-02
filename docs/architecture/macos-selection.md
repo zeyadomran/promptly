@@ -1,3 +1,5 @@
+> Historical macOS implementation record; code removed and support deferred by #55.
+
 # Production macOS selection adapter (P08)
 
 The persistent unsigned Swift helper uses only AppKit, ApplicationServices, Carbon

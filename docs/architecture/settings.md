@@ -1,3 +1,5 @@
+> Current scope is Windows x64 only. Earlier macOS requirements/history below are superseded; functional service tests are automated and native/UI release qualification is manual.
+
 # Settings persistence and effects
 
 SQLite's worker-owned `settings(key, value)` table is the sole preference authority.
@@ -8,8 +10,8 @@ error rather than silently overwriting preferences. Unknown rows are retained fo
 forward-compatible data preservation; newer database schema versions still fail.
 
 Defaults are System theme, Compact startup, pin off, normalization and confirmation
-toast on, Shift double-tap at 300 ms, Alt+Space (the macOS Option key), no pin
-shortcut, login off, tray/dock requested on, and onboarding incomplete. The
+toast on, Shift double-tap at 300 ms, Alt+Space, no pin
+shortcut, login off, tray requested on, and onboarding incomplete. The
 `automatic` hide-after-copy policy follows the persisted shared pin value. `always`
 and `never` remain explicit overrides. `shouldHideAfterCopy` is a pure policy helper;
 P17 must call it only after a successful clipboard write and statistics commit.
@@ -42,17 +44,13 @@ including synchronous failures. A rollback failure reports a restart/recovery
 error rather than claiming the previous OS state was successfully restored.
 Further mutations remain unavailable until restart after a rollback failure.
 Controller implementations must use bounded native deadlines; synchronous
-Electron APIs and a five-second Dock show deadline are wired today. The uncancelable
-native show promise is still observed after timeout; its late completion reconciles
-visibility to the latest controller target, including a rollback to hidden. Late
-recovery errors are reported and the Dock controller refuses further changes.
+Electron login/pin/theme APIs are wired today.
 Effect and commit rejection share one rollback path; any first rollback failure
 quarantines mutations immediately and is never retried automatically.
 
 Real adapters set native theme/window backgrounds, pin existing windows with
-verification, and login registration with readback. macOS additionally uses the
-Dock show/hide APIs with visibility readback. Windows Dock changes return
-`UNAVAILABLE`. Tray visibility returns `UNAVAILABLE` until P24/#26 injects its
+verification, and login registration with readback. Obsolete persisted showDockIcon rows
+are ignored and retained without resetting other preferences. Tray visibility returns `UNAVAILABLE` until P24/#26 injects its
 controller. P07/#9 supplies the real reversible shortcut controller, with actual
 OS registration, duplicate detection and rollback quarantine. Stored defaults are
 requested configuration, not proof of a tray or registered shortcut. Timing
@@ -93,7 +91,7 @@ parallel with settings drain. Controllers should stop accepting external work
 first, drain settings, and then release resources required by their apply/rollback.
 
 Primary native API references: [theme](https://www.electronjs.org/docs/latest/api/native-theme),
-[application login and Dock](https://www.electronjs.org/docs/latest/api/app), and
+[application login](https://www.electronjs.org/docs/latest/api/app), and
 [accelerator syntax](https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts/).
 
 ## Responsive Settings window
@@ -107,18 +105,14 @@ Each control renders committed snapshots; a rejected mutation never replaces the
 previous preference. Successful replies update that derived renderer snapshot
 immediately, while older invalidations/reads cannot regress its revision.
 
-General and Appearance use the existing settings service for login, Dock, hide
-policy, startup mode, theme and shared pin. `getWindowRecovery` exposes read-only
-actual tray/controller, shortcut, Dock and reachable-window state. Missing route
-controllers are disabled, regardless of stored requested defaults. Dock hiding
-first restores the main window and verifies native visibility; a failed recovery
-rejects the settings mutation. Native Settings close and the authenticated
-`returnToMainWindow` operation restore/focus main. Failed auxiliary renderer loads
-and shutdown do not trigger that close recovery. Shortcuts/Tags/Storage retain
-separate feature entrypoints without synthesizing later services.
+General and Appearance use the existing settings service for login, hide policy,
+startup mode, theme and shared pin. `getWindowRecovery` exposes read-only actual
+tray/controller, shortcut and reachable-window state. Missing route controllers are
+disabled regardless of requested preferences. Native Settings close and the
+authenticated `returnToMainWindow` operation restore/focus main. Failed auxiliary
+renderer loads and shutdown do not trigger that close recovery.
 
-The optional `NativePreferences` boundary lets owned UI fixtures exercise real
-effect/readback/rollback and durable services without changing a local developer's
-OS login/Dock settings. A separate explicitly GitHub-hosted-only case uses actual
-Electron APIs and restores captured initial OS state after settings/storage drain.
-See [P20 verification](../verification/P20/README.md) for screenshots and gaps.
+The optional `NativePreferences` boundary supports public functional service tests
+without changing OS login configuration. UI, OS preference readback and accessibility
+remain manual Windows release checks. Older owned-UI/native receipts in
+[P20 verification](../verification/P20/README.md) are historical evidence.

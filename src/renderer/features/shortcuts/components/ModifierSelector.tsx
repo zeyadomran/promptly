@@ -1,15 +1,12 @@
 import type { ComponentProps } from 'react';
 
 import { type Modifier, modifierSchema } from '../../../../shared/contracts/shortcuts';
-import type { ShortcutPlatform } from '../../../../shared/shortcuts/accelerator';
 
 export function ModifierSelector({
-  platform,
   value,
   onChange,
   ...props
 }: Omit<ComponentProps<'select'>, 'value' | 'onChange'> & {
-  platform: ShortcutPlatform;
   value: Modifier;
   onChange: (modifier: Modifier) => void;
 }) {
@@ -24,10 +21,10 @@ export function ModifierSelector({
         if (modifier.success) onChange(modifier.data);
       }}
     >
-      <option value="shift">{platform === 'darwin' ? '⇧ Shift' : 'Shift'}</option>
-      <option value="control">{platform === 'darwin' ? '⌃ Control' : 'Ctrl'}</option>
-      <option value="alt">{platform === 'darwin' ? '⌥ Option' : 'Alt'}</option>
-      <option value="meta">{platform === 'darwin' ? '⌘ Command' : 'Win'}</option>
+      <option value="shift">Shift</option>
+      <option value="control">Ctrl</option>
+      <option value="alt">Alt</option>
+      <option value="meta">Win</option>
     </select>
   );
 }
