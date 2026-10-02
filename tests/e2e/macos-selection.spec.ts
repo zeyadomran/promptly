@@ -52,9 +52,29 @@ test('macOS captures an ordinary owned selection and returns to its saved source
         expect(
           foreground.status === 'ok' && foreground.identity.source?.pid === other.fixturePid
         ).toBe(true);
+        await other.yieldTo(source.fixturePid);
+        const foregroundAfterYield = await other.isForeground(other.fixturePid);
+
+        evidence.push({
+          phase: 'cooperative-yield',
+          ownedForegroundBeforeActivation: foregroundAfterYield.matched
+        });
+        expect(foregroundAfterYield.matched).toBe(true);
+        const sourceBeforeActivation = await source.isForeground(source.fixturePid);
+
+        evidence.push({
+          phase: 'source-before-activation',
+          ownedSourceBackgrounded: !sourceBeforeActivation.matched
+        });
+        expect(sourceBeforeActivation.matched).toBe(false);
+        const activationStarted = performance.now();
         const activation = await adapter.activateSource(recorded.identity);
 
-        evidence.push({ phase: 'source-handoff', status: activation });
+        evidence.push({
+          phase: 'source-handoff',
+          status: activation,
+          elapsedMs: performance.now() - activationStarted
+        });
         expect(activation).toBe('ok');
         expect(await source.isForeground(source.fixturePid)).toMatchObject({
           matched: true,
