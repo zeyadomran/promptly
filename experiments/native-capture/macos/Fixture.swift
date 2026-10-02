@@ -19,10 +19,14 @@ func runFixture(mode: String) {
         window.makeFirstResponder(text)
         text.setSelectedRange(NSRange(location: 0, length: mode == "empty" ? 0 : text.string.utf16.count))
     }
-    window.makeKeyAndOrderFront(nil)
-    if #available(macOS 14.0, *) { app.activate() }
-    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-        print("{\"fixturePid\":\(ProcessInfo.processInfo.processIdentifier)}")
+    app.finishLaunching()
+    DispatchQueue.main.async {
+        window.makeKeyAndOrderFront(nil)
+        if #available(macOS 14.0, *) { app.activate() }
+    }
+    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        let matched = NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
+        print("{\"fixturePid\":\(ProcessInfo.processInfo.processIdentifier),\"foregroundMatched\":\(matched)}")
         fflush(stdout)
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 30) { app.terminate(nil) }

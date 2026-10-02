@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import path from 'node:path';
 import { createInterface } from 'node:readline';
 
 export async function checkNativeFixtures(executable, helper, accessibilityAllowed) {
@@ -11,7 +12,17 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
     ['empty', 'empty'],
     ['password', 'secureInput']
   ]) {
-    const fixture = spawn(executable, ['--fixture', mode], {
+    const fixtureExecutable =
+      process.platform === 'darwin'
+        ? path.join(
+            path.dirname(executable),
+            'NativeFixture.app',
+            'Contents',
+            'MacOS',
+            'promptly-native'
+          )
+        : executable;
+    const fixture = spawn(fixtureExecutable, ['--fixture', mode], {
       stdio: ['ignore', 'pipe', 'ignore'],
       windowsHide: true
     });
@@ -21,9 +32,12 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
 
     try {
       const [line] = await once(lines, 'line', { signal: abort.signal });
-      const { fixturePid } = JSON.parse(line);
+      const { fixturePid, foregroundMatched } = JSON.parse(line);
       const elapsed = [];
       const roundTrips = [];
+
+      if (process.platform === 'darwin')
+        assert.equal(foregroundMatched, true, 'Fixture must own foreground before reading');
 
       if (!accessibilityAllowed) {
         const denied = await helper.request('capture', { expectedPid: fixturePid });
