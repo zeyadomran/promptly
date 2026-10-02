@@ -18,9 +18,12 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
   const commands = useLibraryCommands();
   const { model } = useLibrary();
   const [source, setSource] = useState({
+    snippet,
     available: false,
     explanation: 'Checking source availability…'
   });
+  // A new committed snapshot retires availability before the refresh effect runs.
+  const sourceReady = source.snippet === snippet;
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
@@ -30,18 +33,23 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
       .getSnippetSource({ id: snippet.id })
       .then((result) => {
         if (active)
-          setSource(
-            result.ok ? result.value : { available: false, explanation: result.error.message }
-          );
+          setSource({
+            snippet,
+            ...(result.ok ? result.value : { available: false, explanation: result.error.message })
+          });
       })
       .catch(() => {
         if (active)
-          setSource({ available: false, explanation: 'Unable to verify the source application.' });
+          setSource({
+            snippet,
+            available: false,
+            explanation: 'Unable to verify the source application.'
+          });
       });
     return () => {
       active = false;
     };
-  }, [snippet.id]);
+  }, [snippet]);
   const duplicate = async () => {
     if (!eligible || pending) return;
     setPending(true);
@@ -92,7 +100,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
           Duplicate
         </DropdownMenuItem>
         <DropdownMenuItem
-          disabled={!eligible || !source.available}
+          disabled={!eligible || !sourceReady || !source.available}
           onSelect={() => {
             void window.promptly
               .openSnippetSource({ id: snippet.id })
@@ -106,7 +114,11 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
         >
           Open source application
         </DropdownMenuItem>
-        {!source.available && <p className="snippet-source-explanation">{source.explanation}</p>}
+        {(!sourceReady || !source.available) && (
+          <p className="snippet-source-explanation">
+            {sourceReady ? source.explanation : 'Checking source availability…'}
+          </p>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           variant="destructive"

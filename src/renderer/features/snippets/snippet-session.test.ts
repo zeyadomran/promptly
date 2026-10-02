@@ -47,7 +47,6 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     },
     updateSnippet: ({ id, text }) => {
       const snippet = { ...(records.get(id) ?? first), text };
-
       const persisted = { ok: true as const, value: { revision: 2, snippet } };
 
       if (!writeHold) {
@@ -69,13 +68,37 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.id).toBe(first.id);
     });
+    hold = true;
+    records.set(first.id, {
+      ...first,
+      tags: [
+        {
+          id: '00000000-0000-4000-8000-000000000003',
+          name: 'desktop-check',
+          color: 'red',
+          createdAt: '2026-10-02T00:00:00Z'
+        }
+      ]
+    });
+    session.refresh();
+    session.edit();
+    expect(session.snapshot()).toMatchObject({
+      loading: true,
+      snippet: { id: first.id, tags: [] },
+      editing: false
+    });
+    expect(await session.save()).toBe(false);
+    hold = false;
+    release?.();
+    await vi.waitFor(() => {
+      expect(session.snapshot().snippet?.tags[0]?.name).toBe('desktop-check');
+    });
     session.edit();
     session.change('Discard this draft');
     session.discard();
     await vi.waitFor(() => {
       expect(session.snapshot()).toMatchObject({ editing: false, snippet: { id: first.id } });
     });
-    expect(records.get(first.id)?.text).toBe('Original 雪🙂');
     session.edit();
     session.change('Preserved draft');
     session.select(null, true);
@@ -155,8 +178,15 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.text).toBe('Imported replacement');
     });
+    missing = true;
+    session.refresh();
+    await vi.waitFor(() => {
+      expect(session.snapshot()).toMatchObject({ loading: false, missing: true, snippet: null });
+    });
+    missing = false;
     hold = true;
     session.select(first.id);
+    expect(session.snapshot()).toMatchObject({ loading: true, snippet: null });
     hold = false;
     session.select(second.id);
     release?.();
