@@ -7,6 +7,7 @@ import {
 import { operations } from '../../shared/contracts/operations';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { captureInputSchema } from '../../shared/contracts/storage';
+import type { WorkerTimings } from './worker-diagnostics';
 
 export const storageOperations = {
   getSettings: operations.getSettings,
@@ -44,9 +45,11 @@ export interface WorkerRequest {
   id: number;
   operation: StorageOperation | 'close';
   input: unknown;
+  diagnostic?: true;
 }
 export interface WorkerReply {
   id: number;
   result: DesktopResult<unknown>;
   change?: ChangeEvent;
+  diagnostic?: WorkerTimings;
 }

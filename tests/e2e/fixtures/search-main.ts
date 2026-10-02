@@ -10,6 +10,7 @@ import { storageDesktopServices } from '../../../src/main/storage/desktop-servic
 import { createMainWindow } from '../../../src/main/windows/create-main-window';
 import { defaultSettings, type SettingsSnapshot } from '../../../src/shared/contracts/settings';
 import { searchFixtureIpc, startSearchStartupTrace } from './search-startup-trace';
+import { searchWorkerTrace } from './search-worker-trace';
 
 let storage: StorageClient | undefined;
 
@@ -22,9 +23,14 @@ void app.whenReady().then(async () => {
     throw new Error('Search fixture paths required.');
   const started = performance.now();
 
-  storage = new StorageClient(workerFile, filename, (change) => {
-    desktop.publish(change);
-  });
+  storage = new StorageClient(
+    workerFile,
+    filename,
+    (change) => {
+      desktop.publish(change);
+    },
+    searchWorkerTrace()
+  );
   const revision = await storage.ready;
 
   EventEmitter.prototype.on.call(
