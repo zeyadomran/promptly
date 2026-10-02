@@ -62,8 +62,8 @@ test('packaged fonts and logos load offline with native System colors and no fix
 
     expect(fonts).toHaveLength(5);
     expect(fonts.every((font) => font.status === 'loaded')).toBe(true);
-    await expect(page.locator('img.brand-light')).toHaveJSProperty('naturalWidth', 1024);
-    await expect(page.locator('img.brand-dark')).toHaveJSProperty('naturalWidth', 1024);
+    for (const logo of await page.locator('img.brand-light, img.brand-dark').all())
+      await expect(logo).toHaveJSProperty('naturalWidth', 1024);
     await page.emulateMedia({ colorScheme: 'light' });
     await expect(page.locator('html')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
     await page.screenshot({ path: 'docs/verification/P06/packaged-light.png' });

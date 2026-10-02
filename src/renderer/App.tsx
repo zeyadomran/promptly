@@ -1,5 +1,5 @@
-import { FoundationScreen } from './features/library';
 import { SettingsProvider } from './features/settings/SettingsProvider';
+import { DesktopShell } from './features/window-chrome/DesktopShell';
 import { DesignFixture } from './fixtures/DesignFixture';
 
 export function App() {
@@ -11,7 +11,7 @@ export function App() {
 
   return (
     <SettingsProvider>
-      <FoundationScreen platform={window.promptly.platform} />
+      <DesktopShell />
     </SettingsProvider>
   );
 }

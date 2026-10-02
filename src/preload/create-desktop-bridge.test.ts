@@ -55,7 +55,7 @@ describe('preload allowlist and lifecycle', () => {
 
     expect(Object.isFrozen(bridge)).toBe(true);
     expect(Object.keys(bridge).sort()).toEqual(
-      ['platform', 'subscribeChanges', ...Object.keys(operations)].sort()
+      ['platform', 'subscribeChanges', 'subscribeWindowFocus', ...Object.keys(operations)].sort()
     );
     expect(await bridge.getSnippet({ id: 'not-an-id' })).toMatchObject({
       ok: false,
