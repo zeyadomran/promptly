@@ -19,6 +19,7 @@ import { macosPermissionSnapshotSchema } from './macos-selection';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
+import { snippetSourceSchema } from './snippet-source';
 import {
   sizeModeSchema,
   windowKindSchema,
@@ -51,6 +52,8 @@ export const operations = {
   quitApplication: { request: emptySchema, response: emptySchema },
   searchSnippets: { request: searchRequestSchema, response: searchPageSchema },
   getSnippet: { request: idRequestSchema, response: snippetSnapshotSchema },
+  getSnippetSource: { request: idRequestSchema, response: snippetSourceSchema },
+  openSnippetSource: { request: idRequestSchema, response: emptySchema },
   createSnippet: {
     request: z.strictObject({ text: snippetTextSchema }),
     response: snippetSnapshotSchema

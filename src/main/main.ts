@@ -25,6 +25,7 @@ import {
 import { SettingsService } from './settings/service';
 import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
 import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
+import { snippetSourceServices } from './snippets/source-services';
 import { StorageClient } from './storage/client';
 import { storageDesktopServices } from './storage/desktop-services';
 import { LibraryMutations } from './storage/library-mutations';
@@ -136,6 +137,7 @@ if (primaryInstance)
         ipcMain,
         {
           ...storageDesktopServices(storage, mutations),
+          ...snippetSourceServices(storage),
           ...transfer.services,
           ...copy.services,
           ...settings.services,

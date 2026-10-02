@@ -107,4 +107,13 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
 
   expect(changed).toMatchObject({ total: 1, hasMore: false, items: [{ id: a.id, text }] });
   expect(changed.revision).toBeGreaterThan(first.revision);
+  await call('setSnippetTags', { id: c.id, tagIds: [] });
+  const untagged = await call('searchSnippets', {
+    ...request,
+    query: '',
+    tagIds: [],
+    untagged: true
+  });
+
+  expect(untagged).toMatchObject({ total: 1, items: [{ id: c.id, text: 'C review %b_c' }] });
 });

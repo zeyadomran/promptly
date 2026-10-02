@@ -32,7 +32,7 @@ export function DesktopShell() {
           {settingsWindow ? (
             <SettingsWindow />
           ) : !onboardingWindow ? (
-            <LibraryWindow mode={mode} />
+            <LibraryWindow mode={mode} onModeChange={setMode} />
           ) : (
             <FoundationScreen platform={window.promptly.platform} />
           )}
@@ -42,7 +42,7 @@ export function DesktopShell() {
             {error ?? preferences.error?.message}
           </p>
         )}
-        {!settingsWindow && (onboardingWindow || mode === 'regular') && (
+        {!settingsWindow && onboardingWindow && (
           <footer className="window-footer">
             <PinStatus pinned={preferences.settings.alwaysOnTop} />
             <Button

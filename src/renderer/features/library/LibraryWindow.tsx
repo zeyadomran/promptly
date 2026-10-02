@@ -1,22 +1,27 @@
 import type { SizeMode } from '../../../shared/contracts/window';
+import { RegularLibrary } from '../snippets/RegularLibrary';
+import { SnippetSessionProvider } from '../snippets/SnippetSessionProvider';
 import { TagPickerProvider } from '../tags/TagPickerProvider';
 import { CompactLibrary } from './CompactLibrary';
-import { FoundationScreen } from './FoundationScreen';
 import { LibraryCommandProvider } from './LibraryCommandProvider';
 import { LibraryProvider } from './LibraryProvider';
 
-/** Keep the selection owner mounted across Compact/Regular mode switches. */
-export function LibraryWindow({ mode }: { mode: SizeMode }) {
+/** Selection, drafts, tags and commands remain mounted across both library surfaces. */
+export function LibraryWindow({
+  mode,
+  onModeChange
+}: {
+  mode: SizeMode;
+  onModeChange: (mode: SizeMode) => Promise<void>;
+}) {
   return (
     <LibraryProvider>
       <TagPickerProvider>
-        <LibraryCommandProvider active={mode === 'compact'}>
-          {mode === 'compact' ? (
-            <CompactLibrary />
-          ) : (
-            <FoundationScreen platform={window.promptly.platform} />
-          )}
-        </LibraryCommandProvider>
+        <SnippetSessionProvider mode={mode} onModeChange={onModeChange}>
+          <LibraryCommandProvider active>
+            {mode === 'compact' ? <CompactLibrary /> : <RegularLibrary />}
+          </LibraryCommandProvider>
+        </SnippetSessionProvider>
       </TagPickerProvider>
     </LibraryProvider>
   );

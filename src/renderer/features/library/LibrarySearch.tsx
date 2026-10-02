@@ -4,7 +4,7 @@ import { Input } from '../../components/ui/input';
 import { useLibrary } from './library-context';
 import { LibrarySort } from './LibrarySort';
 
-export function LibrarySearch() {
+export function LibrarySearch({ regular = false }: { regular?: boolean }) {
   const { state, model, searchRef } = useLibrary();
 
   return (
@@ -23,7 +23,11 @@ export function LibrarySearch() {
           model.query({ ...state.request, query: event.target.value });
         }}
       />
-      <kbd className="library-key-hint">esc</kbd>
+      {regular ? (
+        <span className="regular-filter-hint">tag:review from:terminal</span>
+      ) : (
+        <kbd className="library-key-hint">esc</kbd>
+      )}
       <LibrarySort />
     </div>
   );
