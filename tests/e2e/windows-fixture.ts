@@ -22,6 +22,9 @@ export async function windowsFixture(
   let diagnostics = '';
   let timer: ReturnType<typeof setTimeout> | undefined;
   let integrityLevel: number | null = null;
+  let rendered = false;
+  let foregroundMatched = false;
+  let activationAccepted = false;
 
   child.stderr.on('data', (chunk: Buffer) => {
     diagnostics = (diagnostics + chunk.toString()).slice(-2048);
@@ -59,6 +62,18 @@ export async function windowsFixture(
                 value.integrityLevel < 0))
           )
             throw new Error('Invalid fixture integrity receipt');
+          if (
+            !('rendered' in value) ||
+            typeof value.rendered !== 'boolean' ||
+            !('foregroundMatched' in value) ||
+            typeof value.foregroundMatched !== 'boolean' ||
+            !('activationAccepted' in value) ||
+            typeof value.activationAccepted !== 'boolean'
+          )
+            throw new Error('Missing owned foreground readiness');
+          rendered = value.rendered;
+          foregroundMatched = value.foregroundMatched;
+          activationAccepted = value.activationAccepted;
           integrityLevel = value.integrityLevel;
           resolve(value.fixturePid);
         } catch (error) {
@@ -70,6 +85,9 @@ export async function windowsFixture(
     return {
       fixturePid,
       integrityLevel,
+      rendered,
+      foregroundMatched,
+      activationAccepted,
       close: async () => {
         lines.close();
         if (child.exitCode !== null || child.signalCode !== null) return;

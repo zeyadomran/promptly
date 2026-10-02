@@ -17,6 +17,7 @@ internal sealed class SelectionControl : Control
 internal static class Fixture
 {
     [DllImport("user32.dll")] internal static extern bool SetForegroundWindow(IntPtr window);
+    [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
     [DllImport("user32.dll")] internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
     [STAThread]
     private static void Main(string[] args)
@@ -26,14 +27,18 @@ internal static class Fixture
         var window = new Window { Title = "Promptly owned production fixture", Width = 500, Height = 180 };
         var control = new SelectionControl { Mode = mode, Window = window, Focusable = true };
         window.Content = control;
-        window.Loaded += delegate
+        window.ContentRendered += delegate
         {
             window.Activate();
             control.Focus();
-            SetForegroundWindow(new WindowInteropHelper(window).Handle);
+            var activationAccepted = SetForegroundWindow(new WindowInteropHelper(window).Handle);
+            uint foregroundPid;
+            GetWindowThreadProcessId(GetForegroundWindow(), out foregroundPid);
+            var foregroundMatched = foregroundPid == (uint)Process.GetCurrentProcess().Id;
             var level = ProcessAccess.ReadIntegrity((uint)Process.GetCurrentProcess().Id, null);
             Console.WriteLine("{\"fixturePid\":" + Process.GetCurrentProcess().Id + ",\"integrityLevel\":" +
-                (level.HasValue ? level.Value.ToString() : "null") + "}");
+                (level.HasValue ? level.Value.ToString() : "null") + ",\"rendered\":true,\"foregroundMatched\":" +
+                (foregroundMatched ? "true" : "false") + ",\"activationAccepted\":" + (activationAccepted ? "true" : "false") + "}");
             var timeout = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
             timeout.Tick += delegate { app.Shutdown(); };
             timeout.Start();
