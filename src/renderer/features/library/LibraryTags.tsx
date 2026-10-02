@@ -23,6 +23,19 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
       >
         All
       </Button>
+      {regular && (
+        <Button
+          variant="ghost"
+          size="xs"
+          className="library-tag-chip"
+          aria-pressed={state.request.untagged}
+          onClick={() => {
+            model.query({ ...state.request, tagIds: [], untagged: !state.request.untagged });
+          }}
+        >
+          Untagged
+        </Button>
+      )}
       {state.tags.map((tag) => (
         <Button
           key={tag.id}

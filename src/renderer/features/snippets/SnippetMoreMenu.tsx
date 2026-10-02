@@ -13,7 +13,7 @@ import {
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
 
-export function SnippetMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
+export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
   const commands = useLibraryCommands();
   const { model } = useLibrary();
   const [source, setSource] = useState({

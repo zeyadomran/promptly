@@ -5,7 +5,7 @@ import { Button } from '../../components/ui/button';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
 import { useSnippetSession } from './snippet-context';
-import { SnippetMenu } from './SnippetMenu';
+import { SnippetMoreMenu } from './SnippetMoreMenu';
 
 export function SnippetActions({ snippet }: { snippet: Snippet }) {
   const commands = useLibraryCommands();
@@ -41,7 +41,7 @@ export function SnippetActions({ snippet }: { snippet: Snippet }) {
         <Pencil aria-hidden="true" />
         Edit
       </Button>
-      <SnippetMenu snippet={snippet} eligible={eligible} />
+      <SnippetMoreMenu snippet={snippet} eligible={eligible} />
     </div>
   );
 }
