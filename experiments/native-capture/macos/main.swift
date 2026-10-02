@@ -43,6 +43,11 @@ func respond(_ request: [String: Any]) -> [String: Any] {
     return result
 }
 
+if CommandLine.arguments.count > 1 && CommandLine.arguments[1] == "--fixture" {
+    runFixture(mode: CommandLine.arguments.count > 2 ? CommandLine.arguments[2] : "selected")
+    exit(0)
+}
+
 DispatchQueue.global().async {
     while let line = readLine() {
         guard line.utf8.count <= 4096, let data = line.data(using: .utf8),

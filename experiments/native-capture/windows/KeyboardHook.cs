@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows.Forms;
@@ -55,7 +56,7 @@ internal sealed class KeyboardHook : IDisposable
                     key == 0xA4 || key == 0xA5 ? "alt" :
                     key == 0x5B || key == 0x5C ? "meta" : "other";
                 emit(new { v = 1, type = "key", modifier = modifier, down = down,
-                    repeat = repeat, timestampMs = (double)Environment.TickCount });
+                    repeat = repeat, timestampMs = Stopwatch.GetTimestamp() * 1000.0 / Stopwatch.Frequency });
             }
         }
         return NativeMethods.CallNextHookEx(handle, code, message, data);

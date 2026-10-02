@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { arch, release } from 'node:os';
 import path from 'node:path';
 
-import { checkWindowsFixtures } from './fixture-check.mjs';
+import { checkNativeFixtures } from './fixture-check.mjs';
 import { openHelper } from './protocol-client.mjs';
 
 const executable = path.join(
@@ -38,10 +38,9 @@ try {
 
   const shortcut = await helper.request('probeAltSpace');
   const hook = await helper.request('hookStart');
-  const fixtures =
-    process.argv.includes('--fixtures') && process.platform === 'win32'
-      ? await checkWindowsFixtures(executable, helper)
-      : [];
+  const fixtures = process.argv.includes('--fixtures')
+    ? await checkNativeFixtures(executable, helper, capabilities.accessibility !== false)
+    : [];
 
   console.log(
     JSON.stringify({
@@ -49,6 +48,9 @@ try {
       os: process.platform,
       release: release(),
       architecture: arch(),
+      nodeVersion: process.version,
+      nativeRuntime: capabilities.runtime ?? 'system-frameworks',
+      accessibilityAllowed: capabilities.accessibility ?? true,
       clipboardCounterUnchanged: unchanged,
       clipboardMetadataStatus: before.status,
       hookInstallationStatus: hook.status,

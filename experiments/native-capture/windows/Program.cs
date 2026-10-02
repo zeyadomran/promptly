@@ -35,7 +35,8 @@ internal static class Program
                     if (command == "capabilities")
                         result = new Dictionary<string, object> { { "status", "ok" }, { "platform", "win32" },
                             { "selection", "UIAutomation.TextPattern" }, { "clipboardFallback", false },
-                            { "hook", "WH_KEYBOARD_LL" }, { "inputMonitoring", false } };
+                            { "hook", "WH_KEYBOARD_LL" }, { "inputMonitoring", false },
+                            { "runtime", Environment.Version.ToString() } };
                     else if (command == "capture")
                         result = Capture.Read(request.ContainsKey("expectedPid") ? Convert.ToInt32(request["expectedPid"]) : 0,
                             request.ContainsKey("includeText") && Convert.ToBoolean(request["includeText"]));
