@@ -15,6 +15,9 @@ Windows x64 is tested; Windows ARM64 distribution is not qualified.
 `createWindowsSelection({resourcesPath, packaged, applicationPath})` receives only
 Electron main's application paths. Its API is `ready()`, `foregroundIdentity()`,
 `captureSelection(identity)`, `activateSource(identity)`, and `dispose()`.
+The private `foregroundIdentityResult()` variant retains structured failure status;
+the convenience identity method still returns null on failure. Both enforce the
+same 100-ms identity request deadline and retain no request/response diagnostics.
 No renderer bridge method, persistence service, shortcut hook, clipboard access,
 Copy injection, permission prompt, automatic elevation, or capture pipeline is
 introduced here. Issue #9 owns hooks and shortcut recognition.
@@ -63,7 +66,10 @@ not install a capture IPC method.
 
 One shared quit coordinator distinguishes cleanup started from cleanup complete and
 prevents every repeated quit request while cleanup is pending. It awaits both
-storage close and native disposal with `allSettled`, then aggregates failures.
+storage close and native disposal with `allSettled` **after settings drain settles**,
+then aggregates failures. Settings controllers retain live storage/native resources
+until their accepted effects and commits settle; a settings rejection still attempts
+both remaining cleanups.
 A fast failure cannot release the quit gate while the other cleanup is pending.
 Fatal storage initialization and window creation failures use that same idempotent
 cleanup before calling `app.exit(1)`, which otherwise bypasses `before-quit`.
@@ -161,6 +167,15 @@ The Chromium fixture uses a separate **test-only** WPF focus driver to activate 
 owned Chromium HWND after verifying its PID. Local Windows refused Electron's
 initial focus request; the test retains the foreground assertion and never reads
 the user's app. Production capture itself changes no focus.
+Its fixture startup now has a separate 15-second owned-foreground readiness limit.
+Identity-only polls record status, ownership and elapsed time; they never request
+selected text. The subsequent production capture is requested once with its fixed
+100-ms deadline and exact-text assertion. An earlier hosted Chromium failure had
+null identity/source without enough diagnostics to distinguish initialization cost,
+foreground change or unavailable provenance; this remains a qualification gap.
+Receipts survive failures and expose those cases without logging another app's PID,
+name, window title, identity token or text. Fixture readiness cost is separate from
+the later shortcut-to-toast requirement.
 
 Recorded complete local fixture receipt (n=1 startup, n=10 selected captures): UIA
 root warmup **55.4974 ms**, helper start-to-capabilities **86.4545 ms**, process

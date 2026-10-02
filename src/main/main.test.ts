@@ -5,6 +5,8 @@ const owned = vi.hoisted(() => ({
   events: new Map<string, (event: { preventDefault: () => void }) => void>(),
   ready: vi.fn<() => Promise<number>>(),
   storageClose: vi.fn<() => Promise<void>>(),
+  settingsClose: vi.fn<() => Promise<void>>(),
+  settingsInitialize: vi.fn<() => Promise<void>>(),
   nativeDispose: vi.fn<() => Promise<void>>(),
   window: vi.fn<() => Promise<void>>(),
   quit: vi.fn(),
@@ -23,7 +25,8 @@ vi.mock('electron', () => ({
     exit: owned.exit
   },
   BrowserWindow: { getAllWindows: () => [] },
-  ipcMain: {}
+  ipcMain: {},
+  nativeTheme: { on: vi.fn() }
 }));
 vi.mock('./storage/client', () => ({
   StorageClient: class {
@@ -38,6 +41,18 @@ vi.mock('./platform/windows/windows-selection', () => ({
   })
 }));
 vi.mock('./storage/desktop-services', () => ({ storageDesktopServices: () => ({}) }));
+vi.mock('./settings/electron-controllers', () => ({
+  electronSettingsControllers: () => ({}),
+  updateWindowBackgrounds: vi.fn()
+}));
+vi.mock('./settings/service', () => ({
+  SettingsService: class {
+    current = {};
+    services = {};
+    initialize = owned.settingsInitialize;
+    close = owned.settingsClose;
+  }
+}));
 vi.mock('./ipc/install-desktop-ipc', () => ({
   installDesktopIpc: () => ({ windows: {}, publish: vi.fn() })
 }));
@@ -47,7 +62,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it.skipIf(process.platform !== 'win32').each(['storage', 'window'] as const)(
+it.skipIf(process.platform !== 'win32').each(['storage', 'settings', 'window'] as const)(
   'actual main fatal %s path waits for the warming native helper to close',
   async (failure) => {
     vi.resetModules();
@@ -61,6 +76,10 @@ it.skipIf(process.platform !== 'win32').each(['storage', 'window'] as const)(
       failure === 'storage' ? Promise.reject(error) : Promise.resolve(0)
     );
     owned.window.mockRejectedValue(error);
+    owned.settingsInitialize.mockImplementation(() =>
+      failure === 'settings' ? Promise.reject(error) : Promise.resolve()
+    );
+    owned.settingsClose.mockResolvedValue();
     owned.storageClose.mockResolvedValue();
     owned.nativeDispose.mockImplementation(
       () =>
@@ -73,7 +92,7 @@ it.skipIf(process.platform !== 'win32').each(['storage', 'window'] as const)(
       expect(owned.nativeDispose).toHaveBeenCalledOnce();
     });
     expect(report).toHaveBeenCalledWith(
-      failure === 'storage' ? 'Unable to initialize Promptly:' : 'Unable to open Promptly:',
+      failure !== 'window' ? 'Unable to initialize Promptly:' : 'Unable to open Promptly:',
       error
     );
     expect(owned.storageClose).toHaveBeenCalledOnce();

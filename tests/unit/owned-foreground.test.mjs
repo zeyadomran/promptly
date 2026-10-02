@@ -22,25 +22,33 @@ it('waits for owned identity readiness after a transient foreground timeout', as
   expect(observe.mock.calls.map(([value]) => value.status)).toEqual(['timedOut', 'ok']);
 });
 
-it('rejects unrelated identity and bounds pending startup without publishing late readiness', async () => {
+it('rejects unrelated identity rather than treating it as fixture readiness', async () => {
   vi.useFakeTimers();
-  let complete;
-  const pending = new Promise((resolve) => {
-    complete = resolve;
-  });
-  const read = vi
-    .fn()
-    .mockResolvedValueOnce({ status: 'ok', identity: owned })
-    .mockReturnValue(pending);
   const observe = vi.fn();
+  const read = vi.fn().mockResolvedValue({ status: 'ok', identity: owned });
   const result = waitOwnedForeground(read, async () => false, observe, 100);
   const rejected = expect(result).rejects.toThrow('Owned foreground readiness timed out');
 
   await vi.advanceTimersByTimeAsync(100);
   await rejected;
-  expect(observe).toHaveBeenCalledOnce();
   expect(observe.mock.calls[0][0]).toMatchObject({ owned: false });
+});
+
+it('bounds pending startup without publishing late readiness', async () => {
+  vi.useFakeTimers();
+  let complete;
+  const pending = new Promise((resolve) => {
+    complete = resolve;
+  });
+  const read = vi.fn().mockReturnValue(pending);
+  const observe = vi.fn();
+  const result = waitOwnedForeground(read, async () => true, observe, 100);
+  const rejected = expect(result).rejects.toThrow('Owned foreground readiness timed out');
+
+  await vi.advanceTimersByTimeAsync(100);
+  await rejected;
+  expect(observe).not.toHaveBeenCalled();
   complete({ status: 'ok', identity: owned });
   await vi.advanceTimersByTimeAsync(0);
-  expect(observe).toHaveBeenCalledOnce();
+  expect(observe).not.toHaveBeenCalled();
 });

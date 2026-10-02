@@ -13,8 +13,10 @@ production shell intentionally has no fake successful persistence or capture.
 
 P04 connects the durable snippet/tag services through a SQLite worker. Its main-only
 capture/copy-statistics commands and current search boundary are documented in
-[SQLite storage](architecture/sqlite-storage.md). Native capture, clipboard, and
-settings bridge methods remain unavailable until their services are connected.
+[SQLite storage](architecture/sqlite-storage.md). Native capture and clipboard
+services remain unavailable until connected. P05 connects the settings bridge
+through a serialized main service and the same worker; [settings](architecture/settings.md)
+documents native availability, rollback, bootstrap, and shutdown contracts.
 
 Every successful reply carries the authoritative revision. Services publish a
 `ChangeEvent` **after** a durable commit through the installer's `publish` method.
@@ -57,7 +59,9 @@ views must follow the same invalidation pattern for settings/tag snapshots.
 - Settings updates are non-empty strict patches, applied by settings services.
   Shortcut strings are requested configuration, not proof of successful OS
   registration. Services can return `CONFLICT` for registration failures; P05/P07
-  own accelerator validation and actual bindings.
+  own accelerator validation and actual bindings. P05 validates syntax and timing;
+  unsupported native mutations return `UNAVAILABLE` rather than persist fake OS
+  success. Pure configuration such as timing/normalization/toasts is durable now.
 
 ## Verification
 
