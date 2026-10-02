@@ -53,7 +53,7 @@ test('a failed settings renderer is destroyed and the next open loads a fresh wi
     const settings = application.windows().find((window) => window.url().endsWith('#settings'));
 
     if (settings === undefined) throw new Error('Missing recovered settings window.');
-    await expect(settings.getByRole('heading', { name: 'Appearance' })).toBeVisible();
+    await expect(settings.getByRole('heading', { name: 'General' })).toBeVisible();
     expect(
       await application.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows().length)
     ).toBe(2);
@@ -127,7 +127,7 @@ test('closing an owned auxiliary window during a held renderer load releases ope
     const settings = application.windows().find((window) => window.url().endsWith('#settings'));
 
     if (settings === undefined) throw new Error('Missing fresh retry window.');
-    await expect(settings.getByRole('heading', { name: 'Appearance' })).toBeVisible();
+    await expect(settings.getByRole('heading', { name: 'General' })).toBeVisible();
   } finally {
     await isolated.dispose();
   }

@@ -16,7 +16,12 @@ import {
 import { macosPermissionSnapshotSchema } from './macos-selection';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
-import { sizeModeSchema, windowKindSchema, windowStateSchema } from './window';
+import {
+  sizeModeSchema,
+  windowKindSchema,
+  windowRecoverySchema,
+  windowStateSchema
+} from './window';
 
 const emptySchema = z.strictObject({});
 const idRequestSchema = z.strictObject({ id: idSchema });
@@ -25,6 +30,8 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 
 export const operations = {
   getWindowState: { request: emptySchema, response: windowStateSchema },
+  getWindowRecovery: { request: emptySchema, response: windowRecoverySchema },
+  returnToMainWindow: { request: emptySchema, response: windowStateSchema },
   setWindowMode: {
     request: z.strictObject({ mode: sizeModeSchema, reducedMotion: z.boolean() }),
     response: windowStateSchema

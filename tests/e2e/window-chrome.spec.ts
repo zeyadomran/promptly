@@ -59,7 +59,8 @@ test('packaged chrome hit regions, theme, responsive settings and search-focus c
     const settingsPage = app.windows().find((candidate) => candidate.url().endsWith('#settings'));
 
     if (settingsPage === undefined) throw new Error('Settings window missing.');
-    await expect(settingsPage.getByRole('heading', { name: 'Appearance' })).toBeVisible();
+    await expect(settingsPage.getByRole('heading', { name: 'General' })).toBeVisible();
+    await settingsPage.getByRole('tab', { name: 'Appearance' }).click();
     await settingsPage.getByRole('switch', { name: 'Always on top' }).click();
     await expect(settingsPage.getByRole('switch', { name: 'Always on top' })).toBeChecked();
     await expect(page.locator('footer')).toContainText('Always on top');
