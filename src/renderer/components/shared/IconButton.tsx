@@ -1,0 +1,26 @@
+import type { LucideIcon } from 'lucide-react';
+import type { ComponentProps } from 'react';
+
+import { Button } from '../ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
+
+interface IconButtonProps extends Omit<
+  ComponentProps<typeof Button>,
+  'children' | 'asChild' | 'size'
+> {
+  label: string;
+  icon: LucideIcon;
+}
+
+export function IconButton({ label, icon: Icon, ...props }: IconButtonProps) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label={label} {...props}>
+          <Icon aria-hidden="true" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+}
