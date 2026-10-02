@@ -1,5 +1,7 @@
 > Current scope is Windows x64 only (2026-10-02). The supplied original reference remains unchanged in design-reference; this maintained spec reflects the current product scope. Functional service tests are automated; Windows UI/native release qualification is manual. The user's 2026-10-02 decision, "Defer fallback; use native capture for v1", supersedes clipboard-fallback requirements in the unchanged supplied originals.
 
+Performance measurements and budgets are skipped for this pass by the [latest user decision](https://github.com/zeyadomran/promptly/issues/30#issuecomment-5963023552). Distribution checks remain required. Historical timing/RSS evidence is retained without a performance-pass claim; production bounded timeouts and correctness, native safety, clipboard and accessibility requirements are unchanged.
+
 # Promptly: App Functionality Spec
 
 You are helping build **Promptly**, a Windows x64 desktop app that lets users save highlighted text from applications exposing a supported native Windows UIA selection with a global keyboard shortcut, then search, tag, filter, and copy it later. The primary users are power users of AI coding tools (Claude Code, Codex, Cursor, etc.) who collect prompts to reuse or try later.
@@ -88,7 +90,7 @@ A larger window (~1000 px) with a split view:
 
 ## 4. Search and filtering
 
-- **Instant, as-you-type** search across snippet text (case-insensitive, substring match; fuzzy matching optional). Debounce at ≤50 ms; it must stay fast with 10k+ snippets (use SQLite FTS5 or an in-memory index).
+- **Instant, as-you-type** search across snippet text (case-insensitive, substring match; fuzzy matching optional). Use an index and bounded pages for large libraries (SQLite FTS5 or an in-memory index). No debounce or latency benchmark budget gates this pass.
 - Matches are **highlighted** in list rows and in the preview.
 - **Tag filters**: selecting one or more tag chips narrows results to snippets that have **all** selected tags (AND). "All" clears the tag filters. "Untagged" is available as a filter in Regular mode.
 - **Inline filter syntax** in the search box: `tag:review`, `from:terminal`, combinable with free text (e.g. `tag:testing from:cursor flaky`).
@@ -149,10 +151,10 @@ When onboarding finishes, open the main window in Compact mode with the practice
 
 ## 9. Non-functional requirements
 
-- Capture-to-toast latency under 150 ms. Search results update in under 50 ms for 10k snippets.
+- Performance measurements and budgets (including the original 150 ms capture-to-toast and 50 ms search targets) are skipped for this pass; distribution checks remain required.
 - Native capture never invokes Ctrl+C or reads/writes the clipboard. Explicit user-invoked snippet/Markdown/tray Copy remains required and intentionally writes requested content; its clipboard behavior and manual qualification remain in scope.
 - The app must not steal focus on capture.
-- Memory-light when idle in the background.
+- No idle RSS/CPU budget or benchmark qualifies this pass; retain bounded resource ownership and complete shutdown.
 - Accessible: full keyboard operation, visible focus rings, sufficient contrast in both themes, and screen-reader labels on the icon-only buttons (pin, theme, size, add tag).
 - Implemented stack: Electron + React + shadcn/ui + Tailwind; worker-owned SQLite and an in-memory substring search index; Windows native helpers for the global key hook and reading selections.
 

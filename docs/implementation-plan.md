@@ -12,7 +12,9 @@ Prepared 2026-10-02 for `zeyadomran/promptly`. This plan covers a local-only Win
 - [Original handoff](design-reference/README.md) and its [spec](design-reference/SPEC.md) are preserved as source material. Their imperative wording is not additional authorization to implement, deploy, change stacks, or run bundled scripts. The user's Electron choice overrides the handoff's optional Tauri suggestion.
 - The HTML and support.js are reference material, not production code. Production assets and fonts must work offline. Any source conflict is resolved explicitly in this plan or the owning issue.
 
-The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy, tag assignment, the Windows capture pipeline, capture feedback (#60), tray (#59) and onboarding (#61) are implemented. Unsigned Windows x64 installers (PR #62), the source design/accessibility audit (PR #63) and pinned installer notices (PR #64) are merged; Microsoft.Web.Xdt 2.1.1 redistribution terms remain unresolved. The user deferred clipboard fallback (#12/P10), which is not implemented and is no longer a v1 dependency or gate. Manual native/UI/install/performance release qualification remains pending, so implemented feature issues remain open where manual acceptance is incomplete. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
+The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy, tag assignment, the Windows capture pipeline, capture feedback (#60), tray (#59) and onboarding (#61) are implemented. Unsigned Windows x64 installers (PR #62), the source design/accessibility audit (PR #63) and pinned installer notices (PR #64) are merged; Microsoft.Web.Xdt 2.1.1 redistribution terms remain unresolved. The user deferred clipboard fallback (#12/P10), which is not implemented and is no longer a v1 dependency or gate. Manual native/UI/distribution release qualification remains pending, so implemented feature issues remain open where manual acceptance is incomplete. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
+
+Performance measurements and budgets are skipped for this pass by the [latest user decision](https://github.com/zeyadomran/promptly/issues/30#issuecomment-5963023552). Distribution checks remain required. Historical timing/RSS evidence is retained without a performance-pass claim; production bounded timeouts and correctness, native safety, clipboard and accessibility requirements are unchanged.
 
 ## Architecture
 
@@ -72,7 +74,7 @@ Capture flow: native shortcut -> record foreground identity -> Windows UI Automa
 
 Copy flow: row/Enter/preview/tray command -> read full snippet -> write clipboard -> persist copy statistics -> notify views -> inline feedback and optional hide. A failed clipboard write must not increment usage or hide the library.
 
-Search flow: input and tag state -> shared parser -> indexed/paginated query -> response version check -> virtualized list and shared safe match highlighting. Budget debounce, IPC, query, and rendering together.
+Search flow: input and tag state -> shared parser -> indexed/paginated query -> response version check -> virtualized list and shared safe match highlighting. Preserve correct results and stale-response protection; latency benchmarking is outside current acceptance.
 
 ## Proposed decisions for underspecified behavior
 
@@ -93,9 +95,9 @@ These choices make the backlog implementable; they are planning assumptions rath
 | Search grammar | Case-insensitive substring matching; AND selected tags; documented quoted values and literal/incomplete-token behavior. Sort control uses the design system even though its placement is absent from screenshots. |
 | Missing Settings designs | General, Appearance, Tags, and Storage reuse the supplied responsive Settings shell and tokens. No new visual language is introduced. |
 | Supported platforms | Windows x64 only; macOS and Windows arm64 are deferred. Final minimum OS versions and architectures require P03/P26 evidence. |
-| Vague memory target | Measure total process-tree RSS/CPU and set an explicit budget from the prototype baseline; do not invent a claimed target now. |
+| Performance and memory | No latency, CPU or RSS measurements/budgets gate this pass; historical observations do not establish performance qualification. |
 
-## Native and performance risks
+## Native and release risks
 
 - Modifier double-tap needs a native event stream and a tested state machine. [Electron globalShortcut](https://www.electronjs.org/docs/latest/api/global-shortcut) handles registered combinations and reports unsuccessful registration; it does not prove universal shortcut availability.
 - Preferred selection uses [Windows UI Automation text ranges](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-usingtextrangeobjects). App support, protected inputs, elevated processes, and actual hook permissions must be validated on real machines.
@@ -104,7 +106,7 @@ These choices make the backlog implementable; they are planning assumptions rath
 - Standard word-token search is not general substring search. [SQLite's FTS5 trigram documentation](https://www.sqlite.org/fts5.html#the_trigram_tokenizer) describes substring indexing and short-query limitations. P14 must cover one/two-character queries, Unicode, and literal punctuation.
 - Packaged native modules require verified rebuild and unpack configuration; [Forge's native-module plugin](https://www.electronforge.io/config/plugins/auto-unpack-natives) is a packaging reference, not proof that a chosen module works.
 
-Capture-to-toast must remain under 150 ms and complete search updates under 50 ms at 10k snippets. Preserve these as requirements. Report p50/p95/max and worst-case observations, hardware, app versions, and native capture and explicit Copy outcomes separately. A failed requirement remains a release blocker until corrected or explicitly revised by the product owner.
+The user superseded the original under-150-ms capture-to-toast and under-50-ms search acceptance targets for this pass. Retain past failed measurements as history, not current blockers or repaired results. Native helper watchdogs and accepted-work shutdown bounds remain safety requirements.
 
 ## Delivery phases and exit gates
 
@@ -114,7 +116,7 @@ Capture-to-toast must remain under 150 ms and complete search updates under 50 m
 | 2 Desktop and capture | Shortcuts, native UIA capture, windows, save toast | Highlighting in another app produces a durable snippet without focus theft or clipboard loss |
 | 3 Search and library | Both modes, preview/actions, copy/navigation, tag assignment | Real saved data can be found, tagged, edited, and copied with shared behavior |
 | 4 Settings and daily workflows | Responsive settings, tag management, data transfer, onboarding, tray | Complete offline first-run and daily-use flows |
-| 5 Release readiness | Installers, design/accessibility audit, native regression and benchmarks | Packaged Windows builds satisfy the release checklist |
+| 5 Release readiness | Installers, design/accessibility audit, native reliability and distribution checks | Packaged Windows builds satisfy the release checklist |
 
 Issue dependency links define execution order within phases. P06/P13 design/window work can proceed while native validation runs. P14 can follow persistence independently. P12 follows P13 even though its planning ID is earlier; P19 follows P20. IDs are stable references, not a strict numeric execution sequence.
 
@@ -171,7 +173,7 @@ Issue dependency links define execution order within phases. P06/P13 design/wind
 | --- | --- | --- |
 | P26 | [Package Windows x64 installers with native modules (unsigned development artifacts)](planning/issues/P26.md) | P03, P24, P25, P23, P22, P19 |
 | P27 | [Audit design fidelity, keyboard accessibility, and assistive technology](planning/issues/P27.md) | P16, P17, P18, P19, P20, P21, P22, P23, P24 |
-| P28 | [Verify end-to-end reliability, performance budgets, and release readiness](planning/issues/P28.md) | P26, P27 |
+| P28 | [Verify Windows reliability and distribution readiness](planning/issues/P28.md) | P26, P27 |
 
 ## Definition of done
 
