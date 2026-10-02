@@ -94,9 +94,13 @@ if (primaryInstance)
       );
       settings = new SettingsService(
         storage,
-        electronSettingsControllers(() => {
-          lifecycle?.recoverVisibility();
-        }, keyboard.shortcuts.controller)
+        electronSettingsControllers(
+          () => {
+            lifecycle?.recoverVisibility();
+          },
+          undefined,
+          keyboard.shortcuts.controller
+        )
       );
       await settings.initialize();
       desktop = installDesktopIpc(

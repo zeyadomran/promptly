@@ -20,3 +20,20 @@ it('connects the label and description to the control and retains prior descript
   expect(control).toHaveAttribute('aria-invalid', 'true');
   expect(control).toBeDisabled();
 });
+
+it('announces a rejected preference inline and associates its error with the control', () => {
+  render(
+    <SettingsField
+      label="Launch at login"
+      description="Sign-in preference"
+      error="Native operation rejected"
+    >
+      <Input />
+    </SettingsField>
+  );
+  expect(screen.getByRole('alert')).toHaveTextContent('Native operation rejected');
+  expect(screen.getByLabelText('Launch at login')).toHaveAccessibleDescription(
+    'Sign-in preference Native operation rejected'
+  );
+  expect(screen.getByLabelText('Launch at login')).toHaveAttribute('aria-invalid', 'true');
+});

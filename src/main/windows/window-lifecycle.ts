@@ -1,4 +1,4 @@
-import { app, type BrowserWindow, screen, systemPreferences } from 'electron';
+import { type BrowserWindow, screen } from 'electron';
 
 import { failure } from '../../shared/contracts/result';
 import type { WindowKind, WindowState } from '../../shared/contracts/window';
@@ -7,13 +7,15 @@ import type { WindowRegistry } from '../ipc/window-registry';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
 import { clampBounds, windowGeometry } from './geometry';
-import type { WindowOperations } from './lifecycle-services';
-import { canRecover, concealWindow, type WindowRecovery } from './visibility';
+import { concealWindow, type WindowRecovery } from './visibility';
+import { watchWindowLifecycle } from './watch-window-lifecycle';
 import { displayAreas, WindowBounds } from './window-bounds';
+import { createWindowOperations } from './window-operations';
 
 export class WindowLifecycle {
   private readonly windows = new Map<WindowKind, BrowserWindow>();
   private readonly opening = new Map<WindowKind, Promise<BrowserWindow>>();
+  private readonly ready = new Set<BrowserWindow>();
   private bounds: WindowBounds | undefined;
   private closing = false;
   private commandTail: Promise<unknown> = Promise.resolve();
@@ -45,7 +47,7 @@ export class WindowLifecycle {
   };
 
   async show(kind: WindowKind = 'main'): Promise<BrowserWindow> {
-    if (this.closing) throw new Error('Promptly is shutting down.');
+    if (this.isClosing()) throw new Error('Promptly is shutting down.');
     let window = this.windows.get(kind);
 
     const loading = this.opening.get(kind);
@@ -65,18 +67,20 @@ export class WindowLifecycle {
               this.settings.current.settings.defaultSizeMode,
               this.onError
             );
-          created.on('close', (event) => {
-            if (this.closing || kind !== 'main') return;
-            if (canRecover(this.recovery)) {
-              event.preventDefault();
+          watchWindowLifecycle(created, kind, {
+            closing: () => this.closing,
+            recovery: this.recovery,
+            hide: () => {
               this.hide();
-            } else {
-              event.preventDefault();
-              app.quit();
+            },
+            closed: () => {
+              const wasReady = this.ready.delete(created);
+
+              if (this.windows.get(kind) !== created) return;
+              this.windows.delete(kind);
+              if (kind === 'settings' && wasReady && !this.closing)
+                void this.show().catch(this.onError);
             }
-          });
-          created.on('closed', () => {
-            this.windows.delete(kind);
           });
         });
         this.opening.set(kind, pending);
@@ -89,6 +93,8 @@ export class WindowLifecycle {
       }
     }
 
+    if (this.isClosing()) throw new Error('Promptly is shutting down.');
+    this.ready.add(window);
     if (window.isMinimized()) window.restore();
     window.show();
     window.focus();
@@ -112,8 +118,11 @@ export class WindowLifecycle {
   recoverVisibility(): void {
     const window = this.windows.get('main');
 
-    if (window?.isMinimized() === true) window.restore();
-    window?.show();
+    if (window === undefined || window.isDestroyed())
+      throw new Error('Promptly cannot restore its main window.');
+    if (window.isMinimized()) window.restore();
+    window.show();
+    if (!window.isVisible()) throw new Error('Promptly could not restore its main window.');
   }
 
   private state(kind: WindowKind = 'main'): WindowState {
@@ -124,6 +133,10 @@ export class WindowLifecycle {
       mode: this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode,
       visible: window?.isVisible() === true && !window.isMinimized()
     };
+  }
+
+  private isClosing(): boolean {
+    return this.closing;
   }
 
   private enqueue(action: () => Promise<WindowState>) {
@@ -140,33 +153,26 @@ export class WindowLifecycle {
     return result;
   }
 
-  readonly services: WindowOperations = {
-    getWindowState: () => Promise.resolve({ ok: true, value: this.state() }),
-    setWindowMode: ({ mode, reducedMotion }) =>
-      this.enqueue(async () => {
-        await this.show();
-        await this.bounds?.switchMode(
-          mode,
-          reducedMotion || systemPreferences.getAnimationSettings().prefersReducedMotion
-        );
-        return this.state();
-      }),
-    setWindowVisibility: ({ visible }) =>
-      this.enqueue(async () => {
-        if (visible) await this.show();
-        else this.hide();
-        return this.state();
-      }),
-    openDesktopWindow: ({ kind }) =>
-      this.enqueue(async () => {
-        await this.show(kind);
-        return this.state(kind);
-      }),
-    quitApplication: () => {
-      app.quit();
-      return Promise.resolve({ ok: true, value: {} });
-    }
-  };
+  readonly services = createWindowOperations({
+    state: (kind) => this.state(kind),
+    recovery: () => ({
+      tray: this.recovery.trayAvailable(),
+      trayController: this.recovery.trayControllerAvailable?.() === true,
+      shortcut: this.recovery.shortcutAvailable(),
+      dock: this.recovery.dockAvailable(),
+      mainReachable: this.state().visible || this.windows.get('main')?.isMinimized() === true
+    }),
+    enqueue: (action) => this.enqueue(action),
+    show: (kind) => this.show(kind),
+    hide: () => {
+      this.hide();
+    },
+    closeSettings: () => {
+      this.windows.get('settings')?.close();
+    },
+    switchMode: (mode, reducedMotion) =>
+      this.bounds?.switchMode(mode, reducedMotion) ?? Promise.resolve()
+  });
 
   async close(): Promise<void> {
     this.closing = true;

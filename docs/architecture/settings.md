@@ -95,3 +95,30 @@ first, drain settings, and then release resources required by their apply/rollba
 Primary native API references: [theme](https://www.electronjs.org/docs/latest/api/native-theme),
 [application login and Dock](https://www.electronjs.org/docs/latest/api/app), and
 [accelerator syntax](https://www.electronjs.org/docs/latest/tutorial/keyboard-shortcuts/).
+
+## Responsive Settings window
+
+P20 supplies a five-section Radix Tabs shell: a 190px sidebar from 640px and a
+scrollable horizontal navigation strip below it. Breakpoint changes update the
+existing navigation's orientation without replacing its selected tab or focused
+DOM element. Narrow choice rows stack; switch rows remain inline. Shared fields
+associate inline native/commit failures with their control and expose an alert.
+Each control renders committed snapshots; a rejected mutation never replaces the
+previous preference. Successful replies update that derived renderer snapshot
+immediately, while older invalidations/reads cannot regress its revision.
+
+General and Appearance use the existing settings service for login, Dock, hide
+policy, startup mode, theme and shared pin. `getWindowRecovery` exposes read-only
+actual tray/controller, shortcut, Dock and reachable-window state. Missing route
+controllers are disabled, regardless of stored requested defaults. Dock hiding
+first restores the main window and verifies native visibility; a failed recovery
+rejects the settings mutation. Native Settings close and the authenticated
+`returnToMainWindow` operation restore/focus main. Failed auxiliary renderer loads
+and shutdown do not trigger that close recovery. Shortcuts/Tags/Storage retain
+separate feature entrypoints without synthesizing later services.
+
+The optional `NativePreferences` boundary lets owned UI fixtures exercise real
+effect/readback/rollback and durable services without changing a local developer's
+OS login/Dock settings. A separate explicitly GitHub-hosted-only case uses actual
+Electron APIs and restores captured initial OS state after settings/storage drain.
+See [P20 verification](../verification/P20/README.md) for screenshots and gaps.
