@@ -1,0 +1,49 @@
+{
+  "browserName": "chromium",
+  "ready": {
+    "phase": "ready",
+    "pid": 3475,
+    "foregroundMatched": true,
+    "handlerStatus": 0,
+    "registrationStatus": 0,
+    "listening": false,
+    "tapInstalled": false,
+    "carbonPressed": 0,
+    "sessionDown": 0,
+    "sessionUp": 0,
+    "tapDisabled": 0,
+    "elapsedMs": 96.0076249999986
+  },
+  "delivery": {
+    "status": "sent",
+    "ownedForeground": true,
+    "keysInjected": true
+  },
+  "final": {
+    "phase": "final",
+    "pid": 3475,
+    "foregroundMatched": true,
+    "handlerStatus": 0,
+    "registrationStatus": 0,
+    "listening": false,
+    "tapInstalled": false,
+    "carbonPressed": 0,
+    "sessionDown": 0,
+    "sessionUp": 0,
+    "tapDisabled": 0,
+    "elapsedMs": 5098.12470833333
+  },
+  "cleanup": {
+    "owner": {
+      "status": "exited",
+      "pid": 3475
+    },
+    "launcherExitCode": 0
+  },
+  "failed": false,
+  "finalAvailable": true,
+  "cleanupVerified": true,
+  "cleanupFailureCount": 0,
+  "qualification": false,
+  "scope": "one fixed Control+Option F11 chord; passive session tap; bounded scalar counts"
+}

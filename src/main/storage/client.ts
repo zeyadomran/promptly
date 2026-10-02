@@ -4,20 +4,13 @@ import type { ChangeEvent } from '../../shared/contracts/domain';
 import { changeEventSchema, revisionSnapshotSchema } from '../../shared/contracts/domain';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { resultSchema } from '../../shared/contracts/result';
-import { recordSearchValidation } from '../../shared/search/measure-validation';
 import type { StorageOperation, StorageRequest, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
-import {
-  type StorageBoundaryObserver,
-  StorageDiagnostics,
-  storageTimestamp
-} from './worker-diagnostics';
 
 interface PendingRequest {
   resolve: (value: unknown) => void;
   reject: (error: Error) => void;
   timer: ReturnType<typeof setTimeout>;
-  diagnostic: boolean;
 }
 
 interface DrainWaiter {
@@ -33,16 +26,13 @@ export class StorageClient {
   private failure: Error | undefined;
   private closing: Promise<void> | undefined;
   private draining: DrainWaiter | undefined;
-  private readonly diagnostics: StorageDiagnostics | undefined;
   readonly ready: Promise<number>;
 
   constructor(
     workerFile: string,
     databaseFile: string,
-    onChange: (change: ChangeEvent) => void = () => undefined,
-    private readonly onBoundary?: StorageBoundaryObserver
+    onChange: (change: ChangeEvent) => void = () => undefined
   ) {
-    this.diagnostics = onBoundary === undefined ? undefined : new StorageDiagnostics();
     this.worker = new Worker(workerFile, { workerData: databaseFile });
     this.ready = this.register(0, 10_000).then((value) => {
       const result = resultSchema(revisionSnapshotSchema).parse(value);
@@ -51,8 +41,6 @@ export class StorageClient {
       return result.value.revision;
     });
     this.worker.on('message', (reply: WorkerReply) => {
-      const received = this.onBoundary === undefined ? undefined : storageTimestamp();
-
       if (reply.change !== undefined) onChange(changeEventSchema.parse(reply.change));
       const request = this.pending.get(reply.id);
 
@@ -63,9 +51,6 @@ export class StorageClient {
         this.draining?.resolve();
         this.draining = undefined;
       }
-
-      if (request?.diagnostic === true && received !== undefined)
-        this.diagnostics?.receive(reply.id, reply.diagnostic, received);
     });
     this.worker.on('error', () => {
       this.fail(new Error('Local storage worker failed.'));
@@ -85,10 +70,8 @@ export class StorageClient {
     if (this.failure !== undefined) throw this.failure;
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
-    const started = performance.now();
     const result = resultSchema<unknown>(storageOperations[name].response).parse(response);
 
-    if (name === 'searchSnippets') recordSearchValidation(result, 'workerReceiver', started);
     return result as DesktopResult<StorageResponse<K>>;
   }
 
@@ -97,11 +80,6 @@ export class StorageClient {
     this.closed = true;
     this.closing = this.shutdown();
     return this.closing;
-  }
-
-  /** Fixture diagnostics must call this only after the complete measured workload. */
-  flushDiagnostics() {
-    return this.onBoundary === undefined ? undefined : this.diagnostics?.flush(this.onBoundary);
   }
 
   private async shutdown(): Promise<void> {
@@ -131,22 +109,19 @@ export class StorageClient {
       return Promise.reject(new Error('Local storage queue is full.'));
     const id = this.nextId++;
 
-    const diagnostic = operation === 'searchSnippets' && this.diagnostics?.recording === true;
-    const response = this.register(id, timeout, diagnostic);
-    const posted = diagnostic ? storageTimestamp() : undefined;
+    const response = this.register(id, timeout);
 
-    this.worker.postMessage({ id, operation, input, ...(diagnostic ? { diagnostic: true } : {}) });
-    if (posted !== undefined) this.diagnostics?.post(id, posted);
+    this.worker.postMessage({ id, operation, input });
     return response;
   }
 
-  private register(id: number, timeout: number, diagnostic = false): Promise<unknown> {
+  private register(id: number, timeout: number): Promise<unknown> {
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => {
         this.fail(new Error('Local storage worker timed out.'));
       }, timeout);
 
-      this.pending.set(id, { resolve, reject, timer, diagnostic });
+      this.pending.set(id, { resolve, reject, timer });
     });
   }
 

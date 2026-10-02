@@ -55,15 +55,11 @@ Invalid and surrogate-splitting offsets are ignored in both paths. Native
 highlighting does not split or otherwise alter selectable snippet text.
 The shared renderer helper uses exactly the worker's fold/range rules. Full text
 still travels in each returned `Snippet`; preview rendering does not truncate
-storage or search. Optional `searchDurationMs` measures worker snapshot refresh,
-ordering, matching and range generation, excluding response validation and IPC.
-Optional `validationTimings` measures the worker, worker receiver, main dispatcher
-and preload response schemas independently; every original boundary still
-validates the entire response. The numeric transport experiment was rejected.
+storage or search. Every process boundary validates the complete response.
 
 ## Index choice and consistency
 
-Real runtime tests evaluate SQLite `length`, `lower`, LIKE and FTS5 trigram:
+The retained runtime evaluation of SQLite `length`, `lower`, LIKE and FTS5 trigram found:
 SQLite length stops at NUL, built-in lowercase leaves non-ASCII capitals intact,
 LIKE interprets literal `%` as a wildcard, and trigram MATCH cannot return one-
 or two-character queries (it does retain terms following embedded NUL). Ordinary word FTS also
@@ -99,11 +95,15 @@ There is no additional timed debounce.
 
 ## Verification
 
-`npm run check` exercises parser, scalar folding/ranges, literal punctuation,
-filters, all sorts/pages, transactional rollback/batch import, reopen and mutation
-index consistency. `npm run package` followed by `npx playwright test
-tests/e2e/search.spec.ts` runs real React input, the production frozen named bridge,
-main validation, the packaged worker and safe highlight DOM on a deterministic
-10k library. Benchmark details and limits are in
-[P14 evidence](../verification/P14/README.md). Final Compact/Regular layouts remain
-P15/P16 responsibilities; this fixture is scoped to the search behavior contract.
+One deterministic Node test builds the real storage worker, creates four owned
+snippets, and queries through `StorageClient`. It checks literal punctuation,
+quoted tag/source and selected-ID intersections, most-copied pagination, complete
+Unicode/NUL text, highlight offsets, and one committed edit invalidation. The
+worker is terminated before its temporary files are removed.
+
+The user-approved minimal test cleanup retired the 10k renderer benchmark,
+Chromium tracing, pixel-check fixtures and their production timing hooks.
+[Historical P14 evidence](../verification/P14/README.md) retains the passing and
+failing receipts; the hosted latency requirement remains unqualified. Removing
+the benchmark does not establish a performance fix. Final Compact/Regular
+layouts remain P15/P16 responsibilities.

@@ -29,8 +29,6 @@ export class SearchLibrary {
   }
 
   query(request: SearchRequest): SearchPage {
-    const started = performance.now();
-
     if (this.snapshot.refresh()) this.sorted.clear();
     let entries = this.sorted.get(request.sort);
 
@@ -61,8 +59,7 @@ export class SearchLibrary {
       total,
       offset: request.offset,
       hasMore: request.offset + items.length < total,
-      matches,
-      searchDurationMs: performance.now() - started
+      matches
     };
   }
 }
