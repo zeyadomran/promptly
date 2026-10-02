@@ -14,7 +14,15 @@ export async function launchSearchFixture(testInfo: TestInfo) {
   await buildIpcFixture(undefined, 'tests/e2e/fixtures/search-main.ts', 'search');
   const directory = await mkdtemp(path.join(tmpdir(), 'promptly-search-'));
   const filename = path.join(directory, 'search.sqlite');
-  const corpus = seedSearchCorpus(filename);
+  let corpus: ReturnType<typeof seedSearchCorpus>;
+
+  try {
+    corpus = seedSearchCorpus(filename);
+  } catch (error) {
+    await rm(directory, { recursive: true, force: true });
+    throw error;
+  }
+
   const packaged = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
   const asar =
     process.platform === 'darwin'

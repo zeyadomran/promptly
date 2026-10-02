@@ -86,7 +86,7 @@ export class StorageClient {
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
     const started = performance.now();
-    const result = resultSchema(storageOperations[name].response).parse(response);
+    const result = resultSchema<unknown>(storageOperations[name].response).parse(response);
 
     if (name === 'searchSnippets') recordSearchValidation(result, 'workerReceiver', started);
     return result as DesktopResult<StorageResponse<K>>;

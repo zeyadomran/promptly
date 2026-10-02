@@ -113,7 +113,7 @@ export async function launchOwnedTransferPackage() {
       path.join(source, '.vite/build/main.cjs'),
       path.join(source, '.vite/build/production-main.cjs')
     );
-    await buildIpcFixture(undefined, 'tests/e2e/fixtures/storage-native-wrapper.ts', true);
+    await buildIpcFixture(undefined, 'tests/e2e/fixtures/storage-native-wrapper.ts', 'index', true);
     await cp(
       path.resolve('.vite/build/ipc-fixture.cjs'),
       path.join(source, '.vite/build/main.cjs')

@@ -171,3 +171,62 @@ worker receive/send marks are missing, so the await span remains unattributed.
 Only if fresh all-mode-owned-profile/Regular-fixture CI still fails should the
 next bounded diagnostic add main-post/worker-receive/worker-send/main-receive
 markers. No such instrumentation or scheduling change is included in this fix.
+
+## Deferred request-correlated worker boundaries
+
+The later ordinary Windows receipt at `6976` reached 192.8 ms; its separate diagnostic
+run reached 209.9 ms with a 191.3 ms main await span. These remain failures, with no
+proven CPU-versus-scheduler cause. Main `896a8a` (native identity, Settings and Storage
+transfer) is now integrated normally.
+
+The initial unpublished boundary experiment invoked a JSON/logging observer before
+Worker.postMessage. Astra's controlled 25 ms observer reproduced measurement
+contamination. The corrected client captures only scalar timestamps adjacent to
+main post/receive, and the worker captures receive/send under the same request ID.
+No observer runs before posting or resolving a response. The explicit final flush
+runs only after every measured query, rapid input, mutation refresh and complete
+highlight paint finishes; aborted workloads flush during settled cleanup and carry
+workloadCompleted=false. The 5-second flush bound is a diagnostic teardown limit,
+not a change to any product deadline or performance gate.
+
+Capture admits at most 128 complete groups (512 scalar events) within 10 seconds.
+Final flushing stops capture. Strict shared-schema validation rejects nonfinite,
+negative, unexpected or incomplete worker metadata; incomplete groups are counted
+and excluded from interval evidence. Ordinary clients admit no diagnostic request
+flag or response metadata, have no observers, and perform no flush IPC. Tests cover
+interleaving, cap/deadline, malformed metadata, throwing/25 ms delayed observers,
+disabled mode, and final/aborted/stalled flushes. No text, query or snippet result is
+included in worker boundary records. Epoch times align process boundaries;
+monotonic times describe local durations. These marks partition await intervals;
+they cannot distinguish CPU consumption from scheduling without the associated
+trace. Existing opt-in Chromium/IPC observers still add instrumentation overhead.
+
+The [ordinary local receipt](windows-deferred-boundaries-ordinary.json) passes
+query max 15.4 ms, rapid 8.3 ms, mutation max 10.5 ms and complete-highlight 10.1 ms.
+The [separate nonqualifying diagnostic receipt](windows-deferred-boundaries-diagnostic.json)
+passes query max 18.2 ms and retains [128 complete groups](windows-deferred-worker-groups.json),
+with zero incomplete/malformed admitted groups. Both prove actual canonical fresh
+profile identity, 1000x640 simultaneously visible panes and all 703 highlight pixels.
+The [inspected screenshot](windows-deferred-boundaries-visible.png) preserves the
+complete wrapped selected body. Hardware/runtime and cold/warm p50/p95/max remain
+in JSON; these local results do not qualify either hosted runner.
+
+Across the 128 local groups, epoch-difference maxima were 0.477 ms main-post to
+worker-receive, 4.122 ms worker-receive to worker-send, and 1.111 ms worker-send to
+main-receive. This local run did not reproduce the earlier hosted await stall.
+The bounded Chromium JSON remains in the owned temporary diagnostic artifact
+directory and CI retains an equivalent separate artifact on a failing ordinary job.
+
+Current storage writes retain UTF-16 as well as legacy UTF-8. The search snapshot
+uses that same lossless decoder, including lone surrogates. Corpus text/counts are
+unchanged (10k snippets, 7,250,796 code units); the representative current-schema
+database now occupies 45,793,280 bytes. Its previous positional nine-column seeder
+failed before Electron launch after schema 3 integration; the [original failure
+context](incomplete/utf16-corpus-schema-context.md) is retained. It now names columns
+and writes current UTF-16 bytes. A regression validates the real 10k seed and NUL
+suffix matches. Actual bulk import refreshes once, preserves exact text/highlights,
+and clear removes cached results; settings-only revisions do not reload entries.
+
+Fresh unchanged ordinary both-OS CI and exact-head review remain required. No
+query warming, sleep, workload reduction, deadline change or success-only rerun
+was introduced. Earlier ordinary/diagnostic failures remain intact.
