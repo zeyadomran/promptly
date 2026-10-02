@@ -53,10 +53,7 @@ export class CaptureService {
       return Promise.resolve(failure('UNAVAILABLE', 'Capture is paused, busy or shutting down.'));
     if (native === undefined)
       return Promise.resolve(
-        failure(
-          'UNAVAILABLE',
-          'Native capture is unavailable. Safe clipboard fallback is not implemented.'
-        )
+        failure('UNAVAILABLE', 'Native capture is unavailable. No snippet was saved.')
       );
     const phases: CapturePhases = { triggeredAt };
     const current = () => !this.closing && admitted();
@@ -146,7 +143,7 @@ export class CaptureService {
     return failure(
       'UNAVAILABLE',
       status === 'unsupported'
-        ? 'Native selection is unsupported. Safe clipboard fallback is not implemented.'
+        ? 'This app does not support native selection capture. No snippet was saved.'
         : `Native capture was not saved (${status}).`
     );
   }

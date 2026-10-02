@@ -19,7 +19,7 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/
 ## Delivery phases
 
 1. Foundation: scaffold, IPC/domain contracts, native feasibility, SQLite, settings, and CI.
-2. Desktop capture: native adapters, shortcuts, clipboard preservation, capture orchestration, windows, and non-activating toast.
+2. Desktop capture: native UIA adapters, shortcuts, capture orchestration, windows, and non-activating toast.
 3. Library: substring search, both layouts, snippet actions, copy/navigation, and tag assignment.
 4. Daily workflows: responsive settings, tag administration, data transfer, onboarding, and tray.
 5. Release: packaged installers, design/accessibility verification, native regression, and performance evidence.
@@ -29,9 +29,9 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/
 - Automatic capture deduplicates; deliberate Duplicate creates a separate record.
 - Newest uses updatedAt so recapture resurfaces an item; copying does not alter that timestamp.
 - Hide-after-copy follows pin state by default and supports an explicit override.
-- Clipboard fallback must preserve formats and newer concurrent user copies; skip unsafe fallback.
+- Clipboard fallback (#12/P10) is **deferred, not implemented** and outside v1 dependencies/gates. Capture uses Windows UIA only, never Ctrl+C or clipboard reads/writes; unsupported/failed/empty selections save nothing with truthful state. Explicit snippet/Markdown/tray Copy and its clipboard qualification remain required.
 - A dedicated non-activating overlay displays save feedback while the main window is hidden.
-- Shortcut conflict detection is best-effort. Windows Alt+Space availability and terminal Copy behavior require real validation.
+- Shortcut conflict detection is best-effort. Windows Alt+Space availability and native capture support require real validation.
 - Search is substring-based, including one/two-character queries; ordinary word FTS alone is insufficient.
 - Clear all erases library data and in-app undo, retaining preferences/onboarding.
 - JSON import validates before a transactional merge, preserves deliberate duplicate text, and resolves ID/tag conflicts.
@@ -39,7 +39,7 @@ The [implementation plan](https://github.com/zeyadomran/promptly/blob/main/docs/
 
 ## Release acceptance
 
-- [ ] All implementation issues below are complete with their own acceptance evidence.
+- [ ] All active v1 implementation issues below have their own acceptance evidence; deferred P08/P10 are excluded, not marked complete.
 - [ ] Windows supports the complete highlight → capture → search → tag → copy workflow in packaged builds.
 - [ ] No clipboard loss, focus theft, false success, or unresolved data-loss defects.
 - [ ] Capture-to-toast under 150 ms and complete search updates under 50 ms at 10k snippets are measured; deviations remain blockers.
@@ -52,7 +52,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 
 - [x] #55 Remove macOS implementation and restrict builds to Windows x64.
 - Windows capture (#13), tag management (#22), capture feedback (#15), tray (#26) and onboarding (#25) are implemented; their issues remain open for manual acceptance evidence.
-- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Clipboard fallback scope (#12), actual installation (#28), accessibility/native/performance release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
+- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Actual installation (#28), accessibility/native/performance release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
 
 ## Implementation issues
 
@@ -71,7 +71,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 - [ ] [P07 — Implement global shortcuts and the double-tap modifier state machine](https://github.com/zeyadomran/promptly/issues/9)
 - Deferred: #10 macOS support is outside the current release; implementation is removed by #55.
 - [ ] [P09 — Implement Windows selection capture and foreground application identity](https://github.com/zeyadomran/promptly/issues/11)
-- [ ] [P10 — Implement clipboard-preserving Copy fallback with concurrency protection](https://github.com/zeyadomran/promptly/issues/12)
+- Deferred, not implemented: [P10 / #12 clipboard-preserving Copy fallback](https://github.com/zeyadomran/promptly/issues/12) is outside v1 and is not a capture/release gate.
 - [ ] [P11 — Connect the capture pipeline with normalization and deduplication](https://github.com/zeyadomran/promptly/issues/13)
 - [ ] [P12 — Show the focus-safe save toast in a dedicated overlay window](https://github.com/zeyadomran/promptly/issues/15)
 - [ ] [P13 — Implement desktop window lifecycle, size modes, and pin behavior](https://github.com/zeyadomran/promptly/issues/14)

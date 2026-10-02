@@ -1,3 +1,5 @@
+> Scope precedence (2026-10-02): clipboard fallback #12/P10 is deferred/not implemented, outside v1 dependencies and gates. V1 capture uses Windows UIA only, never Ctrl+C or clipboard reads/writes; explicit snippet/Markdown/tray Copy remains required. The earlier checkpoint/ADR statements below are historical, superseded by the [maintained spec](../app-functionality-spec.md) and [deferred P10 reference](../planning/issues/P10.md).
+
 > Current scope is Windows x64 only. Earlier macOS requirements/history below are superseded; functional service tests are automated and native/UI release qualification is manual.
 
 # Historical ADR: Native capture through packaged platform helpers

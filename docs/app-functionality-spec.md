@@ -1,8 +1,8 @@
-> Current scope is Windows x64 only (2026-10-02). The supplied original reference remains unchanged in design-reference; this maintained spec reflects the current product scope. Functional service tests are automated; Windows UI/native release qualification is manual.
+> Current scope is Windows x64 only (2026-10-02). The supplied original reference remains unchanged in design-reference; this maintained spec reflects the current product scope. Functional service tests are automated; Windows UI/native release qualification is manual. The user's 2026-10-02 decision, "Defer fallback; use native capture for v1", supersedes clipboard-fallback requirements in the unchanged supplied originals.
 
 # Promptly: App Functionality Spec
 
-You are helping build **Promptly**, a Windows x64 desktop app that lets users save highlighted text from any application with a global keyboard shortcut, then search, tag, filter, and copy it later. The primary users are power users of AI coding tools (Claude Code, Codex, Cursor, etc.) who collect prompts to reuse or try later.
+You are helping build **Promptly**, a Windows x64 desktop app that lets users save highlighted text from applications exposing a supported native Windows UIA selection with a global keyboard shortcut, then search, tag, filter, and copy it later. The primary users are power users of AI coding tools (Claude Code, Codex, Cursor, etc.) who collect prompts to reuse or try later.
 
 UI is built on **shadcn/ui** components (Button, Input, Badge, Toggle/ToggleGroup, Switch, Slider, Tabs, Dialog, DropdownMenu, Tooltip, Sonner toast, ScrollArea, Command), Space Grotesk for UI text, and Geist Mono for saved snippet text, shortcuts and paths. Supports light, dark, and system themes.
 
@@ -31,9 +31,9 @@ UI is built on **shadcn/ui** components (Button, Input, Badge, Toggle/ToggleGrou
 
 ### Capture behavior
 1. When the shortcut fires, read the **current text selection** of the frontmost app.
-   - Preferred: the OS accessibility API (Windows UI Automation TextPattern).
-   - Fallback: save the clipboard, simulate Copy (Ctrl+C), read the clipboard, then **restore the original clipboard contents**.
-2. If the selection is empty or whitespace only, do nothing, or show a subtle "Nothing selected" toast.
+   - V1 uses **native Windows UI Automation TextPattern only**. Capture must not simulate Ctrl+C or read/write the clipboard.
+   - Clipboard-preserving Copy fallback (#12/P10) is **deferred and not implemented**, not a v1 dependency or release gate. Its future safety requirements remain in [P10](planning/issues/P10.md).
+2. Unsupported, failed, empty or whitespace-only selections save nothing and return a truthful unavailable/error/empty state; never substitute unrelated clipboard contents or show a saved confirmation.
 3. Optional normalization (setting, on by default): trim leading and trailing whitespace, and strip leading terminal prompt characters (`❯`, `$`, `>`, `%`) from the first line.
 4. **Deduplication**: if the identical text already exists, don't create a duplicate. Move the existing snippet to the top (update `updatedAt`) and show "Already saved".
 5. Record `sourceApp` and the timestamp.
@@ -150,7 +150,7 @@ When onboarding finishes, open the main window in Compact mode with the practice
 ## 9. Non-functional requirements
 
 - Capture-to-toast latency under 150 ms. Search results update in under 50 ms for 10k snippets.
-- Never lose the user's clipboard: if the copy-simulation fallback is used, restore the clipboard.
+- Native capture never invokes Ctrl+C or reads/writes the clipboard. Explicit user-invoked snippet/Markdown/tray Copy remains required and intentionally writes requested content; its clipboard behavior and manual qualification remain in scope.
 - The app must not steal focus on capture.
 - Memory-light when idle in the background.
 - Accessible: full keyboard operation, visible focus rings, sufficient contrast in both themes, and screen-reader labels on the icon-only buttons (pin, theme, size, add tag).
@@ -160,4 +160,4 @@ When onboarding finishes, open the main window in Compact mode with the practice
 
 ## 10. Out of scope (v1)
 
-Cloud sync, accounts, sharing, rich text/images, AI features, and a grid layout.
+Clipboard capture fallback (#12/P10, deferred/not implemented), cloud sync, accounts, sharing, rich text/images, AI features, and a grid layout. Deferred fallback is not completed; future work must satisfy P10's format/ownership/restoration safety requirements.

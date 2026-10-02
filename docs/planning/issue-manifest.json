@@ -54,10 +54,10 @@
     "files": "docs/architecture/native-capture-decision.md, experiments/native-capture/",
     "goal": "Resolve the platform risks before committing the production capture implementation.",
     "scope": [
-      "Qualify the existing Windows UI Automation TextPattern adapter, foreground app identity and modifier hook through bounded manual checks; evaluate safe clipboard fallback separately. Do not add another native test harness.",
+      "Qualify the existing Windows UI Automation TextPattern adapter, foreground app identity and modifier hook through bounded manual checks. Clipboard fallback #12/P10 is deferred outside v1. Do not add another native test harness.",
       "Compare maintained native packages against small packaged native helpers; record licenses, supported Electron ABI/architectures, permissions, helper lifecycle, and rebuild/signing needs. Select adapters behind stable interfaces.",
-      "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and protected input. Validate terminal-specific Copy behavior; Ctrl+C must not interrupt a running command.",
-      "Investigate multi-format clipboard snapshots, ownership/change counters, unsupported/lazy formats, failure restoration, and crash behavior. If faithful restoration cannot be established, skip destructive fallback.",
+      "Test editors, Chromium browsers, terminals, no selection, revoked permission, Windows elevated apps, and protected input. Native capture must not invoke Ctrl+C or read/write the clipboard; unsupported/failed/empty selections save nothing and report truthful state.",
+      "Keep deferred fallback safety research in P10; it is not a v1 dependency or release gate. Explicit snippet/Markdown/tray Copy and its clipboard qualification remain in scope.",
       "Measure capture-to-feedback on each path. Confirm Alt+Space availability instead of assuming it."
     ],
     "checks": [
@@ -204,15 +204,12 @@
   },
   {
     "key": "P10",
-    "title": "Implement clipboard-preserving Copy fallback with concurrency protection",
+    "title": "Deferred: clipboard-preserving Copy fallback",
     "phase": 2,
-    "deps": [
-      "P03",
-      "P09"
-    ],
-    "refs": "SPEC §2 Capture behavior, §9 Never lose the clipboard",
+    "deps": [],
+    "refs": "SPEC §§2,9 native-only v1 scope; P10 deferred future clipboard safety reference",
     "files": "src/main/capture/clipboard-fallback/, src/main/platform/clipboard/",
-    "goal": "Capture supported selections through Copy only when the original clipboard can be preserved.",
+    "goal": "Deferred outside v1, not implemented or completed. Preserve the following future safety requirements; native UIA-only capture and explicit snippet/Markdown/tray Copy remain required.",
     "scope": [
       "Snapshot all restorable clipboard representations using the proven native adapter; distinguish empty clipboard from unavailable data. Do not reduce rich clipboard contents to plain text.",
       "Serialize app clipboard operations, inject the correct Copy action for the source app, wait for an observed clipboard change, read text, and restore in a finally path.",
@@ -225,7 +222,14 @@
       "A concurrent user copy wins; timeout, empty selection, error, and cancellation do not replace the clipboard with stale data.",
       "A running terminal command cannot be interrupted by an assumed Ctrl+C copy action."
     ],
-    "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
+    "verify": "Deferred reference only; no v1 verification gate. Reconsider the retained safety requirements and functional/manual verification before any explicitly authorized reactivation.",
+    "status": "deferred",
+    "implemented": false,
+    "v1": false,
+    "futureDependencies": [
+      "P03",
+      "P09"
+    ]
   },
   {
     "key": "P11",
@@ -235,14 +239,13 @@
       "P04",
       "P05",
       "P07",
-      "P09",
-      "P10"
+      "P09"
     ],
     "refs": "SPEC §2",
     "files": "src/main/capture/, src/shared/domain/normalize-snippet.ts",
     "goal": "Turn a shortcut into one durable saved snippet while preserving source app focus.",
     "scope": [
-      "Orchestrate foreground identity, preferred selection API, safe fallback, empty-text rejection, normalization, persistence, and result events.",
+      "Orchestrate foreground identity, native Windows UIA selection only, unsupported/failed/empty-text rejection, normalization, persistence, and result events. Never invoke Ctrl+C or read/write the clipboard during capture; P10 is deferred outside v1.",
       "Normalize only when enabled: trim edges and remove a recognized first-line terminal prompt prefix; retain subsequent lines/indentation and avoid blanket replacement of code symbols.",
       "Deduplicate exact post-normalization text transactionally, preserve existing tags/createdAt, update updatedAt, and emit Already saved.",
       "Serialize/coalesce repeated triggers; handle pause, permission loss, cancellation, storage error, and unsupported capture without false success.",
@@ -251,7 +254,8 @@
     "checks": [
       "A saved result is emitted only after durable success; recapture creates no extra automatic duplicate.",
       "Whitespace-only text is ignored; disabled normalization preserves exact selected content.",
-      "Capture never calls show/focus on main or settings windows."
+      "Capture never calls show/focus on main or settings windows.",
+      "Unsupported/failed/empty selections save nothing with truthful state; explicit snippet/Markdown/tray Copy remains required."
     ],
     "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA, installation and performance requirements are manual Windows release checks where relevant. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
@@ -683,9 +687,9 @@
     "goal": "Demonstrate that Promptly meets its native safety and responsiveness requirements in packaged builds.",
     "scope": [
       "Run the complete highlight→shortcut→capture→toast→search→tag→copy flow on Windows, including hidden/minimized/pinned states and real applications.",
-      "Benchmark 10k+ realistic snippets and long-text outliers: full input-to-painted results under 50 ms, trigger-to-toast under 150 ms; report p50/p95/max, sample counts, OS/hardware, warm/cold state, and accessibility/fallback paths separately.",
+      "Benchmark 10k+ realistic snippets and long-text outliers: full input-to-painted results under 50 ms, trigger-to-toast under 150 ms; report p50/p95/max, sample counts, OS/hardware, warm/cold state, and native UIA capture and explicit Copy outcomes separately.",
       "Measure idle total process-tree RSS and CPU over a defined interval, repeated window/capture cycles, and startup; propose a numeric memory budget from measured Electron baselines because the spec gives none.",
-      "Exercise clipboard multi-format preservation/concurrent copy, permission revocation, unsupported apps, restart, database failure, display changes, sleep/resume, and offline usage.",
+      "Verify native capture never invokes Ctrl+C or reads/writes the clipboard and saves nothing on unsupported/failed/empty selections. Exercise explicit snippet/Markdown/tray Copy, permission/access-denial changes, unsupported apps, restart, database failure, display changes, sleep/resume, and offline usage. P10/#12 fallback is deferred/not implemented and is not a v1 gate.",
       "Confirm every issue acceptance criterion and install/signing check; record failures as release blockers instead of silently weakening requirements."
     ],
     "checks": [
