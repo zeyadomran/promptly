@@ -1,0 +1,131 @@
+{
+  "kind": "owned-native-fixture-lifecycle",
+  "status": "passed",
+  "os": "win32",
+  "release": "10.0.26200",
+  "architecture": "x64",
+  "nodeVersion": "v22.23.2",
+  "fixtures": [
+    {
+      "fixture": "selected",
+      "status": "ok",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 93.4924,
+      "warmMaxNativeMs": 10.4495,
+      "p50NativeMs": 7.297300000000001,
+      "p95NativeMs": 93.4924,
+      "p50RoundTripMs": 7.432399999999916,
+      "p95RoundTripMs": 94.93730000000005,
+      "maxRoundTripMs": 94.93730000000005,
+      "maxNativeMs": 93.4924,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "selected",
+          "status": "ready",
+          "elapsedMs": 465.36859999999996,
+          "pid": 79948,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "selected",
+          "status": "closed",
+          "elapsedMs": 657.6079,
+          "pid": 79948,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        }
+      }
+    },
+    {
+      "fixture": "empty",
+      "status": "empty",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 32.272400000000005,
+      "warmMaxNativeMs": 9.522400000000001,
+      "p50NativeMs": 5.6382,
+      "p95NativeMs": 32.272400000000005,
+      "p50RoundTripMs": 5.795499999999947,
+      "p95RoundTripMs": 32.51890000000003,
+      "maxRoundTripMs": 32.51890000000003,
+      "maxNativeMs": 32.272400000000005,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "empty",
+          "status": "ready",
+          "elapsedMs": 347.27949999999987,
+          "pid": 14524,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "empty",
+          "status": "closed",
+          "elapsedMs": 462.29279999999994,
+          "pid": 14524,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        }
+      }
+    },
+    {
+      "fixture": "password",
+      "status": "secureInput",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 20.1583,
+      "warmMaxNativeMs": 14.5858,
+      "p50NativeMs": 9.6175,
+      "p95NativeMs": 20.1583,
+      "p50RoundTripMs": 9.890100000000075,
+      "p95RoundTripMs": 20.488599999999906,
+      "maxRoundTripMs": 20.488599999999906,
+      "maxNativeMs": 20.1583,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "password",
+          "status": "ready",
+          "elapsedMs": 307.08389999999986,
+          "pid": 44328,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "password",
+          "status": "closed",
+          "elapsedMs": 446.9396999999999,
+          "pid": 44328,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 0
+        }
+      }
+    }
+  ],
+  "failure": null
+}

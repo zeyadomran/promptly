@@ -3,6 +3,7 @@ import { arch, release } from 'node:os';
 import path from 'node:path';
 
 import { checkNativeFixtures } from './fixture-check.mjs';
+import { saveFixtureEvidence } from './fixture-evidence.mjs';
 import { openHelper } from './protocol-client.mjs';
 
 const executable = path.join(
@@ -42,6 +43,7 @@ try {
     ? await checkNativeFixtures(executable, helper, capabilities.accessibility !== false)
     : [];
 
+  if (process.argv.includes('--fixtures')) await saveFixtureEvidence('passed', fixtures);
   console.log(
     JSON.stringify({
       kind: 'native-feasibility',
@@ -64,5 +66,9 @@ try {
   await helper.close();
 } catch (error) {
   helper.kill();
+  if (process.argv.includes('--fixtures'))
+    await saveFixtureEvidence('failed', [], error).catch(() => {
+      console.warn('Owned native fixture receipt could not be saved');
+    });
   throw error;
 }
