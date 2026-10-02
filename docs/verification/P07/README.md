@@ -153,3 +153,54 @@ independent product-delivery failure remains retained and unqualified.
 Full strict checks passed after the hosted correction: 313 tests in 65 files,
 290 handwritten modules, TypeScript, ESLint and formatting. The Windows hosted
 control remains skipped; package content is unchanged by this follow-up.
+
+At `5e5595d`, Mac run
+[37002935742](https://github.com/zeyadomran/promptly/actions/runs/37002935742)
+compiled and ran the LaunchServices control. Its foreground matched, handler and
+registration returned zero, and the unchanged guarded driver reported sent input.
+Carbon callbacks were zero. Its passive tap was unavailable (`listening=false`,
+`tapInstalled=false`), so zero session counts cannot establish missing delivery.
+The byte-identical [control](macos-5e-carbon-control.json),
+[driver](macos-5e-driver.json), and [final product command](macos-5e-command-final.json)
+receipts are retained. Product callbacks remained zero and pin false; this failed
+product gate and its unknown cause remain unchanged.
+
+The next bounded discriminator adds a passive fixed-chord sidecar spawned inside
+an owned Electron main process. Both native builds finish before launching it,
+then the separate LaunchServices Carbon control starts. The launcher uses a fresh
+copy of the packaged Promptly bundle with only its copied resources replaced by a
+minimal test bootstrap: no product services, windows, or shortcut registration.
+The actual distributable is untouched. A fresh profile is supplied at launch and
+the resolved `app.getPath('userData')` is checked by canonical directory identity.
+The receipt explicitly records the copied bundle and differing path/bootstrap;
+this does **not** establish identical TCC attribution or inherited permission.
+
+The sidecar's ready state and a fresh inspection immediately before the unchanged
+guarded driver must both report listening access, an installed enabled listenOnly
+session tap, no Secure Input, and no tap disable event. Otherwise this control
+probe sends no input and retains an inconclusive receipt. The required independent
+product-delivery case remains unchanged. Only Control+Option F11 down/up counts and
+tap health survive the callback; unrelated events are discarded and every count
+is capped at 1024. Hosted markers are required at build, launcher, Electron
+bootstrap, child-owner and native boundaries; no local tap/input is attempted.
+
+The native diagnostic lifetime is ten seconds; receipt polling is bounded to
+three seconds and remote bootstrap/evaluation to four. Final counters and safe
+cleanup-stage outcomes are saved in `finally`, including setup failure after
+Electron starts. Child retirement is attempted before independent launcher
+retirement, even after a rejected or never-settling bootstrap. Stop requests cannot
+bypass the 500 ms owned-handle fallback intervals; successful signals or close
+events never substitute for observed exit. The copied bundle/profile is removed
+only after both child and launcher retirement verify exit. If startup yields no
+launcher handle or termination cannot be established, the owned copy is retained
+and cleanup is reported unverified. No stale PID authorizes a signal.
+
+Main `af0ff00` is integrated with both selection and keyboard helpers/resources,
+typed permission and shortcut IPC, and settings-first native cleanup preserved.
+Local Windows verification passed clean install (451 packages, zero audit findings),
+full strict checks (382 tests in 79 files, 361 handwritten modules), and packaging.
+The 59 focused scalar/privacy/hosted/lifecycle/integration regressions passed;
+new deferred-bootstrap, hung-close and dual-failure cases exercise cleanup without
+native input. The hosted-only control is skipped locally. Fresh hosted Swift
+compilation, tap availability and controlled counters remain pending; neither
+diagnostic outcome qualifies product delivery or physical/background behavior.

@@ -87,7 +87,6 @@ vi.mock('./shortcuts/ipc-services', () => ({
   recorderServices: () => () => ({})
 }));
 
-
 afterEach(() => {
   vi.restoreAllMocks();
 });

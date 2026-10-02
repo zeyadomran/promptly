@@ -1,56 +1,21 @@
 import { execFile, spawn } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, realpath, rm, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
+import type { buildCarbonControl } from './build-carbon-control';
 import { isHostedMacosProbe } from './carbon-hosted';
 import { retireCarbonOwner } from './carbon-owner';
 import { decodeCarbonState } from './carbon-state';
 
 const execute = promisify(execFile);
 
-export async function launchCarbonControl(buildDirectory: string) {
+export async function launchCarbonControl(built: Awaited<ReturnType<typeof buildCarbonControl>>) {
   if (!isHostedMacosProbe(process.platform, process.env))
     throw new Error('Carbon input probe requires hosted macOS');
-  const bundle = path.join(buildDirectory, 'CarbonControl.app');
-  const executable = path.join(bundle, 'Contents/MacOS/carbon-control');
-  const driver = path.join(buildDirectory, 'carbon-shortcut-driver');
-
-  await mkdir(path.dirname(executable), { recursive: true });
-  await execute('xcrun', [
-    'swiftc',
-    '-swift-version',
-    '5',
-    '-warnings-as-errors',
-    '-parse-as-library',
-    path.resolve('tests/native/keyboard/macos/CarbonControl.swift'),
-    '-framework',
-    'AppKit',
-    '-framework',
-    'Carbon',
-    '-o',
-    executable
-  ]);
-  await execute('xcrun', [
-    'swiftc',
-    '-swift-version',
-    '6',
-    '-warnings-as-errors',
-    '-parse-as-library',
-    path.resolve('tests/native/keyboard/macos/ShortcutDriver.swift'),
-    '-o',
-    driver
-  ]);
-  await writeFile(
-    path.join(bundle, 'Contents/Info.plist'),
-    `<?xml version="1.0" encoding="UTF-8"?>
-<plist version="1.0"><dict><key>CFBundleExecutable</key><string>carbon-control</string>
-<key>CFBundleIdentifier</key><string>dev.promptly.owned-carbon-control</string>
-<key>CFBundlePackageType</key><string>APPL</string><key>CFBundleName</key>
-<string>Promptly owned Carbon control</string></dict></plist>`
-  );
+  const { bundle, executable, driver } = built;
   const directory = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-carbon-control-')));
   const nativeExecutable = await realpath(executable);
   const child = spawn('/usr/bin/open', ['-W', '-n', await realpath(bundle), '--args', directory], {
