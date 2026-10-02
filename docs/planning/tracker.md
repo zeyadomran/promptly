@@ -50,7 +50,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 
 ## Current priority
 
-- [ ] #55 Remove macOS implementation and restrict builds to Windows x64.
+- [x] #55 Remove macOS implementation and restrict builds to Windows x64.
 - Finish the Windows capture pipeline (#13) and tag management (#22), then capture feedback (#15), tray (#26), and onboarding (#25).
 - Windows clipboard safety (#12), packaging (#28), and manual accessibility/release qualification (#29/#30) remain open.
 

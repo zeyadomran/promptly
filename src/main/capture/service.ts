@@ -58,7 +58,10 @@ export class CaptureService {
           'Native capture is unavailable. Safe clipboard fallback is not implemented.'
         )
       );
-    const phases = { triggeredAt };
+    const phases: Pick<
+      CaptureEvent,
+      'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'
+    > = { triggeredAt };
     const current = () => !this.closing && admitted();
 
     this.active = this.run(native, ticket, normalize, current, phases)
@@ -86,13 +89,14 @@ export class CaptureService {
     ticket: number,
     normalize: boolean,
     current: () => boolean,
-    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt'>
+    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'>
   ): Promise<CaptureReply> {
     if (!current()) return failure('CONFLICT', 'This capture was canceled.');
     const foreground = await native.foregroundIdentityResult();
 
     if (!current()) return failure('CONFLICT', 'This capture was canceled.');
     if (foreground.status !== 'ok') return this.nativeFailure(foreground.status);
+    if (foreground.identity.bounds != null) phases.sourceBounds = foreground.identity.bounds;
     const selected = await native.captureSelection(foreground.identity);
 
     phases.selectedAt = this.now();
@@ -154,7 +158,7 @@ export class CaptureService {
 
   private publish(
     result: CaptureReply,
-    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt'>
+    phases: Pick<CaptureEvent, 'triggeredAt' | 'selectedAt' | 'persistedAt' | 'sourceBounds'>
   ): void {
     const event: CaptureEvent = {
       ...phases,
