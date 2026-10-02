@@ -110,3 +110,56 @@ Windows validation of the source-identity correction passed all strict checks,
 macOS activation cases are discovered but skipped on Windows. The 22 Swift seam
 cases and OS source/handoff behavior are pending native and packaged macOS CI;
 their execution is not claimed from this development host.
+
+At `b2fff47`,
+[run 36999868036](https://github.com/zeyadomran/promptly/actions/runs/36999868036)
+passed the LaunchServices source handoff and accepted directly launched Promptly
+with a nil launch date. The direct-source case failed before helper initialization:
+its native foreground match was false. The original
+[passing LS receipt](activation-b2fff47-macos-launchServices.json) and
+[failed direct receipt](activation-b2fff47-macos-direct.json) are retained unchanged.
+This does not qualify the direct-source flow.
+
+The test setup now uses an independently verified foreground LaunchServices
+fixture as coordinator. It resolves the exact live owned direct fixture, verifies
+its nonnil executable and bundle, and calls Apple's public
+[`yieldActivation(to:)`](https://developer.apple.com/documentation/appkit/nsapplication/yieldactivation(to:)).
+Only after acknowledgment does the direct target call `app.activate()` itself.
+Native readiness waits for actual foreground identity within the same five-second
+fixture readiness bound; a denial remains false and fails the assertion. No
+force-activation API, arbitrary startup sleep, input injection or TCC change is
+introduced. Direct spawn and the nil-launch-date assertion remain required.
+
+The direct fixture now registers its exit observer before readiness and requires
+an actual ChildProcess exit before checking its terminated source capability.
+A timeout or sent signal cannot substitute for death. Cleanup requests graceful
+stop, then waits for bounded owned-handle TERM/KILL completion and rejects if exit
+remains unobserved. Repeated close shares the same settled operation. LaunchServices
+fallback signals additionally require fresh exact executable/launch-directory
+identity; bare sidecar PIDs do not authorize signaling. Six regressions include
+the review's no-exit reproduction, late TERM/KILL exit, idempotence and ownership
+validation failure while retiring the owned launcher.
+
+These are fixture corrections. Production retained/fresh/foreground application
+equality, opaque capabilities, the single activation, 100 ms request deadlines,
+75 ms activation bound, forged identity rejection and text/selection/pasteboard
+postconditions remain unchanged. Actual native compilation and direct-source OS
+handoff require fresh macOS CI; Windows checks do not establish them.
+
+Review also corrected swallowed cleanup failures: setup errors now aggregate their
+original cause and safe cleanup outcomes, and the final durable receipt includes
+helper/fixture/Electron cleanup status and failure count. Normal completion fails
+on any unverified cleanup; an existing setup/assertion error stays primary. Four
+regressions prove rejected fixture cleanup cannot pass, every cleanup still runs,
+prior failures are preserved, and nested setup outcomes contain no raw contents.
+Ten additional owner regressions cover stale/invalid sidecars, exact live argv and
+signal/death races. Integration includes main `8a827ef` (Settings UI); clean install
+and Windows packaging passed after that merge. Final strict/native CI evidence is
+reported separately below.
+Post-integration Windows validation passed clean install, strict TypeScript,
+zero-warning ESLint/architecture (309 handwritten modules), formatting and 280
+tests in 63 files. All 31 focused exit/owner/observer/cleanup regressions passed.
+Forge packaging passed; both actual macOS activation cases were discovered and
+explicitly skipped locally. Original `b2fff47` receipt hashes match their CI files.
+Fresh macOS compilation, cooperative source setup and complete capture/activation
+remain required; no runtime qualification is claimed from this Windows host.

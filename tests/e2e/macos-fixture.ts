@@ -1,11 +1,14 @@
 import { execFile, spawn } from 'node:child_process';
-import { once } from 'node:events';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { promisify } from 'node:util';
 
+import { ownedFixtureExit } from './macos-fixture-exit';
+import { OwnedFixtureSetupError } from './macos-fixture-failure';
+import { retireSelectionOwner } from './macos-fixture-owner';
+import { yieldOwnedFixture } from './macos-fixture-yield';
 import { observeOwnedMacosForeground } from './macos-foreground-observer';
 
 export const buildMacosFixture = () =>
@@ -53,42 +56,32 @@ async function readState(filename: string): Promise<FixtureState> {
 /** Owned AppKit activation only. No user selection, input injection or TCC changes. */
 export async function macosFixture(
   mode: string,
-  launchMode: 'launchServices' | 'direct' = 'launchServices'
+  launchMode: 'launchServices' | 'direct' = 'launchServices',
+  coordinator?: { yieldTo: (ownedPid: number) => Promise<void> }
 ) {
-  const directory = await mkdtemp(path.join(tmpdir(), 'promptly-owned-selection-'));
-  const bundle = path.resolve('tests/native/macos/out/SelectionFixture.app');
+  const directory = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-owned-selection-')));
+  const bundle = await realpath(path.resolve('tests/native/macos/out/SelectionFixture.app'));
+  const executable = path.join(bundle, 'Contents/MacOS/selection-fixture');
   const child = spawn(
+    launchMode === 'direct' ? executable : '/usr/bin/open',
     launchMode === 'direct'
-      ? path.join(bundle, 'Contents/MacOS/selection-fixture')
-      : '/usr/bin/open',
-    launchMode === 'direct' ? [mode, directory] : ['-W', '-n', bundle, '--args', mode, directory],
+      ? [mode, directory, ...(coordinator ? ['cooperative'] : [])]
+      : ['-W', '-n', bundle, '--args', mode, directory],
     { stdio: 'ignore' }
   );
-  const exited = once(child, 'exit');
+  const lifetime = ownedFixtureExit(child);
   let state: FixtureState | undefined;
-  let closing: Promise<void> | undefined;
+  let closing: Promise<Awaited<ReturnType<typeof lifetime.close>>> | undefined;
   const closeOnce = async () => {
-    await writeFile(path.join(directory, 'stop'), '');
-    const timeout = setTimeout(() => {
-      child.kill();
-    }, 5000);
+    const observed = await lifetime.close(
+      () => writeFile(path.join(directory, 'stop'), ''),
+      launchMode === 'launchServices'
+        ? () => retireSelectionOwner(executable, mode, directory)
+        : undefined
+    );
 
-    try {
-      await Promise.race([exited, delay(5500)]);
-    } finally {
-      clearTimeout(timeout);
-      // Only our own PID from an owned metadata directory, after graceful shutdown failed.
-      if (state !== undefined && child.exitCode === null) {
-        try {
-          process.kill(state.fixturePid);
-        } catch {
-          /* Already exited. */
-        }
-      }
-
-      child.kill();
-      await rm(directory, { recursive: true, force: true });
-    }
+    await rm(directory, { recursive: true, force: true });
+    return observed;
   };
 
   const close = () => {
@@ -97,20 +90,37 @@ export async function macosFixture(
   };
 
   try {
+    if (coordinator) {
+      if (launchMode !== 'direct' || child.pid === undefined)
+        throw new Error('Missing owned direct cooperative process');
+      // Native startup installs its file loop before the coordinator yields.
+      const initialized = await readState(path.join(directory, 'initialized.json'));
+
+      if (initialized.fixturePid !== child.pid)
+        throw new Error('Owned cooperative process PID mismatch');
+      if (lifetime.hasExited()) throw new Error('Owned cooperative target already exited');
+      await coordinator.yieldTo(child.pid);
+      await writeFile(path.join(directory, 'activate'), '');
+    }
+
     state = await readState(path.join(directory, 'ready.json'));
+    if (launchMode === 'direct' && state.fixturePid !== child.pid)
+      throw new Error('Owned direct process PID mismatch');
     return {
       ...state,
       close,
+      yieldTo: (ownedPid: number) => yieldOwnedFixture(directory, ownedPid),
+      hasExited: lifetime.hasExited,
       isForeground: (ownedPid: number) => observeOwnedMacosForeground(directory, ownedPid),
       inspect: async () => {
+        if (lifetime.hasExited()) throw new Error('Owned fixture has exited');
         await rm(path.join(directory, 'state.json'), { force: true });
         await writeFile(path.join(directory, 'inspect'), '');
         return readState(path.join(directory, 'state.json'));
       }
     };
   } catch (error) {
-    await close();
-    throw error;
+    throw new OwnedFixtureSetupError(error, await Promise.allSettled([close()]));
   }
 }
 

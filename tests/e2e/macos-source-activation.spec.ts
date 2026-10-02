@@ -1,13 +1,16 @@
-import path from 'node:path';
-
 import { expect, test } from '@playwright/test';
-import type { BrowserWindow } from 'electron';
 
-import { launchIsolatedElectron } from '../isolated-electron';
 import { buildMacosActivation } from './build-macos-activation';
 import type * as OwnedHarness from './fixtures/macos-activation-main';
+import {
+  launchMacosActivationApplication,
+  ownedActivationWindow
+} from './macos-activation-application';
 import { finishMacosActivation } from './macos-activation-receipt';
-import { buildMacosFixture, macosFixture } from './macos-fixture';
+import { type CooperativeSourceSetup, launchActivationSource } from './macos-activation-source';
+import type { macosFixture } from './macos-fixture';
+import { buildMacosFixture } from './macos-fixture';
+import { OwnedFixtureSetupError } from './macos-fixture-failure';
 import {
   establishOwnedPromptlyForeground,
   type OwnedPromptlyForeground
@@ -21,21 +24,7 @@ for (const sourceLaunchMode of ['launchServices', 'direct'] as const) {
     test.setTimeout(60_000);
     await buildMacosFixture();
     const harnessPath = await buildMacosActivation();
-    const env: Record<string, string> = {};
-
-    for (const [key, value] of Object.entries(process.env)) {
-      if (value !== undefined && key !== 'ELECTRON_RUN_AS_NODE') env[key] = value;
-    }
-
-    const executable = path.resolve(
-      'out',
-      `Promptly-darwin-${process.arch}`,
-      'Promptly.app',
-      'Contents',
-      'MacOS',
-      'Promptly'
-    );
-    const isolated = await launchIsolatedElectron(executable, env);
+    const isolated = await launchMacosActivationApplication();
     const application = isolated.application;
     let ownedWindowReady = false;
     let fixtureReadyForeground = false;
@@ -43,6 +32,11 @@ for (const sourceLaunchMode of ['launchServices', 'direct'] as const) {
     let activationStatus: string | undefined;
     let helperInitialized = false;
     let ownedFixture: Awaited<ReturnType<typeof macosFixture>> | undefined;
+    let sourceSetup: CooperativeSourceSetup | undefined;
+    let priorFailure = false;
+    let setupCleanup: readonly ('fulfilled' | 'rejected')[] | undefined;
+    let terminatedSourceExit:
+      Awaited<ReturnType<NonNullable<typeof ownedFixture>['close']>> | undefined;
     let activated = false;
     let terminatedSourceRejected = false;
     let promptlyForeground: OwnedPromptlyForeground | undefined;
@@ -51,30 +45,19 @@ for (const sourceLaunchMode of ['launchServices', 'direct'] as const) {
       { matched: boolean; launchDateAvailable: boolean; requestMs: number } | undefined;
 
     try {
-      const page = await application.firstWindow();
+      const ownedWindowId = await ownedActivationWindow(application);
 
-      // Window existence precedes ready-to-show; settle its actual renderer/native show
-      // before LaunchServices activates the owned fixture.
-      await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
-      await expect
-        .poll(
-          () =>
-            application.evaluate(({ BrowserWindow }) => {
-              const window = BrowserWindow.getAllWindows()[0];
-
-              return window !== undefined && window.isVisible() && !window.webContents.isLoading();
-            }),
-          { timeout: 5000 }
-        )
-        .toBe(true);
       ownedWindowReady = true;
-      const ownedWindow = await application.browserWindow(page);
-      const ownedWindowId = await ownedWindow.evaluate((window: BrowserWindow) => window.id);
-      const fixture = await macosFixture('selected', sourceLaunchMode);
+
+      stage = 'owned-source-setup';
+      const fixture = await launchActivationSource(sourceLaunchMode, (state) => {
+        sourceSetup = state;
+      });
 
       ownedFixture = fixture;
       stage = 'fixture-native-identity';
       fixtureReadyForeground = fixture.foregroundMatched;
+      expect(fixtureReadyForeground).toBe(true);
       nativeSourceForeground = await fixture.isForeground(fixture.fixturePid);
       expect(nativeSourceForeground.matched).toBe(true);
       if (sourceLaunchMode === 'direct')
@@ -170,7 +153,8 @@ for (const sourceLaunchMode of ['launchServices', 'direct'] as const) {
       activated = true;
       if (sourceLaunchMode === 'direct') {
         stage = 'terminated-source';
-        await fixture.close();
+        terminatedSourceExit = await fixture.close();
+        expect(terminatedSourceExit.observedExit).toBe(true);
         const stale = await application.evaluate(() =>
           (globalThis as HarnessGlobal).ownedMacActivationHarness.capture()
         );
@@ -180,20 +164,32 @@ for (const sourceLaunchMode of ['launchServices', 'direct'] as const) {
       }
 
       stage = 'complete';
+    } catch (error) {
+      priorFailure = true;
+      if (error instanceof OwnedFixtureSetupError) setupCleanup = error.cleanupOutcomes;
+      throw error;
     } finally {
-      await finishMacosActivation(isolated, ownedFixture, {
-        sourceLaunchMode,
-        nativeSourceForeground,
-        terminatedSourceRejected,
-        stage,
-        ownedWindowReady,
-        fixtureReadyForeground,
-        promptlyForeground,
-        nativePromptlyForeground,
-        activationStatus,
-        activated,
-        helperInitialized
-      });
+      await finishMacosActivation(
+        isolated,
+        ownedFixture,
+        {
+          sourceLaunchMode,
+          sourceSetup,
+          setupCleanup,
+          terminatedSourceExit,
+          nativeSourceForeground,
+          terminatedSourceRejected,
+          stage,
+          ownedWindowReady,
+          fixtureReadyForeground,
+          promptlyForeground,
+          nativePromptlyForeground,
+          activationStatus,
+          activated,
+          helperInitialized
+        },
+        priorFailure
+      );
     }
   });
 }
