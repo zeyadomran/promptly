@@ -1,6 +1,7 @@
 import path from 'node:path';
 
 import { app, ipcMain, nativeTheme } from 'electron';
+import squirrelStartup from 'electron-squirrel-startup';
 
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
@@ -65,14 +66,17 @@ const shutdown = createDesktopShutdown({
   }
 });
 const supported = process.platform === 'win32' && process.arch === 'x64';
-const primaryInstance = supported && app.requestSingleInstanceLock();
+
+if (supported) app.setAppUserModelId('com.squirrel.Promptly.Promptly');
+const primaryInstance = supported && !squirrelStartup && app.requestSingleInstanceLock();
 
 if (!supported) {
   console.error('Promptly supports Windows x64 only.');
   app.exit(1);
 }
 
-if (!primaryInstance) app.quit();
+// The standard handler owns setup-event shortcut completion and exit; never initialize desktop effects.
+if (!primaryInstance && !squirrelStartup) app.quit();
 app.on('second-instance', () => {
   openWindow();
 });
