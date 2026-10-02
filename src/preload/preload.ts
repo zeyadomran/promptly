@@ -8,6 +8,7 @@ import { settingsFromArguments } from '../shared/settings-bootstrap';
 import { liveSettingsArgument, settingsBootstrapChannel } from '../shared/settings-bootstrap';
 import { styleNonceFromArguments } from '../shared/style-nonce';
 import { createDesktopBridge } from './create-desktop-bridge';
+import { onboardingStatus } from './onboarding-status';
 
 const platform = process.platform;
 const { bridge, dispose } = createDesktopBridge(
@@ -38,6 +39,7 @@ const { bridge, dispose } = createDesktopBridge(
 );
 
 contextBridge.exposeInMainWorld('promptly', bridge);
+contextBridge.exposeInMainWorld('promptlyOnboarding', onboardingStatus);
 contextBridge.exposeInMainWorld('promptlyStyleNonce', styleNonceFromArguments(process.argv));
 const initial = process.argv.includes(liveSettingsArgument)
   ? resultSchema(settingsSnapshotSchema).parse(ipcRenderer.sendSync(settingsBootstrapChannel, {}))
