@@ -95,6 +95,9 @@ export function createDesktopBridge(
     mergeTags: (request) => call('mergeTags', request),
     getSettings: (request) => call('getSettings', request),
     updateSettings: (request) => call('updateSettings', request),
+    getShortcutStatus: (request) => call('getShortcutStatus', request),
+    setCapturePaused: (request) => call('setCapturePaused', request),
+    setShortcutRecording: (request) => call('setShortcutRecording', request),
     captureSelection: (request) => call('captureSelection', request),
     subscribeWindowFocus(listener) {
       if (disposed || transport.listenFocus === undefined) return () => undefined;

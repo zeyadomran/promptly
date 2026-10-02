@@ -93,9 +93,9 @@ test('packaged chrome hit regions, theme, responsive settings and search-focus c
     ).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
     expect(
       await settingsPage.evaluate(() =>
-        window.promptly.updateSettings({ openShortcut: 'Control+P' })
+        window.promptly.updateSettings({ openShortcut: 'Control+Alt+F10' })
       )
-    ).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    ).toMatchObject({ ok: true });
     const csp = await settingsPage
       .locator('meta[http-equiv="Content-Security-Policy"]')
       .getAttribute('content');

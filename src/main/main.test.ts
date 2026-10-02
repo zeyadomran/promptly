@@ -8,6 +8,8 @@ const owned = vi.hoisted(() => ({
   settingsClose: vi.fn<() => Promise<void>>(),
   settingsInitialize: vi.fn<() => Promise<void>>(),
   nativeDispose: vi.fn<() => Promise<void>>(),
+  keyboardClose: vi.fn<() => Promise<void>>(),
+  stopCommands: vi.fn(),
   window: vi.fn<() => Promise<void>>(),
   windowClose: vi.fn<() => Promise<void>>(),
   quit: vi.fn(),
@@ -64,6 +66,16 @@ vi.mock('./windows/window-lifecycle', () => ({
     show = owned.window;
     close = owned.windowClose;
   }
+}));
+vi.mock('./shortcuts/desktop-shortcuts', () => ({
+  createDesktopShortcuts: () => ({
+    shortcuts: { controller: {}, stopCommands: owned.stopCommands },
+    close: owned.keyboardClose
+  })
+}));
+vi.mock('./shortcuts/ipc-services', () => ({
+  shortcutServices: () => ({}),
+  recorderServices: () => () => ({})
 }));
 
 afterEach(() => {
@@ -136,6 +148,7 @@ it.skipIf(process.platform !== 'win32').each(['normal', 'fatal'] as const)(
     owned.settingsInitialize.mockResolvedValue();
     owned.storageClose.mockResolvedValue();
     owned.nativeDispose.mockResolvedValue();
+    owned.keyboardClose.mockResolvedValue();
     owned.windowClose.mockImplementation(
       () =>
         new Promise<void>((resolve) => {
@@ -164,12 +177,15 @@ it.skipIf(process.platform !== 'win32').each(['normal', 'fatal'] as const)(
     expect(owned.settingsClose).not.toHaveBeenCalled();
     expect(owned.storageClose).not.toHaveBeenCalled();
     expect(owned.nativeDispose).not.toHaveBeenCalled();
+    expect(owned.stopCommands).toHaveBeenCalled();
+    expect(owned.keyboardClose).not.toHaveBeenCalled();
     geometryDone?.();
     await vi.waitFor(() => {
       expect(owned.settingsClose).toHaveBeenCalledOnce();
     });
     expect(owned.storageClose).not.toHaveBeenCalled();
     expect(owned.nativeDispose).not.toHaveBeenCalled();
+    expect(owned.keyboardClose).not.toHaveBeenCalled();
     settingsDone?.();
     await vi.waitFor(() => {
       if (path === 'fatal') expect(owned.exit).toHaveBeenCalledExactlyOnceWith(1);
@@ -177,5 +193,6 @@ it.skipIf(process.platform !== 'win32').each(['normal', 'fatal'] as const)(
     });
     expect(owned.storageClose).toHaveBeenCalledOnce();
     expect(owned.nativeDispose).toHaveBeenCalledOnce();
+    expect(owned.keyboardClose).toHaveBeenCalledOnce();
   }
 );

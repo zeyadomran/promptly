@@ -3,7 +3,7 @@ import { app, BrowserWindow, nativeTheme } from 'electron';
 import type { Settings } from '../../shared/contracts/settings';
 import { updateNativeChrome } from '../windows/native-chrome';
 import { setPinnedWorkspaces } from '../windows/pinned-workspaces';
-import type { SettingsControllers } from './controllers';
+import type { SettingsController, SettingsControllers } from './controllers';
 import { createDockController } from './dock-controller';
 
 export function updateWindowBackgrounds(): void {
@@ -13,14 +13,16 @@ export function updateWindowBackgrounds(): void {
   }
 }
 
-/** Tray (P24/#26) and global shortcuts (P07/#9) inject reversible controllers later. */
+/** Tray (P24/#26) injects its reversible controller later. */
 export function electronSettingsControllers(
-  recoverVisibility: () => void = () => undefined
+  recoverVisibility: () => void = () => undefined,
+  shortcuts?: SettingsController
 ): SettingsControllers {
   const dock = createDockController(app.dock);
 
   return {
     available: [
+      ...(shortcuts === undefined ? [] : [shortcuts]),
       {
         name: 'theme',
         keys: ['theme'],
@@ -68,9 +70,9 @@ export function electronSettingsControllers(
     ],
     unavailable: [
       'showInTray',
-      'saveShortcut',
-      'openShortcut',
-      'pinShortcut',
+      ...(shortcuts === undefined
+        ? (['saveShortcut', 'openShortcut', 'pinShortcut'] as const)
+        : []),
       ...(process.platform === 'darwin' ? [] : (['showDockIcon'] as const))
     ]
   };

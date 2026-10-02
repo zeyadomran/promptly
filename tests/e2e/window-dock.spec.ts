@@ -47,6 +47,12 @@ test('macOS uses a real Dock recovery route and keeps a reachable window after d
     const page = await application.firstWindow();
 
     await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    expect(
+      await page.evaluate(() => window.promptly.setShortcutRecording({ active: true }))
+    ).toMatchObject({ ok: true, value: { recording: true } });
+    expect(await application.evaluate(({ globalShortcut }) => globalShortcut.isSuspended())).toBe(
+      true
+    );
     await beginVisibilityReceipt(application);
     expect(
       await page.evaluate(() => window.promptly.updateSettings({ showDockIcon: true }))

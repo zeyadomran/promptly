@@ -1,4 +1,4 @@
-import type { IpcMain } from 'electron';
+import type { IpcMain, WebContents } from 'electron';
 
 import type { ChangeEvent } from '../../shared/contracts/domain';
 import { changeEventSchema, revisionSchema } from '../../shared/contracts/domain';
@@ -20,7 +20,8 @@ export function installDesktopIpc(
   ipc: IpcMain,
   services: Partial<DesktopOperations> = {},
   initialRevision = 0,
-  bootstrap?: () => SettingsSnapshot
+  bootstrap?: () => SettingsSnapshot,
+  ownedServices?: (sender: WebContents) => Partial<DesktopOperations>
 ) {
   const windows = new WindowRegistry();
   const names = Object.keys(operations) as OperationName[];
@@ -37,7 +38,12 @@ export function installDesktopIpc(
 
   for (const name of names) {
     ipc.handle(operationChannel(name), (event, request: unknown) =>
-      dispatchOperation(services, windows.isAuthorized(event), name, request)
+      dispatchOperation(
+        { ...services, ...ownedServices?.(event.sender) },
+        windows.isAuthorized(event),
+        name,
+        request
+      )
     );
   }
 

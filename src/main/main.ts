@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, ipcMain, Menu, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
@@ -13,6 +14,8 @@ import {
   updateWindowBackgrounds
 } from './settings/electron-controllers';
 import { SettingsService } from './settings/service';
+import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
+import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
 import { StorageClient } from './storage/client';
 import { storageDesktopServices } from './storage/desktop-services';
 import { lifecycleServices } from './windows/lifecycle-services';
@@ -23,13 +26,20 @@ let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
+let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 const shutdown = createDesktopShutdown({
-  cleanup: () =>
-    closeWindowResources(lifecycle, () =>
+  cleanup: () => {
+    keyboard?.shortcuts.stopCommands();
+    return closeWindowResources(lifecycle, () =>
       closeSettingsStorage(settings, storage, {
-        close: () => windowsSelection?.dispose() ?? Promise.resolve()
+        close: () =>
+          closeNativeResources([
+            keyboard,
+            { close: () => windowsSelection?.dispose() ?? Promise.resolve() }
+          ])
       })
-    ),
+    );
+  },
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
   },
@@ -78,11 +88,15 @@ if (primaryInstance)
       );
       const revision = await storage.ready;
 
+      keyboard = createDesktopShortcuts(
+        () => lifecycle,
+        () => settings
+      );
       settings = new SettingsService(
         storage,
         electronSettingsControllers(() => {
           lifecycle?.recoverVisibility();
-        })
+        }, keyboard.shortcuts.controller)
       );
       await settings.initialize();
       desktop = installDesktopIpc(
@@ -90,20 +104,22 @@ if (primaryInstance)
         {
           ...storageDesktopServices(storage),
           ...settings.services,
+          ...shortcutServices(keyboard.shortcuts),
           ...lifecycleServices(() => lifecycle)
         },
         revision,
         () => {
           if (settings === undefined) throw new Error('Preferences unavailable.');
           return settings.current;
-        }
+        },
+        recorderServices(keyboard.shortcuts)
       );
       lifecycle = new WindowLifecycle(
         desktop.windows,
         settings,
         {
           trayAvailable: () => false,
-          shortcutAvailable: () => false,
+          shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true,
           dockAvailable: () => process.platform === 'darwin' && app.dock?.isVisible() === true
         },
         (error) => {
@@ -141,7 +157,10 @@ if (primaryInstance)
       shutdown.fatal();
     });
 
-app.on('before-quit', shutdown.beforeQuit);
+app.on('before-quit', (event) => {
+  keyboard?.shortcuts.stopCommands();
+  shutdown.beforeQuit(event);
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

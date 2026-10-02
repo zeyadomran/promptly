@@ -15,6 +15,7 @@ import {
 } from './domain';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
+import { shortcutStatusSchema } from './shortcuts';
 import { sizeModeSchema, windowKindSchema, windowStateSchema } from './window';
 
 const emptySchema = z.strictObject({});
@@ -85,6 +86,15 @@ export const operations = {
   },
   getSettings: { request: emptySchema, response: settingsSnapshotSchema },
   updateSettings: { request: settingsPatchSchema, response: settingsSnapshotSchema },
+  getShortcutStatus: { request: emptySchema, response: shortcutStatusSchema },
+  setCapturePaused: {
+    request: z.strictObject({ paused: z.boolean() }),
+    response: shortcutStatusSchema
+  },
+  setShortcutRecording: {
+    request: z.strictObject({ active: z.boolean() }),
+    response: shortcutStatusSchema
+  },
   captureSelection: { request: emptySchema, response: captureResultSchema }
 } as const;
 

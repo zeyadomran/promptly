@@ -74,6 +74,7 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       ok: true,
       value: { settings: { defaultSizeMode: 'compact', rememberedBounds: { regular } } }
     });
+    await page.evaluate(() => window.promptly.setShortcutRecording({ active: true }));
     const beforeHide = await visibilityReceipt(app, 'before-hide');
 
     expect(beforeHide.visible).toBe(true);
@@ -155,6 +156,11 @@ test('packaged modes, pin, recovery, display clamp and restart use durable indep
       reopened.getByRole('button', { name: 'Always on top', exact: true })
     ).toHaveAttribute('aria-pressed', 'true');
     const recovery = await visibilityReceipt(app, 'before-close');
+
+    expect(
+      await reopened.evaluate(() => window.promptly.setShortcutRecording({ active: true }))
+    ).toMatchObject({ ok: true, value: { recording: true } });
+
     const hidesOnClose = process.platform === 'darwin' && recovery.dock;
     const closing = hidesOnClose ? undefined : app.waitForEvent('close');
 
