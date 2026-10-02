@@ -10,6 +10,12 @@ live identity activation boundary are documented there. The disposable spike's
 keyboard/clipboard commands are not part of this production helper. Real-app
 qualification and full capture-to-toast latency remain open.
 
+P08 now supplies the [production macOS adapter](macos-selection.md) in
+`native/macos/` and `src/main/platform/macos/`, sharing the bounded production
+transport. Selection and current permission status are included; production
+keyboard hooks remain P07. Native CI and human qualification are tracked
+separately in that document.
+
 ## Decision and stable boundary
 
 Use a persistent Swift helper on macOS and a small C# helper using the OS-installed .NET Framework on Windows. Both communicate only with Electron main through NDJSON v1 on inherited stdio. Ship executables outside ASAR through Forge `extraResource`; resolve the helper from a fixed application resource path, never from renderer input. The spike is unsigned; signing and notarization are explicitly left to the user.

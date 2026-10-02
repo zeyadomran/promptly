@@ -10,7 +10,11 @@ const config: ForgeConfig = {
     asar: true,
     executableName: 'Promptly',
     extraResource:
-      process.platform === 'win32' ? [path.resolve('native/windows/out/promptly-windows.exe')] : []
+      process.platform === 'win32'
+        ? [path.resolve('native/windows/out/promptly-windows.exe')]
+        : process.platform === 'darwin'
+          ? [path.resolve('native/macos/out/promptly-macos')]
+          : []
   },
   hooks: {
     generateAssets: async () => {
@@ -26,6 +30,10 @@ const config: ForgeConfig = {
           ],
           { windowsHide: true }
         );
+      }
+
+      if (process.platform === 'darwin') {
+        await promisify(execFile)('sh', [path.resolve('native/macos/build.sh')]);
       }
     }
   },

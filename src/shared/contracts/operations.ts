@@ -13,6 +13,7 @@ import {
   tagSchema,
   tagSummarySchema
 } from './domain';
+import { macosPermissionSnapshotSchema } from './macos-selection';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import {
@@ -92,6 +93,11 @@ export const operations = {
   },
   getSettings: { request: emptySchema, response: settingsSnapshotSchema },
   updateSettings: { request: settingsPatchSchema, response: settingsSnapshotSchema },
+  getMacosPermissions: { request: emptySchema, response: macosPermissionSnapshotSchema },
+  openMacosPermissionSettings: {
+    request: z.strictObject({ permission: z.enum(['accessibility', 'inputMonitoring']) }),
+    response: z.strictObject({ opened: z.literal(true) })
+  },
   captureSelection: { request: emptySchema, response: captureResultSchema }
 } as const;
 

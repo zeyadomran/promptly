@@ -8,6 +8,7 @@ const owned = vi.hoisted(() => ({
   settingsClose: vi.fn<() => Promise<void>>(),
   settingsInitialize: vi.fn<() => Promise<void>>(),
   nativeDispose: vi.fn<() => Promise<void>>(),
+  foreground: vi.fn<() => Promise<{ status: 'foregroundChanged' }>>(),
   window: vi.fn<() => Promise<void>>(),
   windowClose: vi.fn<() => Promise<void>>(),
   quit: vi.fn(),
@@ -29,7 +30,8 @@ vi.mock('electron', () => ({
   BrowserWindow: { getAllWindows: () => [] },
   ipcMain: {},
   Menu: { setApplicationMenu: vi.fn(), buildFromTemplate: vi.fn() },
-  nativeTheme: { on: vi.fn() }
+  nativeTheme: { on: vi.fn() },
+  shell: { openExternal: vi.fn() }
 }));
 vi.mock('./storage/client', () => ({
   StorageClient: class {
@@ -40,6 +42,13 @@ vi.mock('./storage/client', () => ({
 vi.mock('./platform/windows/windows-selection', () => ({
   createWindowsSelection: () => ({
     ready: () => new Promise<void>(() => undefined),
+    dispose: owned.nativeDispose
+  })
+}));
+vi.mock('./platform/macos/macos-selection', () => ({
+  createMacosSelection: () => ({
+    ready: () => new Promise<void>(() => undefined),
+    foregroundIdentityResult: owned.foreground,
     dispose: owned.nativeDispose
   })
 }));
@@ -70,7 +79,9 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-it.skipIf(process.platform !== 'win32').each(['storage', 'settings', 'window'] as const)(
+it
+  .skipIf(!['win32', 'darwin'].includes(process.platform))
+  .each(['storage', 'settings', 'window'] as const)(
   'actual main fatal %s path waits for the warming native helper to close',
   async (failure) => {
     vi.resetModules();
@@ -88,6 +99,7 @@ it.skipIf(process.platform !== 'win32').each(['storage', 'settings', 'window'] a
       failure === 'settings' ? Promise.reject(error) : Promise.resolve()
     );
     owned.settingsClose.mockResolvedValue();
+    owned.foreground.mockResolvedValue({ status: 'foregroundChanged' });
     owned.windowClose.mockResolvedValue();
     owned.storageClose.mockResolvedValue();
     owned.nativeDispose.mockImplementation(
