@@ -45,7 +45,7 @@ describe('durable snippet storage', () => {
     expect(store.invoke('listTags', {}).tags).toEqual([{ ...tag, snippetCount: 1 }]);
   });
 
-  it('recaptures deterministic original IDs and preserves createdAt/tags; explicit duplicates reset stats', () => {
+  it('recaptures the most recently updated equal-text ID; explicit duplicates reset stats', () => {
     const captured = store.invoke('captureSnippet', {
       text: 'same text',
       sourceApp: 'Terminal',
@@ -78,11 +78,11 @@ describe('durable snippet storage', () => {
     expect(again).toMatchObject({
       status: 'duplicate',
       snippet: {
-        id: original.id,
-        createdAt: original.createdAt,
+        id: duplicate.id,
+        createdAt: duplicate.createdAt,
         updatedAt: time.toISOString(),
         tags: [tag],
-        copyCount: 1,
+        copyCount: 0,
         sourceApp: 'New source',
         sourceAppId: null
       }

@@ -60,7 +60,7 @@ export class SnippetWrites {
   capture(input: StorageRequest<'captureSnippet'>) {
     const row = this.reader.context.db
       .prepare(
-        'SELECT id FROM snippets WHERE textHash = ? AND text = ? ORDER BY createdAt, id LIMIT 1'
+        'SELECT id FROM snippets WHERE textHash = ? AND text = ? ORDER BY updatedAt DESC, id ASC LIMIT 1'
       )
       .get(textHash(input.text), input.text);
 
@@ -71,9 +71,16 @@ export class SnippetWrites {
       };
     const id = String(row['id']);
 
-    this.reader.context.db
-      .prepare('UPDATE snippets SET updatedAt = ?, sourceApp = ?, sourceAppId = ? WHERE id = ?')
-      .run(this.reader.context.now().toISOString(), input.sourceApp, input.sourceAppId, id);
+    const now = this.reader.context.now().toISOString();
+
+    if (input.sourceApp === null && input.sourceAppId === null) {
+      this.reader.context.db.prepare('UPDATE snippets SET updatedAt = ? WHERE id = ?').run(now, id);
+    } else {
+      this.reader.context.db
+        .prepare('UPDATE snippets SET updatedAt = ?, sourceApp = ?, sourceAppId = ? WHERE id = ?')
+        .run(now, input.sourceApp, input.sourceAppId, id);
+    }
+
     return { status: 'duplicate' as const, ...this.reader.snapshot(id) };
   }
 

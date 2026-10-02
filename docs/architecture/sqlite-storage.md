@@ -54,9 +54,13 @@ commands should publish `settings` invalidations after committing.
 
 ## Identity, queries, and undo
 
-Capture matches SHA-256 **and exact SQLite text equality**, then chooses the oldest
-`createdAt`, breaking ties by ascending UUID. Recapture preserves ID, creation time,
-tags, and copy statistics while updating recapture time/source metadata. Explicit
+Capture matches SHA-256 **and exact SQLite text equality**, then chooses the most
+recent `updatedAt`, breaking ties by ascending UUID. Recapture preserves ID, creation
+time, tags, and copy statistics while updating recapture time. If both capture source
+fields are null, it preserves the existing provenance. When either field is available,
+it replaces the complete source pair, including nulls, so a new display label cannot
+inherit another application's identifier. An identifier-only capture clears the old
+display label rather than attach it to a different identity. Explicit
 Duplicate always creates a new UUID, copies tags/source, uses new timestamps, and
 resets copy statistics. Renderer create/edit cannot supply source metadata.
 
