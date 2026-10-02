@@ -25,6 +25,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `platform/macos/macos-selection.test.ts` | Forged and retired source identity rejection at the adapter boundary |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
 | `shortcuts/transactions.test.ts` | Rejected OS binding replacement preserves authoritative preferences and the previous live command |
+| `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad key mapping, chord release before commit, cancellation and stale acquisition retirement through fake IPC |
 | `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 
 Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
