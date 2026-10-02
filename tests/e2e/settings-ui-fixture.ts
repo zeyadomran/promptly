@@ -15,7 +15,7 @@ export async function launchSettingsUiFixture(
 ) {
   if (native && attachNativeReceipt === undefined)
     throw new Error('Native qualification requires a retained receipt destination.');
-  await buildIpcFixture(undefined, 'tests/e2e/fixtures/settings-ui-main.ts', true);
+  await buildIpcFixture(undefined, 'tests/e2e/fixtures/settings-ui-main.ts', 'index', true);
   const profile = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-settings-ui-')));
   const env = Object.fromEntries(
     Object.entries(process.env).filter(

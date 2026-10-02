@@ -125,6 +125,12 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
     const completeHighlightPaint = await assertCompleteHighlights(page);
 
     await finishProfile();
+    const workerBoundaries = await application.evaluate(({ app }) => {
+      if (app.listenerCount('search-fixture:flush-worker-boundaries') === 0) return undefined;
+      return new Promise<unknown>((resolve) => {
+        app.emit('search-fixture:flush-worker-boundaries', resolve);
+      });
+    });
 
     const statistics = summarizeSearchSamples(samples);
     const evidence = {
@@ -132,6 +138,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
       diagnosticProfile: process.env['PROMPTLY_SEARCH_PROFILE'] === '1',
       diagnosticTrace: process.env['PROMPTLY_SEARCH_TRACE'] === '1',
       profileIdentity,
+      workerBoundaries,
       hardware: {
         platform: process.platform,
         cpu: cpus()[0]?.model,

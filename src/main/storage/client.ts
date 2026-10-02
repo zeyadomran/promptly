@@ -8,9 +8,8 @@ import { recordSearchValidation } from '../../shared/search/measure-validation';
 import type { StorageOperation, StorageRequest, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
 import {
-  emitStorageBoundary,
-  receiveWorkerBoundaries,
   type StorageBoundaryObserver,
+  StorageDiagnostics,
   storageTimestamp
 } from './worker-diagnostics';
 
@@ -34,6 +33,7 @@ export class StorageClient {
   private failure: Error | undefined;
   private closing: Promise<void> | undefined;
   private draining: DrainWaiter | undefined;
+  private readonly diagnostics: StorageDiagnostics | undefined;
   readonly ready: Promise<number>;
 
   constructor(
@@ -42,6 +42,7 @@ export class StorageClient {
     onChange: (change: ChangeEvent) => void = () => undefined,
     private readonly onBoundary?: StorageBoundaryObserver
   ) {
+    this.diagnostics = onBoundary === undefined ? undefined : new StorageDiagnostics();
     this.worker = new Worker(workerFile, { workerData: databaseFile });
     this.ready = this.register(0, 10_000).then((value) => {
       const result = resultSchema(revisionSnapshotSchema).parse(value);
@@ -55,8 +56,6 @@ export class StorageClient {
       if (reply.change !== undefined) onChange(changeEventSchema.parse(reply.change));
       const request = this.pending.get(reply.id);
 
-      if (request?.diagnostic && received !== undefined)
-        receiveWorkerBoundaries(this.onBoundary, reply.id, reply.diagnostic, received);
       if (request !== undefined) clearTimeout(request.timer);
       request?.resolve(reply.result);
       this.pending.delete(reply.id);
@@ -64,6 +63,9 @@ export class StorageClient {
         this.draining?.resolve();
         this.draining = undefined;
       }
+
+      if (request?.diagnostic === true && received !== undefined)
+        this.diagnostics?.receive(reply.id, reply.diagnostic, received);
     });
     this.worker.on('error', () => {
       this.fail(new Error('Local storage worker failed.'));
@@ -97,6 +99,11 @@ export class StorageClient {
     return this.closing;
   }
 
+  /** Fixture diagnostics must call this only after the complete measured workload. */
+  flushDiagnostics() {
+    return this.onBoundary === undefined ? undefined : this.diagnostics?.flush(this.onBoundary);
+  }
+
   private async shutdown(): Promise<void> {
     try {
       await this.ready;
@@ -127,7 +134,7 @@ export class StorageClient {
     const diagnostic = this.onBoundary !== undefined && operation === 'searchSnippets';
     const response = this.register(id, timeout, diagnostic);
 
-    if (diagnostic) emitStorageBoundary(this.onBoundary, id, 'main-post', storageTimestamp());
+    if (diagnostic) this.diagnostics?.post(id, storageTimestamp());
     this.worker.postMessage({ id, operation, input, ...(diagnostic ? { diagnostic: true } : {}) });
     return response;
   }

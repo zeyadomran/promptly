@@ -35,6 +35,14 @@ void app.whenReady().then(async () => {
 
   EventEmitter.prototype.on.call(
     app,
+    'search-fixture:flush-worker-boundaries',
+    (reply: (result: unknown) => void) => {
+      reply(storage?.flushDiagnostics());
+    }
+  );
+
+  EventEmitter.prototype.on.call(
+    app,
     'search-fixture:capture',
     (reply: (result: unknown) => void) => {
       void storage
