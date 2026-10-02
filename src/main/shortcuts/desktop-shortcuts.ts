@@ -8,7 +8,6 @@ import {
 import type { SettingsService } from '../settings/service';
 import type { WindowLifecycle } from '../windows/window-lifecycle';
 import { CaptureTrigger } from './capture-trigger';
-import { reportShortcutCommand } from './command-receipt';
 import { CommandRunner } from './command-runner';
 import { Shortcuts } from './service';
 
@@ -30,12 +29,9 @@ export function createDesktopShortcuts(
         commands.run(
           'open',
           async () => {
-            reportShortcutCommand({ action: 'open', phase: 'requested' });
             await lifecycle()?.toggle();
-            reportShortcutCommand({ action: 'open', phase: 'completed' });
           },
           () => {
-            reportShortcutCommand({ action: 'open', phase: 'failed', errorCode: 'UNAVAILABLE' });
             lifecycle()?.recoverVisibility();
           }
         );
@@ -46,23 +42,13 @@ export function createDesktopShortcuts(
           async () => {
             const preferences = settings();
 
-            reportShortcutCommand({ action: 'pin', phase: 'requested' });
             if (preferences !== undefined) {
-              const result = await preferences.services.updateSettings({
+              await preferences.services.updateSettings({
                 alwaysOnTop: !preferences.current.settings.alwaysOnTop
               });
-
-              reportShortcutCommand(
-                result.ok
-                  ? { action: 'pin', phase: 'completed' }
-                  : { action: 'pin', phase: 'failed', errorCode: result.error.code }
-              );
-            } else
-              reportShortcutCommand({ action: 'pin', phase: 'failed', errorCode: 'UNAVAILABLE' });
+            }
           },
-          () => {
-            reportShortcutCommand({ action: 'pin', phase: 'failed', errorCode: 'INTERNAL' });
-          }
+          () => undefined
         );
       }
     },

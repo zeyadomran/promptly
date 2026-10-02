@@ -42,7 +42,7 @@ export async function createShortcutDriver(application: ElectronApplication) {
     ]);
   }
 
-  return async (action: 'open' | 'pin' | 'capture') => {
+  return async (action: 'open' | 'pin') => {
     const owned = await application.evaluate(({ BrowserWindow, app }) => {
       app.focus({ steal: true });
       const fixture = BrowserWindow.getAllWindows().find(

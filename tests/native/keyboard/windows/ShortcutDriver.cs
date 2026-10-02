@@ -16,13 +16,17 @@ internal static class ShortcutDriver
     private static Input Key(ushort key, bool up) { return new Input { type = 1, payload = new Payload { keyboard = new Keyboard { key = key, flags = up ? 2U : 0U } } }; }
     [STAThread] private static int Main(string[] arguments)
     {
+        if (Environment.GetEnvironmentVariable("CI") != "true" ||
+            Environment.GetEnvironmentVariable("GITHUB_ACTIONS") != "true" ||
+            Environment.GetEnvironmentVariable("RUNNER_ENVIRONMENT") != "github-hosted" ||
+            Environment.GetEnvironmentVariable("RUNNER_OS") != "Windows") return 2;
         uint expected;
         long handle;
         if (arguments.Length != 3 || !uint.TryParse(arguments[0], out expected) || !Int64.TryParse(arguments[1], out handle)) return 1;
         uint owner;
         GetWindowThreadProcessId(new IntPtr(handle), out owner);
         if (owner != expected) return 2;
-        ushort key = arguments[2] == "open" ? (ushort)0x79 : arguments[2] == "pin" ? (ushort)0x7A : arguments[2] == "capture" ? (ushort)0x7B : (ushort)0;
+        ushort key = arguments[2] == "open" ? (ushort)0x79 : arguments[2] == "pin" ? (ushort)0x7A : (ushort)0;
         if (key == 0) return 3;
         string result = "activationDenied";
         bool injected = false;

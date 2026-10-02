@@ -1,5 +1,31 @@
 # P07 shortcut qualification
 
+## Current minimal verification
+
+The user-approved cleanup retains one actual product shortcut flow and three
+distinct logic cases: physical double-tap cancellation, rejected OS registration
+rollback, and shutdown invalidation of a late resume. Carbon/session probes and
+their exclusive native runners, copied launchers and infrastructure suites are
+retired. The sections below and all raw receipts are historical evidence.
+
+The product flow keeps capture paused and requires durable pin plus actual
+hide/show results. Windows retains Control+Alt+F11/F10; the owned macOS fixture
+uses Control+Alt+K/J with SDK physical key constants. Native input is restricted
+to GitHub-hosted runners and freshly verified owned foreground processes. No
+production default binding or supported-key restriction changed.
+
+At `b47f2c80070e1a7f600d2adfa2b093c112def706`, the owned K control received one
+Carbon callback while the F11 control received none. The byte-identical receipts
+are [K](macos-b47-k-control.json), [F11](macos-b47-f11-control.json), and the
+[failed product result](macos-b47-command-final.json). This qualifies neither the
+new Electron K/J flow nor physical function-key support. Actual product delivery
+remains required in fresh hosted CI; J has not yet been qualified.
+
+The new macOS native input slice cannot run safely on the local Windows host.
+No local red/green runtime result is claimed for it. The connected capture
+pipeline is absent, so the old trailing capture injection/unavailable-handler
+assertion was removed rather than presented as an implemented base flow.
+
 Local Windows 11 x64 verification passed:
 
 - `npm run check`: strict TypeScript 6.0.3, zero-warning ESLint, formatting,

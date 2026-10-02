@@ -1,21 +1,19 @@
 import AppKit
+import Carbon
 import CoreGraphics
 
 @MainActor @main struct ShortcutDriver {
     static func main() {
         guard CommandLine.arguments.count == 3,
               let expected = Int32(CommandLine.arguments[1]) else { exit(1) }
+        let environment = ProcessInfo.processInfo.environment
+        guard environment["CI"] == "true", environment["GITHUB_ACTIONS"] == "true",
+              environment["RUNNER_ENVIRONMENT"] == "github-hosted",
+              environment["RUNNER_OS"] == "macOS" else { exit(2) }
         let key: CGKeyCode
         switch CommandLine.arguments[2] {
-        case "open": key = 109
-        case "pin": key = 103
-        case "capture": key = 111
-        case "carbon-letter-k":
-            let environment = ProcessInfo.processInfo.environment
-            guard environment["CI"] == "true", environment["GITHUB_ACTIONS"] == "true",
-                  environment["RUNNER_ENVIRONMENT"] == "github-hosted",
-                  environment["RUNNER_OS"] == "macOS" else { exit(2) }
-            key = 40
+        case "open": key = CGKeyCode(kVK_ANSI_J)
+        case "pin": key = CGKeyCode(kVK_ANSI_K)
         default: exit(3)
         }
         let driver = OwnedSequence(expected: expected)
