@@ -20,7 +20,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `platform/macos/macos-selection.test.ts` | Forged and retired source identity rejection at the adapter boundary |
 
-There are seven functional cases. Shortcuts add their public functional behavior when integrated; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
+Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
 
 ## Manual release checks
 
