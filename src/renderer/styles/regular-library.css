@@ -1,0 +1,206 @@
+.regular-library {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.regular-library-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.regular-library .library-search {
+  min-height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 0 0 3px var(--muted);
+}
+.regular-library .library-search:focus-within {
+  box-shadow: 0 0 0 3px var(--ring);
+}
+.regular-filter-hint {
+  color: var(--muted-foreground);
+  font-size: 11px;
+  white-space: nowrap;
+}
+.regular-library .library-tags {
+  flex-wrap: wrap;
+  overflow-y: auto;
+  max-height: 120px;
+  min-height: 0;
+  padding: 14px 0 0;
+}
+.regular-library .library-create-tag {
+  border-radius: 999px;
+}
+.regular-library-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+}
+.regular-library-results {
+  min-height: 0;
+  padding: 6px 0;
+}
+.regular-row {
+  height: 58px;
+  padding: 9px 12px;
+  border-radius: 6px;
+}
+.regular-row .library-row-content {
+  position: relative;
+  padding-right: 54px;
+}
+.regular-row .library-row-text {
+  height: 20px;
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.regular-row .library-row-meta {
+  margin-top: 3px;
+}
+.regular-row-time {
+  position: absolute;
+  top: 2px;
+  right: 0;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.snippet-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 22px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  border-left: 1px solid var(--border);
+  background: var(--sidebar);
+}
+.snippet-preview-empty {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+.snippet-preview-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--muted-foreground);
+  font-size: 11.5px;
+}
+.snippet-preview-meta > span {
+  overflow-wrap: anywhere;
+}
+.snippet-preview-meta time {
+  white-space: nowrap;
+}
+.preview-tag-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.preview-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11.5px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.preview-tag button {
+  width: 16px;
+  height: 16px;
+}
+.preview-tag svg {
+  width: 10px;
+  height: 10px;
+}
+.preview-add-tag {
+  border-style: dashed;
+  color: var(--muted-foreground);
+}
+.snippet-full-text {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  user-select: text;
+}
+.snippet-full-text:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.snippet-actions,
+.snippet-editor-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.snippet-actions > button {
+  height: 36px;
+}
+.snippet-copy {
+  flex: 1;
+}
+.snippet-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.snippet-editor textarea {
+  min-height: 200px;
+  resize: vertical;
+  font-family: 'Geist Mono', monospace;
+  font-size: 12.5px;
+  line-height: 1.65;
+  background: var(--background);
+}
+.snippet-editor-actions {
+  justify-content: flex-end;
+}
+.snippet-source-explanation {
+  max-width: 250px;
+  margin: 0;
+  padding: 4px 8px;
+  font-size: 11px;
+  color: var(--muted-foreground);
+}
+.snippet-error {
+  font-size: 12px;
+  color: var(--destructive);
+  margin: 0;
+}
+.regular-footer {
+  min-height: 34px;
+  gap: 10px;
+  padding: 5px 14px;
+}
+.regular-keyboard-hints,
+.regular-footer-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.regular-keyboard-hints span {
+  white-space: nowrap;
+}
+.regular-keyboard-hints kbd {
+  font-family: inherit;
+  color: var(--foreground);
+}

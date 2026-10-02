@@ -90,6 +90,8 @@ export function createDesktopBridge(
     quitApplication: (request) => call('quitApplication', request),
     searchSnippets: (request) => call('searchSnippets', request),
     getSnippet: (request) => call('getSnippet', request),
+    getSnippetSource: (request) => call('getSnippetSource', request),
+    openSnippetSource: (request) => call('openSnippetSource', request),
     createSnippet: (request) => call('createSnippet', request),
     updateSnippet: (request) => call('updateSnippet', request),
     deleteSnippet: (request) => call('deleteSnippet', request),

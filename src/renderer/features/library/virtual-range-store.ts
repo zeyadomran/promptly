@@ -7,6 +7,11 @@ export class VirtualRangeStore {
   private element: HTMLElement | undefined;
   private count = 0;
 
+  constructor(
+    private rowHeight = 78,
+    private rowStride = 80
+  ) {}
+
   snapshot = () => this.value;
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);
@@ -17,7 +22,13 @@ export class VirtualRangeStore {
 
   private measure = (): void => {
     if (this.element === undefined) return;
-    const next = virtualRange(this.count, this.element.clientHeight, this.element.scrollTop);
+    const next = virtualRange(
+      this.count,
+      this.element.clientHeight,
+      this.element.scrollTop,
+      this.rowHeight,
+      this.rowStride
+    );
 
     if (
       next.first === this.value.first &&
@@ -57,11 +68,23 @@ export class VirtualRangeStore {
     this.measure();
   }
 
+  restoreScroll(top: number): void {
+    if (this.element === undefined) return;
+    this.element.scrollTop = top;
+    this.measure();
+  }
+
   scrollToIndex(index: number): void {
     const element = this.element;
 
     if (element === undefined || index < 0 || index >= this.count) return;
-    element.scrollTop = selectionScroll(index, element.clientHeight, element.scrollTop);
+    element.scrollTop = selectionScroll(
+      index,
+      element.clientHeight,
+      element.scrollTop,
+      this.rowHeight,
+      this.rowStride
+    );
     this.measure();
   }
 }

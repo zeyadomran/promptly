@@ -1,0 +1,50 @@
+import { foldText, matchRanges } from '../../../shared/search/match-text';
+import { parseQuery } from '../../../shared/search/parse-query';
+import { HighlightedText } from '../../components/shared/HighlightedText';
+import { useLibrary } from '../library/library-context';
+import { PreviewTagBar } from './PreviewTagBar';
+import { relativeTime } from './relative-time';
+import { useSnippetSession } from './snippet-context';
+import { SnippetActions } from './SnippetActions';
+import { SnippetEditor } from './SnippetEditor';
+
+export function SnippetPreview() {
+  const { state: library } = useLibrary();
+  const { state } = useSnippetSession();
+  const snippet = state.snippet;
+
+  if (snippet === null)
+    return (
+      <aside className="snippet-preview snippet-preview-empty" aria-label="Snippet preview">
+        <p role={state.error !== undefined ? 'alert' : 'status'}>
+          {state.error ?? (state.loading ? 'Loading preview…' : 'Select a snippet to preview it.')}
+        </p>
+      </aside>
+    );
+  const ranges = matchRanges(snippet.text, parseQuery(library.request.query).text.map(foldText));
+
+  return (
+    <aside className="snippet-preview" aria-label="Snippet preview">
+      <div className="snippet-preview-meta">
+        <span>{snippet.sourceApp ?? 'No source application'}</span>
+        <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
+      </div>
+      <PreviewTagBar snippet={snippet} />
+      {state.editing ? (
+        <SnippetEditor />
+      ) : (
+        <>
+          <div className="snippet-full-text" tabIndex={0} aria-label="Full snippet text">
+            <HighlightedText text={snippet.text} ranges={ranges} />
+          </div>
+          {state.error !== undefined && (
+            <p role="alert" className="snippet-error">
+              {state.error}
+            </p>
+          )}
+          <SnippetActions snippet={snippet} />
+        </>
+      )}
+    </aside>
+  );
+}

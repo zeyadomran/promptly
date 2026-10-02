@@ -6,6 +6,9 @@ import { LibraryModel } from './library-model';
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const [model] = useState(() => new LibraryModel(window.promptly));
+  const [scroll] = useState(
+    () => new Map<string, { top: number; index: number; reveal: number; query: string }>()
+  );
   const state = useSyncExternalStore(model.subscribe, model.snapshot);
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -20,6 +23,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     <LibraryContext
       value={{
         model,
+        scroll,
         state,
         searchRef,
         selection: {

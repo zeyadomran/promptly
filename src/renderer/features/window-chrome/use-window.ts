@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 
 import type { WindowState } from '../../../shared/contracts/window';
 
-/** Library inputs opt into focus with data-promptly-search when P15 supplies them. */
+/** Observe native state; the library command owner manages input focus. */
 export function useWindow() {
   const [state, setState] = useState<WindowState>({
     kind: 'main',
@@ -14,7 +14,6 @@ export function useWindow() {
   useEffect(() => {
     let active = true;
     const focus = () => {
-      document.querySelector<HTMLInputElement>('[data-promptly-search]')?.focus();
       void window.promptly.getWindowState({}).then((result) => {
         if (active && result.ok) setState(result.value);
       });
