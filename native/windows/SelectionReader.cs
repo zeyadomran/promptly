@@ -27,7 +27,10 @@ internal static class SelectionReader
                 (options.ExpectedPid != 0 && identity.Pid != options.ExpectedPid))
                 return Protocol.Result("foregroundChanged");
             result = identity.Result("unsupported");
-            if (!NativeMethods.CanRead(identity.Pid)) result["status"] = "permissionDenied";
+            int? targetIntegrity;
+            bool allowed = ProcessAccess.CanRead(identity.Pid, identity.Started, out targetIntegrity);
+            result["targetIntegrityLevel"] = targetIntegrity;
+            if (!allowed) result["status"] = "permissionDenied";
             else
             {
                 var focused = AutomationElement.FocusedElement;

@@ -71,6 +71,9 @@ test.describe('packaged production Windows selection', () => {
           else expect('text' in result).toBe(false);
           evidence.push({
             fixture: mode,
+            ownedFixtureIntegrityLevel: fixture.integrityLevel,
+            targetIntegrityLevel:
+              'targetIntegrityLevel' in result ? result.targetIntegrityLevel : null,
             status: result.status,
             nativeMs: 'elapsedMs' in result ? result.elapsedMs : null,
             roundTripMs: performance.now() - started
@@ -124,6 +127,7 @@ test.describe('packaged production Windows selection', () => {
 
       const receipt = JSON.stringify({
         platform: process.platform,
+        helperIntegrityLevel: ready.integrityLevel,
         warmupMs: ready.warmupMs,
         helperStartupMs: ready.startupMs,
         processToReadyMs: readyRoundTripMs,

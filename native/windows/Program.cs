@@ -37,7 +37,8 @@ internal static class Program
                     if (command == "capabilities")
                         result = new Dictionary<string, object> { { "status", "ok" }, { "platform", "win32" },
                             { "selection", "UIAutomation.TextPattern" }, { "warmupReady", warmupReady },
-                            { "warmupMs", warmupMs }, { "startupMs", startup.Elapsed.TotalMilliseconds } };
+                            { "warmupMs", warmupMs }, { "startupMs", startup.Elapsed.TotalMilliseconds },
+                            { "integrityLevel", ProcessAccess.OwnIntegrity } };
                     else if (command == "capture") result = SelectionReader.Read(CaptureOptions.Parse(request));
                     else if (command == "foreground")
                     {
@@ -50,8 +51,9 @@ internal static class Program
                         if (!request.TryGetValue("identity", out token) || !(token is string) || ((string)token).Length != 32)
                             throw new ArgumentException();
                         var identity = SourceIdentity.Resolve((string)token);
+                        int? targetIntegrity;
                         result = Protocol.Result(identity == null || !identity.Valid(false) ? "foregroundChanged" :
-                            !NativeMethods.CanRead(identity.Pid) ? "permissionDenied" :
+                            !ProcessAccess.CanRead(identity.Pid, identity.Started, out targetIntegrity) ? "permissionDenied" :
                             NativeMethods.SetForegroundWindow(identity.Window) && identity.Valid(true) ? "ok" : "activationDenied");
                     }
                     else if (command == "stop") { result = Protocol.Result("ok"); stop = true; }

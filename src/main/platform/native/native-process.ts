@@ -104,10 +104,17 @@ export class NativeProcess {
   private pump(): void {
     if (this.active !== undefined || this.queue.length === 0 || this.disposed) return;
     this.active = this.queue.shift();
+    while (this.active !== undefined && performance.now() >= this.active.expiresAt) {
+      clearTimeout(this.active.timer);
+      this.active.reject(new NativeTransportError('timedOut'));
+      this.active = this.queue.shift();
+    }
+
+    if (this.active === undefined) return;
     try {
       const child = this.child ?? this.start();
 
-      if (this.active?.frame !== undefined) child.stdin.write(this.active.frame);
+      child.stdin.write(this.active.frame);
     } catch {
       this.fail('helperUnavailable');
     }

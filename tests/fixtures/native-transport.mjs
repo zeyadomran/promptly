@@ -10,6 +10,7 @@ lines.on('line', (line) => {
   const response = { v: 1, id: request.id, status: 'ok' };
 
   if (mode === 'hang') return;
+  if (mode === 'deny-activate' && request.command === 'activate') process.exit(5);
   if (mode === 'crash') process.exit(2);
   if (mode === 'partial') {
     process.stdout.write('{"v":1');

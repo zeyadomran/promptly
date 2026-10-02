@@ -8,6 +8,7 @@ const selected = {
   status: 'ok',
   source: null,
   identity: 'a'.repeat(32),
+  targetIntegrityLevel: 8192,
   text: '雪🙂\nsecond',
   characterCount: 10,
   elapsedMs: 1.5

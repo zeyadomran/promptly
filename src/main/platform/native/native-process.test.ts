@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import path from 'node:path';
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { nativeActivationSchema } from '../../../shared/contracts/native-selection';
 import { NativeProcess } from './native-process';
@@ -28,6 +28,43 @@ function setup(modes: string[]) {
 }
 
 describe('isolated native lifecycle', () => {
+  it('never writes an expired queued activation and dispatches the next live request', async () => {
+    const { transport, children } = setup(['deny-activate']);
+
+    try {
+      await transport.request('capabilities', {}, parse, 2000);
+      const child = children[0];
+
+      if (child === undefined) throw new Error('Missing child');
+      const writes = vi.spyOn(child.stdin, 'write');
+      const active = transport.request(
+        'capture',
+        {},
+        (value) => {
+          const blockedUntil = performance.now() + 300;
+
+          while (performance.now() < blockedUntil) {
+            /* Delay timers while the queued request expires. */
+          }
+
+          return parse(value);
+        },
+        2000
+      );
+      const activation = transport.request('activate', {}, parse, 100);
+      const expired = expect(activation).rejects.toMatchObject({ status: 'timedOut' });
+      const next = transport.request('capture', {}, parse, 2000);
+
+      expect((await active).status).toBe('ok');
+      await expired;
+      expect((await next).status).toBe('ok');
+      expect(writes).not.toHaveBeenCalledWith(expect.stringContaining('"command":"activate"'));
+      expect(children).toHaveLength(1);
+      expect(child.exitCode).toBeNull();
+    } finally {
+      await transport.dispose();
+    }
+  });
   it('waits for graceful quit, then kills a helper that refuses EOF', async () => {
     const { transport, children } = setup(['block-eof']);
 

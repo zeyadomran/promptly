@@ -45,7 +45,9 @@ internal static class Fixture
                 if (targetPid != UInt32.Parse(args[1]) || !SetForegroundWindow(target))
                     throw new InvalidOperationException("Owned Chromium activation failed");
             }
-            Console.WriteLine("{\"fixturePid\":" + Process.GetCurrentProcess().Id + "}");
+            var level = ProcessAccess.ReadIntegrity((uint)Process.GetCurrentProcess().Id, null);
+            Console.WriteLine("{\"fixturePid\":" + Process.GetCurrentProcess().Id + ",\"integrityLevel\":" +
+                (level.HasValue ? level.Value.ToString() : "null") + "}");
             var timeout = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
             timeout.Tick += delegate { app.Shutdown(); };
             timeout.Start();

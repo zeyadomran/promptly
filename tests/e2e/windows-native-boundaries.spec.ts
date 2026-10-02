@@ -32,6 +32,17 @@ test('packaged native full escaped payload bounds and clean EOF', async () => {
     'resources',
     'promptly-windows.exe'
   );
+  const policy = await promisify(execFile)(
+    path.resolve('tests/native/windows/out/access-policy.exe'),
+    [],
+    { windowsHide: true }
+  );
+
+  expect(JSON.parse(policy.stdout) as unknown).toMatchObject({
+    policyVerified: true,
+    staleCreationRejected: true
+  });
+  console.log('Owned native access-policy receipt:', policy.stdout.trim());
   const transport = new NativeProcess({
     launch: () => spawn(executable, [], { windowsHide: true, stdio: 'pipe' })
   });

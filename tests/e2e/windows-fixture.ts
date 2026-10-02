@@ -12,6 +12,7 @@ export async function windowsFixture(mode: string, arguments_: string[] = []) {
   const lines = readline.createInterface({ input: child.stdout });
   let diagnostics = '';
   let timer: ReturnType<typeof setTimeout> | undefined;
+  let integrityLevel: number | null = null;
 
   child.stderr.on('data', (chunk: Buffer) => {
     diagnostics = (diagnostics + chunk.toString()).slice(-2048);
@@ -37,6 +38,15 @@ export async function windowsFixture(mode: string, arguments_: string[] = []) {
             value.fixturePid !== child.pid
           )
             throw new Error('Invalid fixture readiness');
+          if (
+            !('integrityLevel' in value) ||
+            (value.integrityLevel !== null &&
+              (typeof value.integrityLevel !== 'number' ||
+                !Number.isInteger(value.integrityLevel) ||
+                value.integrityLevel < 0))
+          )
+            throw new Error('Invalid fixture integrity receipt');
+          integrityLevel = value.integrityLevel;
           resolve(value.fixturePid);
         } catch (error) {
           reject(error instanceof Error ? error : new Error('Invalid fixture readiness'));
@@ -46,6 +56,7 @@ export async function windowsFixture(mode: string, arguments_: string[] = []) {
 
     return {
       fixturePid,
+      integrityLevel,
       close: async () => {
         lines.close();
         if (child.exitCode !== null || child.signalCode !== null) return;

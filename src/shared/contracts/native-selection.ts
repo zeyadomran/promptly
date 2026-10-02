@@ -13,6 +13,7 @@ const elapsedMs = z.number().nonnegative();
 const metadata = {
   source: nativeSourceSchema.nullable().optional(),
   identity: identity.optional(),
+  targetIntegrityLevel: z.int().nonnegative().nullable().optional(),
   elapsedMs: elapsedMs.optional()
 };
 
@@ -41,7 +42,8 @@ export const nativeCaptureSchema = z.union([
       identity,
       text: z.string().min(1).max(selectionUnits),
       characterCount: z.int().min(1).max(selectionUnits),
-      elapsedMs
+      elapsedMs,
+      targetIntegrityLevel: z.int().nonnegative().nullable()
     })
     .refine((result) => result.characterCount === result.text.length),
   nativeFailureSchema
@@ -62,7 +64,8 @@ export const nativeReadySchema = z.strictObject({
   selection: z.literal('UIAutomation.TextPattern'),
   warmupReady: z.boolean(),
   warmupMs: elapsedMs,
-  startupMs: elapsedMs
+  startupMs: elapsedMs,
+  integrityLevel: z.int().nonnegative().nullable()
 });
 export const nativeActivationSchema = z.union([
   z.strictObject({ ...envelope, status: z.literal('ok') }),

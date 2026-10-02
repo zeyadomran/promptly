@@ -6,5 +6,8 @@ $references = @('System.Xaml.dll', 'WPF/UIAutomationClient.dll', 'WPF/UIAutomati
   'WPF/WindowsBase.dll', 'WPF/PresentationCore.dll', 'WPF/PresentationFramework.dll') |
   ForEach-Object { '/reference:' + (Join-Path $frameworkRoot $_) }
 $sources = Get-ChildItem -LiteralPath $PSScriptRoot -Filter '*.cs' | ForEach-Object { $_.FullName }
-& (Join-Path $frameworkRoot 'csc.exe') /nologo /warnaserror+ /target:exe /platform:anycpu ('/out:' + (Join-Path $outputDirectory 'fixture.exe')) @references @sources
+$sources += Join-Path $PSScriptRoot '../../../native/windows/ProcessAccess.cs'
+& (Join-Path $frameworkRoot 'csc.exe') /nologo /warnaserror+ /target:exe /platform:anycpu /main:Fixture ('/out:' + (Join-Path $outputDirectory 'fixture.exe')) @references @sources
 if ($LASTEXITCODE -ne 0) { throw 'Owned Windows fixture compilation failed' }
+& (Join-Path $frameworkRoot 'csc.exe') /nologo /warnaserror+ /target:exe /platform:anycpu /main:AccessPolicy ('/out:' + (Join-Path $outputDirectory 'access-policy.exe')) @references @sources
+if ($LASTEXITCODE -ne 0) { throw 'Windows access policy compilation failed' }

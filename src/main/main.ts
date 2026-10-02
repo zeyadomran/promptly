@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { createQuitGuard } from './lifecycle/quit-guard';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import { createMainWindow } from './windows/create-main-window';
@@ -34,16 +35,18 @@ void app.whenReady().then(() => {
   });
 });
 
-let quitting = false;
-
-app.on('before-quit', (event) => {
-  if (windowsSelection === undefined || quitting) return;
-  event.preventDefault();
-  quitting = true;
-  void windowsSelection.dispose().then(() => {
-    app.quit();
-  });
-});
+app.on(
+  'before-quit',
+  createQuitGuard(
+    () => windowsSelection?.dispose() ?? Promise.resolve(),
+    () => {
+      app.quit();
+    },
+    () => {
+      app.exit(1);
+    }
+  )
+);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

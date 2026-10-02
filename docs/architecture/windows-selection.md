@@ -26,7 +26,7 @@ creation time; the private pipe carries a random native-issued token. Main keeps
 WeakSet of identity objects, so a copied/renderer-supplied object cannot activate
 an application. Native retains at most 32 tokens; evicted tokens fail safely.
 Capture validates HWND/PID/creation time/foreground both before and after UIA.
-Activation validates the same live identity, denies elevated processes, calls
+Activation validates the same live identity, denies higher-integrity or unreadable processes, calls
 `SetForegroundWindow`, and reports `activationDenied` when Windows refuses it.
 It never launches a path, shell command, or application inferred from a name.
 
@@ -43,7 +43,9 @@ renderer-provided path/PID as sufficient identity. That resolver is not implemen
 `request(command,payload,parse,deadlineMs)` and `dispose()`. It serializes requests,
 admits at most four requests (one active), caps each request at 4096 bytes, and
 validates every matched response with the supplied strict runtime schema.
-Requests expire from admission, including time spent queued. Capture and identity
+Requests expire from admission, including time spent queued. Dispatch drops expired
+queued requests before writing their bytes, even when main-thread work delays timer
+callbacks; an expired activation cannot execute. Capture and identity
 operations have a 100-ms deadline; initial readiness has a separate 5-second
 deadline. An active timeout/protocol error kills the isolated helper, rejects all
 admitted requests, and permits a fresh process on the next call. IDs never repeat;
@@ -54,6 +56,10 @@ after a 250-ms grace period. Its idempotent Promise resolves when exit is observ
 The production main starts readiness early and prevents `before-quit` until that
 disposal finishes, so a blocked child is not stranded when Electron exits. It does
 not install a capture IPC method.
+
+The quit guard distinguishes cleanup started from cleanup complete and prevents
+every repeated quit request while cleanup is pending. Future storage integration
+must use one shared coordinator awaiting both cleanups, including when one fails.
 
 Frames are byte-bounded at **6,356,992 UTF-8 bytes**, excluding LF. UTF-8 decoding
 is strict across fragments, malformed/partial EOF frames fail closed, and no stderr
@@ -76,6 +82,23 @@ without truncation. Missing TextPattern is `unsupported`, protected fields are
 `secureInput`, denied target/provider access is `permissionDenied`, and foreground
 races discard text as `foregroundChanged`. Provider exceptions are `providerError`;
 blocked calls are `timedOut`; crash/protocol failure is `helperUnavailable`.
+
+Access checks compare the helper's numeric `TokenIntegrityLevel` with the target's
+level. A `PROCESS_QUERY_LIMITED_INFORMATION` handle must report the recorded process
+creation time on that **same handle** before its `TOKEN_QUERY` token is inspected.
+Equal/lower known integrity is allowed to proceed to bounded UIA; higher integrity,
+missing tokens, unavailable handles and creation-time mismatch fail closed. Actual
+UIA denial is still `permissionDenied`. This adds no elevation, UIAccess or CI bypass.
+The independent native policy fixture tests equal/lower/higher/unknown decisions and
+an intentionally incorrect creation time against an actual process handle.
+
+Initial [Windows CI](https://github.com/zeyadomran/promptly/actions/runs/36971422371)
+failed three positive owned-fixture cases with `permissionDenied`: the former guard
+accepted only `TokenElevation == 0`, regardless of the helper's context. That blanket
+guard is replaced by the relative integrity rule. Capabilities and owned fixture
+receipts now retain numeric integrity levels to verify the inherited CI context;
+these receipts contain no selection text. Inherited-context success does not prove
+an actual medium-integrity app can read a high-integrity target.
 
 Before answering capabilities, the helper reads only
 `AutomationElement.RootElement.Current.ProcessId` to initialize UIA/COM without
