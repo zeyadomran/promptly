@@ -25,6 +25,8 @@ import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
 import { StorageClient } from './storage/client';
 import { LibraryMutations } from './storage/library-mutations';
 import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
+import type { TrayCoordinator } from './tray/coordinator';
+import { createDesktopTray } from './tray/desktop-tray';
 import { installDesktopMenu } from './windows/desktop-menu';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { WindowLifecycle } from './windows/window-lifecycle';
@@ -36,11 +38,13 @@ let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let library: ReturnType<typeof createLibraryServices> | undefined;
+let tray: TrayCoordinator | undefined;
 const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources([library?.capture, library?.copy, library?.transfer], () =>
+    tray?.stopCommands();
+    return closeLibraryResources([tray, library?.capture, library?.copy, library?.transfer], () =>
       closeWindowResources(lifecycle, () =>
         closeSettingsStorage(settings, storage, {
           close: () =>
@@ -98,6 +102,7 @@ if (primaryInstance)
         path.join(app.getPath('userData'), 'promptly.sqlite'),
         (change) => {
           desktop.publish(change);
+          if (change.domains.includes('snippets')) tray?.changed();
         }
       );
       const revision = await storage.ready;
@@ -106,9 +111,15 @@ if (primaryInstance)
         () => lifecycle,
         () => settings
       );
+      tray = createDesktopTray(
+        storage,
+        keyboard.shortcuts,
+        () => library?.copy,
+        () => lifecycle
+      );
       settings = new SettingsService(
         storage,
-        electronSettingsControllers(undefined, keyboard.shortcuts.controller)
+        electronSettingsControllers(undefined, keyboard.shortcuts.controller, tray.controller)
       );
       await settings.initialize();
       const dialogs = nativeTransferDialogs(
@@ -130,7 +141,9 @@ if (primaryInstance)
         {
           ...library.services,
           ...settings.services,
-          ...shortcutServices(keyboard.shortcuts),
+          ...shortcutServices(keyboard.shortcuts, () => {
+            tray?.changed();
+          }),
           ...lifecycleServices(() => lifecycle)
         },
         revision,
@@ -144,13 +157,15 @@ if (primaryInstance)
         desktop.windows,
         settings,
         {
-          trayAvailable: () => false,
+          trayAvailable: () => tray?.available === true,
+          trayControllerAvailable: () => tray !== undefined,
           shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true
         },
         (error) => {
           console.error('Unable to save window geometry:', error);
         }
       );
+      await tray.refresh();
       installDesktopMenu(openWindow, () => lifecycle);
       nativeTheme.on('updated', updateWindowBackgrounds);
       openWindow();
@@ -165,9 +180,10 @@ if (primaryInstance)
 
 app.on('before-quit', (event) => {
   keyboard?.shortcuts.stopCommands();
+  tray?.stopCommands();
   shutdown.beforeQuit(event);
 });
 
 app.on('window-all-closed', () => {
-  app.quit();
+  if (tray?.available !== true && keyboard?.shortcuts.recoveryAvailable !== true) app.quit();
 });

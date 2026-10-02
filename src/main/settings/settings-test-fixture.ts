@@ -7,9 +7,10 @@ import type { SettingsControllers } from './controllers';
 import { SettingsService } from './service';
 
 export function testSettings(
-  controllers: SettingsControllers = { available: [], unavailable: [] }
+  controllers: SettingsControllers = { available: [], unavailable: [] },
+  now?: () => Date
 ) {
-  const store = testStorage();
+  const store = testStorage(now);
   const storage = {
     call<K extends StorageOperation>(
       name: K,
@@ -25,5 +26,5 @@ export function testSettings(
     }
   };
 
-  return { store, service: new SettingsService(storage, controllers) };
+  return { store, storage, service: new SettingsService(storage, controllers) };
 }
