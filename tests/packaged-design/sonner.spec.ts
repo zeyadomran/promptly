@@ -78,14 +78,36 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     await expect(page.getByRole('button', { name: 'Show toast fixture' })).toBeFocused();
     await toast.screenshot({ path: 'docs/verification/P06/packaged-sonner-dark.png' });
     await expect(toast).not.toBeVisible({ timeout: 5000 });
-    await page.getByRole('button', { name: 'Open dialog fixture' }).click();
-    await expect(page.getByRole('dialog', { name: 'Accessible overlay fixture' })).toBeVisible();
+    const trigger = page.getByRole('button', { name: 'Open dialog fixture' });
+
+    await trigger.click();
+    const dialog = page.getByRole('dialog', { name: 'Accessible overlay fixture' });
+
+    await expect(dialog).toBeVisible();
     await expect(page.getByRole('button', { name: 'Focusable action' })).toBeFocused();
     expect(
       await page.locator('style[nonce]').evaluateAll((styles) => styles.map((style) => style.nonce))
     ).toContain(firstNonce);
+    await page.keyboard.press('Tab');
+    await expect(dialog.getByRole('button', { name: 'Close', exact: true })).toBeFocused();
+    await expect(page.getByRole('tooltip')).toHaveText('Close');
+    await page.keyboard.press('Enter');
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await trigger.click();
+    await expect(page.getByRole('button', { name: 'Focusable action' })).toBeFocused();
+    await dialog.getByRole('button', { name: 'Close', exact: true }).hover();
+    await expect(page.getByRole('tooltip')).toHaveText('Close');
+    await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
+    await expect(page.getByRole('tooltip')).toHaveCount(0);
+    await trigger.click();
+    await expect(page.getByRole('button', { name: 'Focusable action' })).toBeFocused();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('dialog')).not.toBeVisible();
+    await expect(dialog).not.toBeVisible();
+    await expect(trigger).toBeFocused();
     expect(errors).toEqual([]);
     expect(violations).toEqual([]);
     const rejected = await page.evaluate(async () => {
