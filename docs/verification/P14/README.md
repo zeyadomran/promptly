@@ -146,3 +146,33 @@ macOS result or fresh hosted performance pass is claimed.
 Future receipts use the corrected rendering-opportunity label. Older raw receipts
 retain their original unsupported upper-bound wording as historical evidence;
 their numeric samples, workload and maximum less than 50 ms gate are unchanged.
+
+## Reviewed fixture dependency integration
+
+PR #48 / issue #27's immutable `87160c0` checkpoint is integrated normally as an
+**unmerged dependency**, not a claim that its native CI failure is resolved. It brings
+reviewed owned-worker teardown, CI-only file scheduling, settled Settings setup and
+preassertion macOS receipts. Search's worker diagnostic test uses the same fixture
+client factory and teardown hook/budget, so test timeout cannot bypass worker ownership.
+There is no additional diagnostic infrastructure, workload change or gate relaxation.
+The existing UTF-16/import/cache behavior and startup tests remain intact.
+
+Full integration strict checks passed: 361 tests, one platform skip, 91 files and
+404 handwritten modules, all TypeScript targets, strict ESLint and Prettier. The
+final fixture-hook adjustment passed focused ownership/diagnostic tests (four cases)
+and strict lint/format checks. Windows packaging passed. The existing **ordinary**
+search fixture ran exactly once after packaging with both diagnostics flags off and
+passed in 11.6 seconds. No trace/profiler retry or query prewarming was performed.
+
+[Retained ordinary receipt](windows-87160-integration-ordinary.json) records query
+maximum 18 ms, rapid typing 4.7 ms, capture/edit/tag/delete refresh
+8.1/6.1/5.9/4.8 ms and complete-highlight metric 8.2 ms. Worker/index startup was
+162.9 ms; first font readiness took 25.9 ms. Corpus, hardware/runtime, cold/warm
+p50/p95/max, exact phase values and canonical profile identity are retained in JSON.
+All 703 highlight pixel checks passed; the [inspected visible screenshot](windows-87160-integration-visible.png)
+shows both panes and the wrapped selected body. These local proxy timings do not
+qualify hosted runners or verify physical presentation latency. Original failed and
+incomplete receipts remain unchanged. Both-OS qualification remains unresolved.
+
+All owned processes/profiles closed. There were no real clipboard operations, native
+input, new feature work or performance-policy changes during this integration.
