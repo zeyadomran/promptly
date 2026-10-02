@@ -1,4 +1,5 @@
 import { FoundationScreen } from './features/library';
+import { SettingsProvider } from './features/settings/SettingsProvider';
 import { DesignFixture } from './fixtures/DesignFixture';
 
 export function App() {
@@ -8,5 +9,9 @@ export function App() {
   )
     return <DesignFixture />;
 
-  return <FoundationScreen platform={window.promptly.platform} />;
+  return (
+    <SettingsProvider>
+      <FoundationScreen platform={window.promptly.platform} />
+    </SettingsProvider>
+  );
 }

@@ -6,7 +6,8 @@ import { build } from 'vite';
 export async function buildIpcFixture(
   rendererUrl?: string,
   mainEntry = 'tests/e2e/fixtures/ipc-main.ts',
-  rendererName = 'index'
+  rendererName = 'index',
+  bundledRenderer = false
 ): Promise<void> {
   const url =
     rendererUrl ?? pathToFileURL(path.resolve(`.vite/ipc-fixture/${rendererName}.html`)).href;
@@ -24,7 +25,7 @@ export async function buildIpcFixture(
   await build({
     configFile: false,
     define: {
-      MAIN_WINDOW_VITE_DEV_SERVER_URL: JSON.stringify(url),
+      MAIN_WINDOW_VITE_DEV_SERVER_URL: bundledRenderer ? 'undefined' : JSON.stringify(url),
       MAIN_WINDOW_VITE_NAME: JSON.stringify('main_window')
     },
     build: {

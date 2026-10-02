@@ -25,7 +25,7 @@ export class WindowRegistry {
     });
   }
 
-  isAuthorized(event: IpcMainInvokeEvent): boolean {
+  isAuthorized(event: Pick<IpcMainInvokeEvent, 'sender' | 'senderFrame'>): boolean {
     const trusted = this.windows.get(event.sender.id);
 
     return (
