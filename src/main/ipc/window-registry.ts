@@ -15,7 +15,7 @@ export class WindowRegistry {
 
   register(contents: WebContents, url: string): void {
     if (this.windows.has(contents.id)) throw new Error('Window is already registered.');
-    this.windows.set(contents.id, { contents, url });
+    this.windows.set(contents.id, { contents, url: new URL(url).href });
     contents.once('destroyed', () => {
       this.windows.delete(contents.id);
       this.subscribers.delete(contents.id);

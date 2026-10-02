@@ -91,7 +91,12 @@ export function createDesktopBridge(
     captureSelection: (request) => call('captureSelection', request),
     subscribeChanges(listener) {
       if (disposed) return () => undefined;
-      listeners.add(listener);
+      // Ownership belongs to this registration, even when callbacks are identical.
+      const registeredListener = (event: ChangeEvent): void => {
+        listener(event);
+      };
+
+      listeners.add(registeredListener);
       if (stopListening === undefined) {
         stopListening = transport.listen(emit);
         const current = ++generation;
@@ -117,7 +122,7 @@ export function createDesktopBridge(
       return () => {
         if (!active) return;
         active = false;
-        listeners.delete(listener);
+        listeners.delete(registeredListener);
         if (listeners.size === 0) stop();
       };
     }

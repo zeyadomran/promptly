@@ -47,7 +47,9 @@ export async function createMainWindow(windows: WindowRegistry): Promise<Browser
 
   const devUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL;
   const bundledPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
-  const url = devUrl !== undefined && devUrl !== '' ? devUrl : pathToFileURL(bundledPath).href;
+  const url = new URL(
+    devUrl !== undefined && devUrl !== '' ? devUrl : pathToFileURL(bundledPath).href
+  ).href;
 
   windows.register(window.webContents, url);
   await window.loadURL(url);

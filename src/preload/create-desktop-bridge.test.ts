@@ -20,6 +20,36 @@ function setup() {
 }
 
 describe('preload allowlist and lifecycle', () => {
+  it.each(['first', 'second'])(
+    'keeps an identical callback subscribed after %s registration cleans up',
+    async (order) => {
+      const { bridge, listen, listeners, remove, invoke } = setup();
+      const callback = vi.fn();
+      const stopFirst = bridge.subscribeChanges(callback);
+      const stopSecond = bridge.subscribeChanges(callback);
+      const stopEarlier = order === 'first' ? stopFirst : stopSecond;
+      const stopLater = order === 'first' ? stopSecond : stopFirst;
+
+      await Promise.resolve();
+      callback.mockClear();
+      expect(listen).toHaveBeenCalledTimes(1);
+      for (const listener of listeners) listener({ revision: 1, domains: ['snippets'] });
+      expect(callback).toHaveBeenCalledTimes(2);
+      callback.mockClear();
+      stopEarlier();
+      stopEarlier();
+      expect(remove).not.toHaveBeenCalled();
+      for (const listener of listeners) listener({ revision: 2, domains: ['snippets'] });
+      expect(callback).toHaveBeenCalledExactlyOnceWith({ revision: 2, domains: ['snippets'] });
+      stopLater();
+      stopLater();
+      expect(remove).toHaveBeenCalledTimes(1);
+      expect(listeners.size).toBe(0);
+      expect(invoke.mock.calls.filter(([channel]) => channel === unsubscribeChannel)).toHaveLength(
+        1
+      );
+    }
+  );
   it('exposes only fixed named operations and validates before IPC', async () => {
     const { bridge, invoke } = setup();
 

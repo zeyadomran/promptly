@@ -3,8 +3,8 @@ import { pathToFileURL } from 'node:url';
 
 import { build } from 'vite';
 
-export async function buildIpcFixture(): Promise<void> {
-  const url = pathToFileURL(path.resolve('.vite/ipc-fixture/index.html')).href;
+export async function buildIpcFixture(rendererUrl?: string): Promise<void> {
+  const url = rendererUrl ?? pathToFileURL(path.resolve('.vite/ipc-fixture/index.html')).href;
 
   await build({
     configFile: false,

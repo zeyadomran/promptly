@@ -67,10 +67,12 @@ test('real IPC rejects untrusted windows and frames, broadcasts once, and safely
         app.evaluate(() => (globalThis as unknown as HarnessGlobal).p02Harness.subscriberCount())
       )
       .toBe(1);
-    await app.evaluate(() => (globalThis as unknown as HarnessGlobal).p02Harness.openUntrusted());
-    const untrusted = app.windows().find((page) => page !== first);
+    const untrustedWindow = app.waitForEvent('window');
 
-    if (untrusted === undefined) throw new Error('Untrusted fixture missing.');
+    await app.evaluate(() => (globalThis as unknown as HarnessGlobal).p02Harness.openUntrusted());
+    const untrusted = await untrustedWindow;
+
+    await expect(untrusted.locator('pre')).toHaveText('UNAUTHORIZED');
     expect(
       await untrusted.evaluate(() => window.promptly.createSnippet({ text: 'Denied' }))
     ).toMatchObject({ ok: false, error: { code: 'UNAUTHORIZED' } });
