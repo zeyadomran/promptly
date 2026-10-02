@@ -1,2 +1,3 @@
-# Auto detect text files and perform LF normalization
-* text=auto
+# Keep text checkouts consistent with Prettier on Windows and macOS.
+# Binary assets remain binary through automatic detection.
+* text=auto eol=lf
