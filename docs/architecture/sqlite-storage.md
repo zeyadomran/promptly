@@ -84,14 +84,16 @@ resets copy statistics. Renderer create/edit cannot supply source metadata.
 
 List queries support AND tag IDs, untagged intersection, pagination, and all four
 sorts with ascending UUID ties. Recently copied places nulls last. Any nonempty
-text query returns `UNAVAILABLE`; P14 owns text/inline-filter parsing and indexing.
-The main repository query method is ready for that extension.
+text query uses P14's worker-owned folded substring snapshot and inline parser.
+See [search semantics and indexing](search.md) for Unicode, punctuation, range,
+invalidation, pagination and benchmark boundaries.
 
 SQLite retains snippets as full TEXT. String reads use `CAST(... AS BLOB)` and UTF-8
 decoding because Node 22's SQLite TEXT conversion truncates embedded NULs. Exact
 capture comparison still uses the stored full text. P14 must test SQLite
 `length`, `lower`, LIKE/FTS and tokenizer behavior for NULs, Unicode, one/two-character
-queries, and literal punctuation before claiming complete substring search.
+queries, and literal punctuation; its real-runtime evaluation tests select the
+in-memory path, which preserves the full decoded text.
 
 Delete stores main-owned opaque UUID snapshots only after commit. Undo lasts
 30 seconds, consumes a token only after a successful restoration, and is bounded

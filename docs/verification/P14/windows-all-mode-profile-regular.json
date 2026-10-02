@@ -1,0 +1,1467 @@
+{
+  "browserName": "chromium",
+  "diagnosticProfile": false,
+  "diagnosticTrace": false,
+  "profileIdentity": {
+    "actual": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-SptFwN\\trace-profile",
+    "expected": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-SptFwN\\trace-profile",
+    "actualCanonical": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-SptFwN\\trace-profile",
+    "expectedCanonical": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-SptFwN\\trace-profile"
+  },
+  "hardware": {
+    "platform": "win32",
+    "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor           ",
+    "logicalCpus": 16,
+    "memoryBytes": 33442242560
+  },
+  "runtime": [
+    "{\"indexStartupMs\":111.26639999999999,\"versions\":{\"node\":\"24.21.0\",\"acorn\":\"8.18.0\",\"ada\":\"4.0.0\",\"amaro\":\"1.1.11\",\"ares\":\"1.34.8\",\"brotli\":\"1.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.4.3\",\"merve\":\"1.2.2\",\"modules\":\"149\",\"napi\":\"10\",\"nbytes\":\"0.1.4\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.70.0\",\"nghttp3\":\"\",\"ngtcp2\":\"\",\"openssl\":\"0.0.0\",\"simdjson\":\"4.6.7\",\"simdutf\":\"7.7.0\",\"sqlite\":\"3.53.4\",\"tz\":\"2025c\",\"undici\":\"7.29.1\",\"unicode\":\"17.0\",\"uv\":\"1.52.1\",\"uvwasi\":\"0.0.23\",\"v8\":\"15.2.124.28-electron.0\",\"zlib\":\"1.3.2.1-motley\",\"zstd\":\"1.6.0\",\"electron\":\"44.5.1\",\"chrome\":\"152.0.7977.130\"},\"database\":\"search.sqlite\"}\n"
+  ],
+  "corpus": {
+    "count": 10000,
+    "characters": 7250796,
+    "databaseBytes": 15007744
+  },
+  "startup": {
+    "fontReadyMs": 0,
+    "uiFontLoaded": true,
+    "textFontLoaded": true
+  },
+  "initialGeometry": {
+    "left": 352,
+    "right": 984,
+    "top": 64,
+    "bottom": 608,
+    "viewportWidth": 1000,
+    "viewportHeight": 640,
+    "font": "\"Geist Mono\", monospace",
+    "whiteSpace": "pre-wrap",
+    "textHeight": 220,
+    "lineHeight": 20,
+    "focused": true,
+    "visibility": "visible"
+  },
+  "measurement": "native input event timestamp to second animation frame after real React result commit; conservative paint upper bound; simultaneously visible scrolling 20-row list and ONE wrapped full-text preview, actual bundled fonts; full text transmitted/searched/highlighted; no timed debounce or query prewarming",
+  "statistics": {
+    "i": {
+      "cold": 21.300000071525574,
+      "sampleCount": 11,
+      "p50": 11.600000023841858,
+      "p95": 11.900000095367432,
+      "max": 21.300000071525574
+    },
+    "re": {
+      "cold": 11.5,
+      "sampleCount": 11,
+      "p50": 7.199999928474426,
+      "p95": 9.700000047683716,
+      "max": 11.5
+    },
+    "review": {
+      "cold": 11.5,
+      "sampleCount": 11,
+      "p50": 7.599999904632568,
+      "p95": 10.5,
+      "max": 11.5
+    },
+    "e": {
+      "cold": 14.700000047683716,
+      "sampleCount": 11,
+      "p50": 10.700000047683716,
+      "p95": 14.700000047683716,
+      "max": 14.700000047683716
+    },
+    "needle-9999": {
+      "cold": 9.100000023841858,
+      "sampleCount": 11,
+      "p50": 7.5,
+      "p95": 11.200000047683716,
+      "max": 11.200000047683716
+    },
+    "no-match-zzzz": {
+      "cold": 7.399999976158142,
+      "sampleCount": 11,
+      "p50": 7.399999976158142,
+      "p95": 7.5,
+      "max": 7.5
+    },
+    "你好": {
+      "cold": 9.299999952316284,
+      "sampleCount": 11,
+      "p50": 8.199999928474426,
+      "p95": 10,
+      "max": 10
+    },
+    "(x)*": {
+      "cold": 7.200000047683716,
+      "sampleCount": 11,
+      "p50": 7.700000047683716,
+      "p95": 10.299999952316284,
+      "max": 10.299999952316284
+    },
+    "\"%b_c\"": {
+      "cold": 7.399999976158142,
+      "sampleCount": 11,
+      "p50": 7.399999976158142,
+      "p95": 10.400000095367432,
+      "max": 10.400000095367432
+    },
+    "from:terminal review": {
+      "cold": 9.899999976158142,
+      "sampleCount": 11,
+      "p50": 7.600000023841858,
+      "p95": 10.599999904632568,
+      "max": 10.599999904632568
+    }
+  },
+  "phases": {
+    "i": [
+      {
+        "bridge": 10.200000047683716,
+        "worker": 1.4201000000000477,
+        "reactCommit": 3.1999999284744263,
+        "frameWait": 7.300000071525574,
+        "validation": {
+          "worker": 1.039100000000019,
+          "workerReceiver": 2.123800000000017,
+          "desktopDispatcher": 0.7788000000000466,
+          "preload": 1.899999976158142
+        }
+      },
+      {
+        "bridge": 4.699999928474426,
+        "worker": 0.8078000000000429,
+        "reactCommit": 1.4000000953674316,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.4782999999999902,
+          "workerReceiver": 0.4112999999999829,
+          "desktopDispatcher": 0.3469000000000051,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 3.700000047683716,
+        "worker": 0.37510000000020227,
+        "reactCommit": 2.1999999284744263,
+        "frameWait": 5.800000071525574,
+        "validation": {
+          "worker": 0.38540000000011787,
+          "workerReceiver": 0.37370000000009895,
+          "desktopDispatcher": 0.3508999999999105,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 3.899999976158142,
+        "worker": 0.5303000000003522,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 5.200000047683716,
+        "validation": {
+          "worker": 0.4126000000001113,
+          "workerReceiver": 0.3686999999999898,
+          "desktopDispatcher": 0.35609999999996944,
+          "preload": 0.40000009536743164
+        }
+      },
+      {
+        "bridge": 3.600000023841858,
+        "worker": 0.4863000000000284,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 6,
+        "validation": {
+          "worker": 0.4441999999999098,
+          "workerReceiver": 0.32189999999991414,
+          "desktopDispatcher": 0.2976000000003296,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 4.100000023841858,
+        "worker": 0.6597999999999047,
+        "reactCommit": 2.200000047683716,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.5407000000000153,
+          "workerReceiver": 0.3582000000001244,
+          "desktopDispatcher": 0.2857000000003609,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 4.200000047683716,
+        "worker": 0.6905000000001564,
+        "reactCommit": 1.7999999523162842,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.4962000000000444,
+          "workerReceiver": 0.3613000000000284,
+          "desktopDispatcher": 0.2943999999997686,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 4.100000023841858,
+        "worker": 0.6643999999996595,
+        "reactCommit": 1.7999999523162842,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.4463000000005195,
+          "workerReceiver": 0.3460000000004584,
+          "desktopDispatcher": 0.36999999999989086,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 3.899999976158142,
+        "worker": 0.5901999999996406,
+        "reactCommit": 2,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.35829999999987194,
+          "workerReceiver": 0.3569999999999709,
+          "desktopDispatcher": 0.28920000000016444,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 4.299999952316284,
+        "worker": 0.5841000000000349,
+        "reactCommit": 2.600000023841858,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.4665000000004511,
+          "workerReceiver": 0.34989999999925203,
+          "desktopDispatcher": 0.4364999999997963,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 3.8000000715255737,
+        "worker": 0.6206999999994878,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 2.5,
+        "validation": {
+          "worker": 0.43949999999949796,
+          "workerReceiver": 0.3455999999996493,
+          "desktopDispatcher": 0.2996999999995751,
+          "preload": 0.3999999761581421
+        }
+      }
+    ],
+    "re": [
+      {
+        "bridge": 3.700000047683716,
+        "worker": 1.2588999999999828,
+        "reactCommit": 2.399999976158142,
+        "frameWait": 5.200000047683716,
+        "validation": {
+          "worker": 0.29009999999999536,
+          "workerReceiver": 0.32900000000000773,
+          "desktopDispatcher": 0.2844000000000051,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.799999952316284,
+        "worker": 0.7236000000000331,
+        "reactCommit": 2.100000023841858,
+        "frameWait": 4.700000047683716,
+        "validation": {
+          "worker": 0.27289999999993597,
+          "workerReceiver": 0.2923000000000684,
+          "desktopDispatcher": 0.1932000000001608,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 0.5438000000001466,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 3.700000047683716,
+        "validation": {
+          "worker": 0.3290999999999258,
+          "workerReceiver": 0.24870000000009895,
+          "desktopDispatcher": 0.15679999999997563,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.100000023841858,
+        "worker": 0.5162999999997737,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 3.3000000715255737,
+        "validation": {
+          "worker": 0.23430000000007567,
+          "workerReceiver": 0.18040000000019063,
+          "desktopDispatcher": 0.1412000000000262,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.4000000953674316,
+        "worker": 0.5028999999999542,
+        "reactCommit": 1.0999999046325684,
+        "frameWait": 2.9000000953674316,
+        "validation": {
+          "worker": 0.28840000000036525,
+          "workerReceiver": 0.19299999999975626,
+          "desktopDispatcher": 0.14179999999987558,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.8767000000002554,
+        "reactCommit": 1.2000000476837158,
+        "frameWait": 2.6999999284744263,
+        "validation": {
+          "worker": 0.37190000000009604,
+          "workerReceiver": 0.28749999999990905,
+          "desktopDispatcher": 0.1817999999998392,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.1999999284744263,
+        "worker": 0.5936000000001513,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 3,
+        "validation": {
+          "worker": 0.20999999999958163,
+          "workerReceiver": 0.17259999999987485,
+          "desktopDispatcher": 0.1560999999996966,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 2.100000023841858,
+        "worker": 0.5414000000000669,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 4.299999952316284,
+        "validation": {
+          "worker": 0.18170000000009168,
+          "workerReceiver": 0.17269999999916763,
+          "desktopDispatcher": 0.14419999999972788,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 0.7735999999995329,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.2669999999998254,
+          "workerReceiver": 0.29909999999927095,
+          "desktopDispatcher": 0.18389999999999418,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 0.7008999999998196,
+        "reactCommit": 1.0999999046325684,
+        "frameWait": 2.600000023841858,
+        "validation": {
+          "worker": 0.24359999999978754,
+          "workerReceiver": 0.22580000000016298,
+          "desktopDispatcher": 0.17400000000088767,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 0.6965000000000146,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.200000047683716,
+        "validation": {
+          "worker": 0.2708999999995285,
+          "workerReceiver": 0.21330000000034488,
+          "desktopDispatcher": 0.16589999999996508,
+          "preload": 0.2999999523162842
+        }
+      }
+    ],
+    "review": [
+      {
+        "bridge": 3.600000023841858,
+        "worker": 0.9121000000000095,
+        "reactCommit": 2.5,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.34199999999998454,
+          "workerReceiver": 0.3906000000000631,
+          "desktopDispatcher": 0.28500000000008185,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.6071999999999207,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.799999952316284,
+        "validation": {
+          "worker": 0.24880000000007385,
+          "workerReceiver": 0.255500000000211,
+          "desktopDispatcher": 0.2699000000000069,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 2.1999999284744263,
+        "worker": 0.5246999999999389,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 4.299999952316284,
+        "validation": {
+          "worker": 0.22450000000003456,
+          "workerReceiver": 0.18980000000010477,
+          "desktopDispatcher": 0.15150000000016917,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 0.5437999999999192,
+        "reactCommit": 0.8999999761581421,
+        "frameWait": 3.100000023841858,
+        "validation": {
+          "worker": 0.2302999999997155,
+          "workerReceiver": 0.24569999999994252,
+          "desktopDispatcher": 0.18100000000004002,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 0.55600000000004,
+        "reactCommit": 1,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.23680000000013024,
+          "workerReceiver": 0.22280000000000655,
+          "desktopDispatcher": 0.15859999999975116,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 0.8117999999999483,
+        "reactCommit": 1.6999999284744263,
+        "frameWait": 5.899999976158142,
+        "validation": {
+          "worker": 0.342200000000048,
+          "workerReceiver": 0.24650000000019645,
+          "desktopDispatcher": 0.18170000000009168,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.6237999999998465,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.100000023841858,
+        "validation": {
+          "worker": 0.23890000000028522,
+          "workerReceiver": 0.17420000000038272,
+          "desktopDispatcher": 0.1576999999997497,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.6663999999991574,
+        "reactCommit": 0.09999990463256836,
+        "frameWait": 3.4000000953674316,
+        "validation": {
+          "worker": 0.2737999999999374,
+          "workerReceiver": 0.18289999999979045,
+          "desktopDispatcher": 0.13920000000052823,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.6999999284744263,
+        "worker": 0.761000000000422,
+        "reactCommit": 1.4000000953674316,
+        "frameWait": 3.1999999284744263,
+        "validation": {
+          "worker": 0.30790000000069995,
+          "workerReceiver": 0.23910000000068976,
+          "desktopDispatcher": 0.18070000000079744,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 0.6578999999992448,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.5999999046325684,
+        "validation": {
+          "worker": 0.2254000000002634,
+          "workerReceiver": 0.20709999999962747,
+          "desktopDispatcher": 0.1646999999993568,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 0.731300000000374,
+        "reactCommit": 0.8999999761581421,
+        "frameWait": 6.200000047683716,
+        "validation": {
+          "worker": 0.29719999999997526,
+          "workerReceiver": 0.22670000000016444,
+          "desktopDispatcher": 0.16830000000027212,
+          "preload": 0.2999999523162842
+        }
+      }
+    ],
+    "e": [
+      {
+        "bridge": 6.699999928474426,
+        "worker": 0.6976000000000795,
+        "reactCommit": 1.8000000715255737,
+        "frameWait": 6,
+        "validation": {
+          "worker": 0.735300000000052,
+          "workerReceiver": 0.6281999999999925,
+          "desktopDispatcher": 0.8226000000000795,
+          "preload": 0.6999999284744263
+        }
+      },
+      {
+        "bridge": 6.699999928474426,
+        "worker": 0.6246000000001004,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 1.1999999284744263,
+        "validation": {
+          "worker": 0.6766999999999825,
+          "workerReceiver": 0.7726000000000113,
+          "desktopDispatcher": 0.5730000000000928,
+          "preload": 0.8000000715255737
+        }
+      },
+      {
+        "bridge": 6.200000047683716,
+        "worker": 0.5089000000000397,
+        "reactCommit": 2,
+        "frameWait": 6.399999976158142,
+        "validation": {
+          "worker": 0.5884000000000924,
+          "workerReceiver": 0.4880000000000564,
+          "desktopDispatcher": 0.5167000000001281,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 6.200000047683716,
+        "worker": 0.4851000000003296,
+        "reactCommit": 1.5999999046325684,
+        "frameWait": 2.100000023841858,
+        "validation": {
+          "worker": 0.7114999999998872,
+          "workerReceiver": 0.5553999999997359,
+          "desktopDispatcher": 0.7367000000003827,
+          "preload": 0.6999999284744263
+        }
+      },
+      {
+        "bridge": 6.200000047683716,
+        "worker": 0.6121999999995751,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 4.199999928474426,
+        "validation": {
+          "worker": 0.7053999999998268,
+          "workerReceiver": 0.4711000000002059,
+          "desktopDispatcher": 0.4297999999998865,
+          "preload": 0.7000000476837158
+        }
+      },
+      {
+        "bridge": 6.200000047683716,
+        "worker": 0.6264000000001033,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 2.100000023841858,
+        "validation": {
+          "worker": 0.801300000000083,
+          "workerReceiver": 0.5957000000003063,
+          "desktopDispatcher": 0.47420000000010987,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 6.299999952316284,
+        "worker": 0.5891000000001441,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.600000023841858,
+        "validation": {
+          "worker": 0.6500000000005457,
+          "workerReceiver": 0.4780000000000655,
+          "desktopDispatcher": 0.6671999999998661,
+          "preload": 0.7000000476837158
+        }
+      },
+      {
+        "bridge": 6.200000047683716,
+        "worker": 0.5666000000001077,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.100000023841858,
+        "validation": {
+          "worker": 0.6430000000000291,
+          "workerReceiver": 0.46489999999994325,
+          "desktopDispatcher": 0.42960000000039145,
+          "preload": 0.5999999046325684
+        }
+      },
+      {
+        "bridge": 5.799999952316284,
+        "worker": 0.6475000000000364,
+        "reactCommit": 1.600000023841858,
+        "frameWait": 2.299999952316284,
+        "validation": {
+          "worker": 0.6367000000000189,
+          "workerReceiver": 0.5096999999996115,
+          "desktopDispatcher": 0.4422999999997046,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 6.5,
+        "worker": 0.5331999999998516,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 2.700000047683716,
+        "validation": {
+          "worker": 0.6124999999992724,
+          "workerReceiver": 0.4643999999998414,
+          "desktopDispatcher": 0.6634000000003653,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 5.799999952316284,
+        "worker": 0.5844000000006417,
+        "reactCommit": 1.5,
+        "frameWait": 2.200000047683716,
+        "validation": {
+          "worker": 0.6427000000003318,
+          "workerReceiver": 0.4954999999999927,
+          "desktopDispatcher": 0.42290000000048167,
+          "preload": 0.5
+        }
+      }
+    ],
+    "needle-9999": [
+      {
+        "bridge": 4.700000047683716,
+        "worker": 2.3063000000000784,
+        "reactCommit": 0.7999999523162842,
+        "frameWait": 3.5,
+        "validation": {
+          "worker": 0.17380000000002838,
+          "workerReceiver": 0.13959999999997308,
+          "desktopDispatcher": 0.05980000000010932,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 2.2490999999999985,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 1.7999999523162842,
+        "validation": {
+          "worker": 0.1325000000001637,
+          "workerReceiver": 0.1227000000001226,
+          "desktopDispatcher": 0.052999999999883585,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.8000000715255737,
+        "worker": 1.9945999999999913,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 4.099999904632568,
+        "validation": {
+          "worker": 0.133199999999988,
+          "workerReceiver": 0.1270999999999276,
+          "desktopDispatcher": 0.044800000000122964,
+          "preload": 0
+        }
+      },
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.9390999999995984,
+        "reactCommit": 1.2000000476837158,
+        "frameWait": 1.899999976158142,
+        "validation": {
+          "worker": 0.1386000000002241,
+          "workerReceiver": 0.10159999999996217,
+          "desktopDispatcher": 0.03949999999986176,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 2.2083000000002357,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.200000047683716,
+        "validation": {
+          "worker": 0.11300000000028376,
+          "workerReceiver": 0.08680000000003929,
+          "desktopDispatcher": 0.0385999999998603,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 2.301600000000235,
+        "reactCommit": 1.5,
+        "frameWait": 2.399999976158142,
+        "validation": {
+          "worker": 0.15980000000035943,
+          "workerReceiver": 0.12019999999984066,
+          "desktopDispatcher": 0.04359999999996944,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 2.0093000000006214,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.3000000715255737,
+        "validation": {
+          "worker": 0.1289999999999054,
+          "workerReceiver": 0.09610000000066066,
+          "desktopDispatcher": 0.047599999999874854,
+          "preload": 0
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.9818999999997686,
+        "reactCommit": 0.2999999523162842,
+        "frameWait": 3.8000000715255737,
+        "validation": {
+          "worker": 0.11200000000008004,
+          "workerReceiver": 0.0945000000001528,
+          "desktopDispatcher": 0.04150000000026921,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 4.899999976158142,
+        "worker": 2.3554999999996653,
+        "reactCommit": 0.2999999523162842,
+        "frameWait": 3.700000047683716,
+        "validation": {
+          "worker": 0.18519999999989523,
+          "workerReceiver": 0.11349999999947613,
+          "desktopDispatcher": 0.04020000000036816,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.973399999999856,
+        "reactCommit": 0.2999999523162842,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.10910000000058062,
+          "workerReceiver": 0.08399999999983265,
+          "desktopDispatcher": 0.04460000000017317,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.5,
+        "worker": 2.134900000000016,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 6.200000047683716,
+        "validation": {
+          "worker": 0.1379000000006272,
+          "workerReceiver": 0.09250000000065484,
+          "desktopDispatcher": 0.04340000000047439,
+          "preload": 0.10000002384185791
+        }
+      }
+    ],
+    "no-match-zzzz": [
+      {
+        "bridge": 2.899999976158142,
+        "worker": 2.0538999999999987,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.299999952316284,
+        "validation": {
+          "worker": 0.11859999999990123,
+          "workerReceiver": 0.09630000000004202,
+          "desktopDispatcher": 0.04349999999999454,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.5999999046325684,
+        "worker": 1.9656999999999698,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.11550000000011096,
+          "workerReceiver": 0.08910000000014406,
+          "desktopDispatcher": 0.041600000000016735,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.9622999999999138,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.5,
+        "validation": {
+          "worker": 0.11239999999997963,
+          "workerReceiver": 0.10789999999997235,
+          "desktopDispatcher": 0.03949999999986176,
+          "preload": 0
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 1.8449000000000524,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.800000071525574,
+        "validation": {
+          "worker": 0.12640000000010332,
+          "workerReceiver": 0.0806999999999789,
+          "desktopDispatcher": 0.034799999999904685,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.299999952316284,
+        "worker": 1.7766999999998916,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.100000023841858,
+        "validation": {
+          "worker": 0.11630000000013752,
+          "workerReceiver": 0.07639999999992142,
+          "desktopDispatcher": 0.04329999999981737,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 2.141599999999926,
+        "reactCommit": 0,
+        "frameWait": 4.199999928474426,
+        "validation": {
+          "worker": 0.12750000000005457,
+          "workerReceiver": 0.12570000000005166,
+          "desktopDispatcher": 0.06349999999974898,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.8000000715255737,
+        "worker": 2.179500000000189,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.12770000000000437,
+          "workerReceiver": 0.08790000000044529,
+          "desktopDispatcher": 0.04569999999966967,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.6999999284744263,
+        "worker": 2.1747999999997774,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.08219999999982974,
+          "workerReceiver": 0.0658000000003085,
+          "desktopDispatcher": 0.0342000000000553,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 2.245199999999386,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.1309000000001106,
+          "workerReceiver": 0.10739999999987049,
+          "desktopDispatcher": 0.04359999999996944,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 2.1847999999999956,
+        "reactCommit": 0,
+        "frameWait": 3.299999952316284,
+        "validation": {
+          "worker": 0.13880000000062864,
+          "workerReceiver": 0.1168999999999869,
+          "desktopDispatcher": 0.06289999999989959,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 2.094100000000253,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.600000023841858,
+        "validation": {
+          "worker": 0.08390000000053988,
+          "workerReceiver": 0.0878999999995358,
+          "desktopDispatcher": 0.0466999999998734,
+          "preload": 0.10000002384185791
+        }
+      }
+    ],
+    "你好": [
+      {
+        "bridge": 3.6999999284744263,
+        "worker": 1.831199999999967,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 5.199999928474426,
+        "validation": {
+          "worker": 0.19100000000003092,
+          "workerReceiver": 0.209699999999998,
+          "desktopDispatcher": 0.14819999999997435,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 1.3022000000000844,
+        "reactCommit": 0.6999999284744263,
+        "frameWait": 3.8000000715255737,
+        "validation": {
+          "worker": 0.15780000000017935,
+          "workerReceiver": 0.20499999999992724,
+          "desktopDispatcher": 0.11760000000003856,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2,
+        "worker": 0.8329999999998563,
+        "reactCommit": 0.6000000238418579,
+        "frameWait": 5,
+        "validation": {
+          "worker": 0.16819999999984248,
+          "workerReceiver": 0.1830000000002201,
+          "desktopDispatcher": 0.12170000000014625,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 1.7000000476837158,
+        "worker": 0.949500000000171,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 6.5,
+        "validation": {
+          "worker": 0.17689999999993233,
+          "workerReceiver": 0.13049999999975626,
+          "desktopDispatcher": 0.07189999999991414,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 1.8000000715255737,
+        "worker": 1.0124000000000706,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.14530000000013388,
+          "workerReceiver": 0.10729999999966822,
+          "desktopDispatcher": 0.09380000000010114,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.3463999999999032,
+        "reactCommit": 0.2999999523162842,
+        "frameWait": 5,
+        "validation": {
+          "worker": 0.22969999999986612,
+          "workerReceiver": 0.22049999999990177,
+          "desktopDispatcher": 0.10439999999971405,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 1.6999999284744263,
+        "worker": 0.7704000000003361,
+        "reactCommit": 0.6000000238418579,
+        "frameWait": 7.5,
+        "validation": {
+          "worker": 0.14480000000003201,
+          "workerReceiver": 0.1334999999999127,
+          "desktopDispatcher": 0.08809999999994034,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 1.7000000476837158,
+        "worker": 0.842000000000553,
+        "reactCommit": 0.3999999761581421,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.14469999999982974,
+          "workerReceiver": 0.11169999999947322,
+          "desktopDispatcher": 0.07070000000021537,
+          "preload": 0
+        }
+      },
+      {
+        "bridge": 1.899999976158142,
+        "worker": 0.8468999999995503,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 6.399999976158142,
+        "validation": {
+          "worker": 0.18730000000050495,
+          "workerReceiver": 0.17190000000027794,
+          "desktopDispatcher": 0.1135999999996784,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.299999952316284,
+        "worker": 0.9848000000001775,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 6.399999976158142,
+        "validation": {
+          "worker": 0.21330000000034488,
+          "workerReceiver": 0.243399999999383,
+          "desktopDispatcher": 0.15979999999944994,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 1.899999976158142,
+        "worker": 0.8897999999999229,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.1901000000007116,
+          "workerReceiver": 0.17190000000027794,
+          "desktopDispatcher": 0.10899999999946886,
+          "preload": 0.19999992847442627
+        }
+      }
+    ],
+    "(x)*": [
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.316500000000019,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.1933999999999969,
+          "workerReceiver": 0.18840000000000146,
+          "desktopDispatcher": 0.10930000000007567,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.0999999046325684,
+        "worker": 1.7459000000001197,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 5.899999976158142,
+        "validation": {
+          "worker": 0.16020000000003165,
+          "workerReceiver": 0.14949999999998909,
+          "desktopDispatcher": 0.1010999999998603,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.8000000715255737,
+        "worker": 1.209100000000035,
+        "reactCommit": 0.5,
+        "frameWait": 6.599999904632568,
+        "validation": {
+          "worker": 0.20069999999986976,
+          "workerReceiver": 0.1647000000002663,
+          "desktopDispatcher": 0.09189999999989595,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 1.266399999999976,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.399999976158142,
+        "validation": {
+          "worker": 0.1532999999999447,
+          "workerReceiver": 0.11999999999989086,
+          "desktopDispatcher": 0.06760000000031141,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 1.473399999999856,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.20089999999981956,
+          "workerReceiver": 0.10719999999992069,
+          "desktopDispatcher": 0.06899999999995998,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 1.3546999999998661,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.799999952316284,
+        "validation": {
+          "worker": 0.1574000000000524,
+          "workerReceiver": 0.16060000000015862,
+          "desktopDispatcher": 0.08659999999963475,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 1.3424999999997453,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.1313000000000102,
+          "workerReceiver": 0.11449999999967986,
+          "desktopDispatcher": 0.11899999999968713,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.299999952316284,
+        "worker": 1.327900000000227,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.200000047683716,
+        "validation": {
+          "worker": 0.13740000000052532,
+          "workerReceiver": 0.12409999999999854,
+          "desktopDispatcher": 0.08339999999952852,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.3548000000000684,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.600000023841858,
+        "validation": {
+          "worker": 0.15610000000015134,
+          "workerReceiver": 0.15130000000044674,
+          "desktopDispatcher": 0.0907999999999447,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.5999999046325684,
+        "worker": 1.373700000000099,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5,
+        "validation": {
+          "worker": 0.15250000000014552,
+          "workerReceiver": 0.12470000000030268,
+          "desktopDispatcher": 0.10490000000027067,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.533499999999549,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.699999928474426,
+        "validation": {
+          "worker": 0.2268000000003667,
+          "workerReceiver": 0.1423000000004322,
+          "desktopDispatcher": 0.09040000000004511,
+          "preload": 0.19999992847442627
+        }
+      }
+    ],
+    "\"%b_c\"": [
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.611599999999953,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 4.099999904632568,
+        "validation": {
+          "worker": 0.2118000000000393,
+          "workerReceiver": 0.17259999999998854,
+          "desktopDispatcher": 0.10450000000003001,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 1.0419999999999163,
+        "reactCommit": 0.09999990463256836,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.15530000000012478,
+          "workerReceiver": 0.2156999999999698,
+          "desktopDispatcher": 0.1811999999999898,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.3000000715255737,
+        "worker": 1.2395000000001346,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.17970000000013897,
+          "workerReceiver": 0.14039999999977226,
+          "desktopDispatcher": 0.07340000000021973,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.299999952316284,
+        "worker": 1.3620999999998276,
+        "reactCommit": 0,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.13700000000017099,
+          "workerReceiver": 0.11299999999982901,
+          "desktopDispatcher": 0.07909999999992579,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.299999952316284,
+        "worker": 1.5158999999998741,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.099999904632568,
+        "validation": {
+          "worker": 0.12420000000020082,
+          "workerReceiver": 0.10189999999965949,
+          "desktopDispatcher": 0.06690000000025975,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 1.76299999999992,
+        "reactCommit": 1.4000000953674316,
+        "frameWait": 2.299999952316284,
+        "validation": {
+          "worker": 0.21780000000035216,
+          "workerReceiver": 0.17050000000017462,
+          "desktopDispatcher": 0.09729999999990468,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 1.25,
+        "reactCommit": 0.3999999761581421,
+        "frameWait": 7.300000071525574,
+        "validation": {
+          "worker": 0.18130000000019209,
+          "workerReceiver": 0.20089999999981956,
+          "desktopDispatcher": 0.12960000000020955,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 1.179599999999482,
+        "reactCommit": 0.5,
+        "frameWait": 7.400000095367432,
+        "validation": {
+          "worker": 0.12039999999979045,
+          "workerReceiver": 0.10459999999966385,
+          "desktopDispatcher": 0.11170000000038272,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.3485000000000582,
+        "reactCommit": 0.5,
+        "frameWait": 7.099999904632568,
+        "validation": {
+          "worker": 0.12480000000050495,
+          "workerReceiver": 0.1066000000000713,
+          "desktopDispatcher": 0.06620000000020809,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.1799000000000888,
+        "reactCommit": 0,
+        "frameWait": 4.100000023841858,
+        "validation": {
+          "worker": 0.12740000000030705,
+          "workerReceiver": 0.09599999999954889,
+          "desktopDispatcher": 0.06409999999959837,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.8000000715255737,
+        "worker": 1.6867000000002008,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 2.799999952316284,
+        "validation": {
+          "worker": 0.21119999999973516,
+          "workerReceiver": 0.15639999999984866,
+          "desktopDispatcher": 0.09040000000004511,
+          "preload": 0.20000004768371582
+        }
+      }
+    ],
+    "from:terminal review": [
+      {
+        "bridge": 4.5,
+        "worker": 1.8535000000000537,
+        "reactCommit": 2.200000047683716,
+        "frameWait": 3.0999999046325684,
+        "validation": {
+          "worker": 0.2898000000000138,
+          "workerReceiver": 0.3809999999999718,
+          "desktopDispatcher": 0.29519999999990887,
+          "preload": 0.40000009536743164
+        }
+      },
+      {
+        "bridge": 2.5999999046325684,
+        "worker": 0.9469000000001415,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 3.5,
+        "validation": {
+          "worker": 0.21690000000012333,
+          "workerReceiver": 0.19270000000005894,
+          "desktopDispatcher": 0.17629999999985557,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 1.14850000000024,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 2.8000000715255737,
+        "validation": {
+          "worker": 0.2646999999997206,
+          "workerReceiver": 0.21869999999989886,
+          "desktopDispatcher": 0.15730000000030486,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 0.8209999999999127,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 2.8000000715255737,
+        "validation": {
+          "worker": 0.228099999999813,
+          "workerReceiver": 0.20640000000003056,
+          "desktopDispatcher": 0.15089999999963766,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.7343000000000757,
+        "reactCommit": 1.600000023841858,
+        "frameWait": 3.399999976158142,
+        "validation": {
+          "worker": 0.2108999999995831,
+          "workerReceiver": 0.17390000000023065,
+          "desktopDispatcher": 0.13810000000012224,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 1.0624000000002525,
+        "reactCommit": 1.5,
+        "frameWait": 5.5,
+        "validation": {
+          "worker": 0.23669999999992797,
+          "workerReceiver": 0.24870000000009895,
+          "desktopDispatcher": 0.24379999999973734,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 0.9817999999995664,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 3,
+        "validation": {
+          "worker": 0.2714000000005399,
+          "workerReceiver": 0.16940000000067812,
+          "desktopDispatcher": 0.15359999999964202,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.9426999999996042,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3,
+        "validation": {
+          "worker": 0.274199999999837,
+          "workerReceiver": 0.2312999999994645,
+          "desktopDispatcher": 0.20190000000002328,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 0.917699999999968,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 3.700000047683716,
+        "validation": {
+          "worker": 0.19920000000001892,
+          "workerReceiver": 0.16719999999986612,
+          "desktopDispatcher": 0.19840000000021973,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 0.8474000000005617,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 2.100000023841858,
+        "validation": {
+          "worker": 0.4738999999999578,
+          "workerReceiver": 0.1669000000001688,
+          "desktopDispatcher": 0.14459999999962747,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.9000000953674316,
+        "worker": 0.9142000000001644,
+        "reactCommit": 1.5999999046325684,
+        "frameWait": 6,
+        "validation": {
+          "worker": 0.33810000000084983,
+          "workerReceiver": 0.23959999999988213,
+          "desktopDispatcher": 0.16649999999935972,
+          "preload": 0.2999999523162842
+        }
+      }
+    ]
+  },
+  "rapid": 10.799999952316284,
+  "completeHighlightPaint": 9.899999976158142,
+  "invalidations": {
+    "capture": 8.600000023841858,
+    "edit": 8.400000095367432,
+    "tag": 8.299999952316284,
+    "delete": 6.400000095367432
+  }
+}

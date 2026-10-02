@@ -22,9 +22,9 @@ Seven smoke definitions cover the implemented base app:
 | `macos-selection.spec.ts` | Ordinary owned selection and return to the saved source |
 | `startup-failure.spec.ts` | Owned unsupported database, fatal exit and observed process death; Windows only |
 
-Four Node logic cases cover import atomicity/colliding tag memberships, rejected native Settings effects, hung provider retirement and forged/retired macOS source identities. There are 11 authored cases and 15 platform executions: four shared smokes on both OSes, one native smoke per OS, one fatal-startup smoke on Windows, and four logic cases once.
+Five Node logic cases cover real-worker search/filter/sort/pagination and committed invalidation, import atomicity/colliding tag memberships, rejected native Settings effects, hung provider retirement and forged/retired macOS source identities. There are 12 authored cases and 16 platform executions: four shared smokes on both OSes, one native smoke per OS, one fatal-startup smoke on Windows, and five logic cases once.
 
-Search and shortcuts are pending integrations. Search will add one small real-worker functional query case. Shortcuts will add one actual delivery smoke and three distinct logic cases: physical modifier recognition, registration transaction rollback and suspend/shutdown ordering. The combined target is eight smokes and eight logic cases; absent features have no placeholders.
+Shortcuts are a pending integration. They will add one actual delivery smoke and three distinct logic cases: physical modifier recognition, registration transaction rollback and suspend/shutdown ordering. The combined target is eight smokes and eight logic cases; absent features have no placeholders. When the real library UI is implemented, replace overlapping worker-flow coverage instead of duplicating it.
 
 ## Owned runtime boundary
 
