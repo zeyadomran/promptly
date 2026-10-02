@@ -4,10 +4,12 @@ interface LibraryResources {
 
 /** Stop transfer/capture acceptance and drain library writes while storage is still alive. */
 export async function closeLibraryResources(
-  library: LibraryResources | undefined,
+  library: readonly (LibraryResources | undefined)[],
   remaining: () => Promise<void>
 ) {
-  const transfer = await Promise.allSettled([Promise.resolve().then(() => library?.close())]);
+  const transfer = await Promise.allSettled(
+    library.map((resource) => Promise.resolve().then(() => resource?.close()))
+  );
   const resources = await Promise.allSettled([Promise.resolve().then(remaining)]);
   const failures = [...transfer, ...resources].flatMap((result) =>
     result.status === 'rejected' ? [result.reason as unknown] : []
