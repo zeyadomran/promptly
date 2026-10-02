@@ -1,0 +1,45 @@
+export const ROW_HEIGHT = 78;
+export const ROW_STRIDE = 80;
+const OVERSCAN = 4;
+
+export interface VirtualRange {
+  height: number;
+  first: number;
+  last: number;
+  rows: readonly { index: number; start: number }[];
+}
+
+/** Fixed row geometry bounds DOM work independently of the library size. */
+export function virtualRange(
+  count: number,
+  viewportHeight: number,
+  scrollTop: number
+): VirtualRange {
+  const height = Math.max(0, count * ROW_STRIDE - (ROW_STRIDE - ROW_HEIGHT));
+  const top = Math.max(0, Math.min(scrollTop, height - viewportHeight));
+  const first = Math.max(0, Math.floor(top / ROW_STRIDE) - OVERSCAN);
+  const last =
+    viewportHeight <= 0
+      ? -1
+      : Math.min(count - 1, Math.floor((top + viewportHeight - 1) / ROW_STRIDE) + OVERSCAN);
+
+  return {
+    height,
+    first,
+    last,
+    rows: Array.from({ length: Math.max(0, last - first + 1) }, (_, offset) => {
+      const index = first + offset;
+
+      return { index, start: index * ROW_STRIDE };
+    })
+  };
+}
+
+export function selectionScroll(index: number, viewportHeight: number, scrollTop: number): number {
+  const start = index * ROW_STRIDE;
+  const end = start + ROW_HEIGHT;
+
+  if (start < scrollTop) return start;
+  if (end > scrollTop + viewportHeight) return Math.max(0, end - viewportHeight);
+  return scrollTop;
+}
