@@ -1,10 +1,25 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
-import type { DesktopBridge } from '../shared/contracts/desktop-bridge';
+import { changeChannel } from '../shared/contracts/operations';
+import { createDesktopBridge } from './create-desktop-bridge';
 
 const platform = process.platform;
-const bridge: DesktopBridge = Object.freeze({
-  platform: platform === 'darwin' || platform === 'win32' ? platform : 'unsupported'
-});
+const { bridge, dispose } = createDesktopBridge(
+  {
+    invoke: (channel, request) => ipcRenderer.invoke(channel, request),
+    listen(listener) {
+      const onChange = (_event: unknown, value: unknown): void => {
+        listener(value);
+      };
+
+      ipcRenderer.on(changeChannel, onChange);
+      return () => {
+        ipcRenderer.removeListener(changeChannel, onChange);
+      };
+    }
+  },
+  platform === 'darwin' || platform === 'win32' ? platform : 'unsupported'
+);
 
 contextBridge.exposeInMainWorld('promptly', bridge);
+window.addEventListener('unload', dispose, { once: true });

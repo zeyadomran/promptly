@@ -1,4 +1,7 @@
-/** Read-only bootstrap information. Domain commands belong to P02. */
-export interface DesktopBridge {
+import type { ChangeEvent } from './domain';
+import type { DesktopOperations } from './operations';
+
+export interface DesktopBridge extends DesktopOperations {
   readonly platform: 'darwin' | 'win32' | 'unsupported';
+  subscribeChanges(listener: (event: ChangeEvent) => void): () => void;
 }
