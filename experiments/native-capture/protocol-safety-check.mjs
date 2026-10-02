@@ -12,6 +12,7 @@ const executable = path.join(
 const helper = openHelper(executable, ['--protocol-fixtures']);
 
 try {
+  assert.equal((await helper.ready()).status, 'ok');
   const invalidPids = [
     0,
     -1,
@@ -102,6 +103,7 @@ try {
     'Synthetic checks never access native selections'
   );
   await helper.close();
+  console.log(JSON.stringify({ kind: 'native-protocol-startup', ...helper.startupReceipt }));
   console.log(
     'Native protocol safety passed: 21 malformed options rejected before OS access; 16 synthetic payload boundaries preserved or rejected explicitly.'
   );

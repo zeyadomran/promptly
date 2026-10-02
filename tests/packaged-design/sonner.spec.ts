@@ -20,6 +20,7 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
   const isolated = await launchIsolatedElectron(executablePath, env);
   const app = isolated.application;
   let firstNonce: string | undefined;
+  let firstExit: Awaited<ReturnType<typeof isolated.dispose>> | undefined;
 
   try {
     const page = await app.firstWindow();
@@ -149,11 +150,14 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     expect(violations).toHaveLength(1);
     expect(violations[0]).toContain('Content Security Policy');
   } finally {
-    await isolated.dispose();
+    firstExit = await isolated.dispose();
   }
+
+  expect(firstExit).toMatchObject({ status: 'closed', exitCode: 0 });
 
   const secondIsolation = await launchIsolatedElectron(executablePath, env);
   const secondApp = secondIsolation.application;
+  let secondExit: Awaited<ReturnType<typeof secondIsolation.dispose>> | undefined;
 
   try {
     const page = await secondApp.firstWindow();
@@ -164,6 +168,8 @@ test('packaged libraries render under CSP while unauthorized styles are rejected
     expect(nextNonce).toMatch(/^[A-Za-z0-9+/]{24}$/u);
     expect(nextNonce).not.toBe(firstNonce);
   } finally {
-    await secondIsolation.dispose();
+    secondExit = await secondIsolation.dispose();
   }
+
+  expect(secondExit).toMatchObject({ status: 'closed', exitCode: 0 });
 });
