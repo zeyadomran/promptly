@@ -22,6 +22,7 @@ test.skipIf(process.platform !== 'darwin')(
           '-warnings-as-errors',
           '-parse-as-library',
           path.resolve('tests/native/keyboard/macos/CarbonObservations.swift'),
+          path.resolve('tests/native/keyboard/macos/ProbeChord.swift'),
           path.resolve('tests/native/keyboard/macos/CarbonObservationTests.swift'),
           '-o',
           executable

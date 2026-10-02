@@ -7,9 +7,10 @@ import Foundation
         let environment = ProcessInfo.processInfo.environment
         guard environment["CI"] == "true", environment["GITHUB_ACTIONS"] == "true",
               environment["RUNNER_ENVIRONMENT"] == "github-hosted", environment["RUNNER_OS"] == "macOS",
-              CommandLine.arguments.count == 2 else { exit(2) }
+              CommandLine.arguments.count == 3,
+              let chord = ProbeChord(rawValue: CommandLine.arguments[2]) else { exit(2) }
         let directory = CommandLine.arguments[1]
-        let probe = SessionCounters()
+        let probe = SessionCounters(chord: chord)
         probe.start()
         probe.write("ready", directory: directory)
         let timer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: true) { _ in
@@ -38,12 +39,15 @@ import Foundation
 }
 
 @MainActor final class SessionCounters {
+    private let chord: ProbeChord
     private var port: CFMachPort?
     private var source: CFRunLoopSource?
     private var down = 0
     private var up = 0
     private var disabled = 0
     private let started = ProcessInfo.processInfo.systemUptime
+
+    init(chord: ProbeChord) { self.chord = chord }
 
     func start() {
         guard CGPreflightListenEventAccess(), !IsSecureEventInputEnabled() else { return }
@@ -70,7 +74,7 @@ import Foundation
             return
         }
         // Never store/log unrelated keys, text, windows, identities or raw event flags.
-        guard event.getIntegerValueField(.keyboardEventKeycode) == 103,
+        guard event.getIntegerValueField(.keyboardEventKeycode) == Int64(chord.keyCode),
               event.flags.intersection(.maskControl.union(.maskAlternate)) == [.maskControl, .maskAlternate],
               event.flags.intersection([.maskCommand, .maskShift]).isEmpty else { return }
         if type == .keyDown { down = min(1024, down + 1) }
@@ -78,7 +82,7 @@ import Foundation
     }
 
     func write(_ phase: String, directory: String) {
-        let receipt: [String: Any] = ["phase": phase,
+        let receipt: [String: Any] = ["phase": phase, "chord": chord.rawValue,
             "pid": ProcessInfo.processInfo.processIdentifier,
             "listening": CGPreflightListenEventAccess(), "tapInstalled": port != nil && source != nil,
             "enabled": port.map { CGEvent.tapIsEnabled(tap: $0) } ?? false,

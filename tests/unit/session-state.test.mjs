@@ -6,6 +6,7 @@ import { launchSessionSidecar } from '../e2e/session-sidecar';
 import { decodeSessionState, sessionObservationAvailable } from '../e2e/session-state';
 
 const receipt = {
+  chord: 'ctrl-option-f11',
   phase: 'inspect',
   pid: 42,
   listening: true,
@@ -35,6 +36,7 @@ test.each([
 });
 
 test.each([
+  { chord: 'private arbitrary chord' },
   { down: 1025 },
   { up: -1 },
   { disabled: 0.5 },

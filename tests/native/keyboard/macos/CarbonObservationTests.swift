@@ -1,5 +1,13 @@
 @main struct CarbonObservationTests {
     static func main() {
+        precondition(ProbeChord(rawValue: "ctrl-option-f11") == .f11)
+        precondition(ProbeChord(rawValue: "ctrl-option-k") == .letterK)
+        precondition(ProbeChord(rawValue: "arbitrary-key") == nil)
+        precondition(ProbeChord.f11.keyCode == 103 && ProbeChord.letterK.keyCode == 40)
+        var letter = CarbonObservations()
+        letter.recordLocal(down: true, f11Character: false, function: false,
+                           numericPad: false, kCharacter: true)
+        precondition(letter.localKCharacter && !letter.localF11Character)
         var observation = CarbonObservations()
         precondition(observation.handlerEntered == 0 && observation.carbonPressed == 0)
         observation.enterCarbon()
@@ -18,6 +26,7 @@
         observation.recordLocal(down: false, f11Character: false, function: true, numericPad: true)
         precondition(observation.localDown == 1 && observation.localUp == 1)
         precondition(observation.localF11Character && observation.localFunction && observation.localNumericPad)
+        precondition(!observation.localKCharacter)
         for _ in 0..<2000 {
             observation.enterCarbon()
             _ = observation.decodeCarbon(succeeded: true, signature: 0x50724F62, id: 1)

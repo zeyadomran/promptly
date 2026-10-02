@@ -1,6 +1,7 @@
 import { app } from 'electron';
 
 import { isHostedMacosProbe } from '../carbon-hosted';
+import { parseProbeChord } from '../probe-chord';
 import { createSessionOwner } from '../session-owner';
 
 const profile = process.env['PROMPTLY_SESSION_PROFILE'];
@@ -13,6 +14,7 @@ if (
 )
   throw new Error('Owned hosted session bootstrap required');
 app.setPath('userData', profile);
+const chord = parseProbeChord(process.env['PROMPTLY_SESSION_CHORD']);
 let controller: Awaited<ReturnType<typeof createSessionOwner>> | undefined;
 let exiting = false;
 
@@ -21,7 +23,7 @@ declare global {
 }
 
 globalThis.ownedSessionSidecar = app.whenReady().then(async () => {
-  controller = await createSessionOwner(executable);
+  controller = await createSessionOwner(executable, chord);
   return controller;
 });
 // Observe rejection immediately while retaining the same promise for the test's bounded await.

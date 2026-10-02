@@ -7,6 +7,7 @@ struct CarbonObservations {
     private(set) var localDown = 0
     private(set) var localUp = 0
     private(set) var localF11Character = false
+    private(set) var localKCharacter = false
     private(set) var localFunction = false
     private(set) var localNumericPad = false
 
@@ -25,10 +26,12 @@ struct CarbonObservations {
         return true
     }
 
-    mutating func recordLocal(down: Bool, f11Character: Bool, function: Bool, numericPad: Bool) {
+    mutating func recordLocal(down: Bool, f11Character: Bool, function: Bool, numericPad: Bool,
+                             kCharacter: Bool = false) {
         if down { localDown = min(1024, localDown + 1) }
         else { localUp = min(1024, localUp + 1) }
         localF11Character = localF11Character || f11Character
+        localKCharacter = localKCharacter || kCharacter
         localFunction = localFunction || function
         localNumericPad = localNumericPad || numericPad
     }

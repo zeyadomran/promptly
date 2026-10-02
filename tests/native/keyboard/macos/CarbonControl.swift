@@ -9,7 +9,8 @@ import CoreGraphics
               environment["GITHUB_ACTIONS"] == "true",
               environment["RUNNER_ENVIRONMENT"] == "github-hosted",
               environment["RUNNER_OS"] == "macOS",
-              CommandLine.arguments.count == 2 else { exit(2) }
+              CommandLine.arguments.count == 3,
+              let chord = ProbeChord(rawValue: CommandLine.arguments[2]) else { exit(2) }
         let directory = CommandLine.arguments[1]
         try? String(ProcessInfo.processInfo.processIdentifier).write(
             toFile: directory + "/owner.pid", atomically: true, encoding: .utf8)
@@ -18,7 +19,7 @@ import CoreGraphics
         let window = NSWindow(contentRect: NSRect(x: 180, y: 180, width: 320, height: 180),
             styleMask: [.titled, .closable], backing: .buffered, defer: false)
         window.title = "Promptly owned Carbon control"
-        let probe = CarbonCounters()
+        let probe = CarbonCounters(chord: chord)
         probe.start()
         application.finishLaunching()
         DispatchQueue.main.async {
@@ -37,6 +38,7 @@ import CoreGraphics
 }
 
 @MainActor final class CarbonCounters {
+    private let chord: ProbeChord
     private var handler: EventHandlerRef?
     private var hotKey: EventHotKeyRef?
     private var port: CFMachPort?
@@ -53,6 +55,8 @@ import CoreGraphics
     private var listening = false
     private var tapInstalled = false
     private let started = ProcessInfo.processInfo.systemUptime
+
+    init(chord: ProbeChord) { self.chord = chord }
 
     func awaitForeground(directory: String, deadline: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
@@ -74,7 +78,7 @@ import CoreGraphics
             let owner = Unmanaged<CarbonCounters>.fromOpaque(context).takeUnretainedValue()
             return MainActor.assumeIsolated { owner.receiveCarbon(event) }
         }, 1, &type, pointer, &handler)
-        registrationStatus = RegisterEventHotKey(103, UInt32(controlKey) | UInt32(optionKey),
+        registrationStatus = RegisterEventHotKey(UInt32(chord.keyCode), UInt32(controlKey) | UInt32(optionKey),
             EventHotKeyID(signature: 0x50724F62, id: 1), GetApplicationEventTarget(), 0, &hotKey)
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] event in
             MainActor.assumeIsolated {
@@ -119,13 +123,14 @@ import CoreGraphics
 
     private func receiveLocal(_ event: NSEvent) {
         // Gate the fixed chord before inspecting any characters. Never retain arbitrary text/flags.
-        guard event.keyCode == 103,
+        guard event.keyCode == chord.keyCode,
               event.modifierFlags.intersection([.control, .option]) == [.control, .option],
               event.modifierFlags.intersection([.command, .shift]).isEmpty else { return }
         observations.recordLocal(down: event.type == .keyDown,
             f11Character: event.charactersIgnoringModifiers?.utf16.elementsEqual([UInt16(NSF11FunctionKey)]) == true,
             function: event.modifierFlags.contains(.function),
-            numericPad: event.modifierFlags.contains(.numericPad))
+            numericPad: event.modifierFlags.contains(.numericPad),
+            kCharacter: chord == .letterK && event.charactersIgnoringModifiers?.utf16.elementsEqual([UInt16(0x006b)]) == true)
     }
 
     private func receiveSession(_ type: CGEventType, _ event: CGEvent) {
@@ -134,7 +139,7 @@ import CoreGraphics
             return
         }
         // Discard all unrelated events immediately; retain only this fixed chord's counts.
-        guard event.getIntegerValueField(.keyboardEventKeycode) == 103,
+        guard event.getIntegerValueField(.keyboardEventKeycode) == Int64(chord.keyCode),
               event.flags.intersection(.maskControl.union(.maskAlternate)) == [.maskControl, .maskAlternate],
               event.flags.intersection([.maskCommand, .maskShift]).isEmpty else { return }
         if type == .keyDown { sessionDown = min(1024, sessionDown + 1) }
@@ -155,7 +160,7 @@ import CoreGraphics
     }
 
     func write(_ phase: String, directory: String) {
-        let receipt: [String: Any] = ["phase": phase,
+        let receipt: [String: Any] = ["phase": phase, "chord": chord.rawValue,
             "pid": ProcessInfo.processInfo.processIdentifier,
             "foregroundMatched": NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier,
             "handlerStatus": handlerStatus, "registrationStatus": registrationStatus,
@@ -163,7 +168,8 @@ import CoreGraphics
             "carbonPressed": observations.carbonPressed, "handlerEntered": observations.handlerEntered,
             "parameterFailed": observations.parameterFailed, "idMismatch": observations.idMismatch,
             "localDown": observations.localDown, "localUp": observations.localUp,
-            "localF11Character": observations.localF11Character, "localFunction": observations.localFunction,
+            "localF11Character": observations.localF11Character, "localKCharacter": observations.localKCharacter,
+            "localFunction": observations.localFunction,
             "localNumericPad": observations.localNumericPad, "localMonitorInstalled": localMonitorInstalled,
             "localMonitorRemoved": localMonitorRemoved, "sessionDown": sessionDown, "sessionUp": sessionUp,
             "tapDisabled": tapDisabled, "elapsedMs": (ProcessInfo.processInfo.systemUptime - started) * 1000]

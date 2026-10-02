@@ -20,6 +20,7 @@ export async function buildSessionSidecar(buildDirectory: string) {
     '-warnings-as-errors',
     '-parse-as-library',
     path.resolve('tests/native/keyboard/macos/SessionSidecar.swift'),
+    path.resolve('tests/native/keyboard/macos/ProbeChord.swift'),
     '-framework',
     'Carbon',
     '-o',

@@ -5,14 +5,19 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
 import { isHostedMacosProbe } from './carbon-hosted';
+import { parseProbeChord, type ProbeChord } from './probe-chord';
 import { sessionLifetime } from './session-lifecycle';
 import { decodeSessionState } from './session-state';
 
-export async function createSessionOwner(executable: string) {
+export async function createSessionOwner(
+  executable: string,
+  chord: ProbeChord = 'ctrl-option-f11'
+) {
   if (!isHostedMacosProbe(process.platform, process.env))
     throw new Error('Session owner requires GitHub-hosted macOS');
+  const selected = parseProbeChord(chord);
   const directory = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-session-sidecar-')));
-  const child = spawn(await realpath(executable), [directory], { stdio: 'ignore' });
+  const child = spawn(await realpath(executable), [directory, selected], { stdio: 'ignore' });
   const lifetime = sessionLifetime(child);
   let closing: Promise<Awaited<ReturnType<typeof lifetime.close>>> | undefined;
 
@@ -27,7 +32,7 @@ export async function createSessionOwner(executable: string) {
           throw new Error('Session receipt exceeded byte bound');
         const receipt = decodeSessionState(await readFile(filename, 'utf8'));
 
-        if (receipt.pid !== child.pid || receipt.phase !== phase)
+        if (receipt.pid !== child.pid || receipt.phase !== phase || receipt.chord !== selected)
           throw new Error('Session receipt owner or phase mismatch');
         return receipt;
       } catch (error) {

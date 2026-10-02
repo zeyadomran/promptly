@@ -4,6 +4,7 @@ import { expect, test } from 'vitest';
 import { decodeCarbonState } from '../e2e/carbon-state';
 
 const receipt = {
+  chord: 'ctrl-option-f11',
   phase: 'final',
   pid: 42,
   foregroundMatched: true,
@@ -18,6 +19,7 @@ const receipt = {
   localDown: 1,
   localUp: 1,
   localF11Character: true,
+  localKCharacter: false,
   localFunction: true,
   localNumericPad: false,
   localMonitorInstalled: true,
@@ -33,6 +35,17 @@ test('fixed scalar Carbon counts decode independently of qualification', () => {
   expect(decodeCarbonState(JSON.stringify({ ...receipt, carbonPressed: 0 })).carbonPressed).toBe(0);
 });
 
+test('letter control retains its own label and expected-character boolean', () => {
+  const letter = {
+    ...receipt,
+    chord: 'ctrl-option-k',
+    localF11Character: false,
+    localKCharacter: true
+  };
+
+  expect(decodeCarbonState(JSON.stringify(letter))).toEqual(letter);
+});
+
 test.each([
   { handlerEntered: 0, parameterFailed: 0, idMismatch: 0 },
   { handlerEntered: 1, parameterFailed: 1, idMismatch: 0 },
@@ -44,6 +57,8 @@ test.each([
 });
 
 test.each([
+  { ...receipt, chord: 'private arbitrary key' },
+  { ...receipt, localKCharacter: 'private arbitrary text' },
   { ...receipt, carbonPressed: 1025 },
   { ...receipt, sessionUp: -1 },
   { ...receipt, pid: 0 },

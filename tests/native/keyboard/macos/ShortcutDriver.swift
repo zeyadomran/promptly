@@ -10,6 +10,12 @@ import CoreGraphics
         case "open": key = 109
         case "pin": key = 103
         case "capture": key = 111
+        case "carbon-letter-k":
+            let environment = ProcessInfo.processInfo.environment
+            guard environment["CI"] == "true", environment["GITHUB_ACTIONS"] == "true",
+                  environment["RUNNER_ENVIRONMENT"] == "github-hosted",
+                  environment["RUNNER_OS"] == "macOS" else { exit(2) }
+            key = 40
         default: exit(3)
         }
         let driver = OwnedSequence(expected: expected)

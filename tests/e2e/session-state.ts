@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
+import { probeChordSchema } from './probe-chord';
+
 const count = z.number().int().min(0).max(1024);
 const sessionStateSchema = z.strictObject({
+  chord: probeChordSchema,
   phase: z.enum(['ready', 'inspect', 'final']),
   pid: z.number().int().min(1).max(2147483647),
   listening: z.boolean(),

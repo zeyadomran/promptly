@@ -281,3 +281,39 @@ zero audit findings); full strict checks (424 passed, three native/platform skip
 regressions; package. The hosted Carbon case was explicitly discovered and skipped
 without creating a control, tap, launcher or input. The pure Swift regression and
 AppKit control compilation/runtime are unrun locally and required on fresh Mac CI.
+
+## Separate physical-letter control
+
+The reviewed `86e391` hosted run reached both a healthy passive session observer and
+owned AppKit local dispatch: down/up counts were one in each, F11 character/function
+identity was true, and Carbon handler entry remained zero. Foreground, registration,
+monitor removal and both process cleanup receipts were verified. The product still
+failed with zero callbacks and pin false. Byte-identical [86 control](macos-86-carbon-control.json)
+and [86 product](macos-86-command-final.json) receipts retain this failure; SHA-256 values
+are `997128149ff0097b5ad7d5238b50f0c2e06c82348f31d6605877a949ce62ae72`
+and `ba7b836fa9fcb20a3b3e335c841b24941969969bfc3e8ecf5cfa944dd9b8587f`.
+Zero handler entry excludes decode/ID mismatch as the failing stage in that run;
+it does not identify why Carbon recognition/dispatch did not occur.
+
+The diagnostic now runs two **separate** fixed controls: `ctrl-option-f11` and
+`ctrl-option-k` (physical ANSI_K). Each case creates fresh copied Electron/session
+owners, profiles and a LaunchServices Carbon control. Swift and TypeScript accept
+only these names; ready/final/inspect receipts must identify the requested chord.
+Both passive monitors gate the selected physical key and unchanged modifiers before
+retaining any counts or character-identity booleans. The local monitor returns the
+original NSEvent. Existing F11 character evidence remains separate from the new
+fixed-K character boolean. No arbitrary characters, identities or raw flags are logged.
+
+The original F11/product driver actions and modifier/ownership/held-key/release
+sequence remain unchanged. One additional `carbon-letter-k` action selects physical
+key 40 only under explicit GitHub-hosted macOS guards. Both cases still require a
+fresh healthy tap immediately before guarded input; unavailable observation is
+inconclusive and sends no probe input. Final counters and observed cleanup remain
+durable on failures. This adds no Fn flags, permission requests, signing changes,
+local input, production shortcut changes, or relaxed product timing/delivery gates.
+
+A positive K callback with zero F11 narrows key-class recognition. Both remaining
+zero despite matching session/local delivery leaves shared synthetic-to-Carbon
+recognition/dispatch unresolved. Neither observation qualifies product delivery or
+proves that a host is unsupported. Actual Swift compilation and both observations
+remain required on fresh hosted macOS CI; Windows local validation cannot prove them.

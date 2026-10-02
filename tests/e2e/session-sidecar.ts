@@ -7,6 +7,7 @@ import { _electron as electron, type ElectronApplication } from '@playwright/tes
 import { assertProfileIdentity } from '../profile-identity';
 import type { buildSessionSidecar } from './build-session-sidecar';
 import { isHostedMacosProbe } from './carbon-hosted';
+import { parseProbeChord, type ProbeChord } from './probe-chord';
 import { copySessionBundle } from './session-bundle';
 import { sessionDeadline } from './session-deadline';
 import { sessionLifetime } from './session-lifecycle';
@@ -16,10 +17,12 @@ import { retireSession } from './session-retirement';
 export async function launchSessionSidecar(
   built: Awaited<ReturnType<typeof buildSessionSidecar>>,
   observeCleanup: (stage: 'child' | 'launcher', status: 'verified' | 'failed') => void = () =>
-    undefined
+    undefined,
+  chord: ProbeChord = 'ctrl-option-f11'
 ) {
   if (!isHostedMacosProbe(process.platform, process.env))
     throw new Error('Session launcher requires GitHub-hosted macOS');
+  const selected = parseProbeChord(chord);
   const directory = await realpath(
     await mkdtemp(path.join(tmpdir(), 'promptly-session-launcher-'))
   );
@@ -76,6 +79,7 @@ export async function launchSessionSidecar(
       env: {
         ...environment,
         PROMPTLY_SESSION_PROFILE: await realpath(profile),
+        PROMPTLY_SESSION_CHORD: selected,
         PROMPTLY_SESSION_EXECUTABLE: await realpath(path.join(resources, 'session-sidecar'))
       },
       timeout: 10_000
@@ -89,6 +93,7 @@ export async function launchSessionSidecar(
     await assertProfileIdentity(actual, profile);
     return {
       context: {
+        chord: selected,
         parent: 'owned packaged Electron main',
         copiedBundle: true,
         differentBundlePathAndBootstrap: true,

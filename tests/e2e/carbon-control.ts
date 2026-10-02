@@ -9,18 +9,27 @@ import type { buildCarbonControl } from './build-carbon-control';
 import { isHostedMacosProbe } from './carbon-hosted';
 import { retireCarbonOwner } from './carbon-owner';
 import { decodeCarbonState } from './carbon-state';
+import { parseProbeChord, type ProbeChord, probeDriverAction } from './probe-chord';
 
 const execute = promisify(execFile);
 
-export async function launchCarbonControl(built: Awaited<ReturnType<typeof buildCarbonControl>>) {
+export async function launchCarbonControl(
+  built: Awaited<ReturnType<typeof buildCarbonControl>>,
+  chord: ProbeChord = 'ctrl-option-f11'
+) {
   if (!isHostedMacosProbe(process.platform, process.env))
     throw new Error('Carbon input probe requires hosted macOS');
   const { bundle, executable, driver } = built;
+  const selected = parseProbeChord(chord);
   const directory = await realpath(await mkdtemp(path.join(tmpdir(), 'promptly-carbon-control-')));
   const nativeExecutable = await realpath(executable);
-  const child = spawn('/usr/bin/open', ['-W', '-n', await realpath(bundle), '--args', directory], {
-    stdio: 'ignore'
-  });
+  const child = spawn(
+    '/usr/bin/open',
+    ['-W', '-n', await realpath(bundle), '--args', directory, selected],
+    {
+      stdio: 'ignore'
+    }
+  );
   let exitCode: number | null | undefined;
   let failed = false;
   const closed = new Promise<void>((resolve) => {
@@ -45,7 +54,11 @@ export async function launchCarbonControl(built: Awaited<ReturnType<typeof build
         const receipt = decodeCarbonState(await readFile(filename, 'utf8'));
         const ownerPid = await readFile(path.join(directory, 'owner.pid'), 'utf8');
 
-        if (receipt.phase !== phase || String(receipt.pid) !== ownerPid)
+        if (
+          receipt.phase !== phase ||
+          String(receipt.pid) !== ownerPid ||
+          receipt.chord !== selected
+        )
           throw new Error('Carbon receipt owner or phase mismatch');
         return receipt;
       } catch (error) {
@@ -78,7 +91,7 @@ export async function launchCarbonControl(built: Awaited<ReturnType<typeof build
     close,
     final: () => state('final'),
     send: async (ownedPid: number) => {
-      const result = await execute(driver, [String(ownedPid), 'pin'], {
+      const result = await execute(driver, [String(ownedPid), probeDriverAction(selected)], {
         timeout: 3000,
         maxBuffer: 4096
       });

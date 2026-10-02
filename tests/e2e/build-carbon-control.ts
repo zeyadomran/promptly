@@ -23,6 +23,7 @@ export async function buildCarbonControl(buildDirectory: string) {
     '-parse-as-library',
     path.resolve('tests/native/keyboard/macos/CarbonControl.swift'),
     path.resolve('tests/native/keyboard/macos/CarbonObservations.swift'),
+    path.resolve('tests/native/keyboard/macos/ProbeChord.swift'),
     '-framework',
     'AppKit',
     '-framework',
