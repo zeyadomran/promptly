@@ -177,6 +177,19 @@ Receipts survive failures and expose those cases without logging another app's P
 name, window title, identity token or text. Fixture readiness cost is separate from
 the later shortcut-to-toast requirement.
 
+Hosted Windows run 36978397436 failed at the CSP test's second owned Electron
+launch: `firstWindow` reported a closed target after 27.7 seconds, below the
+45-second test limit. It retained no process exit or startup stderr diagnostics;
+the original cause remains unknown. Two local two-launch checks passed. The
+latest check retained separate readiness times of 1008/927 ms, fresh CSP nonces
+and exit code 0 for both processes. Each owned launch now retains JSON stage,
+elapsed-time, exit/signal and output-byte counters, plus recognized fixed startup
+failure markers; it never retains raw process output. First-window readiness has
+a separate 20-second test limit. A deliberately unsupported schema in a new owned
+temporary profile exercises the closed-target startup failure and asserts exit
+code 1 with the initialization-failed marker. This proves diagnostic retention,
+not the cause or resolution of that hosted failure; fresh exact-head CI is required.
+
 Recorded complete local fixture receipt (n=1 startup, n=10 selected captures): UIA
 root warmup **55.4974 ms**, helper start-to-capabilities **86.4545 ms**, process
 launch-to-ready **235.3208 ms**. First owned selected capture native **14.3547 ms**,
