@@ -1,0 +1,126 @@
+{
+  "runUrl": "https://github.com/zeyadomran/promptly/actions/runs/36967522024",
+  "testedHead": "4181377",
+  "recordedAtUtc": "2026-10-02T05:07:50Z",
+  "fixtureVersion": 1,
+  "records": [
+    {
+      "kind": "native-feasibility",
+      "os": "win32",
+      "release": "10.0.26100",
+      "architecture": "x64",
+      "nodeVersion": "v22.23.2",
+      "nativeRuntime": "4.0.30319.42000",
+      "accessibilityAllowed": true,
+      "clipboardCounterUnchanged": true,
+      "clipboardMetadataStatus": "ok",
+      "hookInstallationStatus": "ok",
+      "altSpaceRegistrationStatus": "ok",
+      "fixtures": [
+        {
+          "fixture": "selected",
+          "status": "ok",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 774.0635000000001,
+          "warmMaxNativeMs": 4.5679,
+          "p50NativeMs": 3.2999,
+          "p95NativeMs": 774.0635000000001,
+          "p50RoundTripMs": 3.482600000000275,
+          "p95RoundTripMs": 783.1039000000001,
+          "maxRoundTripMs": 783.1039000000001,
+          "maxNativeMs": 774.0635000000001
+        },
+        {
+          "fixture": "empty",
+          "status": "empty",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 31.855500000000003,
+          "warmMaxNativeMs": 7.6024,
+          "p50NativeMs": 3.4646000000000003,
+          "p95NativeMs": 31.855500000000003,
+          "p50RoundTripMs": 3.642399999999725,
+          "p95RoundTripMs": 32.8061000000007,
+          "maxRoundTripMs": 32.8061000000007,
+          "maxNativeMs": 31.855500000000003
+        },
+        {
+          "fixture": "password",
+          "status": "secureInput",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 36.705600000000004,
+          "warmMaxNativeMs": 3.7094,
+          "p50NativeMs": 2.6390000000000002,
+          "p95NativeMs": 36.705600000000004,
+          "p50RoundTripMs": 2.816100000000006,
+          "p95RoundTripMs": 42.367699999999786,
+          "maxRoundTripMs": 42.367699999999786,
+          "maxNativeMs": 36.705600000000004
+        }
+      ],
+      "humanCoverage": false,
+      "endToEndToastLatencyMeasured": false
+    },
+    {
+      "kind": "native-feasibility",
+      "os": "darwin",
+      "release": "25.6.0",
+      "architecture": "arm64",
+      "nodeVersion": "v22.23.2",
+      "nativeRuntime": "system-frameworks",
+      "accessibilityAllowed": true,
+      "clipboardCounterUnchanged": true,
+      "clipboardMetadataStatus": "ok",
+      "hookInstallationStatus": "ok",
+      "altSpaceRegistrationStatus": "unsupported",
+      "fixtures": [
+        {
+          "fixture": "selected",
+          "status": "ok",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 6.218458333307808,
+          "warmMaxNativeMs": 0.3645833333507653,
+          "p50NativeMs": 0.2834166666616511,
+          "p95NativeMs": 6.218458333307808,
+          "p50RoundTripMs": 0.41720900000018446,
+          "p95RoundTripMs": 6.74391700000001,
+          "maxRoundTripMs": 6.74391700000001,
+          "maxNativeMs": 6.218458333307808
+        },
+        {
+          "fixture": "empty",
+          "status": "empty",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 3.4589583333399787,
+          "warmMaxNativeMs": 0.45595833333322844,
+          "p50NativeMs": 0.41587499998740896,
+          "p95NativeMs": 3.4589583333399787,
+          "p50RoundTripMs": 0.5919170000001941,
+          "p95RoundTripMs": 3.826915999999983,
+          "maxRoundTripMs": 3.826915999999983,
+          "maxNativeMs": 3.4589583333399787
+        },
+        {
+          "fixture": "password",
+          "status": "secureInput",
+          "samples": 10,
+          "selectionVerified": true,
+          "coldNativeMs": 0.44991666666760466,
+          "warmMaxNativeMs": 0.3720416666510573,
+          "p50NativeMs": 0.2267916666767178,
+          "p95NativeMs": 0.44991666666760466,
+          "p50RoundTripMs": 0.47937499999989086,
+          "p95RoundTripMs": 0.9896250000001601,
+          "maxRoundTripMs": 0.9896250000001601,
+          "maxNativeMs": 0.44991666666760466
+        }
+      ],
+      "humanCoverage": false,
+      "endToEndToastLatencyMeasured": false
+    }
+  ]
+}
