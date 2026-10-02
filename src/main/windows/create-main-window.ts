@@ -1,8 +1,11 @@
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { BrowserWindow, session } from 'electron';
 
-export async function createMainWindow(): Promise<BrowserWindow> {
+import type { WindowRegistry } from '../ipc/window-registry';
+
+export async function createMainWindow(windows: WindowRegistry): Promise<BrowserWindow> {
   const isolatedSession = session.fromPartition('promptly');
 
   isolatedSession.setPermissionRequestHandler((_contents, _permission, callback) => {
@@ -42,11 +45,12 @@ export async function createMainWindow(): Promise<BrowserWindow> {
     window.show();
   });
 
-  if (MAIN_WINDOW_VITE_DEV_SERVER_URL !== undefined && MAIN_WINDOW_VITE_DEV_SERVER_URL !== '') {
-    await window.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
-  } else {
-    await window.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
-  }
+  const devUrl = MAIN_WINDOW_VITE_DEV_SERVER_URL;
+  const bundledPath = path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`);
+  const url = devUrl !== undefined && devUrl !== '' ? devUrl : pathToFileURL(bundledPath).href;
+
+  windows.register(window.webContents, url);
+  await window.loadURL(url);
 
   return window;
 }
