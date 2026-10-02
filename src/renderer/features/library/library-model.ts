@@ -126,6 +126,8 @@ export class LibraryModel {
 
   moveSelection(delta: number): Promise<void> {
     if (this.state.total === 0) return Promise.resolve();
+    this.state.revealVersion += 1;
+
     const missing = this.cursor.move(this.state, delta);
 
     this.publish();

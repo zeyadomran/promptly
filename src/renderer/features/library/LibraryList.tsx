@@ -7,7 +7,11 @@ import { useVirtualStyles } from './use-virtual-styles';
 
 export function LibraryList() {
   const { state, model } = useLibrary();
-  const { scroller, range } = useLibraryRange(state.total, state.selectedIndex);
+  const { scroller, range } = useLibraryRange(
+    state.total,
+    state.selectedIndex,
+    state.revealVersion
+  );
   const { rows, first, last } = range;
   const scope = useVirtualStyles(range.height, rows);
 

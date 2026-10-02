@@ -9,6 +9,7 @@ export interface LibraryState {
   tags: TagSummary[];
   selectedId: string | null;
   selectedIndex: number;
+  revealVersion: number;
   loading: boolean;
   error: DesktopError | undefined;
   cache: PageCache;
@@ -23,6 +24,7 @@ export function initialLibraryState(): LibraryState {
     tags: [],
     selectedId: null,
     selectedIndex: -1,
+    revealVersion: 0,
     loading: true,
     error: undefined,
     cache: new PageCache(),

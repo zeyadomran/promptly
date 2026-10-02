@@ -8,6 +8,13 @@ No approving review is required, matching the solo-maintainer setup in
 must be resolved, and `Workflow validation` must pass against an up-to-date branch.
 Force pushes and branch deletion are blocked.
 
+`Workflow validation` is the only check currently required by branch protection.
+Before merging, the maintainer also verifies every applicable check passes at the
+PR's current head: `Functional checks (windows-latest)`,
+`Functional checks (macos-latest)`, `Analyze (actions)`, and
+`Analyze (javascript-typescript)`. Branch protection does not enforce these
+additional checks.
+
 Only squash merges are enabled. Use Conventional Commits for every commit and PR
 title, such as `feat: add prompt editor`, `fix: preserve draft content`, or
 `ci: update GitHub Actions`. The PR title becomes the squash commit message.
@@ -26,24 +33,24 @@ updates, and uses the Conventional Commit prefix `ci`.
 
 The Electron/React foundation uses npm with a committed lockfile. Dependabot checks
 npm packages weekly and groups related Forge, React, and Tailwind updates.
-Foundation smoke jobs clean-install, check, package, and launch the app on Windows
-and macOS. These are the P01 launch checks; P25 owns the broader application CI,
-native-module matrix, and retained build artifacts. Require new CI checks in branch
-protection only after verifying they run successfully.
+The `Functional checks` jobs clean-install, run strict TypeScript, zero-warning
+ESLint, architecture and formatting checks, and package the app on Windows and
+macOS. Shared functional service tests run once, on Windows. CI has no automated
+GUI launch or native E2E suite; packaging does not qualify OS capture, permissions,
+input delivery or activation. Packaged applications require the native manual
+release checks on both supported OSes in [the test policy](../docs/testing.md).
+Require new CI checks in branch protection only after verifying they run
+successfully.
 
 ## CodeQL availability
 
-The CodeQL workflow is prepared for push, pull request, manual, and weekly runs.
-It targets GitHub Actions and JavaScript/TypeScript.
+This repository is public, so the advanced CodeQL workflow runs for pushes and
+pull requests to `main`, manual dispatches, and weekly scans. It analyzes GitHub
+Actions and JavaScript/TypeScript with `build-mode: none`. Both language checks
+[passed on main at `bbc783b`](https://github.com/zeyadomran/promptly/actions/runs/37031226530).
 
-**CodeQL analysis is currently skipped.** GitHub rejected default setup with HTTP
-403 for this personal private repository. Private CodeQL scanning requires an
-eligible organization with GitHub Code Security access; see
-[GitHub's eligibility documentation](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/private-repository-enablement).
-
-The workflow activates automatically if the repository becomes public. If the
-repository instead gains eligible GitHub Code Security access, set the repository
-Actions variable `CODEQL_ENABLED` to `true`. That variable enables the workflow;
-it does not grant a license. Use this advanced workflow rather than also enabling
-CodeQL default setup. After an actual scan passes, consider requiring its check
-in branch protection.
+The workflow retains an eligibility gate for private repositories: setting the
+Actions variable `CODEQL_ENABLED` to `true` enables analysis only after eligible
+GitHub Code Security access is available. The variable does not grant a license;
+see [GitHub's eligibility documentation](https://docs.github.com/en/code-security/reference/code-scanning/troubleshoot-analysis-errors/private-repository-enablement).
+Use this advanced workflow rather than also enabling CodeQL default setup.
