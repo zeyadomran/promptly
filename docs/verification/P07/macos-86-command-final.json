@@ -1,0 +1,53 @@
+{
+  "native": {
+    "callbacks": {
+      "open": 0,
+      "pin": 0,
+      "capture": 0
+    },
+    "phases": {
+      "requested": 0,
+      "completed": 0,
+      "failed": 0
+    },
+    "last": null,
+    "windows": [
+      {
+        "pinned": false,
+        "visible": true
+      },
+      {
+        "pinned": false,
+        "visible": true
+      }
+    ],
+    "openRegistered": true,
+    "pinRegistered": true,
+    "suspended": false
+  },
+  "durable": {
+    "ok": true,
+    "revision": 1,
+    "pinned": false
+  },
+  "status": {
+    "ok": true,
+    "value": {
+      "capture": "registered",
+      "open": "registered",
+      "pin": "registered",
+      "hook": "installed",
+      "accessibility": true,
+      "inputMonitoring": true,
+      "capturePaused": true,
+      "recording": false,
+      "quarantined": false,
+      "captureHandlerAvailable": false,
+      "labels": {
+        "capture": "⌥⌃F12",
+        "open": "⌥⌃F10",
+        "pin": "⌥⌃F11"
+      }
+    }
+  }
+}

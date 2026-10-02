@@ -74,11 +74,7 @@ paths, HWNDs or native identity tokens through preload. Future Open source app
 IPC must accept an authoritative snippet ID; live native activation does not
 establish safe activation from persisted basename provenance after restart.
 
-`npm run check` covers contract rejection, reply validation, sanitization, preload
-allowlisting/subscription lifetime, stale search handling, and literal snippet
-rendering. `npm run package && npm run test:smoke` checks the packaged shell and
-builds a separate test-only Electron fixture using the production window factory,
-IPC installer, preload, query client, and snippet renderer. It verifies two live
-windows, broadcasts without duplicate listeners, reload/close/unsubscribe cleanup,
-unregistered-window and child-frame rejection, and script-shaped text. Fixture
-services and the test controller are never installed by the production entrypoint.
+The current [test policy](testing.md) uses functional service tests and static/package
+checks. The former Electron IPC fixture and automated GUI suite are retired. Runtime
+sandboxing, sender rejection, CSP, literal rendering and subscription cleanup require
+manual packaged-app release verification; their production protections remain.

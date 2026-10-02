@@ -47,8 +47,7 @@ src/
 native/
   macos/  windows/        # only if selected by native adapter decision
 tests/
-  integration/  e2e/  visual/  accessibility/
-benchmarks/
+  fixtures/              # external provider fixtures for functional service tests
 docs/
 ```
 
@@ -61,7 +60,7 @@ Start with feature-local state and hooks; add a shared store only for demonstrat
 3. Screens compose components and hooks. SQL, native calls, normalization, IPC schemas, and clipboard policies live in focused modules.
 4. Share behavior across Compact and Regular; use separate row/layout components where their presentation differs. Share the tag picker, shortcut recorder, settings fields, metadata, copy service, and highlight renderer.
 5. Prefer actual shadcn primitives and semantic tokens; do not recreate their accessibility behavior with styled divs. Use the Radix/Sonner combination for the specified toast behavior. Preserve the reference's New York/zinc appearance when choosing or adapting the current CLI style.
-6. Tests sit alongside small units or in focused integration suites. Test stateful contracts and failure cases; avoid tests that simply mirror JSX or implementation details.
+6. The current testing strategy supersedes the original suite plan: follow [docs/testing.md](testing.md). Tests exercise public services alongside their source; GUI and native OS behavior use manual release checks.
 
 ## Data and command flow
 

@@ -156,7 +156,9 @@ export class SettingsService {
         .map((controller) => Promise.resolve().then(() => controller.apply(previous.settings)))
     );
 
-    if (outcomes.some((outcome) => outcome.status === 'rejected'))
+    if (outcomes.some((outcome) => outcome.status === 'rejected')) {
+      for (const controller of applied) controller.quarantine?.();
       throw new Error('Rollback failed');
+    }
   }
 }

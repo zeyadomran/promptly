@@ -1,0 +1,44 @@
+{
+  "settings": {
+    "ok": true,
+    "value": {
+      "revision": 3,
+      "settings": {
+        "launchAtLogin": false,
+        "showInTray": true,
+        "showDockIcon": true,
+        "hideAfterCopy": "automatic",
+        "defaultSizeMode": "compact",
+        "saveShortcut": {
+          "kind": "combination",
+          "accelerator": "Control+Alt+F12"
+        },
+        "openShortcut": "Control+Alt+F10",
+        "pinShortcut": "Control+Alt+F11",
+        "doubleTapWindowMs": 300,
+        "showConfirmationToast": true,
+        "normalizeWhitespace": true,
+        "theme": "system",
+        "alwaysOnTop": true,
+        "rememberedBounds": {
+          "compact": {
+            "x": 292,
+            "y": 40,
+            "width": 440,
+            "height": 640
+          },
+          "regular": null
+        },
+        "onboardingComplete": false
+      }
+    }
+  },
+  "window": {
+    "ok": true,
+    "value": {
+      "mode": "compact",
+      "kind": "main",
+      "visible": true
+    }
+  }
+}

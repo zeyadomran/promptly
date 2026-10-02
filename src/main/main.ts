@@ -3,13 +3,17 @@ import path from 'node:path';
 import { app, ipcMain, Menu, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
-import { closeDesktopServices } from './lifecycle/close-desktop-services';
 import { closeLibraryResources } from './lifecycle/close-library-resources';
+import { closeNativeResources } from './lifecycle/close-native-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import { createMacosSelection, type MacosSelection } from './platform/macos/macos-selection';
 import { macosPermissionServices } from './platform/macos/permission-services';
+import {
+  observeSelectionStartup,
+  selectionLaunchOptions
+} from './platform/native/selection-options';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
 import {
@@ -17,6 +21,8 @@ import {
   updateWindowBackgrounds
 } from './settings/electron-controllers';
 import { SettingsService } from './settings/service';
+import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
+import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
 import { StorageClient } from './storage/client';
 import { storageDesktopServices } from './storage/desktop-services';
 import { LibraryMutations } from './storage/library-mutations';
@@ -30,22 +36,26 @@ let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
+let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let macosSelection: MacosSelection | undefined;
 let transfer: StorageTransfer | undefined;
 const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
-  cleanup: () =>
-    closeLibraryResources(transfer, () =>
+  cleanup: () => {
+    keyboard?.shortcuts.stopCommands();
+    return closeLibraryResources(transfer, () =>
       closeWindowResources(lifecycle, () =>
         closeSettingsStorage(settings, storage, {
           close: () =>
-            closeDesktopServices([
-              () => windowsSelection?.dispose() ?? Promise.resolve(),
-              () => macosSelection?.dispose() ?? Promise.resolve()
+            closeNativeResources([
+              keyboard,
+              { close: () => windowsSelection?.dispose() ?? Promise.resolve() },
+              { close: () => macosSelection?.dispose() ?? Promise.resolve() }
             ])
         })
       )
-    ),
+    );
+  },
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
   },
@@ -78,25 +88,13 @@ if (primaryInstance)
     .whenReady()
     .then(async () => {
       if (process.platform === 'darwin') {
-        macosSelection = createMacosSelection({
-          resourcesPath: process.resourcesPath,
-          packaged: app.isPackaged,
-          applicationPath: app.getAppPath()
-        });
-        void macosSelection.ready().catch(() => {
-          console.warn('macOS selection helper unavailable');
-        });
+        macosSelection = createMacosSelection(selectionLaunchOptions());
+        observeSelectionStartup(macosSelection.ready(), 'macOS');
       }
 
       if (process.platform === 'win32') {
-        windowsSelection = createWindowsSelection({
-          resourcesPath: process.resourcesPath,
-          packaged: app.isPackaged,
-          applicationPath: app.getAppPath()
-        });
-        void windowsSelection.ready().catch(() => {
-          console.warn('Windows selection helper unavailable');
-        });
+        windowsSelection = createWindowsSelection(selectionLaunchOptions());
+        observeSelectionStartup(windowsSelection.ready(), 'Windows');
       }
 
       storage = new StorageClient(
@@ -108,11 +106,19 @@ if (primaryInstance)
       );
       const revision = await storage.ready;
 
+      keyboard = createDesktopShortcuts(
+        () => lifecycle,
+        () => settings
+      );
       settings = new SettingsService(
         storage,
-        electronSettingsControllers(() => {
-          lifecycle?.recoverVisibility();
-        })
+        electronSettingsControllers(
+          () => {
+            lifecycle?.recoverVisibility();
+          },
+          undefined,
+          keyboard.shortcuts.controller
+        )
       );
       await settings.initialize();
       transfer = new StorageTransfer(
@@ -129,6 +135,7 @@ if (primaryInstance)
           ...storageDesktopServices(storage, mutations),
           ...transfer.services,
           ...settings.services,
+          ...shortcutServices(keyboard.shortcuts),
           ...macosPermissionServices(macosSelection),
           ...lifecycleServices(() => lifecycle)
         },
@@ -136,14 +143,15 @@ if (primaryInstance)
         () => {
           if (settings === undefined) throw new Error('Preferences unavailable.');
           return settings.current;
-        }
+        },
+        recorderServices(keyboard.shortcuts)
       );
       lifecycle = new WindowLifecycle(
         desktop.windows,
         settings,
         {
           trayAvailable: () => false,
-          shortcutAvailable: () => false,
+          shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true,
           dockAvailable: () => process.platform === 'darwin' && app.dock?.isVisible() === true
         },
         (error) => {
@@ -181,7 +189,10 @@ if (primaryInstance)
       shutdown.fatal();
     });
 
-app.on('before-quit', shutdown.beforeQuit);
+app.on('before-quit', (event) => {
+  keyboard?.shortcuts.stopCommands();
+  shutdown.beforeQuit(event);
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

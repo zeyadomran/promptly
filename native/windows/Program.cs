@@ -5,7 +5,7 @@ using System.Text;
 
 internal static class Program
 {
-    [STAThread]
+    [MTAThread]
     private static void Main()
     {
         Console.OutputEncoding = new UTF8Encoding(false);

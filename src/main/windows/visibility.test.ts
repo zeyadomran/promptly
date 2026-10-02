@@ -1,28 +1,33 @@
-import { expect, it, vi } from 'vitest';
+import { expect, it } from 'vitest';
 
-import { canRecover, concealWindow, type WindowRecovery } from './visibility';
+import { concealWindow } from './visibility';
 
-const unavailable: WindowRecovery = {
-  trayAvailable: () => false,
-  shortcutAvailable: () => false,
-  dockAvailable: () => false
-};
+it('keeps a reachable window when its external recovery route disappears', () => {
+  let visible = true;
+  let shortcutAvailable = false;
+  const window = {
+    hide: () => {
+      visible = false;
+    },
+    minimize: () => {
+      visible = false;
+    },
+    show: () => {
+      visible = true;
+    }
+  };
+  const recovery = {
+    trayAvailable: () => false,
+    dockAvailable: () => false,
+    shortcutAvailable: () => shortcutAvailable
+  };
 
-it('keeps a reachable window while requested tray/shortcut settings have no native controller', () => {
-  const window = { hide: vi.fn(), minimize: vi.fn(), show: vi.fn() };
-
-  expect(canRecover(unavailable)).toBe(false);
-  concealWindow(window, unavailable, 'win32');
-  expect(window.minimize).toHaveBeenCalledOnce();
-  expect(window.hide).not.toHaveBeenCalled();
-  concealWindow(window, unavailable, 'darwin');
-  expect(window.show).toHaveBeenCalledOnce();
-});
-
-it('hides only with an available native recovery registration', () => {
-  const window = { hide: vi.fn(), minimize: vi.fn(), show: vi.fn() };
-
-  concealWindow(window, { ...unavailable, trayAvailable: () => true }, 'win32');
-  expect(window.hide).toHaveBeenCalledOnce();
-  expect(window.minimize).not.toHaveBeenCalled();
+  concealWindow(window, recovery, 'darwin');
+  expect(visible).toBe(true);
+  shortcutAvailable = true;
+  concealWindow(window, recovery, 'darwin');
+  expect(visible).toBe(false);
+  shortcutAvailable = false;
+  concealWindow(window, recovery, 'darwin');
+  expect(visible).toBe(true);
 });

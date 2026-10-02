@@ -1,10 +1,15 @@
 # P14 search evidence
 
-Run `npm ci`, `npm run check`, `npm run package`, then `npm run test:smoke`.
-The search test also runs alone after packaging. CI executes Windows/macOS and
-uploads JSON and visible common-query screenshots even on failure. The strict
-**maximum <50 ms** gate is unchanged. Both OS results at the final integrated
-head remain required; local timing alone does not establish that.
+This directory preserves historical evidence, including failed hosted latency
+receipts. The user-approved minimal test cleanup retired the search benchmark,
+Chromium tracing, pixel-check infrastructure and production timing hooks. The
+commands and gate descriptions below describe those historical runs, not the
+current test suite. No raw receipt was changed and no latency fix is claimed.
+
+Current search verification is one deterministic real-worker functional case in
+`src/main/search/search-library.test.ts`, covering literal/AND filters, sorted
+pagination, exact Unicode/NUL text and a committed edit invalidation. The original
+**maximum <50 ms** requirement remains unqualified on the hosted runners.
 
 The [performance diagnosis](diagnosis.md) preserves the `2455ea9` visible-
 preview Windows CI failure (85.4 ms), passing Mac receipt (49.2 ms), profiler
@@ -69,9 +74,11 @@ including leading/later terms and the late highlight after scrolling. There is
 no occurrence cap: adjacent/overlapping matches form a complete union.
 
 Timing begins at the native input event timestamp and ends at the second
-animation frame after the corresponding React result commits. Chromium paints
-between those callbacks: this is a conservative presentation upper bound,
-not physical display scanout. Assertions bind query/revision to the result;
+animation-frame callback after the corresponding React result commits. This is a
+rendering-opportunity proxy, not verified physical presentation or an established
+presentation upper bound. Separate screenshot assertions prove visible text and
+highlight rendering; they do not establish the timestamp of that presentation.
+Assertions bind query/revision to the result;
 no-match and mutation measurements cannot reuse prior DOM. Worker, bridge,
 React commit and frame-wait phases are retained separately.
 
@@ -140,3 +147,37 @@ platform/hosted skips and the retained seeder failure, followed by the corrected
 search case; separate diagnostic search; two design cases; two-process production
 CSP. All owned processes closed and the normal package was restored. No local
 macOS result or fresh hosted performance pass is claimed.
+
+Future receipts use the corrected rendering-opportunity label. Older raw receipts
+retain their original unsupported upper-bound wording as historical evidence;
+their numeric samples, workload and maximum less than 50 ms gate are unchanged.
+
+## Reviewed fixture dependency integration
+
+PR #48 / issue #27's immutable `87160c0` checkpoint is integrated normally as an
+**unmerged dependency**, not a claim that its native CI failure is resolved. It brings
+reviewed owned-worker teardown, CI-only file scheduling, settled Settings setup and
+preassertion macOS receipts. Search's worker diagnostic test uses the same fixture
+client factory and teardown hook/budget, so test timeout cannot bypass worker ownership.
+There is no additional diagnostic infrastructure, workload change or gate relaxation.
+The existing UTF-16/import/cache behavior and startup tests remain intact.
+
+Full integration strict checks passed: 361 tests, one platform skip, 91 files and
+404 handwritten modules, all TypeScript targets, strict ESLint and Prettier. The
+final fixture-hook adjustment passed focused ownership/diagnostic tests (four cases)
+and strict lint/format checks. Windows packaging passed. The existing **ordinary**
+search fixture ran exactly once after packaging with both diagnostics flags off and
+passed in 11.6 seconds. No trace/profiler retry or query prewarming was performed.
+
+[Retained ordinary receipt](windows-87160-integration-ordinary.json) records query
+maximum 18 ms, rapid typing 4.7 ms, capture/edit/tag/delete refresh
+8.1/6.1/5.9/4.8 ms and complete-highlight metric 8.2 ms. Worker/index startup was
+162.9 ms; first font readiness took 25.9 ms. Corpus, hardware/runtime, cold/warm
+p50/p95/max, exact phase values and canonical profile identity are retained in JSON.
+All 703 highlight pixel checks passed; the [inspected visible screenshot](windows-87160-integration-visible.png)
+shows both panes and the wrapped selected body. These local proxy timings do not
+qualify hosted runners or verify physical presentation latency. Original failed and
+incomplete receipts remain unchanged. Both-OS qualification remains unresolved.
+
+All owned processes/profiles closed. There were no real clipboard operations, native
+input, new feature work or performance-policy changes during this integration.

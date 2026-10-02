@@ -3,6 +3,5 @@ node_modules/
 out/
 coverage/
 test-results/
-playwright-report/
 *.tsbuildinfo
 .DS_Store
