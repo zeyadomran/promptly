@@ -1,0 +1,1754 @@
+{
+  "browserName": "chromium",
+  "diagnosticProfile": false,
+  "diagnosticTrace": true,
+  "profileIdentity": {
+    "actual": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-GGKXQM\\trace-profile",
+    "expected": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-GGKXQM\\trace-profile",
+    "actualCanonical": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-GGKXQM\\trace-profile",
+    "expectedCanonical": "C:\\Users\\ziomr\\AppData\\Local\\Temp\\promptly-search-GGKXQM\\trace-profile"
+  },
+  "hardware": {
+    "platform": "win32",
+    "cpu": "AMD Ryzen 7 7800X3D 8-Core Processor           ",
+    "logicalCpus": 16,
+    "memoryBytes": 33442242560
+  },
+  "runtime": [
+    "{\"searchTrace\":\"recording-started\",\"epochMs\":1790933567596.2258}\n",
+    "{\"indexStartupMs\":114.1105,\"versions\":{\"node\":\"24.21.0\",\"acorn\":\"8.18.0\",\"ada\":\"4.0.0\",\"amaro\":\"1.1.11\",\"ares\":\"1.34.8\",\"brotli\":\"1.2.0\",\"cldr\":\"48.0\",\"icu\":\"78.2\",\"llhttp\":\"9.4.3\",\"merve\":\"1.2.2\",\"modules\":\"149\",\"napi\":\"10\",\"nbytes\":\"0.1.4\",\"ncrypto\":\"0.0.1\",\"nghttp2\":\"1.70.0\",\"nghttp3\":\"\",\"ngtcp2\":\"\",\"openssl\":\"0.0.0\",\"simdjson\":\"4.6.7\",\"simdutf\":\"7.7.0\",\"sqlite\":\"3.53.4\",\"tz\":\"2025c\",\"undici\":\"7.29.1\",\"unicode\":\"17.0\",\"uv\":\"1.52.1\",\"uvwasi\":\"0.0.23\",\"v8\":\"15.2.124.28-electron.0\",\"zlib\":\"1.3.2.1-motley\",\"zstd\":\"1.6.0\",\"electron\":\"44.5.1\",\"chrome\":\"152.0.7977.130\"},\"database\":\"search.sqlite\"}\n",
+    "{\"searchTrace\":\"window-created\",\"epochMs\":1790933567734.976,\"visible\":false,\"focused\":false,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"did-start-loading\",\"epochMs\":1790933567740.3953,\"visible\":false,\"focused\":false,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933567791.732,\"channel\":\"promptly:unsubscribe\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933567792.061,\"channel\":\"promptly:unsubscribe\"}\n",
+    "{\"searchTrace\":\"dom-ready\",\"epochMs\":1790933567824.7544,\"visible\":false,\"focused\":false,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"did-finish-load\",\"epochMs\":1790933567825.0127,\"visible\":false,\"focused\":false,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"ready-to-show\",\"epochMs\":1790933567825.3381,\"visible\":false,\"focused\":false,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"show\",\"epochMs\":1790933567842.2708,\"visible\":true,\"focused\":true,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933567843.7537,\"channel\":\"promptly:subscribe\"}\n{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933567843.8938,\"channel\":\"promptly:subscribe\"}\n{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933567843.9897,\"channel\":\"promptly:searchSnippets\"}\n{\"searchTrace\":\"focus\",\"epochMs\":1790933567844.7346,\"visible\":true,\"focused\":true,\"minimized\":false,\"bounds\":{\"x\":780,\"y\":376,\"width\":1000,\"height\":640},\"backgroundThrottling\":true}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933567850.6375,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933567852.762,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933567856.2195,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933567963.984,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933567974.2437,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568046.6475,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568049.6196,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568117.6633,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568120.1116,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568178.3027,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568182.9128,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568275.1375,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568278.016,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568348.589,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568351.6968,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568394.9539,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568398.1697,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568455.415,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568457.7683,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568514.7205,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568516.926,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568574.124,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568576.5657,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568637.8855,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568640.5115,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568703.1848,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568705.2874,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568763.1672,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568765.3093,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568820.731,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568824.456,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568891.8796,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568894.5889,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568947.489,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568950.488,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933568996.002,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933568998.8135,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933569055.6326,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933569058.3337,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933569117.477,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933569119.7627,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933569176.0828,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933569178.1973,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570025.7537,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570028.1782,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570090.9558,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570092.6123,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570149.7944,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570151.3706,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570210.3967,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570213.658,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570278.7888,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570281.1396,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570335.8035,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570338.9932,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570383.2402,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570385.2083,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570443.4812,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570445.752,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570500.6482,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570502.4817,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570562.9924,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570565.0374,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570626.5898,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570629.0334,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570689.9858,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570691.8113,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570750.8784,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570752.4407,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570810.9033,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570814.7322,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570878.1663,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570880.9543,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570932.3708,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570934.9697,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933570981.7607,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933570983.4075,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571043.2793,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571045.1165,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571103.5955,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571105.753,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571164.0938,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571166.498,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571230.5417,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571233.4456,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571291.8708,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571294.023,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571354.6194,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571356.4888,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571413.8335,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571417.797,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571479.36,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571482.4138,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571532.5,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571535.184,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571583.1724,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571585.196,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571644.5854,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571647.182,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571705.2795,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571707.5073,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571767.7346,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571769.4673,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571830.8867,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571833.951,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571897.0818,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571899.1555,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933571951.7703,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933571953.504,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572025.399,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572029.4626,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572095.651,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572098.5527,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572153.535,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572156.273,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572199.8838,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572201.9482,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572260.2312,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572262.285,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572321.893,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572323.4788,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572383.608,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572385.1768,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572445.0774,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572447.4243,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572507.2776,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572508.9204,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572569.644,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572571.0444,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572630.2444,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572633.6875,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572697.3,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572699.8765,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572752.2866,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572754.5195,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572800.9478,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572802.4658,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572864.2915,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572866.7283,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572921.4446,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572924.0303,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933572984.4775,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933572986.909,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573049.101,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573051.515,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573111.6582,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573113.6316,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573170.6216,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573172.6516,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573230.7563,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573234.9487,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573298.0864,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573300.893,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573354.5146,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573357.0312,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573401.158,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573402.8564,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573462.8315,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573464.9807,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573522.4106,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573525.0366,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573587.3733,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573589.8967,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573646.6392,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573649.606,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573715.3865,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573717.4402,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573774.9355,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573777.272,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573834.1648,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573839.0608,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573900.4731,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573903.3687,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933573954.9583,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933573957.744,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574004.0266,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574005.6003,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574062.4185,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574064.2483,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574124.0212,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574126.5068,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574187.3293,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574189.7764,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574248.4678,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574251.2776,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574312.747,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574314.4001,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574369.264,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574370.7695,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574431.5393,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574435.0447,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574498.3782,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574500.8503,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574556.6104,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574559.3704,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574606.3433,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574608.048,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574666.415,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574668.684,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574724.4146,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574726.2913,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574790.019,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574792.1182,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574852.1985,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574854.7537,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574914.0422,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574915.7178,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933574973.543,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933574975.45,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575038.349,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575041.4167,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575105.1982,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575107.9124,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575162.2268,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575164.7969,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575211.0068,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575212.7214,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575271.5444,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575274.074,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575331.9722,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575334.0437,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575393.7944,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575396.2905,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575458.225,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575459.238,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575494.554,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575496.1665,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575498.0454,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575500.6633,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575501.9924,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575504.4353,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575505.842,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575508.3906,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575509.6748,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575511.8813,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575513.4797,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575515.7856,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575517.121,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575519.6663,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575521.1104,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575523.8362,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575525.2637,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575527.78,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575529.5215,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575531.3994,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575533.1267,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575535.2676,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575581.0735,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575585.3364,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575617.271,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575618.764,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575648.9468,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575651.6287,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575676.9912,\"channel\":\"promptly:updateSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575680.9187,\"channel\":\"promptly:updateSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575681.055,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575685.0435,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575711.3477,\"channel\":\"promptly:createTag\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575714.842,\"channel\":\"promptly:createTag\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575714.9802,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575715.7773,\"channel\":\"promptly:setSnippetTags\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575717.1729,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575719.7087,\"channel\":\"promptly:setSnippetTags\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575719.8037,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575722.8083,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575757.3398,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575758.3809,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575788.3152,\"channel\":\"promptly:deleteSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575792.1345,\"channel\":\"promptly:deleteSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575792.2708,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575793.9644,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575820.325,\"channel\":\"promptly:updateSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575823.2852,\"channel\":\"promptly:updateSnippet\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575823.4302,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575825.1482,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-received\",\"epochMs\":1790933575827.37,\"channel\":\"promptly:searchSnippets\"}\n",
+    "{\"searchTrace\":\"main-ipc-replied\",\"epochMs\":1790933575830.207,\"channel\":\"promptly:searchSnippets\"}\n"
+  ],
+  "corpus": {
+    "count": 10000,
+    "characters": 7250796,
+    "databaseBytes": 15007744
+  },
+  "startup": {
+    "fontReadyMs": 23.5,
+    "uiFontLoaded": true,
+    "textFontLoaded": true
+  },
+  "initialGeometry": {
+    "left": 352,
+    "right": 984,
+    "top": 64,
+    "bottom": 608,
+    "viewportWidth": 1000,
+    "viewportHeight": 640,
+    "font": "\"Geist Mono\", monospace",
+    "whiteSpace": "pre-wrap",
+    "textHeight": 220,
+    "lineHeight": 20,
+    "focused": true,
+    "visibility": "visible"
+  },
+  "measurement": "native input event timestamp to second animation frame after real React result commit; conservative paint upper bound; simultaneously visible scrolling 20-row list and ONE wrapped full-text preview, actual bundled fonts; full text transmitted/searched/highlighted; no timed debounce or query prewarming",
+  "statistics": {
+    "i": {
+      "cold": 18.199999928474426,
+      "sampleCount": 11,
+      "p50": 11.299999952316284,
+      "p95": 12.5,
+      "max": 18.199999928474426
+    },
+    "re": {
+      "cold": 10.700000047683716,
+      "sampleCount": 11,
+      "p50": 9.199999928474426,
+      "p95": 11.200000047683716,
+      "max": 11.200000047683716
+    },
+    "review": {
+      "cold": 10.200000047683716,
+      "sampleCount": 11,
+      "p50": 9.099999904632568,
+      "p95": 11.100000023841858,
+      "max": 11.100000023841858
+    },
+    "e": {
+      "cold": 12.5,
+      "sampleCount": 11,
+      "p50": 12.099999904632568,
+      "p95": 15.100000023841858,
+      "max": 15.100000023841858
+    },
+    "needle-9999": {
+      "cold": 10.300000071525574,
+      "sampleCount": 11,
+      "p50": 9.200000047683716,
+      "p95": 10.699999928474426,
+      "max": 10.699999928474426
+    },
+    "no-match-zzzz": {
+      "cold": 8.400000095367432,
+      "sampleCount": 11,
+      "p50": 9.100000023841858,
+      "p95": 11.5,
+      "max": 11.5
+    },
+    "你好": {
+      "cold": 8.699999928474426,
+      "sampleCount": 11,
+      "p50": 8.299999952316284,
+      "p95": 10.5,
+      "max": 10.5
+    },
+    "(x)*": {
+      "cold": 9.899999976158142,
+      "sampleCount": 11,
+      "p50": 9.400000095367432,
+      "p95": 10,
+      "max": 10
+    },
+    "\"%b_c\"": {
+      "cold": 10.100000023841858,
+      "sampleCount": 11,
+      "p50": 9.200000047683716,
+      "p95": 10.400000095367432,
+      "max": 10.400000095367432
+    },
+    "from:terminal review": {
+      "cold": 11.600000023841858,
+      "sampleCount": 11,
+      "p50": 9,
+      "p95": 11.100000023841858,
+      "max": 11.600000023841858
+    }
+  },
+  "phases": {
+    "i": [
+      {
+        "bridge": 12.899999976158142,
+        "worker": 3.0366000000000213,
+        "reactCommit": 2,
+        "frameWait": 2.5,
+        "validation": {
+          "worker": 2.5079999999999245,
+          "workerReceiver": 2.217899999999986,
+          "desktopDispatcher": 0.5753999999999451,
+          "preload": 1.2999999523162842
+        }
+      },
+      {
+        "bridge": 5.700000047683716,
+        "worker": 0.68100000000004,
+        "reactCommit": 1.6999999284744263,
+        "frameWait": 1.8000000715255737,
+        "validation": {
+          "worker": 0.5315000000000509,
+          "workerReceiver": 0.39010000000007494,
+          "desktopDispatcher": 0.34380000000010114,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 4,
+        "worker": 0.468199999999797,
+        "reactCommit": 1.9000000953674316,
+        "frameWait": 6.199999928474426,
+        "validation": {
+          "worker": 0.41010000000005675,
+          "workerReceiver": 0.42319999999972424,
+          "desktopDispatcher": 0.3786000000000058,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 4.699999928474426,
+        "worker": 0.5003000000001521,
+        "reactCommit": 1.5,
+        "frameWait": 4.700000047683716,
+        "validation": {
+          "worker": 0.39049999999997453,
+          "workerReceiver": 0.44889999999986685,
+          "desktopDispatcher": 0.3702000000002954,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 5.100000023841858,
+        "worker": 0.6730999999999767,
+        "reactCommit": 1.5,
+        "frameWait": 4.600000023841858,
+        "validation": {
+          "worker": 0.5588999999999942,
+          "workerReceiver": 0.39820000000008804,
+          "desktopDispatcher": 0.341099999999642,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 4.900000095367432,
+        "worker": 0.743199999999888,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.6238000000003012,
+          "workerReceiver": 0.36089999999967404,
+          "desktopDispatcher": 0.28990000000067084,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 4.199999928474426,
+        "worker": 0.5045000000000073,
+        "reactCommit": 1.5,
+        "frameWait": 2,
+        "validation": {
+          "worker": 0.3720000000002983,
+          "workerReceiver": 0.41780000000017026,
+          "desktopDispatcher": 0.341099999999642,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 4.600000023841858,
+        "worker": 0.6391999999996187,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 4.199999928474426,
+        "validation": {
+          "worker": 0.3927000000003318,
+          "workerReceiver": 0.350800000000163,
+          "desktopDispatcher": 0.278599999999642,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 4.899999976158142,
+        "worker": 0.6013999999995576,
+        "reactCommit": 1.600000023841858,
+        "frameWait": 5.899999976158142,
+        "validation": {
+          "worker": 0.44030000000020664,
+          "workerReceiver": 0.5342000000000553,
+          "desktopDispatcher": 0.4533000000001266,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 4.5,
+        "worker": 0.634900000000016,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 2.9000000953674316,
+        "validation": {
+          "worker": 0.45199999999931606,
+          "workerReceiver": 0.4735000000000582,
+          "desktopDispatcher": 0.42549999999937427,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 4.899999976158142,
+        "worker": 0.5945999999994456,
+        "reactCommit": 1.5,
+        "frameWait": 5.699999928474426,
+        "validation": {
+          "worker": 0.48289999999997235,
+          "workerReceiver": 0.3352000000004409,
+          "desktopDispatcher": 0.2775000000001455,
+          "preload": 0.6000000238418579
+        }
+      }
+    ],
+    "re": [
+      {
+        "bridge": 4.799999952316284,
+        "worker": 1.0565000000000282,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 3.700000047683716,
+        "validation": {
+          "worker": 0.4539000000000897,
+          "workerReceiver": 0.49479999999994106,
+          "desktopDispatcher": 0.2989000000000033,
+          "preload": 0.40000009536743164
+        }
+      },
+      {
+        "bridge": 3.399999976158142,
+        "worker": 0.690900000000056,
+        "reactCommit": 1.5,
+        "frameWait": 6.100000023841858,
+        "validation": {
+          "worker": 0.29419999999981883,
+          "workerReceiver": 0.32339999999999236,
+          "desktopDispatcher": 0.28379999999992833,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 3.700000047683716,
+        "worker": 0.5847000000003391,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.26339999999981956,
+          "workerReceiver": 0.2339999999999236,
+          "desktopDispatcher": 0.15410000000019863,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.6795999999999367,
+        "reactCommit": 1,
+        "frameWait": 3.399999976158142,
+        "validation": {
+          "worker": 0.3075000000003456,
+          "workerReceiver": 0.22029999999995198,
+          "desktopDispatcher": 0.19619999999986248,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 3.899999976158142,
+        "worker": 0.8023000000002867,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.899999976158142,
+        "validation": {
+          "worker": 0.3270999999999731,
+          "workerReceiver": 0.269800000000032,
+          "desktopDispatcher": 0.21019999999998618,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 0.7327999999997701,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 3.3000000715255737,
+        "validation": {
+          "worker": 0.33259999999972933,
+          "workerReceiver": 0.2533000000003085,
+          "desktopDispatcher": 0.20949999999993452,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 0.6001999999998588,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 3.5,
+        "validation": {
+          "worker": 0.23189999999976862,
+          "workerReceiver": 0.20120000000042637,
+          "desktopDispatcher": 0.16759999999976571,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.799999952316284,
+        "worker": 0.689900000000307,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 4.300000071525574,
+        "validation": {
+          "worker": 0.25869999999940774,
+          "workerReceiver": 0.3088999999999942,
+          "desktopDispatcher": 0.2039999999997235,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3.899999976158142,
+        "worker": 0.7577000000001135,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 4.300000071525574,
+        "validation": {
+          "worker": 0.3463000000001557,
+          "workerReceiver": 0.2510000000002037,
+          "desktopDispatcher": 0.1687000000001717,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3.5,
+        "worker": 0.6728000000002794,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.5,
+        "validation": {
+          "worker": 0.24319999999988795,
+          "workerReceiver": 0.18500000000040018,
+          "desktopDispatcher": 0.14100000000053114,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 3.799999952316284,
+        "worker": 0.6568999999999505,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.600000023841858,
+        "validation": {
+          "worker": 0.24399999999968713,
+          "workerReceiver": 0.19729999999981374,
+          "desktopDispatcher": 0.13339999999971042,
+          "preload": 0.10000002384185791
+        }
+      }
+    ],
+    "review": [
+      {
+        "bridge": 4.600000023841858,
+        "worker": 0.7047000000000025,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 3.899999976158142,
+        "validation": {
+          "worker": 0.26490000000001146,
+          "workerReceiver": 0.42600000000004457,
+          "desktopDispatcher": 0.43820000000005166,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 3.5,
+        "worker": 0.6937000000000353,
+        "reactCommit": 1.7999999523162842,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.3730999999997948,
+          "workerReceiver": 0.29539999999997235,
+          "desktopDispatcher": 0.2727999999999611,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.560099999999693,
+        "reactCommit": 1.7000000476837158,
+        "frameWait": 5,
+        "validation": {
+          "worker": 0.23849999999993088,
+          "workerReceiver": 0.22730000000001382,
+          "desktopDispatcher": 0.15760000000000218,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 0.512199999999666,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 3.899999976158142,
+        "validation": {
+          "worker": 0.1981999999998152,
+          "workerReceiver": 0.23119999999971697,
+          "desktopDispatcher": 0.2549000000003616,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 0.7078999999998814,
+        "reactCommit": 0.7999999523162842,
+        "frameWait": 4.600000023841858,
+        "validation": {
+          "worker": 0.28339999999980137,
+          "workerReceiver": 0.2462999999997919,
+          "desktopDispatcher": 0.15790000000015425,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.9000000953674316,
+        "worker": 0.6882999999997992,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 4.5,
+        "validation": {
+          "worker": 0.2647999999999229,
+          "workerReceiver": 0.1981999999998152,
+          "desktopDispatcher": 0.14660000000003492,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 0.5214999999998327,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.19869999999991705,
+          "workerReceiver": 0.1845999999995911,
+          "desktopDispatcher": 0.13760000000002037,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.7930999999998676,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 6,
+        "validation": {
+          "worker": 0.32369999999991705,
+          "workerReceiver": 0.24030000000038854,
+          "desktopDispatcher": 0.18590000000040163,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.3000000715255737,
+        "worker": 0.9880000000002838,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 2,
+        "validation": {
+          "worker": 0.3725000000004002,
+          "workerReceiver": 0.22199999999975262,
+          "desktopDispatcher": 0.16280000000006112,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.4000000953674316,
+        "worker": 0.5874000000003434,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 5.199999928474426,
+        "validation": {
+          "worker": 0.19439999999940483,
+          "workerReceiver": 0.198500000000422,
+          "desktopDispatcher": 0.14360000000033324,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.7664000000004307,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.2710000000006403,
+          "workerReceiver": 0.23149999999986903,
+          "desktopDispatcher": 0.18389999999999418,
+          "preload": 0.2999999523162842
+        }
+      }
+    ],
+    "e": [
+      {
+        "bridge": 7.299999952316284,
+        "worker": 1.0916999999999462,
+        "reactCommit": 1.7000000476837158,
+        "frameWait": 3.299999952316284,
+        "validation": {
+          "worker": 0.7697999999999183,
+          "workerReceiver": 0.6655000000000655,
+          "desktopDispatcher": 0.8036999999999352,
+          "preload": 0.8000000715255737
+        }
+      },
+      {
+        "bridge": 7.5,
+        "worker": 0.6596000000001823,
+        "reactCommit": 1.5,
+        "frameWait": 3.1999999284744263,
+        "validation": {
+          "worker": 0.689200000000028,
+          "workerReceiver": 0.7600000000002183,
+          "desktopDispatcher": 0.5585000000000946,
+          "preload": 1.3000000715255737
+        }
+      },
+      {
+        "bridge": 5.899999976158142,
+        "worker": 0.43049999999993815,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 5.399999976158142,
+        "validation": {
+          "worker": 0.5470000000000255,
+          "workerReceiver": 0.5811000000003332,
+          "desktopDispatcher": 0.6410999999998239,
+          "preload": 0.5999999046325684
+        }
+      },
+      {
+        "bridge": 6.399999976158142,
+        "worker": 0.592200000000048,
+        "reactCommit": 1.5,
+        "frameWait": 4,
+        "validation": {
+          "worker": 0.9692000000000007,
+          "workerReceiver": 0.4873999999999796,
+          "desktopDispatcher": 0.7753999999999905,
+          "preload": 0.6999999284744263
+        }
+      },
+      {
+        "bridge": 6.300000071525574,
+        "worker": 0.7371000000002823,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.8975000000000364,
+          "workerReceiver": 0.5784000000003289,
+          "desktopDispatcher": 0.43909999999959837,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 6.399999976158142,
+        "worker": 0.6348000000007232,
+        "reactCommit": 1.7000000476837158,
+        "frameWait": 3.399999976158142,
+        "validation": {
+          "worker": 0.7382000000006883,
+          "workerReceiver": 0.6748999999999796,
+          "desktopDispatcher": 0.4643999999998414,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 6,
+        "worker": 0.6103000000002794,
+        "reactCommit": 1.5,
+        "frameWait": 2.6999999284744263,
+        "validation": {
+          "worker": 0.6385999999993146,
+          "workerReceiver": 0.46749999999974534,
+          "desktopDispatcher": 0.7319999999999709,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 6.699999928474426,
+        "worker": 0.6657999999997628,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 3.3000000715255737,
+        "validation": {
+          "worker": 0.6598000000003594,
+          "workerReceiver": 0.8175000000001091,
+          "desktopDispatcher": 0.6610000000000582,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 8,
+        "worker": 0.7465000000001965,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.8104000000002998,
+          "workerReceiver": 0.8778000000002066,
+          "desktopDispatcher": 0.845499999999447,
+          "preload": 0.6000000238418579
+        }
+      },
+      {
+        "bridge": 5.899999976158142,
+        "worker": 0.581199999999626,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 4.200000047683716,
+        "validation": {
+          "worker": 0.60740000000078,
+          "workerReceiver": 0.4618000000000393,
+          "desktopDispatcher": 0.7206999999998516,
+          "preload": 0.5
+        }
+      },
+      {
+        "bridge": 6.100000023841858,
+        "worker": 0.5523000000002867,
+        "reactCommit": 1.2000000476837158,
+        "frameWait": 3.6999999284744263,
+        "validation": {
+          "worker": 0.6949000000004162,
+          "workerReceiver": 0.4481000000005224,
+          "desktopDispatcher": 0.41969999999946594,
+          "preload": 0.6000000238418579
+        }
+      }
+    ],
+    "needle-9999": [
+      {
+        "bridge": 4.299999952316284,
+        "worker": 2.2268000000000256,
+        "reactCommit": 1.600000023841858,
+        "frameWait": 4.300000071525574,
+        "validation": {
+          "worker": 0.15470000000004802,
+          "workerReceiver": 0.12789999999995416,
+          "desktopDispatcher": 0.04499999999995907,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 3.799999952316284,
+        "worker": 2.0471999999999753,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 4.800000071525574,
+        "validation": {
+          "worker": 0.1516999999998916,
+          "workerReceiver": 0.15719999999987522,
+          "desktopDispatcher": 0.06740000000013424,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 1.9137000000000626,
+        "reactCommit": 0.5,
+        "frameWait": 4.900000095367432,
+        "validation": {
+          "worker": 0.10779999999977008,
+          "workerReceiver": 0.08849999999983993,
+          "desktopDispatcher": 0.05610000000024229,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3.0999999046325684,
+        "worker": 2.251299999999901,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 4.199999928474426,
+        "validation": {
+          "worker": 0.12139999999999418,
+          "workerReceiver": 0.098700000000008,
+          "desktopDispatcher": 0.04320000000006985,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 4.600000023841858,
+        "worker": 2.3680999999996857,
+        "reactCommit": 0.6000000238418579,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.1558999999997468,
+          "workerReceiver": 0.14159999999992579,
+          "desktopDispatcher": 0.06610000000000582,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 4.199999928474426,
+        "worker": 2.303399999999783,
+        "reactCommit": 1.4000000953674316,
+        "frameWait": 3.5,
+        "validation": {
+          "worker": 0.15129999999953725,
+          "workerReceiver": 0.11200000000008004,
+          "desktopDispatcher": 0.04660000000058062,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 3.600000023841858,
+        "worker": 2.0428000000001703,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 5.699999928474426,
+        "validation": {
+          "worker": 0.12599999999929423,
+          "workerReceiver": 0.10779999999977008,
+          "desktopDispatcher": 0.04930000000058499,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.1999999284744263,
+        "worker": 2.182600000000093,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.12100000000009459,
+          "workerReceiver": 0.1451999999999316,
+          "desktopDispatcher": 0.07860000000073342,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3.899999976158142,
+        "worker": 2.27179999999953,
+        "reactCommit": 1.2000000476837158,
+        "frameWait": 2.399999976158142,
+        "validation": {
+          "worker": 0.17160000000058062,
+          "workerReceiver": 0.12470000000030268,
+          "desktopDispatcher": 0.04719999999997526,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.8000000715255737,
+        "worker": 1.9513999999999214,
+        "reactCommit": 1.5,
+        "frameWait": 2.899999976158142,
+        "validation": {
+          "worker": 0.14900000000034197,
+          "workerReceiver": 0.09220000000004802,
+          "desktopDispatcher": 0.058100000000194996,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 4.599999904632568,
+        "worker": 2.2020000000002256,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.12989999999990687,
+          "workerReceiver": 0.1048000000000684,
+          "desktopDispatcher": 0.05089999999927386,
+          "preload": 0.19999992847442627
+        }
+      }
+    ],
+    "no-match-zzzz": [
+      {
+        "bridge": 3.600000023841858,
+        "worker": 2.3310999999998785,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 4.400000095367432,
+        "validation": {
+          "worker": 0.16669999999999163,
+          "workerReceiver": 0.13030000000003383,
+          "desktopDispatcher": 0.04829999999992651,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.399999976158142,
+        "worker": 2.4239000000000033,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.12950000000000728,
+          "workerReceiver": 0.1292999999998301,
+          "desktopDispatcher": 0.04460000000017317,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3.5,
+        "worker": 2.6518999999998414,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 7.399999976158142,
+        "validation": {
+          "worker": 0.13410000000021682,
+          "workerReceiver": 0.1123000000002321,
+          "desktopDispatcher": 0.06289999999989959,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 2.158300000000054,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 7,
+        "validation": {
+          "worker": 0.1263000000003558,
+          "workerReceiver": 0.08940000000029613,
+          "desktopDispatcher": 0.039800000000013824,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 2.219100000000253,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.799999952316284,
+        "validation": {
+          "worker": 0.12340000000040163,
+          "workerReceiver": 0.08740000000034343,
+          "desktopDispatcher": 0.03669999999965512,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 2.2204000000001543,
+        "reactCommit": 0,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.11340000000018335,
+          "workerReceiver": 0.1029000000007727,
+          "desktopDispatcher": 0.0374999999994543,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.871299999999792,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.799999952316284,
+        "validation": {
+          "worker": 0.08520000000044092,
+          "workerReceiver": 0.061399999999594,
+          "desktopDispatcher": 0.04839999999967404,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 1.9966000000003987,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.11889999999948486,
+          "workerReceiver": 0.10739999999987049,
+          "desktopDispatcher": 0.05040000000008149,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 2.24369999999999,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 6.599999904632568,
+        "validation": {
+          "worker": 0.13169999999990978,
+          "workerReceiver": 0.10760000000027503,
+          "desktopDispatcher": 0.04849999999987631,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 2.193000000000211,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 5.700000047683716,
+        "validation": {
+          "worker": 0.12259999999969295,
+          "workerReceiver": 0.1081000000003769,
+          "desktopDispatcher": 0.06409999999959837,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 2.1098000000001775,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 7,
+        "validation": {
+          "worker": 0.12079999999969004,
+          "workerReceiver": 0.08719999999993888,
+          "desktopDispatcher": 0.0316000000002532,
+          "preload": 0.10000002384185791
+        }
+      }
+    ],
+    "你好": [
+      {
+        "bridge": 3.899999976158142,
+        "worker": 2.299400000000105,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 4.299999952316284,
+        "validation": {
+          "worker": 0.25479999999993197,
+          "workerReceiver": 0.18529999999987012,
+          "desktopDispatcher": 0.11130000000002838,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.600000023841858,
+        "worker": 1.9424000000001342,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 6.399999976158142,
+        "validation": {
+          "worker": 0.24669999999991887,
+          "workerReceiver": 0.1897999999998774,
+          "desktopDispatcher": 0.08220000000005712,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 2.5999999046325684,
+        "worker": 0.9708999999998014,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.21929999999974825,
+          "workerReceiver": 0.2381000000000313,
+          "desktopDispatcher": 0.20339999999987413,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.100000023841858,
+        "worker": 1.073500000000422,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 4.799999952316284,
+        "validation": {
+          "worker": 0.17669999999998254,
+          "workerReceiver": 0.11149999999997817,
+          "desktopDispatcher": 0.07200000000011642,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.144800000000032,
+        "reactCommit": 0.8999999761581421,
+        "frameWait": 6.799999952316284,
+        "validation": {
+          "worker": 0.2268000000003667,
+          "workerReceiver": 0.18909999999959837,
+          "desktopDispatcher": 0.12809999999990396,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.600000023841858,
+        "worker": 1.1695999999992637,
+        "reactCommit": 0.5,
+        "frameWait": 4.899999976158142,
+        "validation": {
+          "worker": 0.2029999999995198,
+          "workerReceiver": 0.23809999999957654,
+          "desktopDispatcher": 0.15059999999994034,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 1.899999976158142,
+        "worker": 0.8796000000002095,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 6.100000023841858,
+        "validation": {
+          "worker": 0.18590000000040163,
+          "workerReceiver": 0.12530000000060681,
+          "desktopDispatcher": 0.09289999999964493,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 0.9592000000002372,
+        "reactCommit": 0.7000000476837158,
+        "frameWait": 6.599999904632568,
+        "validation": {
+          "worker": 0.18040000000019063,
+          "workerReceiver": 0.16489999999976135,
+          "desktopDispatcher": 0.08889999999973952,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 0.8377000000000407,
+        "reactCommit": 0.09999990463256836,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.22159999999985303,
+          "workerReceiver": 0.1455999999998312,
+          "desktopDispatcher": 0.07470000000012078,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 0.8732999999992899,
+        "reactCommit": 0.6000000238418579,
+        "frameWait": 4.699999928474426,
+        "validation": {
+          "worker": 0.16159999999945285,
+          "workerReceiver": 0.23660000000018044,
+          "desktopDispatcher": 0.11930000000029395,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.200000047683716,
+        "worker": 0.9171000000005733,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.1815999999998894,
+          "workerReceiver": 0.18220000000019354,
+          "desktopDispatcher": 0.12129999999979191,
+          "preload": 0
+        }
+      }
+    ],
+    "(x)*": [
+      {
+        "bridge": 3.3000000715255737,
+        "worker": 1.5109999999999673,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 5.200000047683716,
+        "validation": {
+          "worker": 0.2234000000000833,
+          "workerReceiver": 0.1736999999998261,
+          "desktopDispatcher": 0.10459999999989122,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 3.399999976158142,
+        "worker": 1.8336000000001604,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 6,
+        "validation": {
+          "worker": 0.20650000000000546,
+          "workerReceiver": 0.18240000000014334,
+          "desktopDispatcher": 0.1048000000000684,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.48050000000012,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.5,
+        "validation": {
+          "worker": 0.193000000000211,
+          "workerReceiver": 0.18740000000025248,
+          "desktopDispatcher": 0.10120000000006257,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.3000000715255737,
+        "worker": 1.3015999999997803,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.299999952316284,
+        "validation": {
+          "worker": 0.13970000000017535,
+          "workerReceiver": 0.10640000000012151,
+          "desktopDispatcher": 0.06779999999980646,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 1.7909999999992579,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 5.200000047683716,
+        "validation": {
+          "worker": 0.24580000000059954,
+          "workerReceiver": 0.15779999999995198,
+          "desktopDispatcher": 0.09369999999944412,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.5,
+        "worker": 1.4362999999993917,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 7.100000023841858,
+        "validation": {
+          "worker": 0.1484999999993306,
+          "workerReceiver": 0.12010000000009313,
+          "desktopDispatcher": 0.08240000000023429,
+          "preload": 0.09999990463256836
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 1.425799999999981,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 6.200000047683716,
+        "validation": {
+          "worker": 0.30280000000038854,
+          "workerReceiver": 0.17159999999967113,
+          "desktopDispatcher": 0.11110000000007858,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.3210000000008222,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 6.5,
+        "validation": {
+          "worker": 0.22409999999945285,
+          "workerReceiver": 0.17090000000007421,
+          "desktopDispatcher": 0.09679999999934807,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.2002999999995154,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 5.400000095367432,
+        "validation": {
+          "worker": 0.139299999999821,
+          "workerReceiver": 0.15310000000044965,
+          "desktopDispatcher": 0.08400000000074215,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.3000000715255737,
+        "worker": 1.4259000000001834,
+        "reactCommit": 0.09999990463256836,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.16809999999986758,
+          "workerReceiver": 0.2227999999995518,
+          "desktopDispatcher": 0.0838000000003376,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 1.7395000000005894,
+        "reactCommit": 0.09999990463256836,
+        "frameWait": 5.800000071525574,
+        "validation": {
+          "worker": 0.20820000000003347,
+          "workerReceiver": 0.17189999999936845,
+          "desktopDispatcher": 0.11260000000038417,
+          "preload": 0.20000004768371582
+        }
+      }
+    ],
+    "\"%b_c\"": [
+      {
+        "bridge": 3.5,
+        "worker": 1.4756999999999607,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 5.100000023841858,
+        "validation": {
+          "worker": 0.15630000000010114,
+          "workerReceiver": 0.1994999999999436,
+          "desktopDispatcher": 0.15429999999992106,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.4291000000000622,
+        "reactCommit": 0.30000007152557373,
+        "frameWait": 6.699999928474426,
+        "validation": {
+          "worker": 0.25500000000010914,
+          "workerReceiver": 0.1509000000000924,
+          "desktopDispatcher": 0.07750000000010004,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.6999999284744263,
+        "worker": 1.1833999999998923,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.600000023841858,
+        "validation": {
+          "worker": 0.17880000000013752,
+          "workerReceiver": 0.14469999999982974,
+          "desktopDispatcher": 0.07960000000002765,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.899999976158142,
+        "worker": 1.598700000000008,
+        "reactCommit": 1.100000023841858,
+        "frameWait": 5.199999928474426,
+        "validation": {
+          "worker": 0.1346000000003187,
+          "workerReceiver": 0.11069999999972424,
+          "desktopDispatcher": 0.06749999999965439,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.6427000000003318,
+        "reactCommit": 0.20000004768371582,
+        "frameWait": 5.199999928474426,
+        "validation": {
+          "worker": 0.1529999999993379,
+          "workerReceiver": 0.11009999999987485,
+          "desktopDispatcher": 0.06829999999990832,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.0956000000005588,
+        "reactCommit": 0,
+        "frameWait": 3.299999952316284,
+        "validation": {
+          "worker": 0.12640000000010332,
+          "workerReceiver": 0.0955999999996493,
+          "desktopDispatcher": 0.06670000000030996,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 1.7505000000001019,
+        "reactCommit": 0.19999992847442627,
+        "frameWait": 4.900000095367432,
+        "validation": {
+          "worker": 0.23909999999978027,
+          "workerReceiver": 0.1835000000000946,
+          "desktopDispatcher": 0.12879999999950087,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.200000047683716,
+        "worker": 1.748700000000099,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.5,
+        "validation": {
+          "worker": 0.21010000000023865,
+          "workerReceiver": 0.18190000000049622,
+          "desktopDispatcher": 0.14909999999963475,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 1.7219999999997526,
+        "reactCommit": 0.10000002384185791,
+        "frameWait": 5.899999976158142,
+        "validation": {
+          "worker": 0.197400000000016,
+          "workerReceiver": 0.1782999999995809,
+          "desktopDispatcher": 0.10829999999987194,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.399999976158142,
+        "worker": 1.313799999999901,
+        "reactCommit": 0.40000009536743164,
+        "frameWait": 6.599999904632568,
+        "validation": {
+          "worker": 0.13780000000042492,
+          "workerReceiver": 0.10289999999986321,
+          "desktopDispatcher": 0.06540000000040891,
+          "preload": 0.10000002384185791
+        }
+      },
+      {
+        "bridge": 2.700000047683716,
+        "worker": 1.2881999999999607,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 6.300000071525574,
+        "validation": {
+          "worker": 0.15580000000045402,
+          "workerReceiver": 0.1738999999997759,
+          "desktopDispatcher": 0.14969999999993888,
+          "preload": 0.10000002384185791
+        }
+      }
+    ],
+    "from:terminal review": [
+      {
+        "bridge": 3.299999952316284,
+        "worker": 1.4086999999999534,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 6.200000047683716,
+        "validation": {
+          "worker": 0.248299999999972,
+          "workerReceiver": 0.2158999999999196,
+          "desktopDispatcher": 0.17370000000005348,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 1.0339000000001306,
+        "reactCommit": 1.899999976158142,
+        "frameWait": 5.899999976158142,
+        "validation": {
+          "worker": 0.2460000000000946,
+          "workerReceiver": 0.23279999999999745,
+          "desktopDispatcher": 0.17859999999996035,
+          "preload": 0.19999992847442627
+        }
+      },
+      {
+        "bridge": 2.799999952316284,
+        "worker": 1.07549999999992,
+        "reactCommit": 1.600000023841858,
+        "frameWait": 6.200000047683716,
+        "validation": {
+          "worker": 0.2869999999998072,
+          "workerReceiver": 0.1807000000003427,
+          "desktopDispatcher": 0.14350000000013097,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.299999952316284,
+        "worker": 1.0383999999999105,
+        "reactCommit": 1.3000000715255737,
+        "frameWait": 3.1999999284744263,
+        "validation": {
+          "worker": 0.360700000000179,
+          "workerReceiver": 0.293800000000374,
+          "desktopDispatcher": 0.2219000000000051,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.7752000000000407,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 4.800000071525574,
+        "validation": {
+          "worker": 0.25200000000040745,
+          "workerReceiver": 0.16979999999966822,
+          "desktopDispatcher": 0.16569999999956053,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3,
+        "worker": 0.6819000000004962,
+        "reactCommit": 1.1999999284744263,
+        "frameWait": 4.5,
+        "validation": {
+          "worker": 0.2114000000001397,
+          "workerReceiver": 0.16409999999996217,
+          "desktopDispatcher": 0.1580999999996493,
+          "preload": 0.3999999761581421
+        }
+      },
+      {
+        "bridge": 3.299999952316284,
+        "worker": 1.1774999999997817,
+        "reactCommit": 1.2000000476837158,
+        "frameWait": 3.100000023841858,
+        "validation": {
+          "worker": 0.3297000000002299,
+          "workerReceiver": 0.236800000000585,
+          "desktopDispatcher": 0.17969999999968422,
+          "preload": 0.30000007152557373
+        }
+      },
+      {
+        "bridge": 3.600000023841858,
+        "worker": 1.1496999999999389,
+        "reactCommit": 1.399999976158142,
+        "frameWait": 3.200000047683716,
+        "validation": {
+          "worker": 0.2312000000001717,
+          "workerReceiver": 0.3533999999999651,
+          "desktopDispatcher": 0.2183999999997468,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.3000000715255737,
+        "worker": 1.175000000000182,
+        "reactCommit": 1.5,
+        "frameWait": 4.399999976158142,
+        "validation": {
+          "worker": 0.27709999999933643,
+          "workerReceiver": 0.25349999999980355,
+          "desktopDispatcher": 0.23099999999976717,
+          "preload": 0.20000004768371582
+        }
+      },
+      {
+        "bridge": 3.100000023841858,
+        "worker": 0.9827999999997701,
+        "reactCommit": 1.2999999523162842,
+        "frameWait": 4.300000071525574,
+        "validation": {
+          "worker": 0.2732000000005428,
+          "workerReceiver": 0.20830000000023574,
+          "desktopDispatcher": 0.13689999999951397,
+          "preload": 0.2999999523162842
+        }
+      },
+      {
+        "bridge": 3.4000000953674316,
+        "worker": 1.1192000000000917,
+        "reactCommit": 1.5,
+        "frameWait": 3.899999976158142,
+        "validation": {
+          "worker": 0.3173000000006141,
+          "workerReceiver": 0.2908999999999651,
+          "desktopDispatcher": 0.21370000000024447,
+          "preload": 0.2999999523162842
+        }
+      }
+    ]
+  },
+  "rapid": 11.300000071525574,
+  "completeHighlightPaint": 8.299999952316284,
+  "invalidations": {
+    "capture": 11.799999952316284,
+    "edit": 11.700000047683716,
+    "tag": 10.899999976158142,
+    "delete": 8.700000047683716
+  }
+}

@@ -70,10 +70,9 @@ export class StorageClient {
     if (this.failure !== undefined) throw this.failure;
     const request = storageOperations[name].request.parse(input);
     const response = await this.send(name, request);
+    const result = resultSchema<unknown>(storageOperations[name].response).parse(response);
 
-    return resultSchema<unknown>(storageOperations[name].response).parse(response) as DesktopResult<
-      StorageResponse<K>
-    >;
+    return result as DesktopResult<StorageResponse<K>>;
   }
 
   close(): Promise<void> {

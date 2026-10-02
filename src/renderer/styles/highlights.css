@@ -1,0 +1,4 @@
+::highlight(promptly-search-text) {
+  background-color: var(--highlight);
+  color: var(--foreground);
+}

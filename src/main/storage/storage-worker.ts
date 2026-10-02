@@ -20,7 +20,9 @@ try {
       return;
     }
 
-    port.postMessage(engine.run(message.id, message.operation, message.input));
+    const reply = engine.run(message.id, message.operation, message.input);
+
+    port.postMessage(reply);
   });
 } catch {
   port.postMessage({ id: 0, result: failure('INTERNAL', 'Unable to open local storage.') });
