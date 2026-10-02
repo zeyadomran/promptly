@@ -37,7 +37,9 @@ export function installDesktopIpc(
 
   for (const name of names) {
     ipc.handle(operationChannel(name), (event, request: unknown) =>
-      dispatchOperation(services, windows.isAuthorized(event), name, request)
+      dispatchOperation(services, windows.isAuthorized(event), name, request, {
+        senderId: event.sender.id
+      })
     );
   }
 

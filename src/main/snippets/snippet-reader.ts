@@ -4,10 +4,10 @@ import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import type { StorageContext } from '../storage/context';
 import { StorageError } from '../storage/context';
-import { decodeSqlText, tagColumns } from '../storage/sql-text';
+import { decodeSnippetText, decodeSqlText, tagColumns } from '../storage/sql-text';
 
 const columns =
-  'id, CAST(text AS BLOB) AS text, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
+  'id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
 const sortSql = {
   newest: 'updatedAt DESC, id ASC',
   oldest: 'createdAt ASC, id ASC',
@@ -29,9 +29,11 @@ export class SnippetReader {
       .all(id)
       .map((tag) => tagSchema.parse({ ...tag, name: decodeSqlText(tag['name']) }));
 
+    const { textUtf16: _bytes, ...record } = row;
+
     return snippetSchema.parse({
-      ...row,
-      text: decodeSqlText(row['text']),
+      ...record,
+      text: decodeSnippetText(row['textUtf16'], row['text']),
       sourceApp: decodeSqlText(row['sourceApp']),
       tags
     });

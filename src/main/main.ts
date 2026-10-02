@@ -3,6 +3,7 @@ import path from 'node:path';
 import { app, ipcMain, Menu, nativeTheme } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { closeLibraryResources } from './lifecycle/close-library-resources';
 import { closeSettingsStorage } from './lifecycle/close-settings-storage';
 import { closeWindowResources } from './lifecycle/close-window-resources';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
@@ -15,6 +16,9 @@ import {
 import { SettingsService } from './settings/service';
 import { StorageClient } from './storage/client';
 import { storageDesktopServices } from './storage/desktop-services';
+import { LibraryMutations } from './storage/library-mutations';
+import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
+import { StorageTransfer } from './storage/transfer/service';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { WindowLifecycle } from './windows/window-lifecycle';
 
@@ -23,12 +27,16 @@ let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
 let windowsSelection: WindowsSelection | undefined;
+let transfer: StorageTransfer | undefined;
+const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () =>
-    closeWindowResources(lifecycle, () =>
-      closeSettingsStorage(settings, storage, {
-        close: () => windowsSelection?.dispose() ?? Promise.resolve()
-      })
+    closeLibraryResources(transfer, () =>
+      closeWindowResources(lifecycle, () =>
+        closeSettingsStorage(settings, storage, {
+          close: () => windowsSelection?.dispose() ?? Promise.resolve()
+        })
+      )
     ),
   onError: (error) => {
     console.error('Unable to close desktop services:', error);
@@ -85,10 +93,19 @@ if (primaryInstance)
         })
       );
       await settings.initialize();
+      transfer = new StorageTransfer(
+        storage,
+        mutations,
+        nativeTransferDialogs(
+          app.getPath('userData'),
+          path.join(app.getPath('userData'), 'promptly.sqlite')
+        )
+      );
       desktop = installDesktopIpc(
         ipcMain,
         {
-          ...storageDesktopServices(storage),
+          ...storageDesktopServices(storage, mutations),
+          ...transfer.services,
           ...settings.services,
           ...lifecycleServices(() => lifecycle)
         },

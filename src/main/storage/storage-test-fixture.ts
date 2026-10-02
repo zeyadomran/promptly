@@ -30,7 +30,7 @@ export function testStorage(now?: () => Date) {
     filename,
     invoke<K extends StorageOperation>(name: K, input: StorageRequest<K>): StorageResponse<K> {
       const reply = engine.run(1, name, input);
-      const result = resultSchema(storageOperations[name].response).parse(
+      const result = resultSchema<unknown>(storageOperations[name].response).parse(
         reply.result
       ) as DesktopResult<StorageResponse<K>>;
 

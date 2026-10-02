@@ -15,8 +15,8 @@ export class SnippetWrites {
     this.reader.context.db
       .prepare(
         `INSERT INTO snippets
-        (id, text, textHash, createdAt, updatedAt, sourceApp, sourceAppId, lastCopiedAt, copyCount)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        (id, text, textHash, createdAt, updatedAt, sourceApp, sourceAppId, lastCopiedAt, copyCount, textUtf16)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       )
       .run(
         snippet.id,
@@ -27,7 +27,8 @@ export class SnippetWrites {
         snippet.sourceApp,
         snippet.sourceAppId,
         snippet.lastCopiedAt,
-        snippet.copyCount
+        snippet.copyCount,
+        Buffer.from(snippet.text, 'utf16le')
       );
     for (const tag of snippet.tags)
       this.reader.context.db
@@ -60,9 +61,10 @@ export class SnippetWrites {
   capture(input: StorageRequest<'captureSnippet'>) {
     const row = this.reader.context.db
       .prepare(
-        'SELECT id FROM snippets WHERE textHash = ? AND text = ? ORDER BY updatedAt DESC, id ASC LIMIT 1'
+        'SELECT id FROM snippets WHERE textHash = ? AND text = ? ORDER BY updatedAt DESC, id ASC'
       )
-      .get(textHash(input.text), input.text);
+      .all(textHash(input.text), input.text)
+      .find((candidate) => this.reader.get(String(candidate['id'])).text === input.text);
 
     if (row === undefined)
       return {
@@ -87,8 +89,16 @@ export class SnippetWrites {
   update(input: StorageRequest<'updateSnippet'>) {
     this.reader.get(input.id);
     this.reader.context.db
-      .prepare('UPDATE snippets SET text = ?, textHash = ?, updatedAt = ? WHERE id = ?')
-      .run(input.text, textHash(input.text), this.reader.context.now().toISOString(), input.id);
+      .prepare(
+        'UPDATE snippets SET text = ?, textHash = ?, updatedAt = ?, textUtf16 = ? WHERE id = ?'
+      )
+      .run(
+        input.text,
+        textHash(input.text),
+        this.reader.context.now().toISOString(),
+        Buffer.from(input.text, 'utf16le'),
+        input.id
+      );
     return this.reader.snapshot(input.id);
   }
 

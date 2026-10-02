@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { transferOperations } from './backup/operations';
 import {
   captureResultSchema,
   idSchema,
@@ -28,6 +29,7 @@ const revisionResponseSchema = z.strictObject({ revision: revisionSchema });
 const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSchema });
 
 export const operations = {
+  ...transferOperations,
   getWindowState: { request: emptySchema, response: windowStateSchema },
   getWindowRecovery: { request: emptySchema, response: windowRecoverySchema },
   returnToMainWindow: { request: emptySchema, response: windowStateSchema },
@@ -102,7 +104,8 @@ export type OperationResponse<K extends OperationName> = z.infer<
 >;
 export type DesktopOperations = {
   readonly [K in OperationName]: (
-    request: OperationRequest<K>
+    request: OperationRequest<K>,
+    context?: { senderId: number }
   ) => Promise<DesktopResult<OperationResponse<K>>>;
 };
 export const changeChannel = 'promptly:changes';

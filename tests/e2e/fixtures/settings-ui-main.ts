@@ -16,6 +16,7 @@ import { storageDesktopServices } from '../../../src/main/storage/desktop-servic
 import { lifecycleServices } from '../../../src/main/windows/lifecycle-services';
 import { WindowLifecycle } from '../../../src/main/windows/window-lifecycle';
 import { hostedNativePreferences } from './settings-native-preferences';
+import { ownedTransferServices } from './storage-transfer-services';
 
 const profile = process.env['PROMPTLY_SETTINGS_UI_PROFILE'];
 
@@ -25,6 +26,7 @@ const nativePreferences = hostedNativePreferences(profile);
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
+let library: ReturnType<typeof ownedTransferServices> | undefined;
 let login = false;
 let dock = true;
 let rejectLogin = false;
@@ -49,6 +51,7 @@ events.on('owned-settings-receipt', (reply: (receipt: object) => void) => {
 const shutdown = createDesktopShutdown({
   cleanup: async () => {
     const settled = await Promise.allSettled([
+      library?.transfer.close(),
       closeWindowResources(lifecycle, () => closeSettingsStorage(settings, storage))
     ]);
 
@@ -73,7 +76,7 @@ void app
   .then(async () => {
     nativePreferences.capture();
     storage = new StorageClient(
-      path.resolve('.vite/build/storage-worker.cjs'),
+      path.join(__dirname, 'storage-worker.cjs'),
       path.join(profile, 'settings.sqlite'),
       (change) => {
         desktop.publish(change);
@@ -108,10 +111,13 @@ void app
       )
     );
     await settings.initialize();
+    if (process.env['PROMPTLY_STORAGE_UI'] === '1')
+      library = ownedTransferServices(storage, profile);
     const desktop = installDesktopIpc(
       ipcMain,
       {
-        ...storageDesktopServices(storage),
+        ...storageDesktopServices(storage, library?.mutations),
+        ...library?.transfer.services,
         ...settings.services,
         ...lifecycleServices(() => lifecycle)
       },

@@ -47,7 +47,8 @@ export const migrations: readonly Migration[] = [
         )
         .join('\n')}
     `
-  }
+  },
+  { version: 3, sql: 'ALTER TABLE snippets ADD COLUMN textUtf16 BLOB;' }
 ];
 
 export function migrate(db: DatabaseSync, versions: readonly Migration[] = migrations): void {
