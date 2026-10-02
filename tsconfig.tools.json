@@ -1,5 +1,12 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["node"], "lib": ["ES2022", "DOM"], "jsx": "react-jsx" },
-  "include": ["*.config.ts", "tests/e2e", "src/renderer/env.d.ts", "src/main/forge-env.d.ts"]
+  "include": [
+    "*.config.ts",
+    "tests/e2e",
+    "tests/visual",
+    "tests/packaged-design",
+    "src/renderer/env.d.ts",
+    "src/main/forge-env.d.ts"
+  ]
 }

@@ -1,0 +1,101 @@
+:root {
+  /* Native CSS resolves System before JavaScript runs, including OS changes. */
+  color-scheme: light dark;
+  --background: light-dark(#ffffff, #09090b);
+  --foreground: light-dark(#09090b, #fafafa);
+  --foreground-2: light-dark(#3f3f46, #d4d4d8);
+  --muted-foreground: light-dark(#71717a, #a1a1aa);
+  --muted: light-dark(#f4f4f5, #27272a);
+  --row-selected: light-dark(#f4f4f5, #18181b);
+  --sidebar: light-dark(#fafafa, #0c0c0e);
+  --border: light-dark(#e4e4e7, #27272a);
+  --border-soft: light-dark(#f4f4f5, #18181b);
+  --segment-on: light-dark(#ffffff, #3f3f46);
+  --highlight: light-dark(oklch(0.93 0.08 95), oklch(0.48 0.09 95));
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --destructive: light-dark(#dc2626, #f87171);
+  --destructive-background: light-dark(#fef2f2, #450a0a);
+  --primary: var(--foreground);
+  --primary-foreground: var(--background);
+  --secondary: var(--muted);
+  --secondary-foreground: var(--foreground);
+  --accent: var(--muted);
+  --accent-foreground: var(--foreground);
+  --popover: var(--background);
+  --popover-foreground: var(--foreground);
+  --card: var(--background);
+  --card-foreground: var(--foreground);
+  --input: var(--border);
+  --ring: var(--foreground);
+  --focus-shadow: 0 0 0 3px var(--muted);
+  --radius: 0.5rem;
+  --radius-control: 6px;
+  --radius-key: 4px;
+  --radius-chip: 999px;
+  --radius-compact: 14px;
+  --radius-regular: 12px;
+  --window-shadow:
+    0 12px 32px light-dark(rgb(0 0 0 / 8%), rgb(0 0 0 / 35%)),
+    0 1px 3px light-dark(rgb(0 0 0 / 6%), rgb(0 0 0 / 30%));
+  --toast-shadow: 0 10px 30px rgb(0 0 0 / 12%);
+  --tag-blue: oklch(0.65 0.13 255);
+  --tag-green: oklch(0.65 0.13 150);
+  --tag-red: oklch(0.65 0.13 25);
+  --tag-purple: oklch(0.65 0.13 300);
+  --tag-amber: oklch(0.65 0.13 60);
+  --tag-teal: oklch(0.65 0.13 200);
+  --tag-pink: oklch(0.65 0.13 340);
+  --tag-lime: oklch(0.65 0.13 100);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --font-sans: 'Space Grotesk', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-2: var(--foreground-2);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-destructive: var(--destructive);
+  --color-destructive-background: var(--destructive-background);
+  --color-row-selected: var(--row-selected);
+  --color-sidebar: var(--sidebar);
+  --color-segment-on: var(--segment-on);
+  --color-highlight: var(--highlight);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --radius-sm: var(--radius-key);
+  --radius-md: var(--radius-control);
+  --radius-lg: var(--radius);
+  --text-body: 13.5px;
+  --text-description: 12.5px;
+  --text-meta: 11.5px;
+  --text-chip: 12px;
+  --text-snippet: 12.5px;
+  --text-preview: 13px;
+  --text-window: 13px;
+  --text-page: 18px;
+  --text-onboarding: 22px;
+}

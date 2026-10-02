@@ -1,0 +1,106 @@
+[data-slot='button'],
+[data-slot='input'],
+[data-slot='toggle'],
+[data-slot='toggle-group-item'],
+[data-slot='switch'],
+[data-slot='slider-thumb'] {
+  /* Theme changes never interpolate colors. */
+  transition-property: transform, opacity;
+}
+
+[data-slot='button'] {
+  font-size: 13.5px;
+}
+
+[data-slot='button']:disabled {
+  opacity: 0.45;
+}
+
+[data-slot='button']:focus-visible,
+[data-slot='input']:focus-visible,
+[data-slot='toggle']:focus-visible,
+[data-slot='toggle-group-item']:focus-visible,
+[data-slot='switch']:focus-visible,
+[data-slot='slider-thumb']:focus-visible {
+  outline: 1.5px solid var(--foreground);
+  outline-offset: 0;
+  box-shadow: var(--focus-shadow);
+}
+
+[data-slot='toggle-group'] {
+  padding: 2px;
+  gap: 2px;
+  background: var(--muted);
+}
+
+[data-slot='toggle-group-item'] {
+  height: 24px;
+  min-width: 26px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+[data-slot='toggle-group-item'][data-state='on'] {
+  background: var(--segment-on);
+  color: var(--foreground);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
+}
+
+[data-slot='field-label'] {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+[data-slot='field-description'] {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+.brand-light {
+  display: block;
+}
+.brand-dark {
+  display: none;
+}
+:root[data-theme='dark'] .brand-light {
+  display: none;
+}
+:root[data-theme='dark'] .brand-dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .brand-light {
+    display: none;
+  }
+  :root:not([data-theme='light']) .brand-dark {
+    display: block;
+  }
+}
+
+.settings-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-block: 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.settings-field-control {
+  flex-shrink: 0;
+  width: 192px;
+}
+.settings-field[data-inline='true'] .settings-field-control {
+  width: auto;
+}
+@media (width < 640px) {
+  .settings-field:not([data-inline='true']) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  .settings-field-control {
+    width: 100%;
+  }
+}
