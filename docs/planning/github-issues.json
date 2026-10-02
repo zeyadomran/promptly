@@ -92,10 +92,14 @@
   {
     "key": "P10",
     "number": 12,
-    "title": "[P10] Implement clipboard-preserving Copy fallback with concurrency protection",
+    "title": "[P10] Deferred: clipboard-preserving Copy fallback",
     "url": "https://github.com/zeyadomran/promptly/issues/12",
     "phase": 2,
-    "dependencies": [
+    "dependencies": [],
+    "status": "deferred",
+    "implemented": false,
+    "v1": false,
+    "futureDependencies": [
       "P03",
       "P09"
     ]
@@ -110,8 +114,7 @@
       "P04",
       "P05",
       "P07",
-      "P09",
-      "P10"
+      "P09"
     ]
   },
   {

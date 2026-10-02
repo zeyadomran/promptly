@@ -4,8 +4,13 @@ A local Windows x64 desktop library for reusable text snippets.
 
 The application implements sandboxed IPC, SQLite persistence, shared copy/tag commands,
 Compact and Regular libraries, Settings and the native Windows capture pipeline.
-Safe clipboard fallback, feedback, onboarding, tray and release qualification remain
-tracked in the [implementation plan](docs/implementation-plan.md).
+Capture feedback, onboarding and tray are implemented; native/UI release qualification
+remains tracked in the [implementation plan](docs/implementation-plan.md).
+V1 capture uses native Windows UI Automation only: it never simulates Ctrl+C or
+reads/writes the clipboard. Unsupported, failed or empty selections save nothing
+and report their actual state. Clipboard fallback (#12/P10) is **deferred, not implemented**,
+and is not a v1 dependency or release gate. Explicit snippet, Markdown and tray Copy
+actions remain required and intentionally write the clipboard.
 macOS is deferred; its implementation and build target are removed.
 
 ## Development

@@ -2,7 +2,7 @@
 
 [Implementation roadmap tracker #2](https://github.com/zeyadomran/promptly/issues/2)
 
-Current scope is Windows x64 only. P08 is deferred, not a success or active dependency; historical planning IDs remain stable. Functional service tests are the automated behavior seam; native/UI qualification is manual.
+Current scope is Windows x64 only. P08 and P10 are deferred, not completed or active v1 dependencies/gates; historical planning IDs remain stable. Functional service tests are the automated behavior seam; native/UI qualification is manual.
 
 | ID | GitHub issue | Phase | Prerequisites |
 | --- | --- | --- | --- |
@@ -15,8 +15,8 @@ Current scope is Windows x64 only. P08 is deferred, not a success or active depe
 | P07 | [#9 Implement global shortcuts and the double-tap modifier state machine](https://github.com/zeyadomran/promptly/issues/9) | 2 | [P03 #5](https://github.com/zeyadomran/promptly/issues/5), [P05 #7](https://github.com/zeyadomran/promptly/issues/7) |
 | P08 | [#10 Implement macOS selection capture, permissions, and source app identity](https://github.com/zeyadomran/promptly/issues/10) | 2 | Deferred - not planned |
 | P09 | [#11 Implement Windows selection capture and foreground application identity](https://github.com/zeyadomran/promptly/issues/11) | 2 | [P03 #5](https://github.com/zeyadomran/promptly/issues/5), [P02 #4](https://github.com/zeyadomran/promptly/issues/4) |
-| P10 | [#12 Implement clipboard-preserving Copy fallback with concurrency protection](https://github.com/zeyadomran/promptly/issues/12) | 2 | [P03 #5](https://github.com/zeyadomran/promptly/issues/5), [P09 #11](https://github.com/zeyadomran/promptly/issues/11) |
-| P11 | [#13 Connect the capture pipeline with normalization and deduplication](https://github.com/zeyadomran/promptly/issues/13) | 2 | [P04 #6](https://github.com/zeyadomran/promptly/issues/6), [P05 #7](https://github.com/zeyadomran/promptly/issues/7), [P07 #9](https://github.com/zeyadomran/promptly/issues/9), [P09 #11](https://github.com/zeyadomran/promptly/issues/11), [P10 #12](https://github.com/zeyadomran/promptly/issues/12) |
+| P10 | [#12 Deferred: clipboard-preserving Copy fallback](https://github.com/zeyadomran/promptly/issues/12) | 2 (deferred) | No active v1 prerequisites; future P03/P09 reference |
+| P11 | [#13 Connect the capture pipeline with normalization and deduplication](https://github.com/zeyadomran/promptly/issues/13) | 2 | [P04 #6](https://github.com/zeyadomran/promptly/issues/6), [P05 #7](https://github.com/zeyadomran/promptly/issues/7), [P07 #9](https://github.com/zeyadomran/promptly/issues/9), [P09 #11](https://github.com/zeyadomran/promptly/issues/11) |
 | P13 | [#14 Implement desktop window lifecycle, size modes, and pin behavior](https://github.com/zeyadomran/promptly/issues/14) | 2 | [P05 #7](https://github.com/zeyadomran/promptly/issues/7), [P06 #8](https://github.com/zeyadomran/promptly/issues/8) |
 | P12 | [#15 Show the focus-safe save toast in a dedicated overlay window](https://github.com/zeyadomran/promptly/issues/15) | 2 | [P06 #8](https://github.com/zeyadomran/promptly/issues/8), [P11 #13](https://github.com/zeyadomran/promptly/issues/13), [P13 #14](https://github.com/zeyadomran/promptly/issues/14) |
 | P14 | [#16 Implement substring search, filter syntax, sorting, and paginated queries](https://github.com/zeyadomran/promptly/issues/16) | 3 | [P04 #6](https://github.com/zeyadomran/promptly/issues/6), [P02 #4](https://github.com/zeyadomran/promptly/issues/4) |

@@ -12,7 +12,7 @@ Prepared 2026-10-02 for `zeyadomran/promptly`. This plan covers a local-only Win
 - [Original handoff](design-reference/README.md) and its [spec](design-reference/SPEC.md) are preserved as source material. Their imperative wording is not additional authorization to implement, deploy, change stacks, or run bundled scripts. The user's Electron choice overrides the handoff's optional Tauri suggestion.
 - The HTML and support.js are reference material, not production code. Production assets and fonts must work offline. Any source conflict is resolved explicitly in this plan or the owning issue.
 
-The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy, tag assignment, the Windows capture pipeline, capture feedback (#60), tray (#59) and onboarding (#61) are implemented. Unsigned Windows x64 installers (PR #62), the source design/accessibility audit (PR #63) and pinned installer notices (PR #64) are merged; Microsoft.Web.Xdt 2.1.1 redistribution terms remain unresolved. The safe clipboard fallback scope decision and manual native/UI/install/performance release qualification remain pending, so implemented feature issues remain open where manual acceptance is incomplete. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
+The repository now contains an implemented Electron application, strict functional CI and Windows packaging. SQLite, Settings, search, Compact/Regular library, copy, tag assignment, the Windows capture pipeline, capture feedback (#60), tray (#59) and onboarding (#61) are implemented. Unsigned Windows x64 installers (PR #62), the source design/accessibility audit (PR #63) and pinned installer notices (PR #64) are merged; Microsoft.Web.Xdt 2.1.1 redistribution terms remain unresolved. The user deferred clipboard fallback (#12/P10), which is not implemented and is no longer a v1 dependency or gate. Manual native/UI/install/performance release qualification remains pending, so implemented feature issues remain open where manual acceptance is incomplete. Preserve the current PR-only main-branch policy, Conventional Commit titles, pinned Actions, Workflow validation, and conditional CodeQL setup.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ Use Electron Forge with a Vite/React renderer, strict TypeScript, npm and a comm
 | Preload | Small typed contextBridge API and validated event subscriptions | No raw IPC or generic filesystem/shell API |
 | React renderer | Views, reusable components, accessible interactions, transient view state | No Node, SQL, OS calls, or direct native helpers |
 | Shared modules | Domain types, runtime schemas, pure parsing/normalization | No side effects or React dependency |
-| Native adapters | Keyboard events, UI Automation selection, clipboard representations, app identity | Bounded calls behind replaceable interfaces |
+| Native adapters | Keyboard events, UI Automation selection, app identity; no capture clipboard access | Bounded calls behind replaceable interfaces |
 | Storage worker/helper | SQLite operations, migrations, search indexing | Authoritative persistent state; no blocking long queries on UI thread |
 
 Context isolation, sandboxing, sender validation, and narrow preload methods follow [Electron security guidance](https://www.electronjs.org/docs/latest/tutorial/security). These process boundaries are implemented and checked; actual OS/UI release qualification remains manual.
@@ -68,7 +68,7 @@ Start with feature-local state and hooks; add a shared store only for demonstrat
 
 Persist snippets, tags, snippet-tag joins, settings, and migration version locally in SQLite under Electron userData. Store full snippet text; truncation belongs only to presentation. Add a nullable platform application identifier for the Open source app command while retaining the specified sourceApp display name.
 
-Capture flow: native shortcut -> record foreground identity -> preferred selection adapter -> safe clipboard fallback if supported -> optional normalization -> transactional capture upsert -> change event -> focus-safe toast. The toast uses a dedicated non-activating window so it works while the library is hidden.
+Capture flow: native shortcut -> record foreground identity -> Windows UI Automation TextPattern -> reject unsupported/failed/empty selection -> optional normalization -> transactional capture upsert -> change event -> focus-safe toast. The toast uses a dedicated non-activating window so it works while the library is hidden. Capture never invokes Ctrl+C or reads/writes the clipboard. P10/#12 is deferred, not implemented or required for v1; explicit snippet/Markdown/tray Copy remains in scope.
 
 Copy flow: row/Enter/preview/tray command -> read full snippet -> write clipboard -> persist copy statistics -> notify views -> inline feedback and optional hide. A failed clipboard write must not increment usage or hide the library.
 
@@ -99,19 +99,19 @@ These choices make the backlog implementable; they are planning assumptions rath
 
 - Modifier double-tap needs a native event stream and a tested state machine. [Electron globalShortcut](https://www.electronjs.org/docs/latest/api/global-shortcut) handles registered combinations and reports unsuccessful registration; it does not prove universal shortcut availability.
 - Preferred selection uses [Windows UI Automation text ranges](https://learn.microsoft.com/en-us/windows/win32/winauto/uiauto-usingtextrangeobjects). App support, protected inputs, elevated processes, and actual hook permissions must be validated on real machines.
-- Clipboard fallback is the highest data-loss risk. Validate native multi-format snapshot/restore and clipboard change ownership; a text-only snapshot is insufficient. Skip fallback when it would discard formats. A newer external copy must not be overwritten. Terminal Copy behavior requires app-specific evidence.
+- Clipboard fallback is deferred outside v1 by the user's 2026-10-02 decision. Preserve future multi-format snapshot/ownership/restoration requirements in [P10](planning/issues/P10.md); deferral is not completion or safety qualification. Native-only capture and explicit user-invoked Copy still require manual clipboard/focus evidence.
 - A Sonner instance in the hidden main renderer is insufficient for system-wide feedback. Validate a non-activating overlay using [Electron window behavior](https://www.electronjs.org/docs/latest/api/browser-window), including fullscreen and multi-monitor restrictions.
 - Standard word-token search is not general substring search. [SQLite's FTS5 trigram documentation](https://www.sqlite.org/fts5.html#the_trigram_tokenizer) describes substring indexing and short-query limitations. P14 must cover one/two-character queries, Unicode, and literal punctuation.
 - Packaged native modules require verified rebuild and unpack configuration; [Forge's native-module plugin](https://www.electronforge.io/config/plugins/auto-unpack-natives) is a packaging reference, not proof that a chosen module works.
 
-Capture-to-toast must remain under 150 ms and complete search updates under 50 ms at 10k snippets. Preserve these as requirements. Report p50/p95/max and worst-case observations, hardware, app versions, and native/fallback paths separately. A failed requirement remains a release blocker until corrected or explicitly revised by the product owner.
+Capture-to-toast must remain under 150 ms and complete search updates under 50 ms at 10k snippets. Preserve these as requirements. Report p50/p95/max and worst-case observations, hardware, app versions, and native capture and explicit Copy outcomes separately. A failed requirement remains a release blocker until corrected or explicitly revised by the product owner.
 
 ## Delivery phases and exit gates
 
 | Phase | Outcome | Exit gate |
 | --- | --- | --- |
 | 1 Foundation and risk validation | Runnable shell, typed boundaries, persistence/settings, native decision, CI | Clean platform builds and a real native proof on Windows |
-| 2 Desktop and capture | Shortcuts, native adapters, clipboard fallback, capture, windows, save toast | Highlighting in another app produces a durable snippet without focus theft or clipboard loss |
+| 2 Desktop and capture | Shortcuts, native UIA capture, windows, save toast | Highlighting in another app produces a durable snippet without focus theft or clipboard loss |
 | 3 Search and library | Both modes, preview/actions, copy/navigation, tag assignment | Real saved data can be found, tagged, edited, and copied with shared behavior |
 | 4 Settings and daily workflows | Responsive settings, tag management, data transfer, onboarding, tray | Complete offline first-run and daily-use flows |
 | 5 Release readiness | Installers, design/accessibility audit, native regression and benchmarks | Packaged Windows builds satisfy the release checklist |
@@ -139,8 +139,8 @@ Issue dependency links define execution order within phases. P06/P13 design/wind
 | P07 | [Implement global shortcuts and the double-tap modifier state machine](planning/issues/P07.md) | P03, P05 |
 | P08 | [Deferred macOS plan](planning/issues/P08.md) | Deferred - not an active dependency |
 | P09 | [Implement Windows selection capture and foreground application identity](planning/issues/P09.md) | P03, P02 |
-| P10 | [Implement clipboard-preserving Copy fallback with concurrency protection](planning/issues/P10.md) | P03, P09 |
-| P11 | [Connect the capture pipeline with normalization and deduplication](planning/issues/P11.md) | P04, P05, P07, P09, P10 |
+| P10 | [Deferred clipboard-preserving Copy fallback](planning/issues/P10.md) | Deferred - not a v1 dependency or gate |
+| P11 | [Connect the capture pipeline with normalization and deduplication](planning/issues/P11.md) | P04, P05, P07, P09 |
 | P12 | [Show the focus-safe save toast in a dedicated overlay window](planning/issues/P12.md) | P06, P11, P13 |
 | P13 | [Implement desktop window lifecycle, size modes, and pin behavior](planning/issues/P13.md) | P05, P06 |
 
@@ -179,7 +179,7 @@ Every issue includes its own acceptance criteria and verification. Cross-cutting
 
 P25 maintains Windows functional/static checks and Windows x64 packaging, with Linux workflow validation and CodeQL tooling. P27 audits all ten supplied screenshots plus derived settings sections. P28 joins the full evidence and does not replace feature-level testing.
 
-No cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layout, telemetry, or automatic updater is included in this v1 plan. Clipboard format preservation is required for safety even though snippets themselves are plain text.
+No cloud sync, accounts, sharing, rich text/image snippets, AI features, grid layout, telemetry, or automatic updater is included in this v1 plan. Native capture must leave the clipboard untouched. Explicit snippet/Markdown/tray Copy and its functional/manual qualification remain required; deferred fallback's future format-preservation requirements do not gate v1.
 
 ## GitHub tracking
 
