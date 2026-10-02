@@ -11,5 +11,8 @@ try {
   run('npx playwright test --config playwright.packaged-design.config.ts');
 } finally {
   // Restore the normal distributable even if the fixture verification fails.
-  run('npm run package');
+  const env = { ...process.env };
+
+  delete env.PROMPTLY_DESIGN_FIXTURE;
+  run('npm run package', env);
 }

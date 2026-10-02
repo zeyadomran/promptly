@@ -6,6 +6,8 @@ a foundation check, not an implementation of the library or settings features.
 
 Run `npm ci`, `npm run check`, `npx playwright install chromium`,
 `npm run test:design`, `npm run package`, and `npm run test:smoke`.
+Run `npm run test:packaged-design` to build a temporary verification-only fixture,
+exercise production CSP, then restore the normal distributable even on failure.
 The Playwright fixture suite captures the three `fixtures-*.png` files here; the
 packaged Electron suite captures `packaged-light.png` and `packaged-dark.png`.
 Those captures are actual app output and can be compared with the supplied
@@ -53,6 +55,29 @@ emulation is deliberately avoided because it interferes with Electron file
 navigation; the transport block provides the actual offline asset check.
 Mac packaged verification runs in CI; local evidence is Windows x64.
 
+## Production style policy
+
+Sonner 2.0.8 injects its stylesheet at import time. The build computes the exact
+SHA-256 hash from the pinned installed stylesheet; a changed emission format
+fails the build. The empty style hash permits Sonner's initial empty element.
+Radix's scrollbar helper receives a nonce through its supported `get-nonce` API.
+The main process generates a cryptographically random 144-bit nonce per app
+session, exposes only the validated string through preload, and substitutes it
+into the entry HTML before delivery. The artifact contains a placeholder, never
+an authorization nonce. Renderer file requests are limited to bundled assets;
+additional HTML and paths outside that directory are rejected. The existing
+registered file origin and named IPC bridge remain unchanged.
+
+The packaged fixture test verifies styled Sonner output, Radix dialog focus and
+nonce-bearing scrollbar CSS, zero unexpected CSP violations, and rejection of an
+unauthorized stylesheet. A second app launch must receive a different nonce.
+`packaged-sonner-dark.png` is a toast crop from this runtime policy check. Production keeps
+`script-src 'self'`, narrow style hashes/nonces, and no `unsafe-inline`.
+
+Local validation on 2026-10-02: clean `npm ci`; strict type/lint/format checks;
+64 unit/component/boundary tests; two Chromium theme/keyboard tests; one packaged
+CSP/nonce test; four Electron smoke tests, including all existing IPC checks.
+
 Primary references consulted on 2026-10-02:
 
 - [shadcn Radix Button](https://ui.shadcn.com/docs/components/radix/button)
@@ -61,6 +86,9 @@ Primary references consulted on 2026-10-02:
 - [shadcn Radix Toggle Group](https://ui.shadcn.com/docs/components/radix/toggle-group)
 - [Fontsource Space Grotesk](https://fontsource.org/fonts/space-grotesk)
 - [Fontsource Geist Mono](https://fontsource.org/fonts/geist-mono)
+- [Electron protocol handlers](https://www.electronjs.org/docs/latest/api/protocol)
+- [Electron net.fetch forwarding](https://www.electronjs.org/docs/latest/api/net)
+- [get-nonce supported API](https://github.com/theKashey/get-nonce)
 
 Current stable direct additions verified with npm metadata: Radix UI 1.6.7,
 lucide-react 1.49.0, Sonner 2.0.8, clsx 2.1.1, class-variance-authority 0.7.1,

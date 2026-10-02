@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron';
 
 import { changeChannel } from '../shared/contracts/operations';
+import { styleNonceFromArguments } from '../shared/style-nonce';
 import { createDesktopBridge } from './create-desktop-bridge';
 
 const platform = process.platform;
@@ -22,4 +23,5 @@ const { bridge, dispose } = createDesktopBridge(
 );
 
 contextBridge.exposeInMainWorld('promptly', bridge);
+contextBridge.exposeInMainWorld('promptlyStyleNonce', styleNonceFromArguments(process.argv));
 window.addEventListener('unload', dispose, { once: true });

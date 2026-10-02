@@ -101,6 +101,7 @@ test('themes, local assets, keyboard interactions and reference measurements', a
   await page.getByRole('button', { name: 'Show toast fixture' }).click();
   await expect(page.getByText('Saved to Promptly')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Show toast fixture' })).toBeFocused();
+  await expect(page.locator('[data-sonner-toast]')).not.toBeVisible({ timeout: 5000 });
   await page.setViewportSize({ width: 440, height: 1400 });
   await expect(page.getByLabel('Open Promptly')).toBeVisible();
   await page.screenshot({

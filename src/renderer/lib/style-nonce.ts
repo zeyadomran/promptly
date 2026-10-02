@@ -1,9 +1,12 @@
 import { setNonce } from 'get-nonce';
 
+import { isStyleNonce } from '../../shared/style-nonce';
+
 /** The supported nonce API used by Radix's scrollbar style singleton. */
 export function initializeStyleNonce() {
-  const nonce: unknown = import.meta.env.PROMPTLY_STYLE_NONCE;
+  const nonce: unknown = window.promptlyStyleNonce;
 
-  if (typeof nonce !== 'string' || nonce.length === 0) throw new Error('Missing style nonce');
+  if (nonce === undefined && import.meta.env.DEV) return;
+  if (!isStyleNonce(nonce)) throw new Error('Missing style nonce');
   setNonce(nonce);
 }

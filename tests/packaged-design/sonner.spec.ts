@@ -2,7 +2,7 @@ import path from 'node:path';
 
 import { _electron as electron, expect, test } from '@playwright/test';
 
-test('packaged Radix and Sonner render with exact-hash CSP and blocked network', async () => {
+test('packaged libraries render under CSP while unauthorized styles are rejected', async () => {
   const directory = path.resolve('out', `Promptly-${process.platform}-${process.arch}`);
   const executablePath =
     process.platform === 'darwin'
@@ -15,6 +15,7 @@ test('packaged Radix and Sonner render with exact-hash CSP and blocked network',
   }
 
   const app = await electron.launch({ executablePath, env });
+  let firstNonce: string | undefined;
 
   try {
     const page = await app.firstWindow();
@@ -49,6 +50,22 @@ test('packaged Radix and Sonner render with exact-hash CSP and blocked network',
     expect(csp).toContain("style-src 'self' 'sha256-");
     expect(csp).not.toContain('unsafe-inline');
     expect(csp).toContain("'nonce-");
+    firstNonce = await page.evaluate(() => window.promptlyStyleNonce);
+    if (firstNonce === undefined) throw new Error('Missing packaged style nonce');
+    expect(firstNonce).toMatch(/^[A-Za-z0-9+/]{24}$/u);
+    expect(csp).toContain(`'nonce-${firstNonce}'`);
+    expect(csp).not.toContain('__PROMPTLY_STYLE_NONCE__');
+    const deniedAsset = await app.evaluate(async ({ BrowserWindow }) => {
+      const window = BrowserWindow.getAllWindows()[0];
+
+      if (window === undefined) throw new Error('Missing packaged window');
+      const outside = new URL('../../../package.json', window.webContents.getURL());
+      const response = await window.webContents.session.fetch(outside.href);
+
+      return response.status;
+    });
+
+    expect(deniedAsset).toBe(403);
     await page.getByRole('radio', { name: 'Dark', exact: true }).click();
     await page.getByRole('button', { name: 'Show toast fixture' }).click();
     const toast = page.locator('[data-sonner-toast]');
@@ -56,20 +73,60 @@ test('packaged Radix and Sonner render with exact-hash CSP and blocked network',
     await expect(toast).toBeVisible();
     await expect(toast).toHaveCSS('position', 'absolute');
     await expect(toast).toHaveCSS('background-color', 'rgb(9, 9, 11)');
+    await expect(toast).toHaveCSS('font-family', '"Space Grotesk", sans-serif');
+    await expect(toast).toHaveCSS('width', '290px');
     await expect(page.getByRole('button', { name: 'Show toast fixture' })).toBeFocused();
-    await page.screenshot({
-      path: 'docs/verification/P06/packaged-sonner-dark.png',
-      fullPage: true
-    });
+    await toast.screenshot({ path: 'docs/verification/P06/packaged-sonner-dark.png' });
     await expect(toast).not.toBeVisible({ timeout: 5000 });
     await page.getByRole('button', { name: 'Open dialog fixture' }).click();
     await expect(page.getByRole('dialog', { name: 'Accessible overlay fixture' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Focusable action' })).toBeFocused();
+    expect(
+      await page.locator('style[nonce]').evaluateAll((styles) => styles.map((style) => style.nonce))
+    ).toContain(firstNonce);
     await page.keyboard.press('Escape');
     await expect(page.getByRole('dialog')).not.toBeVisible();
     expect(errors).toEqual([]);
     expect(violations).toEqual([]);
+    const rejected = await page.evaluate(async () => {
+      const violation = new Promise<string>((resolve) => {
+        document.addEventListener(
+          'securitypolicyviolation',
+          (event) => {
+            resolve(event.effectiveDirective);
+          },
+          { once: true }
+        );
+      });
+      const unauthorized = document.createElement('style');
+
+      unauthorized.textContent = 'body { --unauthorized-style: injected; }';
+      document.head.append(unauthorized);
+      return {
+        directive: await violation,
+        applied: getComputedStyle(document.body).getPropertyValue('--unauthorized-style')
+      };
+    });
+
+    expect(rejected.directive).toBe('style-src-elem');
+    expect(rejected.applied).toBe('');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]).toContain('Content Security Policy');
   } finally {
     await app.close();
+  }
+
+  const secondApp = await electron.launch({ executablePath, env });
+
+  try {
+    const page = await secondApp.firstWindow();
+
+    await expect(page.getByRole('heading', { name: 'Promptly' })).toBeVisible();
+    const nextNonce = await page.evaluate(() => window.promptlyStyleNonce);
+
+    expect(nextNonce).toMatch(/^[A-Za-z0-9+/]{24}$/u);
+    expect(nextNonce).not.toBe(firstNonce);
+  } finally {
+    await secondApp.close();
   }
 });

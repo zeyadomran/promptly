@@ -13,6 +13,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="system"
       duration={2500}
       className="toaster group"
+      toastOptions={{ style: { width: '100%' } }}
       icons={{
         success: <CircleCheckIcon className="size-4" />,
         info: <InfoIcon className="size-4" />,
@@ -22,6 +23,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
+          fontFamily: '"Space Grotesk", sans-serif',
+          width: 'min(290px, calc(100vw - 32px))',
+          '--width': '290px',
           '--normal-bg': 'var(--popover)',
           '--normal-text': 'var(--popover-foreground)',
           '--normal-border': 'var(--border)',

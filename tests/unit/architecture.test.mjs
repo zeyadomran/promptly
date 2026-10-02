@@ -9,7 +9,6 @@ const inspect = (layer, source) =>
   inspectModule(path.join(root, 'src', layer, 'fixture.tsx'), source, root);
 
 describe('process boundaries', () => {
-<<<<<<< HEAD
   it('limits the design dependencies and renderer alias to the renderer layer', () => {
     expect(
       inspect(
@@ -24,12 +23,11 @@ describe('process boundaries', () => {
     expect(inspect('renderer', "import secret from '@/../../main/secret';").length).toBeGreaterThan(
       0
     );
-=======
+  });
   it('allows Zod only in pure shared schemas', () => {
     expect(inspect('shared', "import { z } from 'zod';")).toEqual([]);
     expect(inspect('renderer', "import { z } from 'zod';").length).toBeGreaterThan(0);
     expect(inspect('main', "import { z } from 'zod';").length).toBeGreaterThan(0);
->>>>>>> origin/main
   });
   it.each([
     "import fs from 'node:fs';",
@@ -122,4 +120,3 @@ describe('component ownership', () => {
     expect(inspect('shared', '\n'.repeat(201))).toEqual([expect.stringContaining('200 lines')]);
   });
 });
-

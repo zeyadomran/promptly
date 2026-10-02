@@ -1,3 +1,7 @@
+import type { Tag } from '../../shared/contracts/domain';
+
+export type TagColor = Tag['color'];
+
 export const tagColors = [
   'blue',
   'green',
@@ -7,8 +11,7 @@ export const tagColors = [
   'teal',
   'pink',
   'lime'
-] as const;
-export type TagColor = (typeof tagColors)[number];
+] as const satisfies readonly TagColor[];
 
 export const tagColorClasses: Record<TagColor, string> = {
   blue: 'bg-[var(--tag-blue)]',

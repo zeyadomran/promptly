@@ -1,17 +1,13 @@
-import { randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vite';
 
 import { emptyStyleHash, sonnerStyleHash } from './scripts/sonner-style-hash';
-
-// Offline bundles share this build-specific nonce; P13 can provide per-window HTML.
-const styleNonce = randomBytes(18).toString('base64');
+import { styleNoncePlaceholder } from './src/shared/style-nonce';
 
 export default defineConfig(({ command }) => ({
   define: {
-    'import.meta.env.PROMPTLY_STYLE_NONCE': JSON.stringify(styleNonce),
     'import.meta.env.PROMPTLY_DESIGN_FIXTURE': JSON.stringify(
       process.env['PROMPTLY_DESIGN_FIXTURE'] ?? ''
     )
@@ -26,7 +22,7 @@ export default defineConfig(({ command }) => ({
         const style =
           command === 'serve'
             ? "'self' 'unsafe-inline'"
-            : `'self' ${sonnerStyleHash()} ${emptyStyleHash()} 'nonce-${styleNonce}'`;
+            : `'self' ${sonnerStyleHash()} ${emptyStyleHash()} 'nonce-${styleNoncePlaceholder}'`;
 
         return html.replace(
           '__CSP__',
