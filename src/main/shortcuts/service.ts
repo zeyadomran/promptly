@@ -4,8 +4,10 @@ import type { KeyboardHook } from '../platform/keyboard/keyboard-hook';
 import type { SettingsController } from '../settings/controllers';
 import { type AcceleratorApi, Accelerators } from './accelerators';
 import { bindings, type ShortcutAction } from './bindings';
+import { CaptureAdmission } from './capture-admission';
 import { DoubleTap } from './double-tap';
 import { HookSession } from './hook-session';
+import { updateRecording } from './recording';
 import { shortcutController } from './settings-controller';
 import { shortcutStatus } from './status';
 
@@ -24,6 +26,7 @@ export class Shortcuts {
   private paused = false;
   private closing = false;
   private readonly session: HookSession;
+  private readonly admission = new CaptureAdmission(() => !this.blockedCapture);
 
   constructor(
     api: AcceleratorApi,
@@ -40,6 +43,7 @@ export class Shortcuts {
     this.session = new HookSession(
       () => {
         this.taps.reset();
+        this.admission.invalidate();
       },
       () => {
         if (this.preferences !== undefined)
@@ -51,6 +55,7 @@ export class Shortcuts {
       previous: () => this.preferences,
       commit: (settings) => {
         this.preferences = settings;
+        this.admission.invalidate();
       },
       hook: () => this.session.hook,
       recording: () => this.recorders.size > 0,
@@ -67,7 +72,13 @@ export class Shortcuts {
 
   readonly controller: SettingsController;
 
+  captureAdmission(): (() => boolean) | undefined {
+    return this.admission.begin();
+  }
+
   receive(frame: HookFrame): void {
+    if (frame.kind === 'health' || frame.kind === 'reset' || frame.kind === 'ready')
+      this.admission.invalidate();
     if (
       this.blockedCapture ||
       this.session.hook?.health.installed !== true ||
@@ -83,36 +94,23 @@ export class Shortcuts {
   }
 
   setPaused(paused: boolean): void {
+    this.admission.invalidate();
     this.paused = paused;
     this.taps.reset();
   }
 
   record(owner: number, active: boolean): void {
-    if (this.closing) {
-      if (active) throw new Error('Shortcuts are shutting down.');
-      this.recorders.delete(owner);
-      this.taps.reset();
-      return;
-    }
-
-    if (active) this.recorders.add(owner);
-    else this.recorders.delete(owner);
-    try {
-      this.accelerators.suspend(this.recorders.size > 0);
-    } catch (error) {
-      this.recorders.delete(owner);
-      try {
-        this.accelerators.suspend(this.recorders.size > 0);
-      } catch {
-        this.controller.quarantine?.();
-      }
-
-      this.taps.reset();
-      throw error;
-    }
-
-    this.taps.reset();
-    if (active) this.recover();
+    this.admission.invalidate();
+    updateRecording(
+      this.recorders,
+      owner,
+      active,
+      this.closing,
+      this.accelerators,
+      this.controller,
+      this.taps,
+      this.recover
+    );
   }
 
   release(owner: number): void {

@@ -2,6 +2,7 @@ import path from 'node:path';
 
 import { app, ipcMain, nativeTheme } from 'electron';
 
+import { createDesktopCapture } from './capture/desktop-capture';
 import { createDesktopCopy } from './copy/desktop-copy';
 import type { CopyService } from './copy/service';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
@@ -43,11 +44,12 @@ let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let macosSelection: MacosSelection | undefined;
 let transfer: StorageTransfer | undefined;
 let copy: CopyService | undefined;
+let capture: ReturnType<typeof createDesktopCapture> | undefined;
 const mutations = new LibraryMutations();
 const shutdown = createDesktopShutdown({
   cleanup: () => {
     keyboard?.shortcuts.stopCommands();
-    return closeLibraryResources([copy, transfer], () =>
+    return closeLibraryResources([capture, copy, transfer], () =>
       closeWindowResources(lifecycle, () =>
         closeSettingsStorage(settings, storage, {
           close: () =>
@@ -130,12 +132,24 @@ if (primaryInstance)
         path.join(app.getPath('userData'), 'promptly.sqlite')
       );
 
-      transfer = new StorageTransfer(storage, mutations, dialogs);
+      capture = createDesktopCapture(
+        storage,
+        mutations,
+        settings,
+        keyboard,
+        windowsSelection ?? macosSelection
+      );
+      transfer = new StorageTransfer(storage, mutations, dialogs, () => {
+        capture?.sources.clear();
+      });
       copy = createDesktopCopy(storage, mutations, dialogs, settings, () => lifecycle);
       desktop = installDesktopIpc(
         ipcMain,
         {
-          ...storageDesktopServices(storage, mutations),
+          ...storageDesktopServices(storage, mutations, (id) => {
+            capture?.sources.forget(id);
+          }),
+          ...capture.service.services,
           ...transfer.services,
           ...copy.services,
           ...settings.services,
