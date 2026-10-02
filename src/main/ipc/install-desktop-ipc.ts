@@ -42,7 +42,8 @@ export function installDesktopIpc(
         { ...services, ...ownedServices?.(event.sender) },
         windows.isAuthorized(event),
         name,
-        request
+        request,
+        { senderId: event.sender.id }
       )
     );
   }

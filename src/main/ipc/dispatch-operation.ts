@@ -12,7 +12,8 @@ export async function dispatchOperation<K extends OperationName>(
   services: Partial<DesktopOperations>,
   authorized: boolean,
   name: K,
-  input: unknown
+  input: unknown,
+  context?: { senderId: number }
 ): Promise<DesktopResult<OperationResponse<K>>> {
   if (!authorized) return failure('UNAUTHORIZED', 'This window cannot access desktop operations.');
   const schema = operations[name];
@@ -20,12 +21,16 @@ export async function dispatchOperation<K extends OperationName>(
 
   if (!request.success) return failure('INVALID_REQUEST', 'The desktop request is malformed.');
   const handler = services[name] as
-    ((value: OperationRequest<K>) => Promise<DesktopResult<OperationResponse<K>>>) | undefined;
+    | ((
+        value: OperationRequest<K>,
+        context?: { senderId: number }
+      ) => Promise<DesktopResult<OperationResponse<K>>>)
+    | undefined;
 
   if (handler === undefined)
     return failure('UNAVAILABLE', 'This desktop operation is not available yet.');
   try {
-    const response: unknown = await handler(request.data as OperationRequest<K>);
+    const response: unknown = await handler(request.data as OperationRequest<K>, context);
     const parsed = resultSchema<unknown>(schema.response).safeParse(response);
 
     if (!parsed.success)
