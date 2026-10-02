@@ -4,10 +4,12 @@ import path from 'node:path';
 
 import { _electron as electron, type TestInfo } from '@playwright/test';
 
+import { assertProfileIdentity } from '../profile-identity';
 import { buildIpcFixture } from './build-ipc-fixture';
 import { seedSearchCorpus } from './search-corpus';
+import { finishSearchTrace, settleSearchCleanup } from './search-trace';
 
-/** Owns the test corpus and fixture process; diagnostic profile does not change ordinary startup. */
+/** Every fixture owns its corpus and profile; no mode can open the default userData. */
 export async function launchSearchFixture(testInfo: TestInfo) {
   await buildIpcFixture(undefined, 'tests/e2e/fixtures/search-main.ts', 'search');
   const directory = await mkdtemp(path.join(tmpdir(), 'promptly-search-'));
@@ -32,10 +34,7 @@ export async function launchSearchFixture(testInfo: TestInfo) {
   const traceProfile = path.join(directory, 'trace-profile');
   const application = await electron
     .launch({
-      args: [
-        path.resolve('.vite/build/ipc-fixture.cjs'),
-        ...(process.env['PROMPTLY_SEARCH_TRACE'] === '1' ? [`--user-data-dir=${traceProfile}`] : [])
-      ],
+      args: [path.resolve('.vite/build/ipc-fixture.cjs'), `--user-data-dir=${traceProfile}`],
       env
     })
     .catch(async (error: unknown) => {
@@ -47,5 +46,20 @@ export async function launchSearchFixture(testInfo: TestInfo) {
   application.process().stdout?.on('data', (data: Buffer) => {
     consoleMessages.push(data.toString());
   });
-  return { application, consoleMessages, corpus, directory, traceProfile };
+  try {
+    const actual = await application.evaluate(({ app }) => app.getPath('userData'));
+    const profileIdentity = await assertProfileIdentity(actual, traceProfile);
+
+    return { application, consoleMessages, corpus, directory, profileIdentity };
+  } catch (error) {
+    await settleSearchCleanup(
+      [
+        () => finishSearchTrace(application, testInfo),
+        () => application.close(),
+        () => rm(directory, { recursive: true, force: true })
+      ],
+      true
+    );
+    throw error;
+  }
 }

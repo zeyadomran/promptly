@@ -3,7 +3,6 @@ import { cpus, totalmem } from 'node:os';
 
 import { expect, test } from '@playwright/test';
 
-import { assertProfileIdentity } from '../profile-identity';
 import { launchSearchFixture } from './search-application';
 import { assertCompleteHighlights } from './search-complete-highlights';
 import { measureSearchInvalidations } from './search-invalidations';
@@ -16,19 +15,12 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
   browserName
 }, testInfo) => {
   test.setTimeout(120_000);
-  const { application, consoleMessages, corpus, directory, traceProfile } =
+  const { application, consoleMessages, corpus, directory, profileIdentity } =
     await launchSearchFixture(testInfo);
   let traceFinished = false;
   let failed = false;
-  let traceProfileIdentity: Awaited<ReturnType<typeof assertProfileIdentity>> | undefined;
 
   try {
-    if (process.env['PROMPTLY_SEARCH_TRACE'] === '1') {
-      const actual = await application.evaluate(({ app }) => app.getPath('userData'));
-
-      traceProfileIdentity = await assertProfileIdentity(actual, traceProfile);
-    }
-
     const page = await application.firstWindow();
 
     await prepareSearchTrace(page);
@@ -139,7 +131,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
       browserName,
       diagnosticProfile: process.env['PROMPTLY_SEARCH_PROFILE'] === '1',
       diagnosticTrace: process.env['PROMPTLY_SEARCH_TRACE'] === '1',
-      traceProfileIdentity,
+      profileIdentity,
       hardware: {
         platform: process.platform,
         cpu: cpus()[0]?.model,

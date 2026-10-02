@@ -117,3 +117,19 @@ and temporary directory if flushing fails. If the test already failed, cleanup
 errors are reported without replacing the original failure. Three pure regressions
 cover flush/close/remove order, resource release after both flush/close errors,
 and retaining a prior ordinary gate failure when cleanup also fails.
+
+
+## Profile isolation correction after 850f41e review
+
+The initial diagnostic delta isolated TRACE=1 only. Review of Electron/Playwright
+launch and fixture main proved ordinary mode retained the default application
+userData path. An in-memory session partition does not isolate app userData.
+Both ordinary and diagnostic launch now always supply a fresh generated profile;
+actual canonical app.getPath('userData') identity is asserted before fixture use
+and included in each receipt. This intentionally changes harness startup isolation,
+not query samples, deadlines or the input-to-paint gate. No existing default profile
+is read or deleted. Mismatched identity closes the owned process and removes only
+the generated corpus/profile tree. Four mode-specific regressions verify launch
+arguments, real directory identity and rejection of a different existing directory
+without deleting it. The previous diagnostic-only isolation statements describe
+the earlier version; they do not describe the corrected current harness.
