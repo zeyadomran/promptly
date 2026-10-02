@@ -39,6 +39,7 @@ export function TagPickerContent({
       data-promptly-overlay="tags"
       aria-label={state.targetId === null ? 'Create or filter tags' : 'Edit snippet tags'}
       onOpenAutoFocus={() => {
+        // Radix owns initial focus so this runs on each open, including after an outside click.
         restore.current = true;
       }}
       onCloseAutoFocus={(event) => {
@@ -80,7 +81,6 @@ export function TagPickerContent({
     >
       <Command label="Tags" shouldFilter={false} vimBindings={false}>
         <CommandInput
-          autoFocus
           placeholder="Search or create a tag…"
           aria-label="Search or create a tag"
           value={state.query}
