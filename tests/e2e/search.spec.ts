@@ -149,7 +149,7 @@ test('10k input-to-painted React results via named IPC and the packaged worker',
       startup,
       initialGeometry,
       measurement:
-        'native input event timestamp to second animation frame after real React result commit; conservative paint upper bound; simultaneously visible scrolling 20-row list and ONE wrapped full-text preview, actual bundled fonts; full text transmitted/searched/highlighted; no timed debounce or query prewarming',
+        'native input event timestamp to second animation frame after real React result commit; rendering-opportunity proxy, not verified physical presentation; simultaneously visible scrolling 20-row list and ONE wrapped full-text preview, actual bundled fonts; full text transmitted/searched/highlighted; no timed debounce or query prewarming',
       statistics,
       phases,
       rapid,

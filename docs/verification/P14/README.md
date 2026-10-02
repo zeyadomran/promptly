@@ -69,9 +69,11 @@ including leading/later terms and the late highlight after scrolling. There is
 no occurrence cap: adjacent/overlapping matches form a complete union.
 
 Timing begins at the native input event timestamp and ends at the second
-animation frame after the corresponding React result commits. Chromium paints
-between those callbacks: this is a conservative presentation upper bound,
-not physical display scanout. Assertions bind query/revision to the result;
+animation-frame callback after the corresponding React result commits. This is a
+rendering-opportunity proxy, not verified physical presentation or an established
+presentation upper bound. Separate screenshot assertions prove visible text and
+highlight rendering; they do not establish the timestamp of that presentation.
+Assertions bind query/revision to the result;
 no-match and mutation measurements cannot reuse prior DOM. Worker, bridge,
 React commit and frame-wait phases are retained separately.
 
@@ -140,3 +142,7 @@ platform/hosted skips and the retained seeder failure, followed by the corrected
 search case; separate diagnostic search; two design cases; two-process production
 CSP. All owned processes closed and the normal package was restored. No local
 macOS result or fresh hosted performance pass is claimed.
+
+Future receipts use the corrected rendering-opportunity label. Older raw receipts
+retain their original unsupported upper-bound wording as historical evidence;
+their numeric samples, workload and maximum less than 50 ms gate are unchanged.
