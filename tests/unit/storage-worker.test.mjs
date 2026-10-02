@@ -5,7 +5,6 @@ import { setImmediate } from 'node:timers/promises';
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { StorageClient } from '../../src/main/storage/client';
 import { buildStorageWorker, query } from './storage-worker-fixture.mjs';
 
 let fixture;
@@ -23,7 +22,7 @@ describe('serialized database worker', () => {
   it('serializes concurrent recaptures, commits ordered events, drains submitted writes and reopens revision', async () => {
     const changes = [];
     const filename = path.join(directory, 'concurrent.sqlite');
-    const client = new StorageClient(workerFile, filename, (event) => changes.push(event));
+    const client = fixture.createClient(workerFile, filename, (event) => changes.push(event));
 
     try {
       expect(await client.ready).toBe(0);
@@ -58,7 +57,7 @@ describe('serialized database worker', () => {
       expect((await Promise.all(copies)).every((result) => result.ok)).toBe(true);
       await closing;
       await expect(client.call('getRevision', {})).rejects.toThrow('closed');
-      const reopened = new StorageClient(workerFile, filename);
+      const reopened = fixture.createClient(workerFile, filename);
 
       try {
         expect(await reopened.ready).toBe(150);
@@ -75,7 +74,7 @@ describe('serialized database worker', () => {
   });
 
   it('fails startup and shutdown predictably when storage cannot be opened', async () => {
-    const client = new StorageClient(
+    const client = fixture.createClient(
       workerFile,
       path.join(directory, 'nonexistent', 'data.sqlite')
     );
@@ -93,7 +92,7 @@ describe('serialized database worker', () => {
       parentPort.postMessage({id:0,result:{ok:true,value:{revision:0}}});
       parentPort.on('message', () => process.exit(1));`
     );
-    const client = new StorageClient(crashFile, 'unused');
+    const client = fixture.createClient(crashFile, 'unused');
 
     await client.ready;
     await expect(client.call('getRevision', {})).rejects.toThrow('stopped');

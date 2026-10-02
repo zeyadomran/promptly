@@ -2,6 +2,7 @@ import type { ChildProcess } from 'node:child_process';
 
 const markers = {
   initializationFailed: 'Unable to initialize Promptly:',
+  storageOpenFailed: 'Unable to open local storage.',
   windowFailed: 'Unable to open Promptly:',
   cleanupFailed: 'Unable to close desktop services:',
   storageTimedOut: 'Local storage worker timed out.',

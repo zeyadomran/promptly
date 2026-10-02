@@ -5,7 +5,6 @@ import { DatabaseSync } from 'node:sqlite';
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { StorageClient } from '../../src/main/storage/client';
 import { buildStorageWorker, query } from './storage-worker-fixture.mjs';
 
 let fixture;
@@ -24,13 +23,13 @@ function hangingClient(name) {
     parentPort.postMessage({id:0,result:{ok:true,value:{revision:0}}});
     parentPort.on('message', () => {});`
   );
-  return new StorageClient(workerFile, 'unused');
+  return fixture.createClient(workerFile, 'unused');
 }
 
 describe('bounded shutdown phases', () => {
   it('drains a saturated ordinary queue during shutdown and rejects any further work', async () => {
     const filename = path.join(fixture.directory, 'saturated.sqlite');
-    const client = new StorageClient(fixture.workerFile, filename);
+    const client = fixture.createClient(fixture.workerFile, filename);
 
     try {
       await client.ready;
@@ -55,7 +54,7 @@ describe('bounded shutdown phases', () => {
       expect(results.every((result) => result.status === 'fulfilled' && result.value.ok)).toBe(
         true
       );
-      const reopened = new StorageClient(fixture.workerFile, filename);
+      const reopened = fixture.createClient(fixture.workerFile, filename);
 
       try {
         expect(await reopened.ready).toBe(1000);
@@ -74,7 +73,7 @@ describe('bounded shutdown phases', () => {
   it('keeps an accepted real SQLite write alive beyond the close-control budget', async () => {
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const filename = path.join(fixture.directory, 'locked.sqlite');
-    const client = new StorageClient(fixture.workerFile, filename);
+    const client = fixture.createClient(fixture.workerFile, filename);
     let lock;
 
     try {
