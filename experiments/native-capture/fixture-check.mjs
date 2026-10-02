@@ -1,8 +1,6 @@
 import assert from 'node:assert/strict';
-import { spawn } from 'node:child_process';
-import { once } from 'node:events';
-import path from 'node:path';
-import { createInterface } from 'node:readline';
+
+import { startFixture } from './fixture-process.mjs';
 
 export async function checkNativeFixtures(executable, helper, accessibilityAllowed) {
   const evidence = [];
@@ -12,27 +10,10 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
     ['empty', 'empty'],
     ['password', 'secureInput']
   ]) {
-    const fixtureExecutable =
-      process.platform === 'darwin'
-        ? path.join(
-            path.dirname(executable),
-            'NativeFixture.app',
-            'Contents',
-            'MacOS',
-            'promptly-native'
-          )
-        : executable;
-    const fixture = spawn(fixtureExecutable, ['--fixture', mode], {
-      stdio: ['ignore', 'pipe', 'ignore'],
-      windowsHide: true
-    });
-    const lines = createInterface({ input: fixture.stdout });
-    const abort = new AbortController();
-    const timer = setTimeout(() => abort.abort(), 5000);
+    const fixture = await startFixture(executable, mode);
 
     try {
-      const [line] = await once(lines, 'line', { signal: abort.signal });
-      const { fixturePid, foregroundMatched } = JSON.parse(line);
+      const { fixturePid, foregroundMatched } = fixture;
       const elapsed = [];
       const roundTrips = [];
 
@@ -87,9 +68,7 @@ export async function checkNativeFixtures(executable, helper, accessibilityAllow
         maxNativeMs: Math.max(...elapsed)
       });
     } finally {
-      clearTimeout(timer);
-      lines.close();
-      fixture.kill();
+      await fixture.close();
     }
   }
 

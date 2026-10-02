@@ -9,7 +9,7 @@ func readSelection(expectedPid: Int32, includeText: Bool) -> [String: Any] {
     let pid = app.processIdentifier
     result["source"] = ["pid": pid, "name": app.localizedName ?? "Unknown", "id": app.bundleIdentifier as Any? ?? NSNull()]
     if expectedPid != 0 && expectedPid != pid { return ["status": "foregroundChanged"] }
-    if IsSecureEventInputEnabled() { return ["status": "secureInput"] }
+    if IsSecureEventInputEnabled() { result["status"] = "secureInput"; return result }
     if !AXIsProcessTrusted() { return ["status": "permissionDenied"] }
     let element = AXUIElementCreateApplication(pid)
     AXUIElementSetMessagingTimeout(element, 0.12)
@@ -23,7 +23,7 @@ func readSelection(expectedPid: Int32, includeText: Bool) -> [String: Any] {
     AXUIElementSetMessagingTimeout(focused, 0.12)
     var subrole: CFTypeRef?
     AXUIElementCopyAttributeValue(focused, kAXSubroleAttribute as CFString, &subrole)
-    if subrole as? String == "AXSecureTextField" { return ["status": "secureInput"] }
+    if subrole as? String == "AXSecureTextField" { result["status"] = "secureInput"; return result }
     var selected: CFTypeRef?
     let error = AXUIElementCopyAttributeValue(focused, kAXSelectedTextAttribute as CFString, &selected)
     if error == .success, let text = selected as? String {

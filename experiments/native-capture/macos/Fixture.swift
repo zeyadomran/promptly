@@ -26,8 +26,13 @@ func runFixture(mode: String) {
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
         let matched = NSWorkspace.shared.frontmostApplication?.processIdentifier == ProcessInfo.processInfo.processIdentifier
-        print("{\"fixturePid\":\(ProcessInfo.processInfo.processIdentifier),\"foregroundMatched\":\(matched)}")
-        fflush(stdout)
+        let metadata = "{\"fixturePid\":\(ProcessInfo.processInfo.processIdentifier),\"foregroundMatched\":\(matched)}"
+        if CommandLine.arguments.count > 3 {
+            try? metadata.write(toFile: CommandLine.arguments[3], atomically: true, encoding: .utf8)
+        } else {
+            print(metadata)
+            fflush(stdout)
+        }
     }
     DispatchQueue.main.asyncAfter(deadline: .now() + 30) { app.terminate(nil) }
     app.run()
