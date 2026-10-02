@@ -15,6 +15,7 @@ import { styleNonceArgumentPrefix } from '../../shared/style-nonce';
 import type { WindowRegistry } from '../ipc/window-registry';
 import { initialBounds, windowGeometry } from './geometry';
 import { installRendererAssets } from './install-renderer-assets';
+import { loadWindowRenderer } from './load-window-renderer';
 import { registerNativeChrome } from './native-chrome';
 
 export async function createMainWindow(
@@ -100,10 +101,6 @@ export async function createMainWindow(
   window.webContents.on('will-attach-webview', (event) => {
     event.preventDefault();
   });
-  const ready = new Promise<void>((resolve) => {
-    window.once('ready-to-show', resolve);
-  });
-
   const rendererUrl = new URL(
     devUrl !== undefined && devUrl !== '' ? devUrl : pathToFileURL(bundledPath).href
   );
@@ -113,11 +110,12 @@ export async function createMainWindow(
 
   windows.register(window.webContents, url);
   try {
-    await Promise.all([window.loadURL(url), ready]);
+    await loadWindowRenderer(window, url);
+    if (window.isDestroyed()) throw new Error('Window closed before initialization completed.');
     window.show();
   } catch (error) {
     // A registered but failed window must never become a reusable blank recovery route.
-    window.destroy();
+    if (!window.isDestroyed()) window.destroy();
     throw error;
   }
 

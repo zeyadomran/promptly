@@ -7,10 +7,13 @@ was never opened by these tests.
 
 Passed:
 
-- `npm run check`: strict typechecking, lint/architecture, formatting, 197 unit
-  tests in 46 files after integrating main `9b13dd03` and the native shutdown chain.
+- `npm run check`: strict typechecking, lint/architecture, formatting, 206 unit
+  tests in 47 files after integrating main `9b13dd03` and the native shutdown chain.
   This includes rapid mode switches, quit during animation, load/ready ordering,
   failed renderer destruction, and actual-main normal/fatal cleanup ordering.
+  Readiness terminal-event tests use the actual factory/lifecycle modules, verify
+  fresh retries after close/renderer exit, both load/ready orderings, reverse
+  ready-first load rejection, deadline cleanup and observation of late rejection.
 - `npm run package`: actual Windows distributable with sandboxed preload and worker.
 - Nine desktop smoke scenarios passed across the full run and a focused rerun of
   the logo assertion updated for the new title-bar logo. That test verifies every
@@ -34,6 +37,13 @@ retained the merged startup diagnostics. The separate macOS Dock test awaits CI.
 The CSP run again passed with two normal exit-0 processes. Native visibility
 receipts record route availability and show/hide/minimize/restore events; CI
 retains those JSON attachments with its controlled fixture results.
+
+The terminal-readiness delta packaged lifecycle, chrome and failed-load retry
+checks passed. The new native auxiliary-close regression holds its renderer request,
+destroys that owned Settings window before load/paint, verifies the open settles
+with a recoverable result and then renders a fresh Settings window. Its focused
+run passed with a normal process exit 0. The macOS fixture includes the native
+workspace method while production fullscreen-space behavior remains intact.
 
 The first PR CI Windows restore failure compared an unclamped 1100px rectangle
 with a 1024px desktop. The restart/restore test now derives its expected rectangle

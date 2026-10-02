@@ -46,6 +46,10 @@ schemas. Auxiliary windows use the same restricted asset handler, cryptographic
 style nonce, sandbox and live settings bootstrap. The initial show waits for both
 renderer load and ready-to-show, so a late ready event cannot reopen a hidden window.
 Failed renderer loads destroy the owned registered window, allowing a fresh retry.
+Initialization also rejects on window closure, webContents destruction or renderer
+exit, and has a 15-second load/readiness deadline. The gate observes late load
+rejection, removes its listeners/timer on every outcome, and releases the lifecycle's
+pending open so a later request constructs a fresh window.
 A narrow preload focus signal
 lets a later library input opt in with `data-promptly-search`; `useWindow` focuses
 that input on reveal. No global show/hide shortcut is claimed as registered today.
