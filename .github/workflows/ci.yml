@@ -50,6 +50,12 @@ jobs:
         run: npm ci
       - name: Check application foundation
         run: npm run check
+      - name: Install fixture browser
+        run: npx playwright install chromium
+      - name: Verify design primitives, themes and keyboard behavior
+        run: npm run test:design
+      - name: Verify packaged Radix and Sonner under production CSP
+        run: npm run test:packaged-design
       - name: Package application
         run: npm run package
       - name: Launch packaged React window and verify preload isolation

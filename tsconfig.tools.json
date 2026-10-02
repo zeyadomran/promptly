@@ -1,5 +1,11 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["node"], "lib": ["ES2022", "DOM"] },
-  "include": ["*.config.ts", "tests/e2e", "src/renderer/env.d.ts"]
+  "include": [
+    "*.config.ts",
+    "tests/e2e",
+    "tests/visual",
+    "tests/packaged-design",
+    "src/renderer/env.d.ts"
+  ]
 }

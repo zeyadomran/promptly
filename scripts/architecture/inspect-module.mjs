@@ -4,7 +4,18 @@ import { parseSync } from 'oxc-parser';
 
 import { componentNames, walk } from './ast.mjs';
 
-const rendererPackages = new Set(['react', 'react-dom', 'react-dom/client']);
+const rendererPackages = new Set([
+  'react',
+  'react-dom',
+  'react-dom/client',
+  'radix-ui',
+  'lucide-react',
+  'class-variance-authority',
+  'clsx',
+  'tailwind-merge',
+  'sonner',
+  'get-nonce'
+]);
 const testPackages = new Set([
   'vitest',
   '@testing-library/react',
@@ -40,9 +51,14 @@ export function inspectModule(filename, source, root) {
       return;
     }
 
-    if (specifier.startsWith('.')) {
+    if (specifier.startsWith('.') || specifier.startsWith('@/')) {
       const target = path
-        .relative(root, path.resolve(path.dirname(filename), specifier))
+        .relative(
+          root,
+          specifier.startsWith('@/')
+            ? path.resolve(root, 'src/renderer', specifier.slice(2))
+            : path.resolve(path.dirname(filename), specifier)
+        )
         .replaceAll('\\', '/');
       const targetLayer = target.match(/^src\/(main|preload|renderer|shared)\//)?.[1];
       const allowed = layer === 'shared' ? ['shared'] : [layer, 'shared'];

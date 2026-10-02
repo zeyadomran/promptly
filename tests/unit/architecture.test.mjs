@@ -9,6 +9,21 @@ const inspect = (layer, source) =>
   inspectModule(path.join(root, 'src', layer, 'fixture.tsx'), source, root);
 
 describe('process boundaries', () => {
+  it('limits the design dependencies and renderer alias to the renderer layer', () => {
+    expect(
+      inspect(
+        'renderer',
+        "import { Dialog } from 'radix-ui'; import { Button } from '@/components/ui/button';"
+      )
+    ).toEqual([]);
+    expect(inspect('shared', "import { Dialog } from 'radix-ui';").length).toBeGreaterThan(0);
+    expect(
+      inspect('main', "import { Button } from '@/components/ui/button';").length
+    ).toBeGreaterThan(0);
+    expect(inspect('renderer', "import secret from '@/../../main/secret';").length).toBeGreaterThan(
+      0
+    );
+  });
   it.each([
     "import fs from 'node:fs';",
     "export * from '../main/storage';",
