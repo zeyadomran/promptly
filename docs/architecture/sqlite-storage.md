@@ -19,13 +19,20 @@ commit. Reads and failed mutations do not increment it. On startup main seeds th
 IPC subscription handshake with the reopened revision. The client publishes
 committed events before resolving the corresponding request.
 
-Startup, requests, and shutdown have 10-second, 30-second, and five-second limits.
-Timeout or worker exit rejects pending requests and stops the worker. Shutdown
-drains submitted writes, rejects new calls, closes SQLite, and terminates the
-thread. If a worker fails after a commit but before its reply, the caller must
+Startup and ordinary requests have 10-second and 30-second deadlines. Shutdown
+immediately rejects new calls, then drains accepted requests under their existing
+deadlines, without resetting or shortening them. Only after every accepted request
+settles does it send close, with a separate five-second deadline. Drain plus close
+is bounded by the remaining request budget plus five seconds (at most 35 seconds).
+Closing during startup waits for its remaining ten-second deadline before the
+five-second close phase. Timeout or worker exit rejects pending requests and any
+drain waiter, stops the worker, and prevents further requests. Successful shutdown
+closes SQLite and terminates the thread. If a worker fails after a commit but
+before its reply, the caller must
 reopen/query authoritative data rather than assume its write did not commit.
-The ordinary queue is capped at 1,000 pending requests; shutdown reserves one
-control slot so a saturated queue can drain within the same five-second deadline.
+The ordinary queue is capped at 1,000 pending requests. The close control phase
+begins only after that queue is empty; it never aborts valid writes merely because
+their durable SQLite transactions take longer than five seconds in aggregate.
 
 ## Main service interfaces
 
@@ -91,6 +98,11 @@ deliberate duplicate, sorted queries, tag transactions, bounded undo, and failed
 copy-statistics writes. Worker tests cover 100 concurrent captures, 50 concurrent
 copy-statistics commits, ordered publication, reopen, drain, crashes, startup
 failure, and bounded shutdown.
+Shutdown tests retain all 1,000 saturated-queue commits and the exact reopened
+revision/count assertions. Controlled main-process clocks with an actual locked
+SQLite worker verify that the five-second control deadline cannot cut short an
+accepted write; stuck-worker fixtures verify the 30-second drain and separate
+five-second close deadlines without relying on slow wall-clock sleeps.
 
 `npm run check`, `npm run package`, and `npm run test:smoke` are the validation
 commands. The smoke suite loads the real worker from the packaged asar on both

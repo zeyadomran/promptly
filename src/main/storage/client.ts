@@ -13,6 +13,11 @@ interface PendingRequest {
   timer: ReturnType<typeof setTimeout>;
 }
 
+interface DrainWaiter {
+  resolve: () => void;
+  reject: (error: Error) => void;
+}
+
 export class StorageClient {
   private readonly worker: Worker;
   private readonly pending = new Map<number, PendingRequest>();
@@ -20,6 +25,7 @@ export class StorageClient {
   private closed = false;
   private failure: Error | undefined;
   private closing: Promise<void> | undefined;
+  private draining: DrainWaiter | undefined;
   readonly ready: Promise<number>;
 
   constructor(
@@ -41,6 +47,10 @@ export class StorageClient {
       if (request !== undefined) clearTimeout(request.timer);
       request?.resolve(reply.result);
       this.pending.delete(reply.id);
+      if (this.pending.size === 0) {
+        this.draining?.resolve();
+        this.draining = undefined;
+      }
     });
     this.worker.on('error', () => {
       this.fail(new Error('Local storage worker failed.'));
@@ -76,10 +86,18 @@ export class StorageClient {
   private async shutdown(): Promise<void> {
     try {
       await this.ready;
+      await this.drain();
       if (this.failure === undefined) await this.send('close', {}, 5000);
     } finally {
       await this.worker.terminate();
     }
+  }
+
+  private drain(): Promise<void> {
+    if (this.pending.size === 0) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      this.draining = { resolve, reject };
+    });
   }
 
   private send(
@@ -87,7 +105,7 @@ export class StorageClient {
     input: unknown,
     timeout = 30_000
   ): Promise<unknown> {
-    // Reserve one control slot so shutdown can drain a saturated ordinary queue.
+    // Control messages do not consume the ordinary request allowance.
     if (operation !== 'close' && this.pending.size >= 1000)
       return Promise.reject(new Error('Local storage queue is full.'));
     const id = this.nextId++;
@@ -116,6 +134,8 @@ export class StorageClient {
     }
 
     this.pending.clear();
+    this.draining?.reject(error);
+    this.draining = undefined;
     void this.worker.terminate();
   }
 }
