@@ -39,6 +39,14 @@ PID, exit/signal/error codes and byte counts. The native CI workflow retains
 `test-results/native-feasibility/fixture-lifecycle.json` on success or failure.
 See [the retained failure and follow-up evidence](../../docs/verification/P03/README.md).
 
+Windows owned fixtures emit flushed, fixed startup-stage markers on stderr from
+main entry through WPF construction, run/source initialization, Loaded/rendered
+events, metadata output and timer registration. The driver decodes at most 8 KiB
+and retains at most 32 validated stage/timing/HRESULT records; arbitrary stderr
+and exception messages are discarded. These markers diagnose a live fixture
+that times out without stdout. They do not change the five-second deadline or
+establish the cause of previous timeouts.
+
 It validates foreground mismatch, denied fallback, metadata-only counter observation, hook installation and Alt+Space registration probe. Durations are native capture time, not full capture-to-toast latency. A changing clipboard counter is reported as a concurrent change; the harness never restores old content over it.
 
 The safety driver launches a separate helper with `--protocol-fixtures`, rejects malformed capture options before any native selection call, and privately compares synthetic quote/control/Unicode-heavy payloads at the selection boundary. It prints only assertion counts. All helpers/client enforce the same 6,356,992-byte escaped-response budget for up to 1,048,576 UTF-16 selection units; overflow returns `selectionTooLarge` without truncation. Supplied PID must be a JSON integer in 1–2,147,483,647; supplied `includeText` must be a JSON boolean. Only omitted fields use defaults.

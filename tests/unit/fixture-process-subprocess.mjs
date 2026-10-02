@@ -1,5 +1,12 @@
 const mode = process.argv[2];
 
+if (mode === 'silent') {
+  for (const stage of ['mainEntered', 'uiInitialized'])
+    process.stderr.write(
+      `${JSON.stringify({ kind: 'owned-fixture-stage', stage, elapsedMs: 1 })}\n`
+    );
+}
+
 process.on('SIGTERM', () => {
   if (mode === 'resist') return;
   if (mode === 'delayedClose') setTimeout(() => process.exit(0), 150);

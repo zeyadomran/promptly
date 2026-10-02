@@ -1,8 +1,10 @@
+import { fixtureStages } from './fixture-stages.mjs';
 import { terminateChild } from './fixture-termination.mjs';
 
 /** Owns child event settlement and retains counts/codes rather than output text. */
 export function fixtureLifecycle(child, mode) {
   const started = performance.now();
+  const markers = fixtureStages(() => performance.now() - started);
   let stdoutBytes = 0;
   let stderrBytes = 0;
   let stage = 'readiness';
@@ -32,7 +34,8 @@ export function fixtureLifecycle(child, mode) {
       signal: child.signalCode,
       errorCode,
       stdoutBytes,
-      stderrBytes
+      stderrBytes,
+      startupStages: markers.snapshot()
     };
   }
 
@@ -55,6 +58,7 @@ export function fixtureLifecycle(child, mode) {
 
   const countStderr = (chunk) => {
     stderrBytes += chunk.length;
+    markers.read(chunk);
   };
 
   const streamError = (error) => fail('streamFailed', error);

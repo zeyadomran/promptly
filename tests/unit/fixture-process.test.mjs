@@ -53,6 +53,10 @@ test('a live silent fixture uses the unchanged five-second readiness deadline', 
   const error = await launch('silent').catch((failure) => failure);
 
   expect(error.receipt.status).toBe('timedOut');
+  expect(error.receipt.startupStages.map((observation) => observation.stage)).toEqual([
+    'mainEntered',
+    'uiInitialized'
+  ]);
   expect(error.receipt.elapsedMs).toBeGreaterThanOrEqual(4990);
   expect(error.cleanup.status).toBe('closed');
   expect(performance.now() - started).toBeLessThan(6500);
