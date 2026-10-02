@@ -1,0 +1,428 @@
+{
+  "kind": "owned-native-fixture-lifecycle",
+  "status": "passed",
+  "os": "win32",
+  "release": "10.0.26200",
+  "architecture": "x64",
+  "nodeVersion": "v22.23.2",
+  "fixtures": [
+    {
+      "fixture": "selected",
+      "status": "ok",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 91.0222,
+      "warmMaxNativeMs": 8.6768,
+      "p50NativeMs": 6.1401,
+      "p95NativeMs": 91.0222,
+      "p50RoundTripMs": 6.3098999999999705,
+      "p95RoundTripMs": 92.55279999999993,
+      "maxRoundTripMs": 92.55279999999993,
+      "maxNativeMs": 91.0222,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "selected",
+          "status": "ready",
+          "elapsedMs": 417.24410000000006,
+          "pid": 58584,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 614,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3585,
+              "observedMs": 39.76570000000004
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 15.9702,
+              "observedMs": 54.90880000000004
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 24.3059,
+              "observedMs": 63.21520000000004
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 48.3823,
+              "observedMs": 87.31690000000003
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 48.8709,
+              "observedMs": 87.72820000000002
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 184.0364,
+              "observedMs": 223.01529999999997
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 338.0671,
+              "observedMs": 377.0868
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 377.9754,
+              "observedMs": 416.9083
+            }
+          ]
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "selected",
+          "status": "closed",
+          "elapsedMs": 594.7057,
+          "pid": 58584,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 839,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3585,
+              "observedMs": 39.76570000000004
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 15.9702,
+              "observedMs": 54.90880000000004
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 24.3059,
+              "observedMs": 63.21520000000004
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 48.3823,
+              "observedMs": 87.31690000000003
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 48.8709,
+              "observedMs": 87.72820000000002
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 184.0364,
+              "observedMs": 223.01529999999997
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 338.0671,
+              "observedMs": 377.0868
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 377.9754,
+              "observedMs": 416.9083
+            },
+            {
+              "stage": "readinessWritten",
+              "elapsedMs": 378.0358,
+              "observedMs": 417.4721
+            },
+            {
+              "stage": "timerStarted",
+              "elapsedMs": 378.0557,
+              "observedMs": 417.48269999999997
+            },
+            {
+              "stage": "shown",
+              "elapsedMs": 420.1443,
+              "observedMs": 459.0867
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fixture": "empty",
+      "status": "empty",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 36.737300000000005,
+      "warmMaxNativeMs": 10.334800000000001,
+      "p50NativeMs": 7.778300000000001,
+      "p95NativeMs": 36.737300000000005,
+      "p50RoundTripMs": 7.905899999999974,
+      "p95RoundTripMs": 36.98790000000008,
+      "maxRoundTripMs": 36.98790000000008,
+      "maxNativeMs": 36.737300000000005,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "empty",
+          "status": "ready",
+          "elapsedMs": 380.8307000000001,
+          "pid": 50732,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 614,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3773,
+              "observedMs": 42.67240000000004
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 10.7857,
+              "observedMs": 52.7713
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 18.9422,
+              "observedMs": 60.89350000000002
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 44.1393,
+              "observedMs": 86.10569999999996
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 44.1719,
+              "observedMs": 86.10900000000004
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 204.1261,
+              "observedMs": 246.10029999999995
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 306.7575,
+              "observedMs": 348.7277
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 338.7229,
+              "observedMs": 380.71079999999995
+            }
+          ]
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "empty",
+          "status": "closed",
+          "elapsedMs": 517.4675000000001,
+          "pid": 50732,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 839,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3773,
+              "observedMs": 42.67240000000004
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 10.7857,
+              "observedMs": 52.7713
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 18.9422,
+              "observedMs": 60.89350000000002
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 44.1393,
+              "observedMs": 86.10569999999996
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 44.1719,
+              "observedMs": 86.10900000000004
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 204.1261,
+              "observedMs": 246.10029999999995
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 306.7575,
+              "observedMs": 348.7277
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 338.7229,
+              "observedMs": 380.71079999999995
+            },
+            {
+              "stage": "readinessWritten",
+              "elapsedMs": 338.7976,
+              "observedMs": 380.9321000000001
+            },
+            {
+              "stage": "timerStarted",
+              "elapsedMs": 339.1774,
+              "observedMs": 381.09620000000007
+            },
+            {
+              "stage": "shown",
+              "elapsedMs": 369.1183,
+              "observedMs": 411.07810000000006
+            }
+          ]
+        }
+      }
+    },
+    {
+      "fixture": "password",
+      "status": "secureInput",
+      "samples": 10,
+      "selectionVerified": true,
+      "coldNativeMs": 19.081,
+      "warmMaxNativeMs": 11.1592,
+      "p50NativeMs": 6.3414,
+      "p95NativeMs": 19.081,
+      "p50RoundTripMs": 6.680699999999888,
+      "p95RoundTripMs": 19.31510000000003,
+      "maxRoundTripMs": 19.31510000000003,
+      "maxNativeMs": 19.081,
+      "lifecycle": {
+        "startup": {
+          "stage": "ready",
+          "mode": "password",
+          "status": "ready",
+          "elapsedMs": 320.6989000000001,
+          "pid": 75612,
+          "exitCode": null,
+          "signal": null,
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 613,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3702,
+              "observedMs": 41.01330000000007
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 10.4342,
+              "observedMs": 50.74209999999994
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 18.116,
+              "observedMs": 58.421299999999974
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 46.0885,
+              "observedMs": 86.39570000000003
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 46.1199,
+              "observedMs": 86.45489999999995
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 171.6962,
+              "observedMs": 212.0239999999999
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 258.1856,
+              "observedMs": 298.50890000000004
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 280.2278,
+              "observedMs": 320.56140000000005
+            }
+          ]
+        },
+        "cleanup": {
+          "stage": "closed",
+          "mode": "password",
+          "status": "closed",
+          "elapsedMs": 444.67949999999996,
+          "pid": 75612,
+          "exitCode": null,
+          "signal": "SIGTERM",
+          "errorCode": null,
+          "stdoutBytes": 22,
+          "stderrBytes": 838,
+          "startupStages": [
+            {
+              "stage": "mainEntered",
+              "elapsedMs": 0.3702,
+              "observedMs": 41.01330000000007
+            },
+            {
+              "stage": "fixtureEntered",
+              "elapsedMs": 10.4342,
+              "observedMs": 50.74209999999994
+            },
+            {
+              "stage": "applicationInitialized",
+              "elapsedMs": 18.116,
+              "observedMs": 58.421299999999974
+            },
+            {
+              "stage": "uiInitialized",
+              "elapsedMs": 46.0885,
+              "observedMs": 86.39570000000003
+            },
+            {
+              "stage": "runEntered",
+              "elapsedMs": 46.1199,
+              "observedMs": 86.45489999999995
+            },
+            {
+              "stage": "sourceInitialized",
+              "elapsedMs": 171.6962,
+              "observedMs": 212.0239999999999
+            },
+            {
+              "stage": "loaded",
+              "elapsedMs": 258.1856,
+              "observedMs": 298.50890000000004
+            },
+            {
+              "stage": "beforeReadiness",
+              "elapsedMs": 280.2278,
+              "observedMs": 320.56140000000005
+            },
+            {
+              "stage": "readinessWritten",
+              "elapsedMs": 280.2851,
+              "observedMs": 320.8252
+            },
+            {
+              "stage": "timerStarted",
+              "elapsedMs": 280.3116,
+              "observedMs": 320.82770000000005
+            },
+            {
+              "stage": "shown",
+              "elapsedMs": 295.1346,
+              "observedMs": 335.40930000000003
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "failure": null
+}

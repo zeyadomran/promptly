@@ -7,8 +7,15 @@ internal static class Program
     [STAThread]
     private static void Main(string[] args)
     {
+        bool ownedFixture = args.Length > 0 && args[0] == "--fixture";
+        if (ownedFixture) FixtureDiagnostics.Stage("mainEntered");
         Console.OutputEncoding = new UTF8Encoding(false);
-        if (args.Length > 0 && args[0] == "--fixture") { Fixture.Run(args); return; }
+        if (ownedFixture)
+        {
+            try { Fixture.Run(args); }
+            catch (Exception error) { FixtureDiagnostics.Stage("failed", error.HResult); Environment.ExitCode = 1; }
+            return;
+        }
         bool fixtures = args.Length > 0 && args[0] == "--protocol-fixtures";
         int nativeReads = 0;
         using (var hook = new KeyboardHook(Transport.Emit))

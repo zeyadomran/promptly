@@ -1,0 +1,35 @@
+{
+  "kind": "owned-native-fixture-lifecycle",
+  "status": "failed",
+  "os": "win32",
+  "release": "10.0.26100",
+  "architecture": "x64",
+  "nodeVersion": "v22.23.2",
+  "fixtures": [],
+  "failure": {
+    "readiness": {
+      "stage": "readiness",
+      "mode": "selected",
+      "status": "timedOut",
+      "elapsedMs": 5001.549499999999,
+      "pid": 6956,
+      "exitCode": null,
+      "signal": "SIGTERM",
+      "errorCode": null,
+      "stdoutBytes": 0,
+      "stderrBytes": 0
+    },
+    "cleanup": {
+      "stage": "closed",
+      "mode": "selected",
+      "status": "closed",
+      "elapsedMs": 5031.548499999999,
+      "pid": 6956,
+      "exitCode": null,
+      "signal": "SIGTERM",
+      "errorCode": null,
+      "stdoutBytes": 0,
+      "stderrBytes": 0
+    }
+  }
+}
