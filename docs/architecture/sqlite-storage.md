@@ -34,6 +34,15 @@ The ordinary queue is capped at 1,000 pending requests. The close control phase
 begins only after that queue is empty; it never aborts valid writes merely because
 their durable SQLite transactions take longer than five seconds in aggregate.
 
+`createQuitCoordinator` in `src/main/lifecycle/quit-coordinator.ts` guards the
+application's `before-quit` lifecycle. It prevents every quit event while cleanup
+is pending, starts cleanup only once, and permits the final reentrant quit only
+after cleanup settles. Failed cleanup is reported before that final quit. Later
+native services can compose their bounded cleanup with `storage.close()` through
+the same coordinator rather than maintain independent quitting flags.
+Combined cleanup must await every resource's settlement, for example with
+`Promise.allSettled`, so one failure cannot release another pending cleanup.
+
 ## Main service interfaces
 
 `StorageClient(workerFile, databaseFile, onChange)` exposes `ready: Promise<number>`,

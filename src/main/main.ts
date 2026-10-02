@@ -3,13 +3,13 @@ import path from 'node:path';
 import { app, BrowserWindow, ipcMain } from 'electron';
 
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
+import { createQuitCoordinator } from './lifecycle/quit-coordinator';
 import { StorageClient } from './storage/client';
 import { storageDesktopServices } from './storage/desktop-services';
 import { createMainWindow } from './windows/create-main-window';
 
 let desktop: ReturnType<typeof installDesktopIpc>;
 let storage: StorageClient | undefined;
-let quitting = false;
 
 function openWindow(): void {
   void createMainWindow(desktop.windows).catch((error: unknown) => {
@@ -41,19 +41,18 @@ void app
     app.exit(1);
   });
 
-app.on('before-quit', (event) => {
-  if (quitting || storage === undefined) return;
-  event.preventDefault();
-  quitting = true;
-  void storage
-    .close()
-    .catch((error: unknown) => {
+app.on(
+  'before-quit',
+  createQuitCoordinator({
+    cleanup: () => storage?.close() ?? Promise.resolve(),
+    onError: (error) => {
       console.error('Unable to close local storage:', error);
-    })
-    .finally(() => {
+    },
+    quit: () => {
       app.quit();
-    });
-});
+    }
+  })
+);
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

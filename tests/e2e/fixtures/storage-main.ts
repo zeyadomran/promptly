@@ -3,12 +3,12 @@ import path from 'node:path';
 import { app, ipcMain } from 'electron';
 
 import { installDesktopIpc } from '../../../src/main/ipc/install-desktop-ipc';
+import { createQuitCoordinator } from '../../../src/main/lifecycle/quit-coordinator';
 import { StorageClient } from '../../../src/main/storage/client';
 import { storageDesktopServices } from '../../../src/main/storage/desktop-services';
 import { createMainWindow } from '../../../src/main/windows/create-main-window';
 
-let storage: StorageClient;
-let closing = false;
+let storage: StorageClient | undefined;
 
 void app.whenReady().then(async () => {
   const filename = process.env['PROMPTLY_STORAGE_FIXTURE_DATABASE'];
@@ -30,11 +30,15 @@ void app.whenReady().then(async () => {
 app.on('window-all-closed', () => {
   app.quit();
 });
-app.on('before-quit', (event) => {
-  if (closing) return;
-  event.preventDefault();
-  closing = true;
-  void storage.close().finally(() => {
-    app.quit();
-  });
-});
+app.on(
+  'before-quit',
+  createQuitCoordinator({
+    cleanup: () => storage?.close() ?? Promise.resolve(),
+    onError: (error) => {
+      console.error('Unable to close test storage:', error);
+    },
+    quit: () => {
+      app.quit();
+    }
+  })
+);
