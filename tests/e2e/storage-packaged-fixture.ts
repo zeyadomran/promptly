@@ -1,3 +1,4 @@
+import type { ChildProcess } from 'node:child_process';
 import { cp, mkdir, mkdtemp, readFile, realpath, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -7,7 +8,7 @@ import { _electron as electron, type ElectronApplication, expect, test } from '@
 
 import { assertProfileIdentity } from '../profile-identity';
 import { buildIpcFixture } from './build-ipc-fixture';
-import { closeSettingsFixture } from './close-settings-fixture';
+import { closeOwnedApplication, closeSettingsFixture } from './close-settings-fixture';
 import { copyOwnedPackage } from './copy-package';
 import { ensureNativeReceipt, retireNativeReceipt } from './native-restoration-receipt';
 import { writeSettingsReceipt } from './settings-receipt';
@@ -28,10 +29,16 @@ export async function launchOwnedTransferPackage() {
   );
 
   env['PROMPTLY_SETTINGS_UI_PROFILE'] = profile;
-  env['PROMPTLY_SETTINGS_UI_NATIVE'] = '1';
+  env['PROMPTLY_SETTINGS_UI_NATIVE'] =
+    process.env['GITHUB_ACTIONS'] === 'true' &&
+    process.env['RUNNER_ENVIRONMENT'] === 'github-hosted'
+      ? '1'
+      : '0';
   let application: ElectronApplication | undefined;
+  let child: ChildProcess | undefined;
   let stage = 'package-copy';
-  const dispose = async () => {
+  let deathObserved = true;
+  const dispose = async (primary?: unknown) => {
     const failures: unknown[] = [];
 
     try {
@@ -54,26 +61,41 @@ export async function launchOwnedTransferPackage() {
       await closeSettingsFixture({
         close: async () => {
           try {
-            await application?.close();
+            if (application !== undefined && child !== undefined)
+              await closeOwnedApplication(application, child);
           } finally {
+            if (child !== undefined)
+              deathObserved = child.exitCode !== null || child.signalCode !== null;
             await ensureNativeReceipt(profile, stage);
           }
         },
         profile,
         native: true,
+        mayRemoveProfile: () => deathObserved,
         retainReceipt: (body) =>
           writeSettingsReceipt(test.info(), 'packaged-transfer-restoration', body)
       });
     } catch (error) {
       failures.push(error);
     } finally {
-      await rm(root, { recursive: true, force: true }).catch((error: unknown) =>
-        failures.push(error)
-      );
+      if (deathObserved)
+        await rm(root, { recursive: true, force: true }).catch((error: unknown) =>
+          failures.push(error)
+        );
+      else
+        await writeSettingsReceipt(
+          test.info(),
+          'owned-package-retained',
+          JSON.stringify({ stage, deathObserved, retainedRoot: root })
+        );
     }
 
     if (failures.length > 0)
-      throw new AggregateError(failures, 'Owned packaged transfer cleanup failed.');
+      throw new AggregateError(
+        primary === undefined ? failures : [primary, ...failures],
+        'Owned packaged flow cleanup failed.',
+        { cause: primary ?? failures[0] }
+      );
   };
 
   const start = async () => {
@@ -86,7 +108,11 @@ export async function launchOwnedTransferPackage() {
     await retireNativeReceipt(profile);
     await rm(path.join(profile, 'native-transfer-initial.json'), { force: true });
     await rm(path.join(profile, 'native-transfer-phase.json'), { force: true });
+    deathObserved = false;
+    application = undefined;
+    child = undefined;
     application = await electron.launch({ executablePath: executable, env, timeout: 20_000 });
+    child = application.process();
     await application.firstWindow({ timeout: 20_000 });
     await assertProfileIdentity(
       await application.evaluate(({ app }) => app.getPath('userData')),
@@ -113,7 +139,7 @@ export async function launchOwnedTransferPackage() {
       path.join(source, '.vite/build/main.cjs'),
       path.join(source, '.vite/build/production-main.cjs')
     );
-    await buildIpcFixture(undefined, 'tests/e2e/fixtures/storage-native-wrapper.ts', 'index', true);
+    await buildIpcFixture();
     await cp(
       path.resolve('.vite/build/ipc-fixture.cjs'),
       path.join(source, '.vite/build/main.cjs')
@@ -131,7 +157,8 @@ export async function launchOwnedTransferPackage() {
         stage = next;
       },
       restart: async () => {
-        await application?.close();
+        if (application !== undefined && child !== undefined)
+          await closeOwnedApplication(application, child);
         const receipt = await readFile(path.join(profile, 'native-preferences-restored.json'));
 
         await writeSettingsReceipt(test.info(), 'packaged-transfer-restart-restoration', receipt);
