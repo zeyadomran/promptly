@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { transferOperations } from './backup/operations';
+import { copyOutcomeSchema } from './copy';
 import {
   captureResultSchema,
   idSchema,
@@ -68,7 +69,7 @@ export const operations = {
   duplicateSnippet: { request: idRequestSchema, response: snippetSnapshotSchema },
   copySnippet: {
     request: z.strictObject({ id: idSchema, format: z.enum(['text', 'markdown']) }),
-    response: snippetSnapshotSchema
+    response: copyOutcomeSchema
   },
   setSnippetTags: {
     request: z.strictObject({ id: idSchema, tagIds: z.array(idSchema).max(100) }),
