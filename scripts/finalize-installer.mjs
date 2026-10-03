@@ -5,7 +5,7 @@ import { installerArtifacts } from './installer-artifacts.mjs';
 
 const directory = path.resolve('out/make/squirrel.windows/x64');
 const provenance = JSON.parse(await readFile('out/build-provenance.json', 'utf8'));
-const artifacts = await installerArtifacts(directory);
+const artifacts = await installerArtifacts(directory, !provenance.unsignedDevelopment);
 
 await writeFile(
   path.join(directory, 'BUILD-PROVENANCE.json'),

@@ -47,8 +47,8 @@ export class WindowRegistry {
     if (this.isAuthorized(event)) this.subscribers.delete(event.sender.id);
   }
 
-  broadcast(channel: string, value: unknown): void {
-    for (const id of this.subscribers) {
+  broadcast(channel: string, value: unknown, subscribedOnly = true): void {
+    for (const id of subscribedOnly ? this.subscribers : this.windows.keys()) {
       const trusted = this.windows.get(id);
 
       if (trusted === undefined || trusted.contents.isDestroyed()) {

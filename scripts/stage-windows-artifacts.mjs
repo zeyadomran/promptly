@@ -4,11 +4,18 @@ import path from 'node:path';
 
 const source = path.resolve('out/make/squirrel.windows/x64');
 const provenance = JSON.parse(await readFile(path.join(source, 'BUILD-PROVENANCE.json'), 'utf8'));
+const signed = process.argv.includes('--signed');
 
-if (provenance.platform !== 'win32' || provenance.arch !== 'x64' || !provenance.unsignedDevelopment)
-  throw new Error('Expected unsigned Windows x64 maker provenance.');
+if (
+  provenance.platform !== 'win32' ||
+  provenance.arch !== 'x64' ||
+  provenance.unsignedDevelopment !== !signed
+)
+  throw new Error('Expected Windows x64 maker provenance matching the staging mode.');
 const info = { version: provenance.version };
-const directory = path.resolve(`out/staged/Promptly-${info.version}-unsigned-dev-win32-x64`);
+const directory = path.resolve(
+  `out/staged/Promptly-${info.version}-${signed ? 'signed' : 'unsigned-dev'}-win32-x64`
+);
 
 await mkdir(directory, { recursive: true });
 const artifacts = [];
@@ -35,4 +42,4 @@ await writeFile(
   path.join(directory, 'SHA256SUMS'),
   `${artifacts.map((artifact) => `${artifact.sha256}  ${artifact.file}`).join('\n')}\n`
 );
-console.log(`Staged unsigned development artifacts: ${directory}`);
+console.log(`Staged ${signed ? 'signed release' : 'unsigned development'} artifacts: ${directory}`);

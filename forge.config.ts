@@ -3,13 +3,18 @@ import path from 'node:path';
 import { promisify } from 'node:util';
 
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
-import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+import { MakerSquirrel, type MakerSquirrelConfig } from '@electron-forge/maker-squirrel';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
+import { releaseSigning, signedRelease } from './windows-sign.config';
+
+const windowsSign = releaseSigning();
+
 const config: ForgeConfig = {
   packagerConfig: {
+    ...(windowsSign === undefined ? {} : { windowsSign }),
     asar: true,
     executableName: 'Promptly',
     icon: path.resolve('out/brand-assets/promptly.ico'),
@@ -56,6 +61,12 @@ const config: ForgeConfig = {
       );
     },
     postMake: async () => {
+      if (signedRelease)
+        await promisify(execFile)(
+          'pwsh',
+          ['-NoProfile', '-File', path.resolve('scripts/verify-release-signatures.ps1')],
+          { windowsHide: true }
+        );
       await promisify(execFile)(
         process.execPath,
         [path.resolve('scripts/finalize-installer.mjs')],
@@ -69,8 +80,23 @@ const config: ForgeConfig = {
     new MakerSquirrel({
       name: 'Promptly',
       authors: 'Zeyad Omran',
-      description: 'Promptly — unsigned Windows x64 development build',
-      setupExe: 'Promptly-unsigned-dev-x64-Setup.exe',
+      description: signedRelease
+        ? 'Promptly — reusable text snippets'
+        : 'Promptly — unsigned Windows x64 development build',
+      setupExe: signedRelease ? 'Promptly-x64-Setup.exe' : 'Promptly-unsigned-dev-x64-Setup.exe',
+      // The maker uses windows-sign v1; both versions accept the same options,
+      // but their private hash enums have different TypeScript identities.
+      ...(windowsSign === undefined
+        ? {}
+        : {
+            windowsSign: {
+              ...windowsSign,
+              // eslint-disable-next-line @typescript-eslint/no-unsafe-enum-assignment
+              hashes: ['sha256'] as NonNullable<
+                NonNullable<MakerSquirrelConfig['windowsSign']>['hashes']
+              >
+            }
+          }),
       setupIcon: path.resolve('out/brand-assets/promptly.ico'),
       nuspecTemplate: path.resolve('packaging/Promptly.nuspectemplate'),
       noMsi: true,
