@@ -20,7 +20,7 @@ export function LibrarySearch({ regular = false }: { regular?: boolean }) {
         maxLength={4096}
         className="library-search-input"
         onChange={(event) => {
-          model.query({ ...state.request, query: event.target.value });
+          model.query({ ...state.request, query: event.target.value }, true);
         }}
       />
       {regular ? (

@@ -91,7 +91,13 @@ logically immediately. An active named IPC cannot be physically aborted; it
 finishes before the queued latest request. Responses carry the request that
 produced them; hooks can avoid rendering data for another current input. Revision
 events refetch, older snapshots retry once, and disposal drops in-flight replies.
-There is no additional timed debounce.
+The active library model publishes typed input immediately and retires cached pages
+and command-eligible selection. Nonempty typing waits for 200 ms without another
+edit before querying; only the latest input is sent. Pagination and late replies
+cannot repopulate rows during that wait, including a reply for text typed again.
+Sort/filter actions and clearing search cancel the wait and query immediately.
+Closing the model cancels its timer; reopening queries the current input. The IPC
+client retains its existing coalescing and stale-response protection.
 
 ## Verification
 

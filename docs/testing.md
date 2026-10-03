@@ -14,7 +14,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | --- | --- |
 | `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights and committed invalidation |
 | `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
-| `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and revision/query reconciliation |
+| `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection, typed search debounce and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
 | `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, capture-only pause, reversible tray visibility and retired native-menu ownership |
 | `main/capture/service.test.ts` | Native Windows selection through real SQLite, conservative normalization, exact recapture, suppression/clear/import cancellation, pre-deferral admission and entered-save retirement |

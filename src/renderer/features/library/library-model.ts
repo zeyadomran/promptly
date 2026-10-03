@@ -16,6 +16,7 @@ export class LibraryModel {
   private client: ReturnType<typeof createSearchClient> | undefined;
   private cursor = new LibraryCursor();
   private summaryVersion = 0;
+  private searchTimer: ReturnType<typeof setTimeout> | undefined;
   private closed = false;
 
   constructor(private bridge: LibraryBridge) {}
@@ -87,7 +88,9 @@ export class LibraryModel {
     this.publish();
   }
 
-  query(request: SearchRequest): void {
+  /** Typed input retires rows immediately and queries after a short idle interval. */
+  query(request: SearchRequest, debounce = false): void {
+    this.cancelSearchTimer();
     this.state.request = { ...request, offset: 0, limit: PAGE_SIZE };
     this.state.cache.clear();
     this.state.selectedId = null;
@@ -96,8 +99,20 @@ export class LibraryModel {
     this.cursor.reset();
     this.state.loading = true;
     this.state.error = undefined;
+    if (debounce && request.query.length > 0) {
+      this.searchTimer = setTimeout(() => {
+        this.searchTimer = undefined;
+        this.ensure(0);
+      }, 200);
+    }
+
     this.publish();
-    this.ensure(0);
+    if (this.searchTimer === undefined) this.ensure(0);
+  }
+
+  private cancelSearchTimer(): void {
+    clearTimeout(this.searchTimer);
+    this.searchTimer = undefined;
   }
 
   private invalidate(): void {
@@ -115,6 +130,7 @@ export class LibraryModel {
   }
 
   private fetch(index: number): Promise<void> {
+    if (this.closed || this.searchTimer !== undefined) return Promise.resolve();
     const offset = Math.floor(Math.max(0, index) / PAGE_SIZE) * PAGE_SIZE;
 
     return this.client?.search({ ...this.state.request, offset }) ?? Promise.resolve();
@@ -144,7 +160,8 @@ export class LibraryModel {
   }
 
   private receive(result: DesktopResult<SearchPage>, request: SearchRequest): void {
-    if (this.closed || !sameQuery(request, this.state.request)) return;
+    if (this.closed || this.searchTimer !== undefined || !sameQuery(request, this.state.request))
+      return;
     this.state.loading = false;
     if (!result.ok) {
       this.state.error = result.error;
@@ -167,6 +184,7 @@ export class LibraryModel {
 
   close(): void {
     this.closed = true;
+    this.cancelSearchTimer();
     this.client?.dispose();
     this.client = undefined;
   }

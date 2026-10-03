@@ -114,23 +114,70 @@ it('browses paged results with command-safe selection across refreshes and newer
     await vi.waitFor(() => {
       expect(model.snapshot().selectedId).toBeNull();
     });
-    model.query({ ...initialQuery, query: 'Snippet 999' });
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    const requested = fixture.requests.length;
+
+    model.query({ ...initialQuery, query: 'Snippet 9' }, true);
+    expect(model.snapshot().request.query).toBe('Snippet 9');
+    expect(model.snapshot().selectedId).toBeNull();
     fixture.release();
     await oldQueryPage;
-    await vi.waitFor(() => {
-      expect(model.snapshot().total).toBe(1);
-    });
+    await vi.advanceTimersByTimeAsync(199);
+    expect(model.snapshot()).toMatchObject({ loading: true, total: 0, selectedId: null });
+    expect(model.snapshot().cache.size).toBe(0);
+    expect(fixture.requests.slice(requested)).toEqual([]);
+    model.query({ ...initialQuery, query: 'Snippet 999' }, true);
+    model.ensure(0);
+    await vi.advanceTimersByTimeAsync(199);
+    expect(model.snapshot()).toMatchObject({ loading: true, total: 0, selectedId: null });
+    expect(fixture.requests.slice(requested)).toEqual([]);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(fixture.requests.slice(requested)).toEqual([{ ...initialQuery, query: 'Snippet 999' }]);
+    expect(model.snapshot().total).toBe(1);
     expect(model.snapshot().selectedId).toBe('00000000-0000-4000-8000-000000000999');
     expect(model.snapshot().unfilteredTotal).toBe(1_400);
-    model.query({ ...initialQuery, query: 'missing' });
-    await vi.waitFor(() => {
-      expect(model.snapshot()).toMatchObject({ loading: false, total: 0 });
-    });
-    expect(model.snapshot().selectedId).toBeNull();
+    fixture.holdNext(0);
+    model.refresh();
+    await vi.advanceTimersByTimeAsync(0);
+    model.query({ ...initialQuery, query: 'Snippet 999' }, true);
+    fixture.release();
+    await vi.advanceTimersByTimeAsync(199);
+    expect(model.snapshot()).toMatchObject({ loading: true, total: 0, selectedId: null });
+    expect(model.snapshot().cache.size).toBe(0);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(model.snapshot().total).toBe(1);
+    model.query({ ...initialQuery, query: 'missing' }, true);
+    model.query({ ...model.snapshot().request, sort: 'oldest', untagged: true });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(model.snapshot()).toMatchObject({ loading: false, total: 0, selectedId: null });
+    const missingRequest = { ...initialQuery, query: 'missing', sort: 'oldest', untagged: true };
+
+    expect(fixture.requests.at(-1)).toEqual(missingRequest);
+    const applied = fixture.requests.length;
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(fixture.requests.slice(applied)).toEqual([]);
+    model.query({ ...initialQuery, query: 'Snippet 9' }, true);
+    model.query(initialQuery, true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(model.snapshot().total).toBe(1_400);
+    expect(fixture.requests.at(-1)).toEqual(initialQuery);
+    const cleared = fixture.requests.length;
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(fixture.requests.slice(cleared)).toEqual([]);
+    model.query({ ...initialQuery, query: 'Snippet 999' }, true);
+    model.close();
+    const closed = fixture.requests.length;
+
+    await vi.advanceTimersByTimeAsync(200);
+    expect(fixture.requests.slice(closed)).toEqual([]);
+    model.start();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(model.snapshot().selectedId).toBe('00000000-0000-4000-8000-000000000999');
     model.query(initialQuery);
-    await vi.waitFor(() => {
-      expect(model.snapshot().total).toBe(1_400);
-    });
+    await vi.advanceTimersByTimeAsync(0);
+    vi.useRealTimers();
     fixture.change([], ['snippets', 'tags']);
     await vi.waitFor(() => {
       expect(model.snapshot().unfilteredTotal).toBe(0);
@@ -141,5 +188,6 @@ it('browses paged results with command-safe selection across refreshes and newer
     unsubscribe();
     preview.close();
     model.close();
+    vi.useRealTimers();
   }
 });
