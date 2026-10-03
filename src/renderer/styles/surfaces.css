@@ -213,21 +213,15 @@
   font:
     11px 'Geist Mono',
     monospace;
-  overflow: hidden;
-}
-.tag-management-hex-chip input {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
+  background: var(--background);
+  color: var(--foreground);
   cursor: pointer;
 }
 .tag-management-hex-chip:focus-within {
   border-color: var(--ring);
   box-shadow: var(--focus-shadow);
 }
-.tag-management-hex-chip[data-disabled='true'] {
+.tag-management-hex-chip:disabled {
   opacity: var(--disabled-opacity);
 }
 @keyframes surface-enter {

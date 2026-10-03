@@ -1,6 +1,5 @@
-import { useId } from 'react';
-
 import { type TagColor, tagColorHex, tagColors, tagColorStyle } from '../../../lib/tag-palette';
+import { TagCustomColorPopover } from './TagCustomColorPopover';
 
 export function TagColorPicker({
   color,
@@ -11,7 +10,6 @@ export function TagColorPicker({
   disabled: boolean;
   change: (color: TagColor) => void;
 }) {
-  const pickerId = useId();
   const hex = tagColorHex(color);
 
   return (
@@ -32,20 +30,7 @@ export function TagColorPicker({
           />
         ))}
       </div>
-      <label className="tag-management-hex-chip" htmlFor={pickerId} data-disabled={disabled}>
-        <span className="library-tag-dot" style={tagColorStyle(color)} aria-hidden="true" />
-        <span>{hex}</span>
-        <input
-          id={pickerId}
-          type="color"
-          aria-label="Choose custom tag color"
-          value={hex}
-          disabled={disabled}
-          onChange={(event) => {
-            change(event.target.value);
-          }}
-        />
-      </label>
+      <TagCustomColorPopover color={color} disabled={disabled} change={change} />
     </div>
   );
 }
