@@ -1,3 +1,4 @@
+import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { PinStatus } from '../../components/shared/PinStatus';
 import { useLibrary } from '../library/library-context';
 import { usePreferences } from '../settings/settings-context';
@@ -10,16 +11,21 @@ export function RegularFooter() {
     <footer className="library-footer regular-footer">
       <div className="regular-keyboard-hints">
         <span>
-          <kbd>↑ ↓</kbd> navigate
+          <kbd>
+            {shortcutLabel(settings.localShortcuts.previous, window.promptly.platform)}{' '}
+            {shortcutLabel(settings.localShortcuts.next, window.promptly.platform)}
+          </kbd>{' '}
+          navigate
         </span>
         <span>
-          <kbd>Enter</kbd> copy
+          <kbd>{shortcutLabel(settings.localShortcuts.copy, window.promptly.platform)}</kbd> copy
         </span>
         <span>
-          <kbd>Ctrl T</kbd> tag
+          <kbd>{shortcutLabel(settings.localShortcuts.tag, window.promptly.platform)}</kbd> tag
         </span>
         <span>
-          <kbd>Delete</kbd> remove
+          <kbd>{shortcutLabel(settings.localShortcuts.delete, window.promptly.platform)}</kbd>{' '}
+          remove
         </span>
       </div>
       <div className="regular-footer-status">

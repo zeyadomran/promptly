@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
+import { usePreferences } from '../settings/settings-context';
 import { keyboardFocus, windowFocusMaySearch } from './keyboard-focus';
 import { LibraryCommandService } from './library-command-service';
 import { LibraryCommandsContext, useLibraryTagActions } from './library-commands';
@@ -18,6 +19,7 @@ export function LibraryCommandProvider({
 }) {
   const { model, selection } = useLibrary();
   const tags = useLibraryTagActions();
+  const { settings } = usePreferences();
   const composing = useRef(false);
   const [undo, setUndo] = useState<{ run: () => Promise<void> }>();
   const [commands] = useState(
@@ -53,20 +55,25 @@ export function LibraryCommandProvider({
   }, [commands]);
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
-      const command = libraryKeyCommand({
-        key: event.key,
-        meta: event.metaKey,
-        ctrl: event.ctrlKey,
-        alt: event.altKey,
-        shift: event.shiftKey,
-        composing: composing.current || event.isComposing || event.key === 'Process',
-        prevented: event.defaultPrevented,
-        repeat: event.repeat,
-        active,
-        focus: keyboardFocus(event),
-        selected: model.snapshot().selectedId !== null,
-        hasSearch: selection.hasSearch
-      });
+      const command = libraryKeyCommand(
+        {
+          key: event.key,
+          code: event.code,
+          altGraph: event.getModifierState('AltGraph'),
+          meta: event.metaKey,
+          ctrl: event.ctrlKey,
+          alt: event.altKey,
+          shift: event.shiftKey,
+          composing: composing.current || event.isComposing || event.key === 'Process',
+          prevented: event.defaultPrevented,
+          repeat: event.repeat,
+          active,
+          focus: keyboardFocus(event),
+          selected: model.snapshot().selectedId !== null,
+          hasSearch: selection.hasSearch
+        },
+        settings.localShortcuts
+      );
 
       if (command === undefined) return;
       event.preventDefault();
@@ -123,7 +130,7 @@ export function LibraryCommandProvider({
       window.removeEventListener('compositionend', finished);
       window.removeEventListener('keydown', keyboard);
     };
-  }, [active, commands, model, selection, tags]);
+  }, [active, commands, model, selection, tags, settings.localShortcuts]);
 
   return (
     <LibraryCommandsContext

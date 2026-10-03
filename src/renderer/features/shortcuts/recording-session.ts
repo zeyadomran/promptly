@@ -14,6 +14,7 @@ export class ShortcutRecordingSession {
   private active = false;
   private candidateKey = '';
   private candidateReleased = false;
+  private scope: 'global' | 'local' = 'global';
   private commit: ((accelerator: string) => Promise<void>) | undefined;
   private listener: (snapshot: RecordingSnapshot) => void = () => undefined;
   snapshot: RecordingSnapshot = {
@@ -33,11 +34,16 @@ export class ShortcutRecordingSession {
     };
   }
 
-  start(target: string, commit: (accelerator: string) => Promise<void>): Promise<void> {
+  start(
+    target: string,
+    commit: (accelerator: string) => Promise<void>,
+    scope: 'global' | 'local' = 'global'
+  ): Promise<void> {
     if (this.snapshot.phase === 'saving') return this.tail;
     const request = ++this.request;
 
     this.commit = commit;
+    this.scope = scope;
     this.publish({ phase: 'starting', target, error: undefined, candidate: undefined });
     return this.enqueue(async () => {
       await this.release();
@@ -69,7 +75,7 @@ export class ShortcutRecordingSession {
     }
 
     if (
-      event.key === 'Escape' ||
+      (event.key === 'Escape' && this.scope === 'global') ||
       (event.key === 'Tab' && !event.ctrlKey && !event.altKey && !event.metaKey)
     ) {
       void this.cancel();
@@ -90,14 +96,17 @@ export class ShortcutRecordingSession {
       return true;
     }
 
-    const accelerator = recordedAccelerator(event);
+    const accelerator = recordedAccelerator(event, this.scope === 'local');
 
     if (accelerator === undefined) {
       if (!event.repeat && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key))
         this.publish({
           ...this.snapshot,
           candidate: undefined,
-          error: 'Press a modifier and a key. IME and AltGr text cannot be recorded.'
+          error:
+            this.scope === 'local'
+              ? 'Press one key or a combination. Tab, IME and AltGr text cannot be recorded.'
+              : 'Press a modifier and a key. IME and AltGr text cannot be recorded.'
         });
       return true;
     }

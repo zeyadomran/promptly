@@ -13,6 +13,7 @@ type ShortcutRecorderProps = Pick<
   label: string;
   value: string | null;
   optional?: boolean;
+  scope?: 'global' | 'local';
   recording: ReturnType<typeof useShortcutRecording>;
   onChange: (accelerator: string | null) => Promise<void>;
 };
@@ -21,6 +22,7 @@ export function ShortcutRecorder({
   label,
   value,
   optional = false,
+  scope = 'global',
   recording,
   onChange,
   ...props
@@ -62,7 +64,7 @@ export function ShortcutRecorder({
             if (disabled) return;
             setClearError(undefined);
             if (active) void session.cancel();
-            else void session.start(id, onChange);
+            else void session.start(id, onChange, scope);
           }}
         >
           {active ? (
@@ -84,6 +86,18 @@ export function ShortcutRecorder({
             <ShortcutKeycaps accelerator={value} platform={window.promptly.platform} />
           )}
         </Button>
+        {active && scope === 'local' && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              void session.cancel();
+            }}
+          >
+            Cancel
+          </Button>
+        )}
         {optional && value !== null && (
           <Button
             type="button"
@@ -112,8 +126,12 @@ export function ShortcutRecorder({
       <p id={hintId} className="shortcut-hint">
         {active
           ? snapshot.candidate === undefined
-            ? 'Escape cancels. Tab leaves recording.'
-            : 'Release the keys to apply. Escape cancels.'
+            ? scope === 'local'
+              ? 'Press one key or a combination. Escape can be recorded. Tab leaves recording; Cancel stops it.'
+              : 'Escape cancels. Tab leaves recording.'
+            : scope === 'local'
+              ? 'Release the keys to apply. Tab leaves recording; Cancel stops it.'
+              : 'Release the keys to apply. Escape cancels.'
           : `${value === null ? 'No binding. ' : `Current binding: ${shortcutLabel(value, window.promptly.platform)}. `}Click the shortcut, or focus it and press Enter or Space, to change it.`}
       </p>
       {error !== undefined && (

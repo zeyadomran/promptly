@@ -21,17 +21,17 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `main/onboarding/coordinator.test.ts` | Real practice capture, durable completion/reopen, unsupported recovery and Skip/owner retirement without fabricated data |
 | `main/capture-toast/service.test.ts` | Committed confirmation replacement, validated open/focus activation, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |
-| `renderer/features/library/library-keyboard.test.ts` | Scoped navigation/copy, editor/IME/overlay ownership and clear-then-hide |
+| `renderer/features/library/library-keyboard.test.ts` | Configured local commands/cancel, scoped navigation/copy, native typing/activation, editor/IME/overlay ownership and clear-then-hide |
 | `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo, JSON and Markdown export, clear/import/reopen, tag rename/collision/atomic membership merge and tag-only deletion |
 | `main/snippets/tag-picker.test.ts` | Shared picker creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
-| `settings/service.test.ts` | Successful preference save/reopen, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
+| `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
 | `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |
 | `windows/visibility.test.ts` | Reachability when an external recovery route appears or disappears |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
-| `shortcuts/transactions.test.ts` | Rejected OS binding replacement preserves authoritative preferences and the previous live command |
-| `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad key mapping, chord release before commit, cancellation and stale acquisition retirement through fake IPC |
+| `shortcuts/transactions.test.ts` | Legacy global binding startup and rejected OS replacement preserve authoritative preferences and the previous live command |
+| `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad/local key mapping, Escape recording and Tab exit, key release before commit, cancellation and stale acquisition retirement through fake IPC |
 | `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 
 Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.

@@ -35,5 +35,10 @@ export function useShortcutPreferences() {
     }
   };
 
-  return { ...preferences, pending, error, apply };
+  return {
+    ...preferences,
+    pending,
+    error: error ?? shortcutConflict(preferences.settings, window.promptly.platform),
+    apply
+  };
 }

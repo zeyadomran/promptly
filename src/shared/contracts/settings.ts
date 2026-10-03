@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { acceleratorSchema } from './accelerator';
 import { revisionSchema } from './domain';
+import { defaultLocalShortcuts, localShortcutsSchema } from './local-shortcuts';
 
 export const shortcutSchema = z.discriminatedUnion('kind', [
   z.strictObject({
@@ -25,6 +26,7 @@ export const settingsSchema = z.strictObject({
   saveShortcut: shortcutSchema,
   openShortcut: acceleratorSchema,
   pinShortcut: acceleratorSchema.nullable(),
+  localShortcuts: localShortcutsSchema,
   doubleTapWindowMs: z.number().int().min(150).max(600),
   showConfirmationToast: z.boolean(),
   normalizeWhitespace: z.boolean(),
@@ -60,6 +62,7 @@ export function defaultSettings(): Settings {
     saveShortcut: { kind: 'double-tap', modifier: 'shift' },
     openShortcut: 'Alt+Space',
     pinShortcut: null,
+    localShortcuts: defaultLocalShortcuts(),
     doubleTapWindowMs: 300,
     showConfirmationToast: true,
     normalizeWhitespace: true,

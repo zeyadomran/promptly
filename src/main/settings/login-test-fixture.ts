@@ -1,0 +1,35 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
+
+/** Owned Squirrel installation paths; none of these fixture executables are launched. */
+export function loginTestFixture(directory: string) {
+  const applicationDirectory = path.join(directory, 'Promptly');
+  const installedExecutable = path.join(applicationDirectory, 'app-0.1.0', 'Promptly.exe');
+  const stableExecutable = path.join(applicationDirectory, 'Promptly.exe');
+  const loginEntries = new Map<string, boolean>();
+
+  mkdirSync(path.dirname(installedExecutable), { recursive: true });
+  for (const filename of [
+    installedExecutable,
+    stableExecutable,
+    path.join(applicationDirectory, 'Update.exe')
+  ])
+    writeFileSync(filename, 'owned fixture, not executed');
+  const application = {
+    isPackaged: true,
+    setLoginItemSettings: ({
+      path: target,
+      openAtLogin
+    }: {
+      path: string;
+      openAtLogin: boolean;
+    }) => {
+      loginEntries.set(target, openAtLogin);
+    },
+    getLoginItemSettings: ({ path: target }: { path: string }) => ({
+      openAtLogin: loginEntries.get(target) ?? false
+    })
+  };
+
+  return { applicationDirectory, installedExecutable, stableExecutable, loginEntries, application };
+}

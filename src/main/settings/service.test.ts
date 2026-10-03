@@ -3,13 +3,14 @@ import path from 'node:path';
 
 import { expect, it } from 'vitest';
 
+import { defaultSettings } from '../../shared/contracts/settings';
 import { loginPreferences, prepareSquirrelLogin } from './login-preferences';
-import { testSettings } from './settings-test-fixture';
+import { loginTestFixture } from './login-test-fixture';
+import { seedLegacyShortcutProfile, testSettings } from './settings-test-fixture';
 
 it('persists settings across reopen and rolls back rejected native effects', async () => {
   let theme = 'system';
   let pinned = false;
-  const loginEntries = new Map<string, boolean>();
   let login: ReturnType<typeof loginPreferences>;
   const fixture = testSettings({
     unavailable: [],
@@ -45,62 +46,74 @@ it('persists settings across reopen and rolls back rejected native effects', asy
 
   try {
     const fixtureDirectory = path.dirname(fixture.store.filename);
-    const applicationDirectory = path.join(fixtureDirectory, 'Promptly');
-    const installedExecutable = path.join(applicationDirectory, 'app-0.1.0', 'Promptly.exe');
-    const stableExecutable = path.join(applicationDirectory, 'Promptly.exe');
-
-    mkdirSync(path.dirname(installedExecutable), { recursive: true });
-    writeFileSync(installedExecutable, 'owned fixture, not executed');
-    writeFileSync(stableExecutable, 'owned fixture, not executed');
-    writeFileSync(path.join(applicationDirectory, 'Update.exe'), 'owned fixture, not executed');
-    const application = {
-      isPackaged: true,
-      setLoginItemSettings: ({
-        path: target,
-        openAtLogin
-      }: {
-        path: string;
-        openAtLogin: boolean;
-      }) => {
-        loginEntries.set(target, openAtLogin);
-      },
-      getLoginItemSettings: ({ path: target }: { path: string }) => ({
-        openAtLogin: loginEntries.get(target) ?? false
-      })
-    };
+    const {
+      applicationDirectory,
+      installedExecutable,
+      stableExecutable,
+      loginEntries,
+      application
+    } = loginTestFixture(fixtureDirectory);
 
     login = loginPreferences(application, installedExecutable);
-    fixture.store.engine.context.db
-      .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
-      .run('showDockIcon', 'false');
-    fixture.store.engine.context.db
-      .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
-      .run('openShortcut', '"CommandOrControl+Space"');
-    fixture.store.engine.context.db
-      .prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)')
-      .run('pinShortcut', '"Super+P"');
+    seedLegacyShortcutProfile(fixture.store);
     await fixture.service.initialize();
     const initial = await fixture.service.services.getSettings({});
 
     if (!initial.ok) throw new Error('Expected retained Windows preferences.');
     expect(Object.keys(initial.value.settings)).not.toContain('showDockIcon');
     expect(initial.value.settings).toMatchObject({
-      openShortcut: 'CommandOrControl+Space',
+      openShortcut: 'Control+F',
       pinShortcut: 'Super+P'
     });
+    expect(initial.value.settings.localShortcuts).toMatchObject({
+      copy: 'Return',
+      dismiss: 'Escape',
+      cancelEdit: 'Escape'
+    });
     expect(await fixture.service.services.updateSettings({ theme: 'light' })).toMatchObject({
+      ok: true
+    });
+    const localShortcuts = {
+      ...defaultSettings().localShortcuts,
+      copy: 'Control+K',
+      focusSearch: 'Control+S'
+    };
+
+    expect(
+      await fixture.service.services.updateSettings({ theme: 'light', localShortcuts })
+    ).toMatchObject({
       ok: true,
       value: { settings: { theme: 'light' } }
     });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 1,
+      revision: 2,
       settings: {
         theme: 'light',
         alwaysOnTop: false,
-        openShortcut: 'CommandOrControl+Space',
-        pinShortcut: 'Super+P'
+        openShortcut: 'Control+F',
+        pinShortcut: 'Super+P',
+        localShortcuts: { copy: 'Control+K', dismiss: 'Escape', cancelEdit: 'Escape' }
       }
+    });
+    for (const patch of [
+      { localShortcuts: { ...localShortcuts, tag: 'Control+K' } },
+      { localShortcuts: { ...localShortcuts, copy: 'Super+P' } },
+      { pinShortcut: 'Super+T' }
+    ])
+      expect(await fixture.service.services.updateSettings(patch)).toMatchObject({
+        ok: false,
+        error: { code: 'CONFLICT' }
+      });
+    expect(
+      await fixture.service.services.updateSettings({
+        localShortcuts: { ...localShortcuts, copy: 'Tab' }
+      })
+    ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+    fixture.store.reopen();
+    expect(fixture.store.invoke('getSettings', {})).toMatchObject({
+      revision: 2,
+      settings: { localShortcuts: { copy: 'Control+K' } }
     });
     expect(
       await fixture.service.services.updateSettings({ theme: 'dark', alwaysOnTop: true })
@@ -108,7 +121,7 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     expect({ theme, pinned }).toEqual({ theme: 'light', pinned: false });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 1,
+      revision: 2,
       settings: { theme: 'light', alwaysOnTop: false }
     });
     expect(await fixture.service.services.updateSettings({ launchAtLogin: true })).toMatchObject({
