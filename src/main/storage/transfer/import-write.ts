@@ -1,37 +1,38 @@
 import type { SnippetWrites } from '../../snippets/snippet-writes';
 import type { ImportPlan } from './import-plan';
 
-/** Called only by the worker's existing transaction wrapper after revision validation. */
+/** Only the worker transaction writes the immutable, previously reviewed stage. */
 export function writeImport(writes: SnippetWrites, plan: ImportPlan) {
-  const memberships = new Map<string, Set<string>>();
   const { context } = writes.reader;
 
-  for (const tag of plan.backup.tags) {
-    if (plan.newTags.has(tag.id))
+  for (const tag of plan.stage.tags()) {
+    const mapping = plan.stage.db.prepare('SELECT target,fresh FROM tags WHERE id = ?').get(tag.id);
+
+    if (mapping === undefined) throw new Error('Missing reviewed tag');
+
+    if (mapping['fresh'] === 1)
       context.db
-        .prepare('INSERT INTO tags (id, name, color, createdAt) VALUES (?, ?, ?, ?)')
-        .run(plan.tagIds.get(tag.id) ?? tag.id, tag.name, tag.color, tag.createdAt);
+        .prepare('INSERT INTO tags(id,name,color,createdAt) VALUES(?,?,?,?)')
+        .run(String(mapping['target']), tag.name, tag.color, tag.createdAt);
   }
 
-  for (const relationship of plan.backup.memberships) {
-    const ids = memberships.get(relationship.snippetId) ?? new Set<string>();
+  for (const snippet of plan.stage.snippets()) {
+    const mapping = plan.stage.db
+      .prepare('SELECT target,skip FROM snippets WHERE id = ?')
+      .get(snippet.id);
 
-    ids.add(plan.tagIds.get(relationship.tagId) ?? relationship.tagId);
-    memberships.set(relationship.snippetId, ids);
-  }
+    if (mapping === undefined) throw new Error('Missing reviewed snippet');
 
-  for (const snippet of plan.backup.snippets) {
-    writes.insert({
-      ...snippet,
-      id: plan.snippetIds.get(snippet.id) ?? snippet.id,
-      sourceApp: null,
-      sourceAppId: null,
-      tags: []
-    });
-    for (const tag of memberships.get(snippet.id) ?? [])
-      context.db
-        .prepare('INSERT OR IGNORE INTO snippet_tags VALUES (?, ?)')
-        .run(plan.snippetIds.get(snippet.id) ?? snippet.id, tag);
+    if (mapping['skip'] === 1) continue;
+    const id = String(mapping['target']);
+
+    writes.insert({ ...snippet, id, sourceApp: null, sourceAppId: null, tags: [] });
+    for (const tag of plan.stage.db
+      .prepare(
+        'SELECT DISTINCT target FROM tags JOIN memberships ON tags.id = tagId WHERE snippetId = ?'
+      )
+      .all(snippet.id))
+      context.db.prepare('INSERT INTO snippet_tags VALUES(?,?)').run(id, String(tag['target']));
   }
 
   return { revision: context.revision() };

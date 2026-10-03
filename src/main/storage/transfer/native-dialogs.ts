@@ -67,7 +67,7 @@ export function nativeTransferDialogs(directory: string, databaseFile: string): 
       };
     },
     save: async (owner, format) => {
-      const extension = format === 'json' ? 'json' : 'md';
+      const extension = format === 'json' ? 'jsonl' : 'md';
       const result = await dialog.showSaveDialog(parent(owner), {
         title: 'Export Promptly library',
         defaultPath: `promptly-library.${extension}`,
@@ -83,7 +83,7 @@ export function nativeTransferDialogs(directory: string, databaseFile: string): 
     open: async (owner) => {
       const result = await dialog.showOpenDialog(parent(owner), {
         title: 'Import Promptly JSON backup',
-        filters: [{ name: 'Promptly JSON backup', extensions: ['json'] }],
+        filters: [{ name: 'Promptly JSON backup', extensions: ['jsonl', 'json'] }],
         properties: ['openFile', 'dontAddToRecent']
       });
 

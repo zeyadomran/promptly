@@ -1,3 +1,5 @@
+import { readFileSync, statSync } from 'node:fs';
+
 import { expect, it } from 'vitest';
 
 import { allSnippets } from './storage-test-fixture';
@@ -39,9 +41,7 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
         { snippetId: duplicate.id, tagId: tag.id }
       ])
     );
-    expect(
-      Buffer.from(store.invoke('exportLibraryData', { format: 'markdown' }).data).toString('utf8')
-    ).toContain(text);
+    expect(readFileSync(store.exportFile('markdown'), 'utf8')).toContain(text);
     store.invoke('clearLibrary', {});
     expect(store.invoke('searchSnippets', allSnippets).items).toEqual([]);
     const preview = store.prepare(backup);
@@ -87,7 +87,11 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     );
     expect(store.export()).toEqual(beforeMerge);
     store.engine.context.db.exec('DROP TRIGGER reject_tag_merge');
+    store.invoke('setTagMembership', { id: original.id, tagId: target.id, assigned: true });
+    const deletedBeforeMerge = store.invoke('deleteSnippet', { id: original.id });
+
     store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id });
+    store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeMerge.undoToken });
     expect(store.invoke('listTags', {}).tags).toEqual([
       expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 2 })
     ]);
@@ -96,12 +100,38 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
         text,
         tags: [{ id: target.id, color: 'teal' }]
       });
+    const deletedBeforeTagRemoval = store.invoke('deleteSnippet', { id: original.id });
+
     store.invoke('deleteTag', { id: target.id });
+    expect(
+      store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeTagRemoval.undoToken }).snippet
+    ).toMatchObject({ id: original.id, text, tags: [] });
     store.reopen();
     expect(store.invoke('listTags', {}).tags).toEqual([]);
     for (const id of [original.id, duplicate.id])
       expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({ id, text, tags: [] });
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(2);
+    store.invoke('clearLibrary', {});
+    const largeText = '\u0001'.repeat(1_000_000);
+    const largeIds = Array.from(
+      { length: 17 },
+      () => store.invoke('createSnippet', { text: largeText }).snippet.id
+    );
+    const completeBackup = store.exportFile();
+
+    expect(statSync(completeBackup).size).toBeGreaterThan(64 * 1024 * 1024);
+    store.invoke('clearLibrary', {});
+    const largePreview = store.prepareFile(completeBackup);
+
+    expect(largePreview.snippets).toBe(17);
+
+    store.invoke('commitLibraryImport', {
+      token: largePreview.token,
+      revision: largePreview.revision
+    });
+    store.reopen();
+    for (const id of largeIds)
+      expect(store.invoke('getSnippet', { id }).snippet.text).toBe(largeText);
   } finally {
     store.dispose();
   }

@@ -1,35 +1,34 @@
 import type { SnippetWrites } from '../../snippets/snippet-writes';
 import { StorageError } from '../context';
 import type { StorageRequest } from '../protocol';
-import { encodeExport } from './encode-export';
 import { type ImportPlan, planImport } from './import-plan';
 import { writeImport } from './import-write';
-import { readBackup } from './read-backup';
-import { portableSnapshot } from './snapshot';
+import { libraryIdentity } from './library-identity';
+import { stageBackup } from './stage-backup';
+import { writeExport } from './stream-export';
 
 export class TransferRepository {
   private readonly plans = new Map<string, ImportPlan>();
+  private readonly expiry = new Map<string, NodeJS.Timeout>();
 
   constructor(private readonly writes: SnippetWrites) {}
 
   clearPlans(): void {
-    this.plans.clear();
+    for (const token of this.plans.keys()) this.remove(token);
   }
 
   export(input: StorageRequest<'exportLibraryData'>) {
     const { context } = this.writes.reader;
 
-    return {
-      revision: context.revision(),
-      data: encodeExport(portableSnapshot(context), input.format)
-    };
+    writeExport(context, input.filename, input.format);
+    return { revision: context.revision() };
   }
 
   preview(input: StorageRequest<'prepareLibraryImport'>) {
     const { context } = this.writes.reader;
 
     for (const [token, pendingPlan] of this.plans) {
-      if (pendingPlan.expires <= context.now().getTime()) this.plans.delete(token);
+      if (pendingPlan.expires <= context.now().getTime()) this.remove(token);
     }
 
     if (this.plans.size >= 4)
@@ -37,14 +36,28 @@ export class TransferRepository {
         'UNAVAILABLE',
         'Too many pending imports. Cancel an existing preview.'
       );
-    const plan = planImport(context, readBackup(input.filename));
+    const stage = stageBackup(input.filename);
+    let plan: ImportPlan;
+
+    try {
+      plan = planImport(context, stage);
+    } catch (error) {
+      stage.close();
+      throw error;
+    }
 
     this.plans.set(plan.preview.token, plan);
+    this.expiry.set(
+      plan.preview.token,
+      setTimeout(() => {
+        this.remove(plan.preview.token);
+      }, 5 * 60_000).unref()
+    );
     return plan.preview;
   }
 
   discard(input: StorageRequest<'discardLibraryImport'>) {
-    this.plans.delete(input.token);
+    this.remove(input.token);
     return {};
   }
 
@@ -54,8 +67,7 @@ export class TransferRepository {
 
     if (plan === undefined || plan.expires <= context.now().getTime())
       throw new StorageError('NOT_FOUND', 'Import preview expired. Choose the file again.');
-    // The existing wrapper increments revision inside BEGIN IMMEDIATE before dispatch.
-    if (plan.preview.revision !== input.revision || context.revision() !== input.revision + 1)
+    if (plan.preview.revision !== input.revision || libraryIdentity(context) !== plan.identity)
       throw new StorageError(
         'CONFLICT',
         'Your library changed. Choose the file again to review it.'
@@ -63,8 +75,15 @@ export class TransferRepository {
     const result = writeImport(this.writes, plan);
 
     context.afterCommit(() => {
-      this.plans.delete(input.token);
+      this.remove(input.token);
     });
     return result;
+  }
+
+  private remove(token: string): void {
+    clearTimeout(this.expiry.get(token));
+    this.expiry.delete(token);
+    this.plans.get(token)?.stage.close();
+    this.plans.delete(token);
   }
 }
