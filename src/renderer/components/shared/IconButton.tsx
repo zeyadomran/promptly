@@ -9,7 +9,7 @@ interface IconButtonProps extends Omit<
   'children' | 'asChild' | 'size'
 > {
   label: string;
-  shortcut?: string;
+  shortcut?: string | undefined;
   icon: LucideIcon;
 }
 

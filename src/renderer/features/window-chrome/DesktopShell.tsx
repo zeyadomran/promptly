@@ -14,11 +14,11 @@ import { WindowTitleBar } from './WindowTitleBar';
 export function DesktopShell({
   wiki,
   updateControl,
-  updateVisible = false
+  updateVisible
 }: {
   wiki?: ReactNode;
   updateControl?: ReactNode;
-  updateVisible?: boolean;
+  updateVisible?: boolean | undefined;
 }) {
   const { mode, setMode, error } = useWindow();
   const preferences = usePreferences();

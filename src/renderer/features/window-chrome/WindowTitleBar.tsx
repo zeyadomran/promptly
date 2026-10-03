@@ -6,25 +6,30 @@ import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { IconButton } from '../../components/shared/IconButton';
 import { Logo } from '../../components/shared/Logo';
 import { Button } from '../../components/ui/button';
+import { isTitleBarUpdateVisible } from '../settings/hooks/update-presentation';
+import { useUpdates } from '../settings/hooks/use-updates';
 import { usePreferences } from '../settings/settings-context';
 import { shellGlobalBindings, wikiShortcutAvailable } from './shell-keyboard';
 import { useShellNavigation } from './shell-navigation';
 import { SizeControl } from './SizeControl';
+import { TitleBarUpdate } from './TitleBarUpdate';
 import { WindowPreferences } from './WindowPreferences';
 
 export function WindowTitleBar({
   mode,
   setMode,
   updateControl,
-  updateVisible = false
+  updateVisible
 }: {
   mode: SizeMode;
   setMode: (mode: SizeMode) => void;
   updateControl?: ReactNode;
-  updateVisible?: boolean;
+  updateVisible?: boolean | undefined;
 }) {
   const { view, showLibrary, toggleView } = useShellNavigation();
   const { settings } = usePreferences();
+  const { state } = useUpdates();
+  const visible = updateVisible ?? isTitleBarUpdateVisible(state);
   const wikiShortcut = wikiShortcutAvailable(
     settings.localShortcuts,
     shellGlobalBindings(settings)
@@ -35,7 +40,7 @@ export function WindowTitleBar({
       className="window-titlebar"
       data-platform={window.promptly.platform}
       data-mode={mode}
-      data-update-visible={updateVisible}
+      data-update-visible={visible}
     >
       {view === 'library' ? (
         <div className="window-brand">
@@ -54,9 +59,9 @@ export function WindowTitleBar({
         </Button>
       )}
       <div className="window-title-actions">
-        {updateVisible && (
+        {visible && (
           <>
-            {updateControl}
+            {updateControl ?? <TitleBarUpdate compact={mode === 'compact'} />}
             <span className="window-action-divider" aria-hidden="true" />
           </>
         )}
