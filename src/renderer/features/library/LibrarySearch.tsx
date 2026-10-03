@@ -2,7 +2,6 @@ import { Search } from 'lucide-react';
 
 import { Input } from '../../components/ui/input';
 import { useLibrary } from './library-context';
-import { LibrarySort } from './LibrarySort';
 
 export function LibrarySearch({ regular = false }: { regular?: boolean }) {
   const { state, model, searchRef } = useLibrary();
@@ -28,7 +27,6 @@ export function LibrarySearch({ regular = false }: { regular?: boolean }) {
       ) : (
         <kbd className="library-key-hint">esc</kbd>
       )}
-      <LibrarySort />
     </div>
   );
 }

@@ -3,6 +3,8 @@ import { autoUpdater } from 'electron';
 import { releaseFeed } from './github-release';
 
 /** Called only after explicit Update consent. Squirrel applies files before restart. */
+// Electron 44's built-in AutoUpdater exposes no download-progress event on Windows.
+// Keep progress absent so consumers show an indeterminate download, never a timer estimate.
 export function applySquirrelUpdate(version: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const finish = (error?: Error) => {
