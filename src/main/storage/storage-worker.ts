@@ -3,6 +3,7 @@ import { parentPort, workerData } from 'node:worker_threads';
 import { failure } from '../../shared/contracts/result';
 import { StorageEngine } from './engine';
 import type { WorkerRequest } from './protocol';
+import { classifyStorageStartup, storageStartupCauses } from './startup-failure';
 
 if (parentPort === null) throw new Error('Storage must run in a worker thread.');
 const port = parentPort;
@@ -24,7 +25,13 @@ try {
 
     port.postMessage(reply);
   });
-} catch {
-  port.postMessage({ id: 0, result: failure('INTERNAL', 'Unable to open local storage.') });
+} catch (error) {
+  const startupFailure = classifyStorageStartup(error);
+
+  port.postMessage({
+    id: 0,
+    result: failure('INTERNAL', storageStartupCauses[startupFailure]),
+    startupFailure
+  });
   port.close();
 }

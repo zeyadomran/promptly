@@ -3,17 +3,43 @@ import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 
+import type { IpcMainInvokeEvent, WebContents } from 'electron';
 import { build } from 'vite';
 import { afterAll, beforeAll, expect, it } from 'vitest';
 
-import type { SearchRequest } from '../../shared/contracts/domain';
+import type { ChangeEvent, SearchRequest } from '../../shared/contracts/domain';
+import { WindowRegistry } from '../ipc/window-registry';
 import { StorageClient } from '../storage/client';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 
 let directory: string | undefined;
 let client: StorageClient | undefined;
+let rejectPublication = false;
+const published: ChangeEvent[] = [];
+const subscribers = new WindowRegistry();
+
+function subscribe(id: number, send: (_channel: string, value: ChangeEvent) => void): void {
+  const contents = {
+    id,
+    mainFrame: { url: 'https://promptly.invalid/' },
+    isDestroyed: () => false,
+    once: () => undefined,
+    on: () => undefined,
+    send
+  } as unknown as WebContents;
+
+  subscribers.register(contents, 'https://promptly.invalid/');
+  subscribers.subscribe({
+    sender: contents,
+    senderFrame: contents.mainFrame
+  } as IpcMainInvokeEvent);
+}
 
 beforeAll(async () => {
+  subscribe(1, () => {
+    if (rejectPublication) throw new Error('Controlled subscriber failure');
+  });
+  subscribe(2, (_channel, change) => published.push(change));
   directory = await mkdtemp(path.join(tmpdir(), 'promptly-search-contract-'));
   await build({
     configFile: false,
@@ -31,7 +57,10 @@ beforeAll(async () => {
   });
   client = new StorageClient(
     path.join(directory, 'worker.cjs'),
-    path.join(directory, 'data.sqlite')
+    path.join(directory, 'data.sqlite'),
+    (change) => {
+      subscribers.broadcast('owned-change', change);
+    }
   );
   await client.ready;
 }, 30_000);
@@ -116,4 +145,22 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
   });
 
   expect(untagged).toMatchObject({ total: 1, items: [{ id: c.id, text: 'C review %b_c' }] });
+  rejectPublication = true;
+  expect(
+    await call('updateSnippet', { id: c.id, text: 'Committed despite subscriber failure' })
+  ).toMatchObject({ snippet: { id: c.id, text: 'Committed despite subscriber failure' } });
+  expect(await call('getSnippet', { id: c.id })).toMatchObject({
+    snippet: { text: 'Committed despite subscriber failure' }
+  });
+  expect(published.at(-1)).toMatchObject({ revision: 14, domains: ['snippets'] });
+  await client?.close();
+  if (directory === undefined) throw new Error('Expected owned worker directory.');
+  client = new StorageClient(
+    path.join(directory, 'worker.cjs'),
+    path.join(directory, 'data.sqlite')
+  );
+  await client.ready;
+  expect(await call('getSnippet', { id: c.id })).toMatchObject({
+    snippet: { text: 'Committed despite subscriber failure' }
+  });
 });

@@ -12,7 +12,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 
 | File | Canonical behavior |
 | --- | --- |
-| `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights and committed invalidation |
+| `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights, committed reply/publication isolation and durable reopen |
 | `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
 | `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and reveal clearance, typed search debounce and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
@@ -26,6 +26,9 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `main/snippets/tag-picker.test.ts` | Shared picker all-tag choices, assigned-first and catalog ordering, creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
 | `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
+| `settings/startup-effects.test.ts` | Optional native startup failure retains requested preferences, exposes unavailable controls and permits unrelated durable changes |
+| `storage/startup-failure.test.ts` | Real worker rejects damaged, corrupt-preference and newer databases with safe visible causes while retaining owned file bytes |
+| `lifecycle/failure-recovery.test.ts` | Dead worker rejects commands without replay, retires commands before explicit restart/quit and preserves bounded cleanup ownership |
 | `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |
 | `windows/visibility.test.ts` | Recorder focus and owner release through real shortcuts, suspended command dispatch, restored open command and reachability on genuine route loss |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |

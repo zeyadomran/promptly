@@ -6,6 +6,7 @@ import type { Settings } from '../../shared/contracts/settings';
 export interface SettingsController {
   readonly keys: readonly (keyof Settings)[];
   readonly name: string;
+  readonly optionalStartup?: boolean;
   apply: (settings: Settings) => Promise<void>;
   quarantine?: () => void;
 }
