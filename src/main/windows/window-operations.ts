@@ -14,9 +14,8 @@ export function createWindowOperations(owner: {
   state: (kind?: WindowKind) => WindowState;
   recovery: () => WindowRecoveryState;
   enqueue: (action: () => Promise<WindowState>) => Promise<DesktopResult<WindowState>>;
-  show: (kind?: WindowKind) => Promise<unknown>;
+  show: (kind?: WindowKind, navigate?: boolean) => Promise<unknown>;
   hide: () => void;
-  closeSettings: () => void;
   switchMode: (mode: SizeMode) => Promise<void>;
 }): WindowOperations {
   return {
@@ -25,12 +24,11 @@ export function createWindowOperations(owner: {
     returnToMainWindow: () =>
       owner.enqueue(async () => {
         await owner.show();
-        owner.closeSettings();
         return owner.state();
       }),
     setWindowMode: ({ mode }) =>
       owner.enqueue(async () => {
-        await owner.show();
+        await owner.show('main', false);
         await owner.switchMode(mode);
         return owner.state();
       }),

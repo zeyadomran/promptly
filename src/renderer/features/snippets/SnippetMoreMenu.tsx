@@ -13,14 +13,17 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
+import { useShellNavigation } from '../window-chrome/shell-navigation';
 
 export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
+  const { view } = useShellNavigation();
+  const [open, setOpen] = useState(false);
   const commands = useLibraryCommands();
   const { model } = useLibrary();
   const [source, setSource] = useState({
     snippet,
     available: false,
-    explanation: 'Checking source availabilityâ€¦'
+    explanation: 'Checking source availability…'
   });
   // A new committed snapshot retires availability before the refresh effect runs.
   const sourceReady = source.snippet === snippet;
@@ -66,7 +69,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={view === 'library' && open} onOpenChange={setOpen}>
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
@@ -82,59 +85,67 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
         </TooltipTrigger>
         <TooltipContent>More snippet actions</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          disabled={!eligible}
-          onSelect={() => {
-            void commands?.copy(snippet.id, 'markdown');
+      {view === 'library' && (
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={(event) => {
+            if (document.querySelector('[data-shell-library][hidden]') !== null)
+              event.preventDefault();
           }}
         >
-          <FileCode aria-hidden="true" />
-          Copy as Markdown
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={!eligible || pending}
-          onSelect={() => {
-            void duplicate();
-          }}
-        >
-          <CopyPlus aria-hidden="true" />
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={!eligible || !sourceReady || !source.available}
-          onSelect={() => {
-            void window.promptly
-              .openSnippetSource({ id: snippet.id })
-              .then((result) => {
-                if (!result.ok) commands?.report(result.error.message);
-              })
-              .catch(() => {
-                commands?.report('Unable to open the source application.');
-              });
-          }}
-        >
-          <ExternalLink aria-hidden="true" />
-          Open source application
-        </DropdownMenuItem>
-        {(!sourceReady || !source.available) && (
-          <p className="snippet-source-explanation">
-            {sourceReady ? source.explanation : 'Checking source availabilityâ€¦'}
-          </p>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={!eligible}
-          onSelect={() => {
-            void commands?.deleteSelected();
-          }}
-        >
-          <Trash2 aria-hidden="true" />
-          Delete snippet
-          <span className="menu-shortcut">Del</span>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+          <DropdownMenuItem
+            disabled={!eligible}
+            onSelect={() => {
+              void commands?.copy(snippet.id, 'markdown');
+            }}
+          >
+            <FileCode aria-hidden="true" />
+            Copy as Markdown
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!eligible || pending}
+            onSelect={() => {
+              void duplicate();
+            }}
+          >
+            <CopyPlus aria-hidden="true" />
+            Duplicate
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!eligible || !sourceReady || !source.available}
+            onSelect={() => {
+              void window.promptly
+                .openSnippetSource({ id: snippet.id })
+                .then((result) => {
+                  if (!result.ok) commands?.report(result.error.message);
+                })
+                .catch(() => {
+                  commands?.report('Unable to open the source application.');
+                });
+            }}
+          >
+            <ExternalLink aria-hidden="true" />
+            Open source application
+          </DropdownMenuItem>
+          {(!sourceReady || !source.available) && (
+            <p className="snippet-source-explanation">
+              {sourceReady ? source.explanation : 'Checking source availability…'}
+            </p>
+          )}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={!eligible}
+            onSelect={() => {
+              void commands?.deleteSelected();
+            }}
+          >
+            <Trash2 aria-hidden="true" />
+            Delete snippet
+            <span className="menu-shortcut">Del</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      )}
     </DropdownMenu>
   );
 }

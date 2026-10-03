@@ -4,13 +4,21 @@ import { changeChannel } from '../shared/contracts/operations';
 import { resultSchema } from '../shared/contracts/result';
 import { settingsSnapshotSchema } from '../shared/contracts/settings';
 import { updateChannel } from '../shared/contracts/updates';
-import { focusSearchChannel } from '../shared/contracts/window';
+import { focusSearchChannel, shellNavigationChannel } from '../shared/contracts/window';
 import { settingsFromArguments } from '../shared/settings-bootstrap';
 import { liveSettingsArgument, settingsBootstrapChannel } from '../shared/settings-bootstrap';
 import { styleNonceFromArguments } from '../shared/style-nonce';
 import { createDesktopBridge } from './create-desktop-bridge';
 import { onboardingStatus } from './onboarding-status';
 
+// Register before the renderer loads so the initial native route cannot be missed.
+let navigation: unknown;
+const navigationListeners = new Set<(view: unknown) => void>();
+
+ipcRenderer.on(shellNavigationChannel, (_event, value: unknown) => {
+  navigation = value;
+  for (const listener of navigationListeners) listener(value);
+});
 const platform = process.platform;
 const { bridge, dispose } = createDesktopBridge(
   {
@@ -23,6 +31,13 @@ const { bridge, dispose } = createDesktopBridge(
       ipcRenderer.on(updateChannel, onUpdate);
       return () => {
         ipcRenderer.removeListener(updateChannel, onUpdate);
+      };
+    },
+    listenNavigation(listener) {
+      navigationListeners.add(listener);
+      if (navigation !== undefined) listener(navigation);
+      return () => {
+        navigationListeners.delete(listener);
       };
     },
     listenFocus(listener) {

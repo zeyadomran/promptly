@@ -6,6 +6,7 @@ export class VirtualRangeStore {
   private listeners = new Set<() => void>();
   private element: HTMLElement | undefined;
   private count = 0;
+  private pendingReveal: number | undefined;
 
   constructor(
     private rowHeight = ROW_HEIGHT,
@@ -21,7 +22,15 @@ export class VirtualRangeStore {
   };
 
   private measure = (): void => {
-    if (this.element === undefined) return;
+    // A hidden shell view has no geometry. Keep its last rows and scroll position.
+    if (this.element === undefined || this.element.clientHeight === 0) return;
+    if (this.pendingReveal !== undefined) {
+      const index = this.pendingReveal;
+
+      this.pendingReveal = undefined;
+      this.scrollToIndex(index);
+    }
+
     const next = virtualRange(
       this.count,
       this.element.clientHeight,
@@ -78,6 +87,11 @@ export class VirtualRangeStore {
     const element = this.element;
 
     if (element === undefined || index < 0 || index >= this.count) return;
+    if (element.clientHeight === 0) {
+      this.pendingReveal = index;
+      return;
+    }
+
     element.scrollTop = selectionScroll(
       index,
       element.clientHeight,
