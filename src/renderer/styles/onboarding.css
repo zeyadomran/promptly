@@ -2,7 +2,7 @@
 .onboarding-titlebar {
   position: relative;
   flex-shrink: 0;
-  height: 38px;
+  height: max(38px, calc(env(titlebar-area-height, 0px) + 1px));
   -webkit-app-region: drag;
   user-select: none;
 }
