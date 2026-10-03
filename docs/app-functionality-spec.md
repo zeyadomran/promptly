@@ -129,7 +129,9 @@ Sections:
   - Toggles: show confirmation toast; trim whitespace and terminal prompts.
 - **Appearance**: theme (Light/Dark/System); always on top default.
 - **Tags**: management table (see §5).
-- **Storage**: data location (with "Reveal in Explorer"); Export (JSON, Markdown); Import (JSON); Clear all (confirmation dialog, typed confirmation).
+- **Storage**: Export (JSON, Markdown); Import (JSON); Clear all (confirmation dialog, typed confirmation).
+
+General also shows the running app version from Electron and a GitHub repository link. The main process opens only `https://github.com/zeyadomran/promptly` in the external browser. **Check for updates** is a disabled placeholder: no network request, download, installation or claimed update status. Data location and Reveal in Explorer are not shown in Settings. Button labels omit ellipses; familiar Edit/Delete tag actions use icons with tooltips and accessible names, while primary and confirmation actions keep text.
 
 All settings apply immediately (no Save button) and persist locally.
 

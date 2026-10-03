@@ -60,7 +60,7 @@ export function SnippetEditor() {
             void save();
           }}
         >
-          {state.pending ? 'Applying…' : state.conflict ? 'Replace saved text' : 'Apply changes'}
+          {state.pending ? 'Applying' : state.conflict ? 'Replace saved text' : 'Apply changes'}
         </Button>
       </div>
     </div>

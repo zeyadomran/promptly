@@ -72,6 +72,10 @@
 .settings-choice {
   width: 100%;
 }
+.application-settings {
+  margin-top: 24px;
+  border-top: 1px solid var(--border);
+}
 .settings-choice [data-slot='toggle-group-item'] {
   flex: 1;
   padding-inline: 8px;

@@ -4,6 +4,7 @@ import { Tabs } from '../../../components/ui/tabs';
 import { TagsSettings } from '../../tags/TagsSettings';
 import { useWideSettings } from '../hooks/use-wide-settings';
 import { AppearanceSettings } from './AppearanceSettings';
+import { ApplicationSettings } from './ApplicationSettings';
 import { GeneralSettings } from './GeneralSettings';
 import { SettingsNavigation } from './SettingsNavigation';
 import { SettingsSection } from './SettingsSection';
@@ -29,6 +30,7 @@ export function SettingsWindow() {
           description="Make Promptly fit your daily workflow."
         >
           <GeneralSettings />
+          <ApplicationSettings />
         </SettingsSection>
         <SettingsSection
           value="shortcuts"

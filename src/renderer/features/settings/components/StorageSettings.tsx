@@ -13,20 +13,6 @@ export function StorageSettings() {
   return (
     <div className="storage-settings">
       <StorageRow
-        label="Data location"
-        description={transfer.directory ?? 'Reading your data location…'}
-      >
-        <Button
-          variant="outline"
-          disabled={transfer.pending || transfer.directory === undefined}
-          onClick={() => {
-            void transfer.reveal();
-          }}
-        >
-          Reveal in Explorer
-        </Button>
-      </StorageRow>
-      <StorageRow
         label="Export"
         description="JSON is a portable backup. Markdown is a readable copy of your full text."
       >
@@ -63,7 +49,7 @@ export function StorageSettings() {
             void transfer.chooseImport();
           }}
         >
-          Import JSON…
+          Import JSON
         </Button>
       </StorageRow>
       <StorageRow

@@ -38,7 +38,7 @@ export function ClearLibraryDialog({ pending, error, clear }: ClearLibraryProps)
     >
       <DialogTrigger asChild>
         <Button variant="destructive" disabled={pending}>
-          Clear all…
+          Clear all
         </Button>
       </DialogTrigger>
       <DialogContent
@@ -89,7 +89,7 @@ export function ClearLibraryDialog({ pending, error, clear }: ClearLibraryProps)
               void apply();
             }}
           >
-            {pending ? 'Clearing…' : 'Clear library'}
+            {pending ? 'Clearing' : 'Clear library'}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -25,7 +25,7 @@ export function TagDeleteDialog({
             void remove();
           }}
         >
-          {dialog.pending ? 'Deleting…' : 'Delete tag'}
+          {dialog.pending ? 'Deleting' : 'Delete tag'}
         </Button>
       </DialogFooter>
     </TagDialog>

@@ -1,4 +1,7 @@
+import { Pencil, Trash2 } from 'lucide-react';
+
 import type { TagSummary } from '../../../../shared/contracts/domain';
+import { IconButton } from '../../../components/shared/IconButton';
 import { Button } from '../../../components/ui/button';
 import { TagBadge } from '../../tags/TagBadge';
 
@@ -21,17 +24,14 @@ export function TagManagementRow({
       <td className="tag-management-count">{tag.snippetCount}</td>
       <td>
         <div className="tag-management-actions">
-          <Button
-            size="sm"
-            variant="ghost"
+          <IconButton
+            icon={Pencil}
+            label={`Edit ${tag.name}`}
             disabled={disabled}
-            aria-label={`Edit ${tag.name}`}
             onClick={(event) => {
               open('edit', event.currentTarget);
             }}
-          >
-            Edit
-          </Button>
+          />
           <Button
             size="sm"
             variant="ghost"
@@ -43,18 +43,15 @@ export function TagManagementRow({
           >
             Merge
           </Button>
-          <Button
-            size="sm"
-            variant="ghost"
+          <IconButton
+            icon={Trash2}
+            label={`Delete ${tag.name}`}
             className="tag-management-delete"
             disabled={disabled}
-            aria-label={`Delete ${tag.name}`}
             onClick={(event) => {
               open('delete', event.currentTarget);
             }}
-          >
-            Delete
-          </Button>
+          />
         </div>
       </td>
     </tr>

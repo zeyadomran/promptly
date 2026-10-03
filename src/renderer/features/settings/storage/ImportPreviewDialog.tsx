@@ -89,7 +89,7 @@ export function ImportPreviewDialog({
               void confirm();
             }}
           >
-            {pending ? 'Importing…' : 'Import'}
+            {pending ? 'Importing' : 'Import'}
           </Button>
         </DialogFooter>
       </DialogContent>

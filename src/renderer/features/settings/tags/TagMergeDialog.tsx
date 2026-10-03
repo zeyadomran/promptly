@@ -60,7 +60,7 @@ export function TagMergeDialog({
             void merge(targetId);
           }}
         >
-          {dialog.pending ? 'Merging…' : 'Merge tags'}
+          {dialog.pending ? 'Merging' : 'Merge tags'}
         </Button>
       </DialogFooter>
     </TagDialog>
