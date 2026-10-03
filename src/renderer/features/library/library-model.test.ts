@@ -1,10 +1,10 @@
 import { expect, it, vi } from 'vitest';
 
 import { delayedLibraryFixture } from './delayed-library-fixture';
+import { expectLibraryGeometry } from './library-geometry-test-fixture';
 import { LibraryModel } from './library-model';
 import { libraryPreviewFixture } from './library-preview-test-fixture';
 import { initialQuery } from './page-cache';
-import { selectionScroll } from './virtual-range';
 
 it('browses paged results with command-safe selection across refreshes and newer queries', async () => {
   const fixture = delayedLibraryFixture(1_400);
@@ -36,7 +36,7 @@ it('browses paged results with command-safe selection across refreshes and newer
     if (selected === undefined) throw new Error('Missing owned item');
     expect(model.snapshot().selectedId).toBe(selected.id);
     expect(model.snapshot().selectedIndex).toBe(201);
-    expect(selectionScroll(model.snapshot().selectedIndex, 100, 0)).toBe(17_272);
+    expectLibraryGeometry(model.snapshot().selectedIndex, expect);
     await vi.waitFor(() => {
       expect(preview.snapshot().snippet).toMatchObject({ id: selected.id, text: 'Snippet 201' });
     });

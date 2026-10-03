@@ -1,5 +1,6 @@
-export const ROW_HEIGHT = 78;
-export const ROW_GAP = 8;
+export const ROW_HEIGHT = 96;
+export const ROW_GAP = 2;
+export const ROW_PADDING = 6;
 export const ROW_STRIDE = ROW_HEIGHT + ROW_GAP;
 const OVERSCAN = 4;
 
@@ -18,14 +19,16 @@ export function virtualRange(
   rowHeight = ROW_HEIGHT,
   rowStride = ROW_STRIDE
 ): VirtualRange {
-  const height =
-    Math.max(0, count * rowStride - (rowStride - rowHeight)) + (count > 0 ? ROW_GAP : 0);
+  const height = count > 0 ? count * rowStride - (rowStride - rowHeight) + 2 * ROW_PADDING : 0;
   const top = Math.max(0, Math.min(scrollTop, height - viewportHeight));
-  const first = Math.max(0, Math.floor(top / rowStride) - OVERSCAN);
+  const first = Math.max(0, Math.floor((top - ROW_PADDING) / rowStride) - OVERSCAN);
   const last =
     viewportHeight <= 0
       ? -1
-      : Math.min(count - 1, Math.floor((top + viewportHeight - 1) / rowStride) + OVERSCAN);
+      : Math.min(
+          count - 1,
+          Math.floor((top + viewportHeight - ROW_PADDING - 1) / rowStride) + OVERSCAN
+        );
 
   return {
     height,
@@ -34,7 +37,7 @@ export function virtualRange(
     rows: Array.from({ length: Math.max(0, last - first + 1) }, (_, offset) => {
       const index = first + offset;
 
-      return { index, start: index * rowStride };
+      return { index, start: ROW_PADDING + index * rowStride };
     })
   };
 }
@@ -47,7 +50,7 @@ export function selectionScroll(
   rowStride = ROW_STRIDE
 ): number {
   const start = index * rowStride;
-  const end = start + rowHeight + ROW_GAP;
+  const end = start + rowHeight + 2 * ROW_PADDING;
 
   if (start < scrollTop) return start;
   if (end > scrollTop + viewportHeight) return Math.max(0, end - viewportHeight);

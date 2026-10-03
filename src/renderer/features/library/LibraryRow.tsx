@@ -4,7 +4,7 @@ import type { HighlightRange } from '../../lib/highlight';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
 import { LibraryMetadata } from './LibraryMetadata';
-import { LibraryTagDots } from './LibraryTagDots';
+import { LibraryTagRail } from './LibraryTagRail';
 
 export function LibraryRow({
   snippet,
@@ -32,7 +32,7 @@ export function LibraryRow({
     <div
       id={`snippet-${snippet.id}`}
       role="option"
-      aria-selected={regular ? selected : undefined}
+      aria-selected={selected}
       aria-description={
         snippet.tags.length === 0
           ? 'Untagged'
@@ -46,12 +46,12 @@ export function LibraryRow({
       className={`library-row ${positionClass}`}
       onClick={select}
     >
-      <LibraryTagDots tags={snippet.tags} />
+      <LibraryTagRail tags={snippet.tags} />
       <div className="library-row-content">
         <div className="library-row-text">
           <HighlightedText text={snippet.text} ranges={ranges} />
         </div>
-        <LibraryMetadata snippet={snippet} copied={copied} />
+        <LibraryMetadata snippet={snippet} copied={copied} regular={regular} />
       </div>
     </div>
   );

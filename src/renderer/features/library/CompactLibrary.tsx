@@ -4,6 +4,7 @@ import { useLibrary } from './library-context';
 import { LibraryEmpty } from './LibraryEmpty';
 import { LibraryFooter } from './LibraryFooter';
 import { LibraryList } from './LibraryList';
+import { LibraryListHeader } from './LibraryListHeader';
 import { LibrarySearch } from './LibrarySearch';
 import { LibraryTags } from './LibraryTags';
 
@@ -31,6 +32,7 @@ export function CompactLibrary() {
           )}
         </p>
       )}
+      <LibraryListHeader />
       <div className="library-results" aria-busy={state.loading}>
         {state.loading && state.total === 0 ? (
           <p className="library-empty" role="status">
