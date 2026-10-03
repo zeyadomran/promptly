@@ -1,25 +1,14 @@
 import type { CaptureToast } from '../../shared/contracts/capture-toast';
 import type { CaptureEvent } from '../capture/ports';
+import { captureNotification, validToastRectangle } from './capture-notification';
 import type { ToastEffects, ToastPreferences, ToastRectangle, ToastWindow } from './ports';
 
-function valid(rectangle: ToastRectangle): boolean {
-  return (
-    Object.values(rectangle).every(Number.isFinite) && rectangle.width > 0 && rectangle.height > 0
-  );
-}
-
-function preview(text: string): string {
-  let line = text.split(/[\r\n]/u, 1)[0]?.slice(0, 512) ?? '';
-
-  if (line.length === 512 && /[\uD800-\uDBFF]$/u.test(line)) line = line.slice(0, -1);
-  return line;
-}
-
-/** One latest committed confirmation; its deadline is independent of renderer focus. */
+/** One latest capture outcome; its deadline is independent of renderer focus. */
 export class CaptureToastService {
   private closed = false;
   private version = 0;
-  private current: { toast: CaptureToast; source: ToastRectangle } | undefined;
+  private current: { toast: CaptureToast; source: ToastRectangle | undefined } | undefined;
+  private lastFailure = -Infinity;
   private window: ToastWindow | undefined;
   private opening: Promise<ToastWindow> | undefined;
   private cancelTimer: (() => void) | undefined;
@@ -31,31 +20,36 @@ export class CaptureToastService {
   ) {}
 
   async capture(event: CaptureEvent): Promise<void> {
-    if (
-      this.closed ||
-      !this.preferences.enabled ||
-      event.preview === undefined ||
-      event.sourceBounds === undefined ||
-      !valid(event.sourceBounds) ||
-      (event.status !== 'saved' && event.status !== 'duplicate')
-    )
-      return;
+    if (this.closed || !this.preferences.enabled) return;
+    const notification = captureNotification(event);
+
+    if (notification === undefined) return;
+    if (notification.status === 'failed') {
+      const now = this.effects.now?.() ?? performance.now();
+
+      if (now - this.lastFailure < 5000) return;
+      this.lastFailure = now;
+    }
+
     const version = ++this.version;
 
     this.current = {
       toast: {
         version,
-        status: event.status,
-        preview: preview(event.preview.text),
+        status: notification.status,
+        preview: notification.preview,
         theme: this.preferences.theme,
         phase: 'visible'
       },
-      source: { ...event.sourceBounds }
+      source: notification.source
     };
     this.cancelTimer?.();
-    this.cancelTimer = this.effects.schedule(() => {
-      this.leave(version);
-    }, 2300);
+    this.cancelTimer = this.effects.schedule(
+      () => {
+        this.leave(version);
+      },
+      notification.status === 'failed' ? 5000 : 2300
+    );
     try {
       const window = await this.getWindow();
 
@@ -179,14 +173,17 @@ export class CaptureToastService {
     if (this.current === undefined || this.window?.alive() !== true) return;
     const area = this.effects.workArea(this.current.source);
 
-    if (!valid(area)) {
+    if (!validToastRectangle(area)) {
       this.dismiss();
       return;
     }
 
     const margin = Math.min(16, area.width / 4, area.height / 4);
     const width = Math.min(330, area.width - 2 * margin);
-    const height = Math.min(110, area.height - 2 * margin);
+    const height = Math.min(
+      this.current.toast.status === 'failed' ? 140 : 110,
+      area.height - 2 * margin
+    );
 
     this.window.present(this.current.toast, {
       x: Math.round(area.x + area.width - width - margin),

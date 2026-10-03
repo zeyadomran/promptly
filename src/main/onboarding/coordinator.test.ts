@@ -56,6 +56,7 @@ test('first-run completion is durable and skipping creates no practice data', as
     admit: () => () => true,
     now: () => 2,
     native: {
+      sourceAvailable: () => Promise.resolve(true),
       foregroundIdentityResult: () => Promise.resolve({ status: 'ok', identity }),
       captureSelection: async () => {
         await selected;

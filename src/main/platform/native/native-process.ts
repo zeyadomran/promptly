@@ -2,13 +2,9 @@ import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 
 import { NdjsonFrames } from './ndjson-frames';
 import { terminateNative } from './terminate-native';
+import { NativeTransportError, type TransportFailure } from './transport-failure';
 
-export type TransportFailure = 'timedOut' | 'helperUnavailable' | 'busy' | 'disposed';
-export class NativeTransportError extends Error {
-  constructor(readonly status: TransportFailure) {
-    super(status);
-  }
-}
+export { NativeTransportError, type TransportFailure } from './transport-failure';
 interface Pending {
   id: string;
   frame: string;
@@ -28,6 +24,7 @@ export class NativeProcess {
   private active: Pending | undefined;
   private queue: Pending[] = [];
   private serial = 0;
+  private session = 0;
   private disposed = false;
   private disposal: Promise<void> | undefined;
 
@@ -35,6 +32,10 @@ export class NativeProcess {
 
   get running(): boolean {
     return this.child !== undefined;
+  }
+
+  get generation(): number {
+    return this.session;
   }
 
   request<T>(
@@ -125,6 +126,7 @@ export class NativeProcess {
     const frames = new NdjsonFrames();
 
     this.child = child;
+    this.session++;
     // Drain stderr but never retain or print provider-controlled diagnostics.
     child.stderr.resume();
     child.on('error', () => {

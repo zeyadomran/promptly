@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 
 import type { CaptureEvent } from '../capture/ports';
+import { assertCaptureFailureFeedback } from './failure-feedback-flow';
 import type { ToastEffects, ToastWindow } from './ports';
 import { CaptureToastService } from './service';
 
@@ -165,4 +166,5 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
   expect(visible).toBe(false);
   expect(alive).toBe(false);
   expect(timers.size).toBe(0);
+  await assertCaptureFailureFeedback();
 });

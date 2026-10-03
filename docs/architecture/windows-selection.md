@@ -26,11 +26,21 @@ Call `ready()` during startup, then obtain `foregroundIdentity()` immediately wh
 the shortcut fires, **before changing any application UI**. Keep that exact frozen
 identity object for the ensuing capture. Native records HWND, PID and process
 creation time; the private pipe carries a random native-issued token. Main keeps a
-WeakSet of identity objects, so a copied/renderer-supplied object cannot activate
-an application. Native retains at most 32 tokens; evicted tokens fail safely.
+WeakMap of identity objects and issuing helper generations, so a copied/renderer-supplied
+object or an object issued by a retired helper cannot activate an application.
+`sourceAvailable(identity)` validates a retained token through the already-running
+helper under the 100-ms deadline; it never starts a replacement. Native retains at
+most 32 tokens, and validation detects eviction, destroyed windows and inaccessible
+processes. Renderer source availability is asynchronous and enables activation
+only after this check. A temporary transport failure reports unavailable without
+erasing an otherwise valid capability solely because the request was busy.
 Capture validates HWND/PID/creation time/foreground both before and after UIA.
 Activation validates the same live identity, denies higher-integrity or unreadable processes, calls
-`SetForegroundWindow`, and reports `activationDenied` when Windows refuses it.
+`ShowWindowAsync(SW_RESTORE)` for a minimized retained window, waits at most 60 ms
+for restoration, then revalidates before `SetForegroundWindow`. It reports success
+only when the exact window is foreground and no longer minimized. Windows refusal
+or an incomplete restore reports `activationDenied`; the transport still has its
+100-ms deadline.
 It never launches a path, shell command, or application inferred from a name.
 
 Only safe nullable provenance `{pid,name,id}` leaves the helper: `id` is a bounded
@@ -83,16 +93,23 @@ The final exit preserves code 1 for fatal failures; cleanup errors remain report
 Frames are byte-bounded at **6,356,992 UTF-8 bytes**, excluding LF. UTF-8 decoding
 is strict across fragments, malformed/partial EOF frames fail closed, and no stderr
 or request/response text is logged. Ordinary diagnostics are structured statuses.
-Production accepts only capabilities/foreground/capture/activate/stop. Spike-only
+Production accepts only capabilities/foreground/capture/validate/activate/stop. Spike-only
 fixture, hook and clipboard commands are invalid even with command-line flags.
 `expectedPid` and `includeText` retain exact JSON int/boolean parsing: omission alone
 defaults; null, strings, fractional/overflow PID and coerced flags are invalid.
 
 ## Selection semantics and initialization
 
-UIA reads only `FocusedElement` and its `TextPattern.GetSelection()` ranges after
-checking `IsPassword`. It never reads `DocumentRange`, clipboard data or a fallback
-document. Ranges are joined in provider array order with exactly one LF separator,
+UIA reads `FocusedElement` and at most sixteen elements on its raw-view ancestor
+chain. Every element must belong to the frozen foreground PID, expose no password
+guard, and lead to the exact foreground window. Native child handles must resolve
+to that same root HWND. The nearest TextPattern may be the focused element itself
+or a verified ancestor that accepts the focused child through `RangeFromChild`.
+Only that provider's `GetSelection()` ranges are read. Focus and foreground are
+rechecked before returning selected content. The managed .NET Framework API has
+no TextChildPattern wrapper; no COM wrapper/dependency is introduced.
+There is no child/sibling/document scan, `DocumentRange`, clipboard data or fallback
+document read. Ranges are joined in provider array order with exactly one LF separator,
 including degenerate ranges; whitespace, CRLF, controls, quotes and supplementary
 Unicode remain exact. Empty means zero UTF-16 units; whitespace selections remain
 `ok` for the later normalization pipeline. Native caps 4096 ranges and 1,048,576
@@ -101,6 +118,14 @@ without truncation. Missing TextPattern is `unsupported`, protected fields are
 `secureInput`, denied target/provider access is `permissionDenied`, and foreground
 races discard text as `foregroundChanged`. Provider exceptions are `providerError`;
 blocked calls are `timedOut`; crash/protocol failure is `helperUnavailable`.
+
+Actionable failed captures publish their bounded human-readable message to the
+existing inactive confirmation overlay, including failures without source bounds
+(placed on the primary display). Failure feedback lasts five seconds and repeats
+at most once per five seconds. Empty selection, canceled capture and ordinary
+typing remain silent. The existing confirmation preference and owner retirement
+still apply. This improves observability; it does not establish support for every
+source application or every multi-process accessibility tree.
 
 Access checks compare the helper's numeric `TokenIntegrityLevel` with the target's
 level. A `PROCESS_QUERY_LIMITED_INFORMATION` handle must report the recorded process

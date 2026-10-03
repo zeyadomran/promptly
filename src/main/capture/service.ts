@@ -3,6 +3,7 @@ import { failure } from '../../shared/contracts/result';
 import { normalizeSnippet } from '../../shared/domain/normalize-snippet';
 import type { StorageClient } from '../storage/client';
 import type { LibraryMutations } from '../storage/library-mutations';
+import { nativeCaptureFailure } from './native-failure';
 import type { CaptureEffects, CaptureEvent, CapturePhases, CaptureReply } from './ports';
 
 export class CaptureService {
@@ -140,12 +141,7 @@ export class CaptureService {
   }
 
   private nativeFailure(status: string): CaptureReply {
-    return failure(
-      'UNAVAILABLE',
-      status === 'unsupported'
-        ? 'This app does not support native selection capture. No snippet was saved.'
-        : `Native capture was not saved (${status}).`
-    );
+    return nativeCaptureFailure(status);
   }
 
   private now(): number {
@@ -157,7 +153,9 @@ export class CaptureService {
       ...phases,
       completedAt: this.now(),
       status: result.ok ? result.value.status : 'failed',
-      ...(result.ok ? { revision: result.value.revision } : { reason: result.error.code }),
+      ...(result.ok
+        ? { revision: result.value.revision }
+        : { reason: result.error.code, message: result.error.message }),
       ...(result.ok && result.value.status !== 'empty'
         ? {
             id: result.value.snippet.id,

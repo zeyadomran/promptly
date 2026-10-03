@@ -5,7 +5,7 @@ import type { WindowsIdentity, WindowsSelection } from '../platform/windows/wind
 export type CaptureIdentity = WindowsIdentity;
 export type CaptureNative = Pick<
   WindowsSelection,
-  'foregroundIdentityResult' | 'captureSelection' | 'activateSource'
+  'foregroundIdentityResult' | 'captureSelection' | 'activateSource' | 'sourceAvailable'
 >;
 
 export interface CaptureEvent {
@@ -13,6 +13,7 @@ export interface CaptureEvent {
   id?: string;
   revision?: number;
   reason?: string;
+  message?: string;
   /** Main-only committed content for toast consumers. Never log or publish as a change event. */
   preview?: Readonly<{
     id: string;
