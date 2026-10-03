@@ -16,7 +16,8 @@ export interface ToastWindow {
 export interface ToastEffects {
   create: (signal: AbortSignal, activate: (version: number) => void) => Promise<ToastWindow>;
   openPromptly: () => Promise<void>;
-  workArea: (source: ToastRectangle) => ToastRectangle;
+  workArea: (source: ToastRectangle | undefined) => ToastRectangle;
+  now?: () => number;
   schedule: (callback: () => void, milliseconds: number) => () => void;
   failed: () => void;
 }

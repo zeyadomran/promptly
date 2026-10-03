@@ -25,6 +25,7 @@ export function desktopConfirmation(
         await windows.show();
       },
       workArea: (source) => {
+        if (source === undefined) return screen.getPrimaryDisplay().workArea;
         // DWM frames are physical; Electron performs monitor-aware conversion, including negative origins.
         const dip = screen.screenToDipRect(null, source);
 

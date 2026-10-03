@@ -14,6 +14,7 @@ import {
 } from '../../../shared/contracts/native-selection';
 import type { NativeProcessOptions, TransportFailure } from '../native/native-process';
 import { NativeProcess, NativeTransportError } from '../native/native-process';
+import { SourceCapabilities } from './source-capabilities';
 
 export interface WindowsIdentity {
   readonly token: string;
@@ -44,10 +45,11 @@ export function windowsHelperPath(options: WindowsSelectionOptions): string {
 export class WindowsSelection {
   private readonly transport: NativeProcess;
   private readiness: Promise<ReturnType<typeof nativeReadySchema.parse>> | undefined;
-  private readonly identities = new WeakSet<WindowsIdentity>();
+  private readonly identities: SourceCapabilities;
 
   constructor(options: NativeProcessOptions) {
     this.transport = new NativeProcess(options);
+    this.identities = new SourceCapabilities(this.transport);
   }
 
   ready(): Promise<ReturnType<typeof nativeReadySchema.parse>> {
@@ -97,7 +99,7 @@ export class WindowsSelection {
           : { bounds: result.bounds === null ? null : Object.freeze(result.bounds) })
       });
 
-      this.identities.add(identity);
+      this.identities.remember(identity);
       return { status: 'ok', identity };
     } catch (error) {
       this.readiness = undefined;
@@ -106,7 +108,7 @@ export class WindowsSelection {
   }
 
   async captureSelection(identity: WindowsIdentity): Promise<WindowsCaptureResult> {
-    if (!this.identities.has(identity)) return { status: 'foregroundChanged', v: 1, id: 'local' };
+    if (!this.identities.known(identity)) return { status: 'foregroundChanged', v: 1, id: 'local' };
     try {
       await this.ready();
       return await this.transport.request(
@@ -124,7 +126,7 @@ export class WindowsSelection {
   async activateSource(
     identity: WindowsIdentity
   ): Promise<ReturnType<typeof nativeActivationSchema.parse>['status'] | TransportFailure> {
-    if (!this.identities.has(identity)) return 'foregroundChanged';
+    if (!this.identities.known(identity)) return 'foregroundChanged';
     try {
       await this.ready();
       const result = await this.transport.request(
@@ -143,6 +145,10 @@ export class WindowsSelection {
 
   dispose(): Promise<void> {
     return this.transport.dispose();
+  }
+
+  sourceAvailable(identity: WindowsIdentity): Promise<boolean> {
+    return this.identities.available(identity);
   }
 }
 

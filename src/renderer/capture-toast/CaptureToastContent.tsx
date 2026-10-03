@@ -3,10 +3,18 @@ import logo from '../assets/brand/logo.svg';
 import darkLogo from '../assets/brand/logo-on-dark.svg';
 
 export function CaptureToastContent({ confirmation }: { confirmation: CaptureToast }) {
+  const title =
+    confirmation.status === 'failed'
+      ? 'Capture not confirmed'
+      : confirmation.status === 'saved'
+        ? 'Saved to Promptly'
+        : 'Already saved';
+
   return (
     <section
       className="confirmation"
       data-phase={confirmation.phase}
+      data-status={confirmation.status}
       role="status"
       aria-live="polite"
       key={confirmation.version}
@@ -14,7 +22,7 @@ export function CaptureToastContent({ confirmation }: { confirmation: CaptureToa
       <button
         type="button"
         className="confirmation-open"
-        aria-label={`${confirmation.status === 'saved' ? 'Saved to Promptly' : 'Already saved'}. Open Promptly.`}
+        aria-label={`${title}. Open Promptly.`}
         aria-describedby={`capture-preview-${String(confirmation.version)}`}
         title="Open Promptly"
         disabled={confirmation.phase !== 'visible'}
@@ -26,9 +34,7 @@ export function CaptureToastContent({ confirmation }: { confirmation: CaptureToa
         <img className="confirmation-logo logo-dark" src={darkLogo} alt="" width="20" height="20" />
         <span className="confirmation-content">
           <span className="confirmation-heading">
-            <strong>
-              {confirmation.status === 'saved' ? 'Saved to Promptly' : 'Already saved'}
-            </strong>
+            <strong>{title}</strong>
             <span className="confirmation-time">now</span>
           </span>
           <span
