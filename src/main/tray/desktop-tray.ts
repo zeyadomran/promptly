@@ -13,8 +13,7 @@ export function createDesktopTray(
   shortcuts: Shortcuts,
   copy: () => CopyService | undefined,
   lifecycle: () => WindowLifecycle | undefined,
-  updateReady: () => boolean,
-  restartForUpdate: () => void
+  updates: { ready: () => boolean; restart: () => void }
 ) {
   const error = () => {
     console.warn('Windows tray command unavailable.');
@@ -22,8 +21,8 @@ export function createDesktopTray(
 
   return new TrayCoordinator(storage, shortcuts, electronTray(error), {
     copy,
-    updateReady,
-    restartForUpdate,
+    updateReady: updates.ready,
+    restartForUpdate: updates.restart,
     open: async (kind) => {
       const windows = lifecycle();
 

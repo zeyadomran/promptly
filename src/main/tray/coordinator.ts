@@ -5,6 +5,7 @@ import type { Shortcuts } from '../shortcuts/service';
 import type { StorageClient } from '../storage/client';
 import { TrayFeedback } from './feedback';
 import { trayLabel } from './label';
+import { trayMenu } from './menu';
 import type { TrayHandle, TrayItem, TrayNative } from './ports';
 
 interface TrayCommands {
@@ -102,44 +103,17 @@ export class TrayCoordinator {
             run: () => this.copy(snippet.id, owner)
           }));
 
-          const menu: TrayItem[] = [
-            { label: 'Recent', enabled: false },
-            ...items,
-            { type: 'separator' },
-            {
-              label: 'Open Promptly',
-              shortcut: this.shortcuts.status.labels.open,
-              run: () => this.open('main')
+          const menu = trayMenu(items, this.shortcuts.status, {
+            open: (kind) => this.open(kind),
+            pause: async () => {
+              if (!this.available) return;
+              this.shortcuts.setPaused(!this.shortcuts.status.capturePaused);
+              await this.refresh();
             },
-            {
-              label: this.shortcuts.status.capturePaused ? 'Resume capture' : 'Pause capture',
-              run: async () => {
-                if (!this.available) return;
-                this.shortcuts.setPaused(!this.shortcuts.status.capturePaused);
-                await this.refresh();
-              }
-            },
-            { label: 'Settings', run: () => this.open('settings') },
-            ...(this.commands.updateReady()
-              ? [
-                  {
-                    label: 'Restart to update',
-                    run: () => {
-                      if (this.commands.updateReady()) this.commands.restartForUpdate();
-                      return Promise.resolve();
-                    }
-                  }
-                ]
-              : []),
-            { type: 'separator' },
-            {
-              label: 'Quit Promptly',
-              run: () => {
-                this.commands.quit();
-                return Promise.resolve();
-              }
-            }
-          ];
+            updateReady: this.commands.updateReady,
+            restartForUpdate: this.commands.restartForUpdate,
+            quit: this.commands.quit
+          });
 
           handle?.setMenu(menu.map((item) => this.ownedItem(item, owner)));
         } while (seen !== this.version);

@@ -2,6 +2,7 @@ import { expect, it, vi } from 'vitest';
 
 import { closeSettingsStorage } from '../lifecycle/close-settings-storage';
 import { trayFixture } from './tray-test-fixture';
+import { assertReadyEmptyMenu, assertReadyUpdateMenu } from './tray-update-flow';
 
 it('keeps recent commands authoritative and capture-only pause reachable through reversible tray visibility', async () => {
   const owned = trayFixture();
@@ -99,36 +100,11 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     expect(windows.slice(-2)).toEqual(['main', 'settings']);
     expect(owned.menu().find((item) => item.label === 'Recent')?.enabled).toBe(false);
     expect(owned.menu().find((item) => item.label === 'Open Promptly')?.shortcut).toBe('Alt+Space');
-    expect(owned.menu().some((item) => item.label === 'Restart to update')).toBe(false);
-    await owned.updates.check();
-    await tray.refresh();
-    expect(owned.menu().some((item) => item.label === 'Restart to update')).toBe(false);
-    await owned.updates.install();
-    await tray.refresh();
-    const restart = owned.menu().find((item) => item.label === 'Restart to update');
+    const restart = await assertReadyUpdateMenu(owned);
 
-    expect(restart?.run).toBeDefined();
-    expect(
-      owned
-        .menu()
-        .slice(-3)
-        .map((item) => item.label ?? item.type)
-    ).toEqual(['Restart to update', 'separator', 'Quit Promptly']);
     fixture.store.invoke('clearLibrary', {});
     await tray.refresh();
-    expect(
-      owned
-        .menu()
-        .map((item) => item.label)
-        .filter(Boolean)
-    ).toEqual([
-      'Recent',
-      'Open Promptly',
-      'Pause capture',
-      'Settings',
-      'Restart to update',
-      'Quit Promptly'
-    ]);
+    assertReadyEmptyMenu(owned);
     fixture.store.invoke('createSnippet', { text: 'Owned feedback retirement' });
     await tray.refresh();
     await owned
