@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 
 import type { OnboardingState } from '../../shared/contracts/onboarding';
-import type { DesktopResult } from '../../shared/contracts/result';
+import { type DesktopResult, failure } from '../../shared/contracts/result';
 import { CaptureService } from '../capture/service';
 import { SettingsService } from '../settings/service';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
@@ -13,8 +13,18 @@ import type { OnboardingOwner } from './ports';
 
 test('first-run completion is durable and skipping creates no practice data', async () => {
   const store = testStorage();
-  const call = <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
-    Promise.resolve(store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>);
+  let completionBarrier: Promise<void> | undefined;
+  let failCompletion = false;
+  let releaseCompletion = () => undefined;
+  const call = async <K extends StorageOperation>(name: K, input: StorageRequest<K>) => {
+    if (name === 'updateSettings' && completionBarrier !== undefined) {
+      await completionBarrier;
+      if (failCompletion) return failure('INTERNAL', 'Owned database write rejected.');
+    }
+
+    return store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>;
+  };
+
   const settings = new SettingsService({ call }, { available: [], unavailable: [] });
   let visible: string | undefined;
   let alive = true;
@@ -96,6 +106,30 @@ test('first-run completion is durable and skipping creates no practice data', as
       value: { step: 'welcome', saved: false }
     });
     coordinator.step(owner, 'shortcut');
+    completionBarrier = new Promise<void>((resolve) => {
+      releaseCompletion = resolve;
+    });
+    failCompletion = true;
+    const pendingSkip = coordinator.finish(owner, true);
+
+    expect(keyboard.shortcuts.captureAdmission()).toBeUndefined();
+    expect(await capture.capture()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    keyboard.tap(1000);
+    keyboard.tap(1180);
+    expect(coordinator.state(owner)).toMatchObject({
+      ok: true,
+      value: { step: 'shortcut', saved: false }
+    });
+    releaseCompletion();
+    expect(await pendingSkip).toMatchObject({ ok: false, error: { code: 'INTERNAL' } });
+    completionBarrier = undefined;
+    failCompletion = false;
+    expect(coordinator.state(owner)).toMatchObject({
+      ok: true,
+      value: { step: 'shortcut', test: { status: 'waiting' }, saved: false }
+    });
+    expect(await capture.capture()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    expect(settings.current.settings.onboardingComplete).toBe(false);
     expect(keyboard.shortcuts.captureAdmission()).toBeUndefined();
     keyboard.tap(10);
     expect(coordinator.state(owner)).toMatchObject({
@@ -106,6 +140,19 @@ test('first-run completion is durable and skipping creates no practice data', as
     expect(coordinator.state(owner)).toMatchObject({
       ok: true,
       value: { step: 'detected', test: { status: 'detected', elapsedMs: 180 }, saved: false }
+    });
+    completionBarrier = new Promise<void>((resolve) => {
+      releaseCompletion = resolve;
+    });
+    const successfulSkip = coordinator.finish(owner, true);
+
+    expect(await capture.capture()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    releaseCompletion();
+    expect(await successfulSkip).toMatchObject({ ok: true, value: { completed: true } });
+    completionBarrier = undefined;
+    expect(keyboard.shortcuts.captureAdmission()).toBeTypeOf('function');
+    expect(await settings.services.updateSettings({ onboardingComplete: false })).toMatchObject({
+      ok: true
     });
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(0);
     alive = false;
@@ -183,6 +230,7 @@ test('first-run completion is durable and skipping creates no practice data', as
     await skipped.close();
     await reopened.close();
   } finally {
+    releaseCompletion();
     release();
     unsubscribe();
     await capture.close();

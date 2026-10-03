@@ -82,18 +82,7 @@ export class OnboardingCoordinator {
       test: { status: 'inactive' },
       ...(step === 'capture' ? { saved: false, preview: null } : {})
     };
-    if (step === 'shortcut') {
-      this.effects.startTest(session.owner.id, (test) => {
-        if (!this.current(session) || !['shortcut', 'detected'].includes(session.state.step))
-          return;
-        session.state = {
-          ...session.state,
-          test,
-          ...(test.status === 'detected' ? { step: 'detected' } : {})
-        };
-        this.notify(session);
-      });
-    }
+    if (step === 'shortcut') this.startTest(session);
 
     this.notify(session);
     return { ok: true, value: { ...session.state } };
@@ -115,10 +104,18 @@ export class OnboardingCoordinator {
         failure('CONFLICT', 'Capture selected text successfully, or choose Skip.')
       );
     session.armedAt = Infinity;
-    this.effects.stopTest(session.owner.id);
-    const finishing = this.complete(session, destination).finally(() => {
-      this.finishing = undefined;
-    });
+    const finishing = this.complete(session, destination)
+      .then((result) => {
+        if (!result.ok && this.current(session) && !session.state.completed) {
+          this.finishing = undefined;
+          if (session.state.step === 'shortcut') this.startTest(session);
+        }
+
+        return result;
+      })
+      .finally(() => {
+        this.finishing = undefined;
+      });
 
     this.finishing = finishing;
     return finishing;
@@ -149,10 +146,28 @@ export class OnboardingCoordinator {
     this.notify(session);
     try {
       await this.effects.complete(session.owner.id, destination);
+      this.effects.stopTest(session.owner.id);
       return { ok: true, value: { ...session.state } };
     } catch {
       return failure('UNAVAILABLE', 'Setup was saved. Reopen Promptly to continue.');
     }
+  }
+
+  private startTest(session: Session): void {
+    this.effects.startTest(session.owner.id, (test) => {
+      if (
+        this.finishing !== undefined ||
+        !this.current(session) ||
+        !['shortcut', 'detected'].includes(session.state.step)
+      )
+        return;
+      session.state = {
+        ...session.state,
+        test,
+        ...(test.status === 'detected' ? { step: 'detected' } : {})
+      };
+      this.notify(session);
+    });
   }
 
   private current(session: Session): boolean {
