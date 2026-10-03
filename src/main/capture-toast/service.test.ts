@@ -8,10 +8,13 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
   let shown: Parameters<ToastWindow['present']> | undefined;
   let visible = false;
   let alive = true;
+  let promptlyVisible = false;
+  let promptlyFocused = false;
   let now = 0;
   const timers = new Map<() => void, number>();
   const window: ToastWindow = {
     alive: () => alive,
+    visible: () => visible,
     present: (...value) => {
       shown = value;
       visible = true;
@@ -26,6 +29,11 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
   };
   const effects: ToastEffects = {
     create: () => Promise.resolve(window),
+    openPromptly: () => {
+      promptlyVisible = true;
+      promptlyFocused = true;
+      return Promise.resolve();
+    },
     workArea: () => ({ x: -1280, y: 0, width: 1280, height: 720 }),
     schedule: (callback, delay) => {
       timers.set(callback, now + delay);
@@ -63,6 +71,15 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
     },
     { x: -346, y: 594, width: 330, height: 110 }
   ]);
+  expect(promptlyVisible).toBe(false);
+  expect(promptlyFocused).toBe(false);
+  expect(await service.activate(1)).toBe(true);
+  expect(promptlyVisible).toBe(true);
+  expect(promptlyFocused).toBe(true);
+  promptlyFocused = false;
+  expect(await service.activate(1)).toBe(true);
+  expect(promptlyVisible).toBe(true);
+  expect(promptlyFocused).toBe(true);
   now = 1000;
   await service.capture({
     ...event,
@@ -77,6 +94,18 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
     phase: 'visible'
   });
   expect(timers.size).toBe(1);
+  promptlyFocused = false;
+  expect(await service.activate(1)).toBe(false);
+  expect(await service.activate(3)).toBe(false);
+  visible = false;
+  expect(await service.activate(2)).toBe(false);
+  visible = true;
+  alive = false;
+  expect(await service.activate(2)).toBe(false);
+  alive = true;
+  expect(promptlyFocused).toBe(false);
+  expect(await service.activate(2)).toBe(true);
+  expect(promptlyFocused).toBe(true);
   service.updatePreferences({ enabled: true, theme: 'system' });
   expect(shown?.[0].theme).toBe('system');
   effects.workArea = () => ({ x: 2000, y: -900, width: 1920, height: 1080 });
@@ -92,19 +121,26 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
   for (const [callback, deadline] of timers) if (deadline <= now) callback();
   expect(visible).toBe(true);
   expect(shown?.[0]).toHaveProperty('phase', 'leaving');
+  promptlyFocused = false;
+  expect(await service.activate(2)).toBe(false);
+  expect(promptlyFocused).toBe(false);
   now = 3500;
   for (const [callback, deadline] of timers) if (deadline <= now) callback();
   expect(visible).toBe(false);
   expect(timers.size).toBe(0);
+  expect(await service.activate(2)).toBe(false);
   service.updatePreferences({ enabled: false, theme: 'light' });
   await service.capture(event);
+  expect(await service.activate(3)).toBe(false);
   expect(visible).toBe(false);
   service.updatePreferences({ enabled: true, theme: 'light' });
   await service.capture(event);
   service.updatePreferences({ enabled: false, theme: 'light' });
+  expect(await service.activate(3)).toBe(false);
   expect(visible).toBe(false);
   expect(timers.size).toBe(0);
   await service.close();
+  expect(await service.activate(3)).toBe(false);
   expect(alive).toBe(false);
   await service.capture(event);
   expect(visible).toBe(false);
@@ -120,6 +156,8 @@ test('committed confirmation owns inactive visibility, replacement and retiremen
   const loading = new CaptureToastService(effects, { enabled: true, theme: 'light' });
   const first = loading.capture(event);
   const replacement = loading.capture({ ...event, status: 'duplicate' });
+
+  expect(await loading.activate(2)).toBe(false);
   const closed = loading.close();
 
   resolveWindow?.(window);

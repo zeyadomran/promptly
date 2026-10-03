@@ -149,6 +149,7 @@ When onboarding finishes, open the main window in Compact mode with the practice
 ## 8. System tray
 
 - A monochrome tray icon. Menu items: Open Promptly, the last 5 snippets (click to copy), Pause capture, Settings, Quit.
+- A single left-click on the tray icon shows, restores and focuses Promptly. Right-click opens the context menu; Open Promptly uses the same show action.
 - While capture is paused, the global save shortcut is disabled and the icon shows a paused state.
 
 ---

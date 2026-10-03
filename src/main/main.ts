@@ -129,7 +129,7 @@ if (primaryInstance)
         keyboard,
         windowsSelection
       );
-      confirmation = desktopConfirmation(library.capture.service, settings);
+      confirmation = desktopConfirmation(library.capture.service, settings, () => lifecycle);
       onboarding = desktopOnboarding(
         library.capture.service,
         settings,

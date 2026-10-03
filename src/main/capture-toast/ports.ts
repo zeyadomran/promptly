@@ -8,12 +8,14 @@ export interface ToastRectangle {
 }
 export interface ToastWindow {
   alive: () => boolean;
+  visible: () => boolean;
   present: (toast: CaptureToast, bounds: ToastRectangle) => void;
   hide: () => void;
   destroy: () => void;
 }
 export interface ToastEffects {
-  create: (signal: AbortSignal) => Promise<ToastWindow>;
+  create: (signal: AbortSignal, activate: (version: number) => void) => Promise<ToastWindow>;
+  openPromptly: () => Promise<void>;
   workArea: (source: ToastRectangle) => ToastRectangle;
   schedule: (callback: () => void, milliseconds: number) => () => void;
   failed: () => void;

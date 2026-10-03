@@ -53,7 +53,7 @@ export function electronTray(onError: () => void): TrayNative {
       };
 
       nativeTheme.on('updated', changed);
-      tray.on('double-click', () => {
+      tray.on('click', () => {
         invoke(menu[0]);
       });
       update();

@@ -1,15 +1,23 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { BrowserWindow, session } from 'electron';
+import { BrowserWindow, type IpcMainEvent, session } from 'electron';
 
-import { captureToastChannel } from '../../shared/contracts/capture-toast';
+import {
+  type CaptureToast,
+  captureToastActivationChannel,
+  captureToastActivationSchema,
+  captureToastChannel
+} from '../../shared/contracts/capture-toast';
 import { installRendererAssets } from '../windows/install-renderer-assets';
 import { loadWindowRenderer } from '../windows/load-window-renderer';
 import { markOverlayWindow } from '../windows/overlay-windows';
 import type { ToastWindow } from './ports';
 
-export async function createToastWindow(signal: AbortSignal): Promise<ToastWindow> {
+export async function createToastWindow(
+  signal: AbortSignal,
+  activate: (version: number) => void
+): Promise<ToastWindow> {
   const canceled = () => signal.aborted;
 
   if (canceled()) throw new Error('Confirmation overlay retired.');
@@ -32,7 +40,7 @@ export async function createToastWindow(signal: AbortSignal): Promise<ToastWindo
     frame: false,
     transparent: true,
     backgroundColor: '#00000000',
-    focusable: false,
+    focusable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
     resizable: false,
@@ -57,7 +65,33 @@ export async function createToastWindow(signal: AbortSignal): Promise<ToastWindo
 
   markOverlayWindow(window);
   window.setAlwaysOnTop(true, 'pop-up-menu');
-  window.setIgnoreMouseEvents(true);
+  const contents = window.webContents;
+  let presented: CaptureToast | undefined;
+  const activated = (event: IpcMainEvent, channel: string, ...args: unknown[]) => {
+    if (
+      canceled() ||
+      window.isDestroyed() ||
+      !window.isVisible() ||
+      channel !== captureToastActivationChannel ||
+      event.sender !== contents ||
+      event.senderFrame !== contents.mainFrame ||
+      event.senderFrame.url !== new URL(url).href ||
+      presented?.phase !== 'visible' ||
+      args.length !== 1
+    )
+      return;
+    const version = captureToastActivationSchema.safeParse(args[0]);
+
+    if (version.success && version.data === presented.version) activate(version.data);
+  };
+
+  const hidden = () => {
+    presented = undefined;
+  };
+
+  // Scope the sole command to this owned WebContents; the overlay gets no desktop IPC authority.
+  contents.on('ipc-message', activated);
+  window.on('hide', hidden);
   const destroy = () => {
     if (!window.isDestroyed()) window.destroy();
   };
@@ -65,6 +99,10 @@ export async function createToastWindow(signal: AbortSignal): Promise<ToastWindo
   signal.addEventListener('abort', destroy, { once: true });
   window.once('closed', () => {
     signal.removeEventListener('abort', destroy);
+    contents.removeListener('ipc-message', activated);
+    contents.removeListener('render-process-gone', destroy);
+    window.removeListener('hide', hidden);
+    presented = undefined;
   });
   window.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
   window.webContents.on('will-navigate', (event) => {
@@ -73,19 +111,22 @@ export async function createToastWindow(signal: AbortSignal): Promise<ToastWindo
   window.webContents.on('will-attach-webview', (event) => {
     event.preventDefault();
   });
-  window.webContents.on('render-process-gone', destroy);
+  contents.on('render-process-gone', destroy);
   try {
     await loadWindowRenderer(window, url);
     if (canceled() || window.isDestroyed()) throw new Error('Confirmation overlay retired.');
     return {
       alive: () => !window.isDestroyed(),
+      visible: () => !window.isDestroyed() && window.isVisible(),
       present: (toast, bounds) => {
         if (window.isDestroyed()) return;
         window.setBounds(bounds, false);
         window.webContents.send(captureToastChannel, toast);
         window.showInactive();
+        presented = toast;
       },
       hide: () => {
+        presented = undefined;
         if (window.isDestroyed()) return;
         window.hide();
         window.webContents.send(captureToastChannel, null);
