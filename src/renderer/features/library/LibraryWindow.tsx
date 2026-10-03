@@ -9,16 +9,18 @@ import { LibraryProvider } from './LibraryProvider';
 /** Selection, drafts, tags and commands remain mounted across both library surfaces. */
 export function LibraryWindow({
   mode,
-  onModeChange
+  onModeChange,
+  active = true
 }: {
+  active?: boolean;
   mode: SizeMode;
   onModeChange: (mode: SizeMode) => Promise<void>;
 }) {
   return (
     <LibraryProvider>
-      <TagPickerProvider>
-        <SnippetSessionProvider mode={mode} onModeChange={onModeChange}>
-          <LibraryCommandProvider active>
+      <TagPickerProvider active={active}>
+        <SnippetSessionProvider active={active} mode={mode} onModeChange={onModeChange}>
+          <LibraryCommandProvider active={active}>
             {mode === 'compact' ? <CompactLibrary /> : <RegularLibrary />}
           </LibraryCommandProvider>
         </SnippetSessionProvider>

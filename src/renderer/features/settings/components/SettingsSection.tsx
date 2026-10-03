@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import { TabsContent } from '../../../components/ui/tabs';
+import type { SettingsSectionId } from '../../window-chrome/shell-navigation';
 
 export function SettingsSection({
   value,
@@ -8,18 +8,25 @@ export function SettingsSection({
   description,
   children
 }: {
-  value: string;
+  value: SettingsSectionId;
   title: string;
   description: string;
   children: ReactNode;
 }) {
   return (
-    <TabsContent value={value} className="settings-section">
+    <section
+      id={`settings-${value}`}
+      data-settings-section={value}
+      className="settings-section"
+      aria-labelledby={`settings-${value}-heading`}
+    >
       <div className="settings-section-heading">
-        <h1>{title}</h1>
+        <h1 id={`settings-${value}-heading`} tabIndex={-1}>
+          {title}
+        </h1>
         <p>{description}</p>
       </div>
-      {children}
-    </TabsContent>
+      <div className="settings-card">{children}</div>
+    </section>
   );
 }
