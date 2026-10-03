@@ -1,6 +1,7 @@
 import { expect, it } from 'vitest';
 
-import { libraryKeyCommand } from './library-keyboard';
+import { defaultLocalShortcuts } from '../../../shared/contracts/local-shortcuts';
+import { editorCancelCommand, libraryKeyCommand } from './library-keyboard';
 
 it('routes library navigation and copy while preserving text, IME, and overlay ownership', () => {
   const input = {
@@ -53,4 +54,64 @@ it('routes library navigation and copy while preserving text, IME, and overlay o
   expect(libraryKeyCommand({ ...editorTag, alt: true })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'f', ctrl: true, focus: 'editor' })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'f', ctrl: true })).toBe('focus-search');
+  const shortcuts = {
+    ...defaultLocalShortcuts(),
+    next: 'Control+J',
+    previous: 'Control+K',
+    copy: 'Control+Return',
+    tag: 'Control+G',
+    delete: 'Control+D',
+    deleteAlternate: 'Control+Backspace',
+    focusSearch: 'Control+S',
+    settings: 'Control+.',
+    dismiss: 'Control+Escape',
+    cancelEdit: 'Control+Escape'
+  };
+
+  expect(libraryKeyCommand(input, shortcuts)).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, ctrl: true }, shortcuts)).toBe('copy');
+  expect(libraryKeyCommand({ ...input, key: 'j', ctrl: true, repeat: true }, shortcuts)).toBe(
+    'next'
+  );
+  expect(libraryKeyCommand({ ...input, key: 'k', ctrl: true }, shortcuts)).toBe('previous');
+  expect(libraryKeyCommand({ ...input, key: 'd', ctrl: true, focus: 'library' }, shortcuts)).toBe(
+    'delete'
+  );
+  expect(
+    libraryKeyCommand({ ...input, key: 'Backspace', ctrl: true, focus: 'library' }, shortcuts)
+  ).toBe('delete');
+  expect(libraryKeyCommand({ ...input, key: 's', ctrl: true }, shortcuts)).toBe('focus-search');
+  expect(libraryKeyCommand({ ...input, key: '.', ctrl: true }, shortcuts)).toBe('settings');
+  expect(libraryKeyCommand({ ...input, key: 'g', ctrl: true, focus: 'editor' }, shortcuts)).toBe(
+    'tag'
+  );
+  expect(libraryKeyCommand({ ...input, key: 'Escape', ctrl: true }, shortcuts)).toBe(
+    'clear-search'
+  );
+  expect(
+    libraryKeyCommand({ ...input, key: 'Escape', ctrl: true, hasSearch: false }, shortcuts)
+  ).toBe('hide');
+  const typing = { ...shortcuts, tag: 'G', next: 'Space', copy: 'Shift+Return' };
+
+  expect(libraryKeyCommand({ ...input, key: 'g', focus: 'editor' }, typing)).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, key: ' ' }, typing)).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, shift: true }, typing)).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, key: ' ', focus: 'library' }, typing)).toBe('next');
+  expect(
+    libraryKeyCommand(
+      { ...input, key: 'c', ctrl: true, focus: 'editor' },
+      { ...shortcuts, tag: 'Control+C' }
+    )
+  ).toBeUndefined();
+  expect(editorCancelCommand({ ...input, key: 'Escape', ctrl: true }, shortcuts)).toBe(true);
+  expect(
+    editorCancelCommand({ ...input, key: 'Escape', ctrl: true, composing: true }, shortcuts)
+  ).toBe(false);
+  expect(editorCancelCommand({ ...input, key: 'Escape' }, shortcuts)).toBe(false);
+  expect(
+    libraryKeyCommand({ ...input, key: ' ', focus: 'control' }, { ...shortcuts, settings: 'Space' })
+  ).toBeUndefined();
+  expect(
+    libraryKeyCommand({ ...input, focus: 'control' }, { ...shortcuts, tag: 'Return' })
+  ).toBeUndefined();
 });

@@ -1,4 +1,5 @@
 import { acceleratorSchema } from '../contracts/accelerator';
+import { localAcceleratorSchema } from '../contracts/local-shortcuts';
 
 export interface ShortcutKeyEvent {
   key: string;
@@ -29,7 +30,7 @@ const numpadKeys = new Map([
   ['NumpadDivide', 'numdiv']
 ]);
 
-export function recordedAccelerator(event: ShortcutKeyEvent): string | undefined {
+export function recordedAccelerator(event: ShortcutKeyEvent, local = false): string | undefined {
   if (
     event.repeat ||
     event.isComposing ||
@@ -51,15 +52,12 @@ export function recordedAccelerator(event: ShortcutKeyEvent): string | undefined
     ? `num${event.code.slice(6)}`
     : (numpadKeys.get(event.code) ?? namedKeys.get(event.key) ?? event.key.toUpperCase());
   let accelerator = [...modifiers, key].join('+');
+  const schema = local ? localAcceleratorSchema : acceleratorSchema;
 
   // Alt-modified input can produce an unsupported glyph. Only fall back for an unsupported
   // modified character on a letter key; never substitute a punctuation position.
-  if (
-    !acceleratorSchema.safeParse(accelerator).success &&
-    event.altKey &&
-    /^Key[A-Z]$/.test(event.code)
-  )
+  if (!schema.safeParse(accelerator).success && event.altKey && /^Key[A-Z]$/.test(event.code))
     accelerator = [...modifiers, event.code.slice(3)].join('+');
 
-  return acceleratorSchema.safeParse(accelerator).success ? accelerator : undefined;
+  return schema.safeParse(accelerator).success ? accelerator : undefined;
 }

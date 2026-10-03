@@ -6,6 +6,7 @@ import {
   settingsSchema,
   type SettingsSnapshot
 } from '../../shared/contracts/settings';
+import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageClient } from '../storage/client';
 import type { SettingsController, SettingsControllers } from './controllers';
 
@@ -74,7 +75,11 @@ export class SettingsService {
       );
     const parsed = settingsPatchSchema.safeParse(input);
 
-    if (!parsed.success) return failure('INVALID_REQUEST', 'Invalid preference values.');
+    if (!parsed.success)
+      return failure(
+        'INVALID_REQUEST',
+        (parsed.error.issues[0]?.message ?? 'Invalid preference values.').slice(0, 256)
+      );
     const previous = await this.storage.call('getSettings', {});
 
     if (!previous.ok) return previous;
@@ -84,6 +89,9 @@ export class SettingsService {
     };
     const changed = (key: keyof SettingsPatch) =>
       JSON.stringify(next.settings[key]) !== JSON.stringify(previous.value.settings[key]);
+    const conflict = shortcutChangeConflict(previous.value.settings, next.settings, 'win32');
+
+    if (conflict !== undefined) return failure('CONFLICT', conflict);
 
     if (this.controllers.unavailable.some(changed))
       return failure(

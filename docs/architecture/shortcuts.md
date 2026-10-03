@@ -26,6 +26,39 @@ modifiers never become bindings. A valid chord waits for its captured key and al
 suppression ends and the settings transaction starts. Escape, Tab/Shift+Tab,
 recorder blur, window blur, hidden context and unmount cancel and release ownership.
 
+## Local commands
+
+Settings also records every Promptly-owned local command: next/previous snippet,
+copy, delete and its optional alternative, focus search, edit tags, open Settings,
+clear search or hide, and cancel a text edit. Defaults retain the original keys.
+`localShortcuts` is a fixed strict preference record; old databases missing that
+row read the defaults. Each committed change survives the existing SQLite settings
+transaction and change notification path. Local keys may be single keys or
+combinations; global shortcuts still require a modifier. Tab stays focus navigation.
+Local recording accepts Escape and supplies Cancel; Tab, blur and owner retirement
+still cancel. All bindings wait for key release before committing.
+
+The shared conflict check rejects new global/local collisions and duplicate local
+actions before replacing preferences. Clear/hide and editor cancel can share a key
+because their owners do not overlap. Legacy global bindings that happen to collide
+with a new local default keep working at startup. Settings displays the collision
+until the local binding is changed; unrelated preferences can still be saved.
+Profiles with several legacy collisions can resolve them one binding at a time.
+Renderer and main compare the exact command pair and key for every collision;
+remaining legacy pairs may persist, but replacing one with a new pair is rejected.
+Global registration checks only global commands so upgrading never discards an
+older working native binding solely because a new local default was introduced.
+
+Library dispatch reads committed settings and retains editor, overlay, IME,
+AltGr and repeat ownership. Only next/previous repeat. Search and editors retain
+ordinary typing, selection, clipboard and text-navigation keys under remapping;
+buttons retain native activation. The tag command remains available during text
+editing when its binding is safe for editable controls. Editor cancellation owns
+its separate binding; validation rejects cancellation keys that native editing
+would always consume and explains the accepted choices. Footer and copy hints show the committed keys. Cmdk/Radix
+selection, arrow navigation, dialog dismissal and native control activation remain
+accessibility controls, rather than additional Promptly command bindings.
+
 Shared accelerator validation, alias identity and known Windows reservations are
 used in both renderer and main. Recorder characters follow the logical keyboard
 layout; supported numpad keys keep distinct `num*` identities. Only unsupported

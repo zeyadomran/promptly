@@ -6,6 +6,19 @@ import { testStorage } from '../storage/storage-test-fixture';
 import type { SettingsControllers } from './controllers';
 import { SettingsService } from './service';
 
+export function seedLegacyShortcutProfile(store: ReturnType<typeof testStorage>): void {
+  const database = store.engine.context.db;
+  const write = database.prepare('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)');
+
+  for (const [key, value] of [
+    ['showDockIcon', 'false'],
+    ['openShortcut', '"Control+F"'],
+    ['pinShortcut', '"Control+T"']
+  ] as const)
+    write.run(key, value);
+  database.prepare('DELETE FROM settings WHERE key = ?').run('localShortcuts');
+}
+
 export function testSettings(
   controllers: SettingsControllers = { available: [], unavailable: [] },
   now?: () => Date,

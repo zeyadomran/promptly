@@ -7,6 +7,7 @@ import { ShortcutRecorder } from '../../shortcuts/components/ShortcutRecorder';
 import { useShortcutPreferences } from '../../shortcuts/hooks/use-shortcut-preferences';
 import { useShortcutRecording } from '../../shortcuts/hooks/use-shortcut-recording';
 import { useShortcutStatus } from '../../shortcuts/hooks/use-shortcut-status';
+import { LocalShortcutSettings } from './LocalShortcutSettings';
 import { SettingsRow } from './SettingsRow';
 import { SettingSwitch } from './SettingSwitch';
 
@@ -83,6 +84,12 @@ export function ShortcutSettings() {
         onChange={(doubleTapWindowMs) => apply({ doubleTapWindowMs })}
       />
       <ShortcutConflictStatus status={status} error={error} />
+      <LocalShortcutSettings
+        value={settings.localShortcuts}
+        recording={recording}
+        disabled={pending}
+        onChange={(localShortcuts) => apply({ localShortcuts })}
+      />
       <h2 className="shortcut-group-heading">When saving</h2>
       <SettingSwitch
         label="Show confirmation toast"

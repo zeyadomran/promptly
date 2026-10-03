@@ -1,11 +1,14 @@
 import { Button } from '../../components/ui/button';
 import { Textarea } from '../../components/ui/textarea';
 import { useLibrarySelection } from '../library/library-context';
+import { editorCancelCommand } from '../library/library-keyboard';
+import { usePreferences } from '../settings/settings-context';
 import { useSnippetSession } from './snippet-context';
 
 export function SnippetEditor() {
   const { session, state } = useSnippetSession();
   const selection = useLibrarySelection();
+  const { settings } = usePreferences();
   const cancel = () => {
     session.discard();
     selection.focusSearch();
@@ -31,8 +34,24 @@ export function SnippetEditor() {
           session.change(event.target.value);
         }}
         onKeyDown={(event) => {
-          if (event.nativeEvent.isComposing) return;
-          if (event.key === 'Escape' && !state.pending) {
+          if (
+            !state.pending &&
+            editorCancelCommand(
+              {
+                key: event.key,
+                code: event.code,
+                meta: event.metaKey,
+                ctrl: event.ctrlKey,
+                alt: event.altKey,
+                shift: event.shiftKey,
+                repeat: event.repeat,
+                composing: event.nativeEvent.isComposing || event.key === 'Process',
+                prevented: event.defaultPrevented,
+                altGraph: event.getModifierState('AltGraph')
+              },
+              settings.localShortcuts
+            )
+          ) {
             event.preventDefault();
             event.stopPropagation();
             cancel();

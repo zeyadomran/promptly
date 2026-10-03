@@ -28,11 +28,18 @@ export function shortcutKeycaps(accelerator: string, platform: ShortcutPlatform)
     control: 'Ctrl',
     alt: 'Alt',
     shift: 'Shift',
-    super: 'Win'
+    super: 'Win',
+    return: 'Enter',
+    escape: 'Esc',
+    up: '↑',
+    down: '↓',
+    left: '←',
+    right: '→'
   };
 
   return acceleratorKey(accelerator, platform)
     .split('+')
+    .filter(Boolean)
     .map((part) => symbols[part] ?? (part === 'space' ? 'Space' : part.toUpperCase()));
 }
 

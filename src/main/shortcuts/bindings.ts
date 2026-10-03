@@ -11,7 +11,7 @@ export interface Binding {
   action: ShortcutAction;
 }
 export function bindings(settings: Settings, platform: NodeJS.Platform): Binding[] {
-  const conflict = shortcutConflict(settings, 'win32');
+  const conflict = shortcutConflict(settings, 'win32', 'global');
 
   if (conflict !== undefined) throw new Error(conflict);
   const candidates: [ShortcutAction, string | null][] = [
