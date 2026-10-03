@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
+import { resolveWikiLink } from './wiki-navigation';
 import type { WikiPage } from './wiki-pages';
 import { WikiCode } from './WikiCode';
 import { WikiLink } from './WikiLink';
@@ -56,7 +57,7 @@ export function WikiArticle({ page }: { page: WikiPage }) {
         allowedElements={allowedElements}
         remarkPlugins={plugins}
         components={components}
-        urlTransform={(url) => url}
+        urlTransform={(url) => (resolveWikiLink(url) === undefined ? '' : url)}
       >
         {page.markdown}
       </Markdown>
