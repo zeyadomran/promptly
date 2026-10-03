@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { tagPresetColors } from './tag-colors';
+
 export const idSchema = z.uuid();
 export const timestampSchema = z.iso.datetime();
 export const revisionSchema = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER);
@@ -8,16 +10,12 @@ export const snippetTextSchema = z
   .min(1)
   .max(1_000_000)
   .refine((text) => text.trim().length > 0);
-export const tagColorSchema = z.enum([
-  'blue',
-  'green',
-  'red',
-  'purple',
-  'amber',
-  'teal',
-  'pink',
-  'lime'
-]);
+export const customTagColorSchema = z
+  .string()
+  .trim()
+  .regex(/^#[0-9a-f]{6}$/iu, 'Use a six-digit hex color, such as #12abef.')
+  .transform((color) => color.toLowerCase());
+export const tagColorSchema = z.union([z.enum(tagPresetColors), customTagColorSchema]);
 export const tagNameSchema = z
   .string()
   .min(1)

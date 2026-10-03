@@ -83,6 +83,29 @@
   height: 16px;
   border-radius: 50%;
 }
+.tag-management-custom-color {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+.tag-management-color-input {
+  width: 100%;
+  height: 36px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  cursor: pointer;
+}
+.tag-management-color-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.tag-management-color-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
 .tag-management-select {
   width: 100%;
   min-width: 0;
