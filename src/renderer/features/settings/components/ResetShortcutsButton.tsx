@@ -25,12 +25,12 @@ export function ResetShortcutsButton({
   };
 
   return (
-    <SettingsRow
-      label="Restore shortcut defaults"
-      description="Reset global and in-app shortcuts, including double-tap timing."
-      disabled={disabled || state === 'pending'}
-    >
-      <div>
+    <>
+      <SettingsRow
+        label="Reset shortcuts"
+        description="Reset global and in-app shortcuts, including double-tap timing."
+        disabled={disabled || state === 'pending'}
+      >
         <Button
           type="button"
           variant="outline"
@@ -43,14 +43,14 @@ export function ResetShortcutsButton({
         >
           Reset shortcuts
         </Button>
-        <p className="shortcut-hint" role="status" aria-live="polite">
-          {state === 'pending'
-            ? 'Resetting shortcuts…'
-            : state === 'complete'
-              ? 'Shortcut preferences reset.'
-              : ''}
-        </p>
-      </div>
-    </SettingsRow>
+      </SettingsRow>
+      <p className="shortcut-hint" role="status" aria-live="polite">
+        {state === 'pending'
+          ? 'Resetting shortcuts…'
+          : state === 'complete'
+            ? 'Shortcut preferences reset.'
+            : ''}
+      </p>
+    </>
   );
 }
