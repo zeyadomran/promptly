@@ -1,7 +1,6 @@
 import type { Snippet } from '../../../shared/contracts/domain';
 import { HighlightedText } from '../../components/shared/HighlightedText';
 import type { HighlightRange } from '../../lib/highlight';
-import { RegularSnippetRow } from '../snippets/RegularSnippetRow';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
 import { LibraryMetadata } from './LibraryMetadata';
@@ -11,14 +10,12 @@ export function LibraryRow({
   snippet,
   ranges,
   index,
-  positionClass,
-  regular = false
+  positionClass
 }: {
   snippet: Snippet;
   ranges: readonly HighlightRange[];
   index: number;
   positionClass: string;
-  regular?: boolean;
 }) {
   const { state, model } = useLibrary();
   const commands = useLibraryCommands();
@@ -28,20 +25,6 @@ export function LibraryRow({
   const select = () => {
     if (model.select(snippet.id, index) && commands !== undefined) void commands.copy(snippet.id);
   };
-
-  if (regular)
-    return (
-      <RegularSnippetRow
-        snippet={snippet}
-        ranges={ranges}
-        index={index}
-        total={state.total}
-        selected={selected}
-        copied={copied}
-        positionClass={positionClass}
-        onSelect={select}
-      />
-    );
 
   return (
     <div
@@ -64,11 +47,7 @@ export function LibraryRow({
         <div className="library-row-text">
           <HighlightedText text={snippet.text} ranges={ranges} />
         </div>
-        <LibraryMetadata
-          snippet={snippet}
-          copied={copied}
-          actionable={commands !== undefined && (selected || copied)}
-        />
+        <LibraryMetadata snippet={snippet} copied={copied} />
       </div>
     </div>
   );

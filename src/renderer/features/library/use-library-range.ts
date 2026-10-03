@@ -12,7 +12,7 @@ export function useLibraryRange(
   const { scroll, state } = useLibrary();
   const mode = regular ? 'regular' : 'compact';
   const query = JSON.stringify(state.request);
-  const [store] = useState(() => new VirtualRangeStore(regular ? 58 : 78, regular ? 60 : 80));
+  const [store] = useState(() => new VirtualRangeStore());
   const scroller = useRef<HTMLDivElement>(null);
   const previous = useRef<{ index: number; reveal: number; query: string } | undefined>(undefined);
   const range = useSyncExternalStore(store.subscribe, store.snapshot);

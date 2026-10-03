@@ -18,6 +18,7 @@ export function ToggleGroupItem({
 
   return (
     <ToggleGroupPrimitive.Item
+      {...props}
       data-slot="toggle-group-item"
       data-variant={context.variant ?? variant}
       data-size={context.size ?? size}
@@ -31,7 +32,6 @@ export function ToggleGroupItem({
         'data-[spacing=0]:rounded-none data-[spacing=0]:shadow-none data-[spacing=0]:first:rounded-l-md data-[spacing=0]:last:rounded-r-md data-[spacing=0]:data-[variant=outline]:border-l-0 data-[spacing=0]:data-[variant=outline]:first:border-l',
         className
       )}
-      {...props}
     >
       {children}
     </ToggleGroupPrimitive.Item>
