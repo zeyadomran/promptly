@@ -1,63 +1,80 @@
 import type { LocalShortcuts } from '../../../../shared/contracts/local-shortcuts';
 import { localShortcutLabels } from '../../../../shared/shortcuts/conflicts';
-import { ShortcutRecorder } from '../../shortcuts/components/ShortcutRecorder';
+import { ShortcutBindingControl } from '../../shortcuts/components/ShortcutBindingControl';
+import { ShortcutGroup } from '../../shortcuts/components/ShortcutGroup';
+import { ShortcutRow } from '../../shortcuts/components/ShortcutRow';
+import type { useShortcutPreferences } from '../../shortcuts/hooks/use-shortcut-preferences';
 import type { useShortcutRecording } from '../../shortcuts/hooks/use-shortcut-recording';
-import { SettingsRow } from './SettingsRow';
+import { ResetShortcutsButton } from './ResetShortcutsButton';
 
 const descriptions: Record<keyof LocalShortcuts, string> = {
   next: 'Move to the next snippet.',
   previous: 'Move to the previous snippet.',
   copy: 'Copy the selected snippet.',
-  delete: 'Delete the selected snippet outside search.',
+  delete: 'Delete the selected snippet outside search. Either binding runs the same command.',
   deleteAlternate: 'Optional second key for deleting a snippet.',
   focusSearch: 'Focus the library search.',
   tag: 'Open tags for the selected snippet. During text edits, typing and clipboard keys keep their native behavior.',
-  settings: 'Open the Settings window.',
+  settings: 'Open Settings.',
   dismiss: 'Clear search first; otherwise hide the window.',
   cancelEdit:
     'Discard the text draft and return to search. Use Esc, a function key, or a Ctrl/Win combination that keeps text editing keys available.'
 };
 
 export function LocalShortcutSettings({
-  value,
+  preferences,
   recording,
-  disabled,
-  onChange
+  disabled
 }: {
-  value: LocalShortcuts;
+  preferences: ReturnType<typeof useShortcutPreferences>;
   recording: ReturnType<typeof useShortcutRecording>;
   disabled: boolean;
-  onChange: (shortcuts: LocalShortcuts) => Promise<void>;
 }) {
   return (
-    <>
-      <h2 className="shortcut-group-heading">Inside Promptly</h2>
-      <p className="shortcut-hint">
-        Typing, text selection and control navigation keep their native keys. These bindings run
-        only when their command owns keyboard focus. Tab moves focus.
-      </p>
-      {(Object.keys(localShortcutLabels) as (keyof LocalShortcuts)[]).map((action) => (
-        <SettingsRow
-          key={action}
-          label={localShortcutLabels[action]}
-          description={descriptions[action]}
-          disabled={disabled}
-        >
-          <ShortcutRecorder
+    <ShortcutGroup
+      title="Inside Promptly"
+      description="When the window is focused"
+      status={
+        <ResetShortcutsButton
+          localOnly
+          disabled={disabled || recording.snapshot.phase !== 'idle'}
+          apply={preferences.apply}
+        />
+      }
+    >
+      {(Object.keys(localShortcutLabels) as (keyof LocalShortcuts)[])
+        .filter((action) => action !== 'deleteAlternate')
+        .map((action) => (
+          <ShortcutRow
+            key={action}
             label={localShortcutLabels[action]}
-            value={value[action]}
-            scope="local"
-            optional={action === 'deleteAlternate'}
-            disabled={disabled}
-            recording={recording}
-            onChange={(accelerator) =>
-              accelerator === null && action !== 'deleteAlternate'
-                ? Promise.resolve()
-                : onChange({ ...value, [action]: accelerator })
-            }
-          />
-        </SettingsRow>
-      ))}
-    </>
+            description={descriptions[action]}
+            dense
+          >
+            <ShortcutBindingControl
+              target={action}
+              label={localShortcutLabels[action]}
+              scope="local"
+              preferences={preferences}
+              recording={recording}
+              disabled={disabled}
+            />
+            {action === 'delete' && (
+              <>
+                <span className="shortcut-alternative">or</span>
+                <ShortcutBindingControl
+                  target="deleteAlternate"
+                  label={localShortcutLabels.deleteAlternate}
+                  scope="local"
+                  optional
+                  preferences={preferences}
+                  recording={recording}
+                  disabled={disabled}
+                />
+              </>
+            )}
+          </ShortcutRow>
+        ))}
+    </ShortcutGroup>
   );
 }

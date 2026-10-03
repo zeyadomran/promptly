@@ -151,7 +151,7 @@ if (primaryInstance)
           ...library.services,
           ...updates.services,
           ...settings.services,
-          ...desktopApplicationServices(),
+          ...desktopApplicationServices(() => lifecycle),
           ...shortcutServices(keyboard.shortcuts, () => {
             tray?.changed();
           }),

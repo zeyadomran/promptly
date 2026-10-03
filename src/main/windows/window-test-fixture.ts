@@ -10,10 +10,12 @@ class ControlledContents extends EventEmitter {
   readonly mainFrame = { url: '' };
   destroyed = false;
   messages: string[] = [];
+  sent: { channel: string; payload: unknown }[] = [];
   isDestroyed = () => this.destroyed;
   setWindowOpenHandler = () => undefined;
-  send = (channel: string) => {
+  send = (channel: string, payload?: unknown) => {
     this.messages.push(channel);
+    this.sent.push({ channel, payload });
   };
 }
 

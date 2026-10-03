@@ -45,9 +45,10 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
     () =>
       window.promptly.subscribeShellNavigation((next) => {
         if (next === 'settings') showSettings();
+        else if (next === 'wiki') showWiki();
         else showLibrary();
       }),
-    [showLibrary, showSettings]
+    [showLibrary, showSettings, showWiki]
   );
   useEffect(() => {
     if (view !== 'library') return;

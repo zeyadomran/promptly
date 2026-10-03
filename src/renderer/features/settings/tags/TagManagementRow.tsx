@@ -2,10 +2,9 @@ import { Pencil, Trash2 } from 'lucide-react';
 
 import type { TagSummary } from '../../../../shared/contracts/domain';
 import { IconButton } from '../../../components/shared/IconButton';
-import { Button } from '../../../components/ui/button';
 import { TagBadge } from '../../tags/TagBadge';
 
-export type TagAction = 'edit' | 'merge' | 'delete';
+export type TagAction = 'edit' | 'delete';
 
 export function TagManagementRow({
   tag,
@@ -32,17 +31,6 @@ export function TagManagementRow({
               open('edit', event.currentTarget);
             }}
           />
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={disabled}
-            aria-label={`Merge ${tag.name}`}
-            onClick={(event) => {
-              open('merge', event.currentTarget);
-            }}
-          >
-            Merge
-          </Button>
           <IconButton
             icon={Trash2}
             label={`Delete ${tag.name}`}

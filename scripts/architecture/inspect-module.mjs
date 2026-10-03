@@ -6,6 +6,8 @@ import { componentNames, walk } from './ast.mjs';
 
 const rendererPackages = new Set([
   'react',
+  'react-markdown',
+  'remark-gfm',
   'react-dom',
   'react-dom/client',
   'radix-ui',

@@ -1,11 +1,8 @@
-import { recordedAccelerator, type ShortcutKeyEvent } from '../../../shared/shortcuts/keyboard';
-
-export interface RecordingSnapshot {
-  phase: 'idle' | 'starting' | 'recording' | 'saving';
-  target: string | undefined;
-  error: string | undefined;
-  candidate: string | undefined;
-}
+import type { ShortcutKeyEvent } from '../../../shared/shortcuts/keyboard';
+import type { ShortcutEdit } from '../../../shared/shortcuts/shortcut-edit';
+import { modifierPreview, recordingInput } from './recording-input';
+import { recordingCandidate, recordingError, type RecordingSnapshot } from './recording-state';
+export type { RecordingSnapshot } from './recording-state';
 
 /** One session per renderer. Serial IPC transitions prevent a late acquire reviving capture. */
 export class ShortcutRecordingSession {
@@ -16,6 +13,7 @@ export class ShortcutRecordingSession {
   private candidateReleased = false;
   private scope: 'global' | 'local' = 'global';
   private commit: ((accelerator: string) => Promise<void>) | undefined;
+  private inspect: ((accelerator: string) => ShortcutEdit) | undefined;
   private listener: (snapshot: RecordingSnapshot) => void = () => undefined;
   snapshot: RecordingSnapshot = {
     phase: 'idle',
@@ -37,12 +35,14 @@ export class ShortcutRecordingSession {
   start(
     target: string,
     commit: (accelerator: string) => Promise<void>,
-    scope: 'global' | 'local' = 'global'
+    scope: 'global' | 'local' = 'global',
+    inspect?: (accelerator: string) => ShortcutEdit
   ): Promise<void> {
     if (this.snapshot.phase === 'saving') return this.tail;
     const request = ++this.request;
 
     this.commit = commit;
+    this.inspect = inspect;
     this.scope = scope;
     this.publish({ phase: 'starting', target, error: undefined, candidate: undefined });
     return this.enqueue(async () => {
@@ -64,62 +64,61 @@ export class ShortcutRecordingSession {
   }
 
   handleKey(event: ShortcutKeyEvent): boolean {
-    if (!['starting', 'recording'].includes(this.snapshot.phase)) return false;
-    if (
-      event.isComposing ||
-      ['Dead', 'Process', 'Unidentified', 'AltGraph'].includes(event.key) ||
-      event.altGraph === true
-    ) {
-      this.publish({ ...this.snapshot, candidate: undefined });
-      return true;
-    }
-
-    if (
-      (event.key === 'Escape' && this.scope === 'global') ||
-      (event.key === 'Tab' && !event.ctrlKey && !event.altKey && !event.metaKey)
-    ) {
-      void this.cancel();
+    if (this.snapshot.phase === 'conflict') {
+      if (event.key === 'Escape' || event.key === 'Tab') void this.cancel();
       return event.key === 'Escape';
     }
 
+    if (!['starting', 'recording'].includes(this.snapshot.phase)) return false;
+    const input = recordingInput(event, this.scope, this.snapshot.candidate);
+
+    if (input.kind === 'cancel') {
+      void this.cancel();
+      return input.consume;
+    }
+
     if (this.snapshot.phase !== 'recording') return true;
-    if (
-      this.snapshot.candidate !== undefined &&
-      !event.repeat &&
-      !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key)
-    ) {
+    if (input.kind === 'ignore') {
+      if (input.preview !== undefined) this.publish({ ...this.snapshot, preview: input.preview });
+      return true;
+    }
+
+    if (input.kind === 'clear') {
       this.publish({
         ...this.snapshot,
         candidate: undefined,
-        error: 'Record one key with modifiers, then release the keys.'
+        collision: undefined,
+        preview: undefined,
+        ...(input.error !== undefined ? { error: input.error } : {})
       });
       return true;
     }
 
-    const accelerator = recordedAccelerator(event, this.scope === 'local');
+    const { accelerator } = input;
+    const inspection = this.inspect?.(accelerator);
 
-    if (accelerator === undefined) {
-      if (!event.repeat && !['Shift', 'Control', 'Alt', 'Meta'].includes(event.key))
-        this.publish({
-          ...this.snapshot,
-          candidate: undefined,
-          error:
-            this.scope === 'local'
-              ? 'Press one key or a combination. Tab, IME and AltGr text cannot be recorded.'
-              : 'Press a modifier and a key. IME and AltGr text cannot be recorded.'
-        });
+    if (inspection?.kind === 'invalid') {
+      this.publish({
+        ...this.snapshot,
+        candidate: undefined,
+        collision: undefined,
+        error: inspection.message
+      });
       return true;
     }
 
     this.candidateKey = event.code || event.key.toLowerCase();
     this.candidateReleased = false;
-    this.publish({ ...this.snapshot, candidate: accelerator, error: undefined });
+    this.publish(recordingCandidate(this.snapshot, accelerator, inspection));
     return true;
   }
 
   handleKeyUp(event: ShortcutKeyEvent): boolean {
     if (!['starting', 'recording'].includes(this.snapshot.phase)) return false;
     const accelerator = this.snapshot.candidate;
+
+    if (accelerator === undefined)
+      this.publish({ ...this.snapshot, preview: modifierPreview(event) });
 
     if ((event.code || event.key.toLowerCase()) === this.candidateKey)
       this.candidateReleased = true;
@@ -133,12 +132,19 @@ export class ShortcutRecordingSession {
     )
       return true;
     const request = this.request;
+
     const commit = this.commit;
+    const collision = this.snapshot.collision;
 
     this.publish({ ...this.snapshot, phase: 'saving', error: undefined });
     void this.enqueue(async () => {
       await this.release();
       if (request !== this.request) return;
+      if (collision !== undefined) {
+        this.publish({ ...this.snapshot, phase: 'conflict', collision });
+        return;
+      }
+
       await commit?.(accelerator);
       if (request === this.request)
         this.publish({ ...this.snapshot, phase: 'idle', candidate: undefined });
@@ -148,6 +154,23 @@ export class ShortcutRecordingSession {
 
   settled(): Promise<void> {
     return this.tail;
+  }
+  resolveConflict(commit: () => Promise<void>): Promise<void> {
+    if (this.snapshot.phase !== 'conflict') return this.tail;
+    const request = this.request;
+
+    this.publish({ ...this.snapshot, phase: 'saving', error: undefined });
+    return this.enqueue(async () => {
+      if (request !== this.request) return;
+      await commit();
+      if (request === this.request)
+        this.publish({
+          phase: 'idle',
+          target: this.snapshot.target,
+          candidate: undefined,
+          error: undefined
+        });
+    }, request);
   }
 
   private async release(): Promise<void> {
@@ -164,13 +187,7 @@ export class ShortcutRecordingSession {
         /* Main still owns renderer crash cleanup. */
       }
 
-      if (request === this.request)
-        this.publish({
-          ...this.snapshot,
-          phase: 'idle',
-          error:
-            error instanceof Error ? error.message : 'Unable to record this shortcut. Try again.'
-        });
+      if (request === this.request) this.publish(recordingError(this.snapshot, error));
     });
     return this.tail;
   }

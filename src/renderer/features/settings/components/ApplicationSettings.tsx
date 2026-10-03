@@ -25,6 +25,12 @@ export function ApplicationSettings() {
         </p>
       )}
       <UpdateSettings />
+      <StorageRow label="Wiki" description="Read the Promptly user guide.">
+        <Button variant="outline" onClick={showWiki}>
+          <BookOpen aria-hidden="true" />
+          Open wiki
+        </Button>
+      </StorageRow>
       <StorageRow label="GitHub" description="View the source code and report issues.">
         <Button variant="outline" asChild>
           <a
@@ -38,12 +44,6 @@ export function ApplicationSettings() {
             Open repository
             <ExternalLink aria-hidden="true" />
           </a>
-        </Button>
-      </StorageRow>
-      <StorageRow label="Wiki" description="Read the Promptly user guide.">
-        <Button variant="outline" onClick={showWiki}>
-          Open wiki
-          <BookOpen aria-hidden="true" />
         </Button>
       </StorageRow>
       <StorageRow label="Privacy" description="Read how Promptly handles your information.">

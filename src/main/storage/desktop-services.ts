@@ -27,7 +27,6 @@ export function storageDesktopServices(
     ensureTag: (input) => mutations.run(() => storage.call('ensureTag', input)),
     setTagMembership: (input) => mutations.run(() => storage.call('setTagMembership', input)),
     updateTag: (input) => mutations.run(() => storage.call('updateTag', input)),
-    deleteTag: (input) => mutations.run(() => storage.call('deleteTag', input)),
-    mergeTags: (input) => mutations.run(() => storage.call('mergeTags', input))
+    deleteTag: (input) => mutations.run(() => storage.call('deleteTag', input))
   };
 }

@@ -2,6 +2,7 @@
 import { expect, it, vi } from 'vitest';
 
 import { defaultShortcutSettings } from '../../shared/shortcuts/defaults';
+import { planShortcutEdit } from '../../shared/shortcuts/shortcut-edit';
 import { testSettings } from '../settings/settings-test-fixture';
 import { exerciseShortcutRecovery } from './recovery-test-flow';
 import { shortcutFixture } from './shortcut-test-fixture';
@@ -101,6 +102,85 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
     storage.store.reopen();
     expect(await storage.service.services.getSettings({})).toEqual(reset);
     expect(storage.store.invoke('getSnippet', { id: owned.id }).snippet).toEqual(owned);
+    const current = storage.service.current;
+    const edit = planShortcutEdit(current.settings, 'tag', 'Control+F');
+
+    expect(edit).toMatchObject({
+      kind: 'conflict',
+      collision: { action: 'focusSearch', label: 'Focus search', swapAllowed: true }
+    });
+    if (edit.kind !== 'conflict' || edit.swapPatch === undefined)
+      throw new Error('Expected an atomic shortcut swap.');
+    const swapped = await storage.service.services.updateSettings(edit.swapPatch);
+
+    expect(swapped).toMatchObject({
+      ok: true,
+      value: {
+        revision: current.revision + 1,
+        settings: {
+          localShortcuts: {
+            tag: 'Control+F',
+            focusSearch: 'CommandOrControl+T',
+            dismiss: 'Escape',
+            cancelEdit: 'Escape'
+          }
+        }
+      }
+    });
+    storage.store.reopen();
+    expect(await storage.service.services.getSettings({})).toEqual(swapped);
+    expect(planShortcutEdit(storage.service.current.settings, 'cancelEdit', 'Escape').kind).toBe(
+      'ready'
+    );
+    expect(planShortcutEdit(storage.service.current.settings, 'copy', 'F1').kind).toBe('ready');
+    await storage.service.services.updateSettings({
+      saveShortcut: { kind: 'combination', accelerator: 'Control+Alt+S' }
+    });
+    const beforeGlobal = storage.service.current;
+
+    expect(planShortcutEdit(beforeGlobal.settings, 'pin', 'Alt+Space')).toMatchObject({
+      kind: 'conflict',
+      collision: { action: 'open', swapAllowed: false }
+    });
+
+    expect(planShortcutEdit(beforeGlobal.settings, 'next', 'Control+Alt+S')).toMatchObject({
+      kind: 'conflict',
+      collision: { action: 'save', swapAllowed: false }
+    });
+    const globalEdit = planShortcutEdit(beforeGlobal.settings, 'open', 'Control+Alt+S');
+
+    if (globalEdit.kind !== 'conflict' || globalEdit.swapPatch === undefined)
+      throw new Error('Expected a safe global exchange.');
+    const globalSwap = await storage.service.services.updateSettings(globalEdit.swapPatch);
+
+    expect(globalSwap).toMatchObject({
+      ok: true,
+      value: {
+        revision: beforeGlobal.revision + 1,
+        settings: {
+          openShortcut: 'Control+Alt+S',
+          saveShortcut: { kind: 'combination', accelerator: 'Alt+Space' }
+        }
+      }
+    });
+    storage.store.reopen();
+    expect(await storage.service.services.getSettings({})).toEqual(globalSwap);
+    const reverse = planShortcutEdit(storage.service.current.settings, 'open', 'Alt+Space');
+
+    if (reverse.kind !== 'conflict' || reverse.swapPatch === undefined)
+      throw new Error('Expected a reversible exchange.');
+    storage.store.engine.context.db.exec(
+      "CREATE TRIGGER reject_owned_swap BEFORE UPDATE ON settings WHEN NEW.key = 'openShortcut' BEGIN SELECT RAISE(ABORT, 'owned disk failure'); END;"
+    );
+    expect(await storage.service.services.updateSettings(reverse.swapPatch)).toMatchObject({
+      ok: false
+    });
+    storage.store.engine.context.db.exec('DROP TRIGGER reject_owned_swap');
+    expect(await storage.service.services.getSettings({})).toEqual(globalSwap);
+    fixture.registered.get('Control+Alt+S')?.();
+    expect(fixture.commands.open).toHaveBeenCalledTimes(2);
+    storage.store.reopen();
+    expect(await storage.service.services.getSettings({})).toEqual(globalSwap);
     fixture.shortcuts.stopCommands();
     expect(fixture.shortcuts.retry()).toBe(false);
   } finally {
