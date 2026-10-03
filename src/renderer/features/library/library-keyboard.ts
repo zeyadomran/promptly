@@ -24,15 +24,21 @@ export function libraryKeyCommand(input: {
   selected: boolean;
   hasSearch: boolean;
 }): LibraryKeyCommand | undefined {
-  if (input.prevented || input.composing || input.focus === 'overlay' || input.focus === 'editor')
-    return undefined;
+  if (input.prevented || input.composing || input.focus === 'overlay') return undefined;
   if (input.alt || input.shift) return undefined;
   if (input.repeat && input.key !== 'ArrowDown' && input.key !== 'ArrowUp') return undefined;
+  if (
+    (input.meta || input.ctrl) &&
+    input.active &&
+    input.key.toLowerCase() === 't' &&
+    input.selected
+  )
+    return 'tag';
+  if (input.focus === 'editor') return undefined;
   if (input.meta || input.ctrl) {
     if (input.key === ',') return 'settings';
     if (!input.active) return undefined;
     if (input.key.toLowerCase() === 'f') return 'focus-search';
-    if (input.key.toLowerCase() === 't' && input.selected) return 'tag';
     return undefined;
   }
 
