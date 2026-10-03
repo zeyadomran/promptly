@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { Tabs } from '../../../components/ui/tabs';
 import { TagsSettings } from '../../tags/TagsSettings';
+import { useUpdates } from '../hooks/use-updates';
 import { useWideSettings } from '../hooks/use-wide-settings';
 import { AppearanceSettings } from './AppearanceSettings';
 import { ApplicationSettings } from './ApplicationSettings';
@@ -14,6 +15,11 @@ import { StorageSettings } from './StorageSettings';
 export function SettingsWindow() {
   const [section, setSection] = useState('general');
   const wide = useWideSettings();
+  const showUpdates = useCallback(() => {
+    setSection('general');
+  }, []);
+
+  useUpdates(showUpdates);
 
   return (
     <Tabs

@@ -21,6 +21,7 @@ import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
 import { snippetSourceSchema } from './snippet-source';
+import { updateOperations } from './updates';
 import {
   sizeModeSchema,
   windowKindSchema,
@@ -35,6 +36,7 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 
 export const operations = {
   ...transferOperations,
+  ...updateOperations,
   getApplicationInfo: {
     request: emptySchema,
     response: z.strictObject({ version: z.string().min(1).max(128) })

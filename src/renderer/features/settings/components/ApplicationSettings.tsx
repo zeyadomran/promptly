@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { useApplicationInfo } from '../hooks/use-application-info';
 import { StorageRow } from '../storage/StorageRow';
+import { UpdateSettings } from './UpdateSettings';
 
 export function ApplicationSettings() {
   const { version, versionError, linkError, opening, openRepository, openWiki } =
@@ -18,11 +19,7 @@ export function ApplicationSettings() {
           {versionError}
         </p>
       )}
-      <StorageRow label="Updates" description="Update checks are not available yet.">
-        <Button variant="outline" disabled>
-          Check for updates
-        </Button>
-      </StorageRow>
+      <UpdateSettings />
       <StorageRow label="GitHub" description="View the source code and report issues.">
         <Button variant="outline" asChild>
           <a

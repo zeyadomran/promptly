@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { app, ipcMain, nativeTheme, shell } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
@@ -12,17 +12,9 @@ import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
 import { installWindowOpenCommands } from './lifecycle/open-library-window';
 import { warnStartupPreferences } from './lifecycle/preference-warning';
 import { desktopOnboarding } from './onboarding/desktop-onboarding';
-import {
-  observeSelectionStartup,
-  selectionLaunchOptions
-} from './platform/native/selection-options';
-import type { WindowsSelection } from './platform/windows/windows-selection';
-import { createWindowsSelection } from './platform/windows/windows-selection';
+import { startWindowsSelection } from './platform/windows/desktop-selection';
 import { applicationServices } from './settings/application-services';
-import {
-  electronSettingsControllers,
-  updateWindowBackgrounds
-} from './settings/electron-controllers';
+import { electronSettingsControllers } from './settings/electron-controllers';
 import { SettingsService } from './settings/service';
 import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
 import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
@@ -32,7 +24,8 @@ import { LibraryMutations } from './storage/library-mutations';
 import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
 import type { TrayCoordinator } from './tray/coordinator';
 import { createDesktopTray } from './tray/desktop-tray';
-import { installDesktopMenu } from './windows/desktop-menu';
+import { createDesktopUpdates } from './updates/desktop-updates';
+import { installDesktopAppearance } from './windows/desktop-appearance';
 import { installLastWindowPolicy } from './windows/last-window-policy';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { observeOrdinaryWindowClosure } from './windows/overlay-windows';
@@ -42,12 +35,13 @@ let desktop: ReturnType<typeof installDesktopIpc> | undefined;
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
-let windowsSelection: WindowsSelection | undefined;
+let windowsSelection: ReturnType<typeof startWindowsSelection> | undefined;
 let keyboard: ReturnType<typeof createDesktopShortcuts> | undefined;
 let library: ReturnType<typeof createLibraryServices> | undefined;
 let tray: TrayCoordinator | undefined;
 let confirmation: ReturnType<typeof desktopConfirmation> | undefined;
 let onboarding: ReturnType<typeof desktopOnboarding> | undefined;
+let updates: ReturnType<typeof createDesktopUpdates> | undefined;
 const mutations = new LibraryMutations();
 
 observeOrdinaryWindowClosure();
@@ -76,6 +70,7 @@ const shutdown = createDesktopShutdown({
 });
 const primaryInstance = ownApplication();
 const recovery = desktopRecovery(() => {
+  updates?.close();
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
   lifecycle?.stopCommands();
@@ -87,8 +82,7 @@ if (primaryInstance)
   void app
     .whenReady()
     .then(async () => {
-      windowsSelection = createWindowsSelection(selectionLaunchOptions());
-      observeSelectionStartup(windowsSelection.ready(), 'Windows');
+      windowsSelection = startWindowsSelection();
 
       storage = desktopStorage(
         (change) => {
@@ -143,10 +137,15 @@ if (primaryInstance)
       );
       const recorders = recorderServices(keyboard.shortcuts);
 
+      updates = createDesktopUpdates(
+        () => desktop?.windows,
+        () => lifecycle
+      );
       desktop = installDesktopIpc(
         ipcMain,
         {
           ...library.services,
+          ...updates.services,
           ...settings.services,
           ...applicationServices(
             () => app.getVersion(),
@@ -178,15 +177,16 @@ if (primaryInstance)
         }
       );
       await tray.refresh();
-      installDesktopMenu(openWindow, () => lifecycle);
-      nativeTheme.on('updated', updateWindowBackgrounds);
+      installDesktopAppearance(openWindow, () => lifecycle);
       openWindow();
+      updates.start();
     })
     .catch((error: unknown) => {
       void recovery.startup(error);
     });
 
 app.on('before-quit', (event) => {
+  updates?.close();
   recovery.close();
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();

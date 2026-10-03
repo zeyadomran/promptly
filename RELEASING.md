@@ -1,6 +1,37 @@
-# Unsigned Windows development installers
+# Windows releases
 
-These artifacts are **unsigned development builds**, not production-ready releases. No signing credentials, release publication, cloud updater or telemetry is configured. Building an installer does not qualify installation or native runtime behavior. One bounded Windows 11 install lifecycle is recorded below; #28 remains open for the remaining native/runtime and release-provenance checks.
+The signed release workflow builds Windows x64 installers with Azure Artifact Signing and publishes an update feed on GitHub Releases. The separate unsigned development workflow remains available for local qualification. Building or signing an installer does not qualify installation or native runtime behavior. One bounded Windows 11 install lifecycle is recorded below; #28 remains open for the remaining native/runtime checks. No telemetry is configured.
+
+## Signed releases
+
+The GitHub environment `release` must allow `v*` tags and contain these variables:
+
+| Variable                 | Value source                                                   |
+| ------------------------ | -------------------------------------------------------------- |
+| `AZURE_CLIENT_ID`        | Application (client) ID of the GitHub signing app registration |
+| `AZURE_TENANT_ID`        | Directory (tenant) ID                                          |
+| `AZURE_SUBSCRIPTION_ID`  | Subscription containing the signing account                    |
+| `AZURE_SIGNING_ACCOUNT`  | Artifact Signing account name                                  |
+| `AZURE_SIGNING_PROFILE`  | Validated Public Trust certificate profile name                |
+| `AZURE_SIGNING_ENDPOINT` | Signing account regional endpoint                              |
+
+The app registration needs the Artifact Signing Certificate Profile Signer role on the signing account or certificate profile. Its federated credential uses issuer `https://token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange`, and this repository's immutable environment subject: `repo:zeyadomran@45938909/promptly@1400985935:environment:release`. No client secret or exported certificate is used. The Windows runner supplies Azure CLI, the Windows SDK and .NET 8; the workflow downloads the pinned Artifact Signing client.
+
+To release, update `package.json` and the root versions in `package-lock.json` together in a reviewed PR. After merging, push a tag matching that version, such as `v0.1.0`. The tag must point to a commit on `main`. `.github/workflows/release.yml` runs all checks, signs the app, native helpers and Squirrel installer, and requires valid timestamped signatures in the packaged payload. It stages hashes and build provenance before creating a draft GitHub release. Only after all six assets are uploaded does it publish the release and mark it latest. Existing releases are never overwritten.
+
+Published assets are `Promptly-x64-Setup.exe`, `Promptly-<version>-full.nupkg`, `RELEASES`, `BUILD.json`, `SHA256SUMS` and this release guide as `README.md`. Keep all three Squirrel assets together; never edit them after publication. Signed packaging refuses a dirty checkout. `BUILD.json` identifies the built commit and artifact hashes.
+
+For a signing check without publication, push a tag `v<version>-validation` (optionally followed by `.1`, `.2`, etc.) and manually dispatch the **Signed Windows release** workflow on that tag. A manual run builds, signs and retains Actions artifacts, but never creates a GitHub release. Validation tags do not trigger release publication.
+
+## Optional application updates
+
+Installed builds query the public GitHub latest-release metadata once each time Promptly starts. Settings also offers **Check for updates**. Both paths show **No updates found** when current, or an **Update** button when a newer stable release has a complete Windows asset set. Network and API-rate-limit failures show a retry message. Development and unpacked builds explain that updates require the installed Windows app.
+
+A startup check that finds an update shows a Windows notification asking whether to update. Clicking it opens General Settings and scrolls to and focuses **Update**. Windows notification preferences can suppress delivery; Settings still reflects the available version. Startup and manual checks download metadata only. Clicking **Update** authorizes Squirrel to download and apply that specific release while the current app keeps running. **Restart now** then becomes available; restart is never forced. The new version also takes effect on the next normal launch after an accepted update.
+
+The updater uses HTTPS GitHub URLs and Squirrel's package integrity checks. Release signing is verified before publication; the updater does not add a separate runtime Authenticode publisher-pinning check. Keep repository release permissions restricted. Previously installed builds without the updater need a manual installer upgrade once. The first Squirrel launch delays its automatic check briefly to allow the installation lock to clear.
+
+Before qualifying this feature, manually verify two signed versions on an owned Windows profile: notification navigation, declining/dismissing without downloading, manual no-update feedback, explicit update/restart and preserved data. Service tests do not prove native notification delivery or an installed update lifecycle.
 
 ## Target and prerequisites
 
@@ -8,7 +39,7 @@ The supported build target is Windows x64 only. The documented minimum target is
 
 References: [Electron platform support](https://github.com/electron/electron#platform-support), [Windows capture guide](https://github.com/zeyadomran/promptly/wiki/Capturing-Text), [Forge Squirrel.Windows](https://www.electronforge.io/config/makers/squirrel.windows).
 
-## Build and stage
+## Build and stage unsigned development installers
 
 Use the repository's pinned Node 22/npm lockfile on Windows x64:
 
@@ -54,7 +85,7 @@ The **Stage unsigned development installer** GitHub workflow is manual (`workflo
 
 Product/executable identity remains `Promptly`/`Promptly.exe`; Squirrel package identity is `Promptly` and AppUserModelID is `com.squirrel.Promptly.Promptly`. Do not change these identities between upgrades. Squirrel setup-event launches use the standard maintained handler and skip normal instance ownership, helper startup, SQLite, normal Settings effects and ordinary windows, including first-run onboarding. Before that handler runs, uninstall attempts to remove only the app-owned native login registration under that same AppUserModelID. A cleanup error is reported without preventing Squirrel's shortcut removal/quit; the retained database's login preference is not changed. Install/update/obsolete events do not perform this native cleanup. The bounded Windows 11 check below observed uninstall login-entry removal/readback; other environments remain unqualified.
 
-Per-user installation uses Squirrel's versioned application directory under `%LOCALAPPDATA%\Promptly`. Authoritative data remains Electron's stable `userData` directory (`%APPDATA%\Promptly` for this product): `promptly.sqlite` and any SQLite WAL/SHM companions. Normal Settings, onboarding, import/export and tray behavior keep that same database path. Installed login-at-startup registration/readback uses Squirrel's stable `Promptly.exe` one directory above `app-<version>` when that stub and `Update.exe` exist; development and unpacked applications retain their executable target. No updater or additional login registration is introduced. Installer handling contains no user-data deletion code.
+Per-user installation uses Squirrel's versioned application directory under `%LOCALAPPDATA%\Promptly`. Authoritative data remains Electron's stable `userData` directory (`%APPDATA%\Promptly` for this product): `promptly.sqlite` and any SQLite WAL/SHM companions. Normal Settings, onboarding, import/export and tray behavior keep that same database path. Installed login-at-startup registration/readback uses Squirrel's stable `Promptly.exe` one directory above `app-<version>` when that stub and `Update.exe` exist; development and unpacked applications retain their executable target. Updates retain these identities and data paths. Installer handling contains no user-data deletion code.
 
 Before an upgrade or uninstall, quit Promptly fully and export a JSON backup. Upgrade should replace application files while retaining the userData directory; uninstall should remove application files/shortcuts and its native login entry while leaving user data. Reinstall with the same identity should reopen it and apply its retained preferences. The bounded check below observed these outcomes and also recorded installer residue. Do not offer automatic data deletion. Any deliberate data removal is a separate explicit user action. The production package version remains `0.1.0`; a separately built, uncommitted `0.1.1` qualification fixture enabled a genuine upgrade check without a production version bump.
 

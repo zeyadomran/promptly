@@ -40,6 +40,8 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 
 Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
 
+The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, retry, concurrent requests and shutdown. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
+
 ## Manual release checks
 
 Before qualifying a release, use a packaged application with a fresh owned profile on Windows x64 and verify:
@@ -50,6 +52,7 @@ Before qualifying a release, use a packaged application with a fresh owned profi
 - Settings persistence, native login/permission outcomes and responsive navigation.
 - Native chooser/reveal and library transfer UI; actual global shortcut delivery, physical modifier recognition, owned selection capture and source activation.
 - Unsigned install/upgrade/uninstall and database preservation, using [the release guide](RELEASING.md).
+- Signed release signatures and installed updates: startup notification, notification-to-Settings focus, manual check, explicit update/restart and preserved data. Dismissing a notification must not download or apply an update.
 - Windows tray visibility, taskbar theme/DPI icons, pause/resume, recent-item full-text copy, recovery after hiding and complete Quit drainage.
 
 Native preferences must be captured before application initialization and restored/read back after shutdown. Verify owned process death before deleting profiles; retain the tree if death is unverified. Use only owned selection/input/clipboard fixtures, never a user's data or desktop application. These checks are manual qualification work, not a replacement automated fixture framework.

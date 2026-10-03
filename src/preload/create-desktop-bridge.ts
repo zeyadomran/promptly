@@ -14,11 +14,13 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
+import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
   listenFocus?: (listener: () => void) => () => void;
+  listenUpdates?: (listener: (value: unknown) => void) => () => void;
 }
 
 export function createDesktopBridge(
@@ -74,6 +76,11 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
+    getUpdateState: (request) => call('getUpdateState', request),
+    checkForUpdates: (request) => call('checkForUpdates', request),
+    installUpdate: (request) => call('installUpdate', request),
+    restartForUpdate: (request) => call('restartForUpdate', request),
+    subscribeUpdates: updateSubscription(transport.listenUpdates, focusStops, () => disposed),
     getApplicationInfo: (request) => call('getApplicationInfo', request),
     openRepository: (request) => call('openRepository', request),
     openWiki: (request) => call('openWiki', request),
