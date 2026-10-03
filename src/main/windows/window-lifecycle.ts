@@ -13,7 +13,8 @@ import {
   desktopRootKind,
   publishShellNavigation
 } from './shell-navigation';
-import { canRecover, concealWindow, type WindowRecovery } from './visibility';
+import type { WindowRecovery } from './visibility';
+import { canRecover, concealWindow, restoreWindow } from './visibility';
 import { watchWindowLifecycle } from './watch-window-lifecycle';
 import { WindowBounds } from './window-bounds';
 import { createWindowOperations } from './window-operations';
@@ -129,13 +130,7 @@ export class WindowLifecycle {
   }
 
   recoverVisibility(): void {
-    const window = this.windows.get(this.rootKind());
-
-    if (window === undefined || window.isDestroyed())
-      throw new Error('Promptly cannot restore its window.');
-    if (window.isMinimized()) window.restore();
-    window.show();
-    if (!window.isVisible()) throw new Error('Promptly could not restore its window.');
+    restoreWindow(this.windows.get(this.rootKind()));
   }
 
   recoverIfUnreachable(): void {
