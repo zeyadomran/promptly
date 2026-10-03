@@ -84,7 +84,16 @@ export class TagPickerController {
   matches(tags: readonly TagSummary[]): TagSummary[] {
     const query = this.state.query.trim().toLowerCase();
 
-    return tags.filter((tag) => tag.name.includes(query));
+    const matching = tags.filter((tag) => tag.name.includes(query));
+
+    if (this.state.targetId === null) return matching;
+    const assigned = this.state.selectedIds.flatMap((id) =>
+      matching.filter((tag) => tag.id === id)
+    );
+
+    return query === ''
+      ? assigned
+      : [...assigned, ...matching.filter((tag) => !this.state.selectedIds.includes(tag.id))];
   }
   private async read(): Promise<void> {
     const id = this.state.targetId;

@@ -5,6 +5,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { tagColorStyle } from '../../lib/tag-palette';
+import { TagName } from './TagName';
 
 export function TagBadge({
   name,
@@ -15,7 +16,7 @@ export function TagBadge({
   return (
     <Badge variant="outline" className="tag-badge">
       <span className="library-tag-dot" style={tagColorStyle(color)} aria-hidden="true" />
-      <span className="tag-badge-name">{name}</span>
+      <TagName name={name} />
       {onRemove !== undefined && (
         <Tooltip>
           <TooltipTrigger asChild>

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import { Popover, PopoverAnchor } from '../../components/ui/popover';
 import { LibraryTagActionsContext } from '../library/library-commands';
@@ -12,14 +12,31 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
   const [picker] = useState(() => new TagPickerController(window.promptly));
   const state = useSyncExternalStore(picker.subscribe, picker.snapshot);
   const [trigger, setTrigger] = useState<HTMLElement | null>(null);
-  const anchor = useMemo(() => ({ current: trigger }), [trigger]);
+  const rectangle = useRef<DOMRect | undefined>(undefined);
+  const anchor = useMemo(
+    () => ({
+      current:
+        trigger === null
+          ? null
+          : {
+              getBoundingClientRect: () => {
+                if (trigger.isConnected && getComputedStyle(trigger).visibility !== 'hidden')
+                  rectangle.current = trigger.getBoundingClientRect();
+                return rectangle.current ?? trigger.getBoundingClientRect();
+              }
+            }
+    }),
+    [trigger]
+  );
   const captureTrigger = (element?: HTMLElement) => {
     const active = document.activeElement;
 
-    setTrigger(
+    const next =
       element ??
-        (active instanceof HTMLElement && active !== document.body ? active : searchRef.current)
-    );
+      (active instanceof HTMLElement && active !== document.body ? active : searchRef.current);
+
+    rectangle.current = next?.getBoundingClientRect();
+    setTrigger(next);
   };
 
   useEffect(() => {
@@ -40,6 +57,7 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
           void picker.openSnippet(id);
         },
         removeTag: (id, tagId) => picker.remove(id, tagId),
+        activeTrigger: state.open ? (trigger?.dataset['tagPickerTrigger'] ?? null) : null,
         busy: state.busy,
         error: state.error
       }}
@@ -65,9 +83,35 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
 
             if (tagIds.length <= 100) model.query({ ...current, tagIds, untagged: false });
           }}
+          untagged={library.request.untagged}
+          chooseUntagged={() => {
+            const current = model.snapshot().request;
+
+            model.query({ ...current, tagIds: [], untagged: !current.untagged });
+          }}
+          clearFilters={() => {
+            model.query({ ...model.snapshot().request, tagIds: [], untagged: false });
+          }}
           restoreFocus={() => {
-            if (trigger?.isConnected === true && !trigger.matches(':disabled')) trigger.focus();
-            else selection.focusSearch();
+            if (
+              trigger?.isConnected === true &&
+              !trigger.matches(':disabled') &&
+              getComputedStyle(trigger).visibility !== 'hidden'
+            )
+              trigger.focus();
+            else {
+              const add = trigger
+                ?.closest('.tag-overflow-row')
+                ?.querySelector<HTMLButtonElement>('[data-overflow-end] button:not(:disabled)');
+
+              if (
+                add !== undefined &&
+                add !== null &&
+                getComputedStyle(add).visibility !== 'hidden'
+              )
+                add.focus();
+              else selection.focusSearch();
+            }
           }}
         />
       </Popover>

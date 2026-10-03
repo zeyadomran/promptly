@@ -68,7 +68,11 @@ export class TagRepository {
     const snippet = this.reader.get(input.id);
     const ids = snippet.tags.map((tag) => tag.id).filter((id) => id !== input.tagId);
 
-    if (input.assigned) ids.push(input.tagId);
+    if (input.assigned) {
+      if (snippet.tags.some((tag) => tag.id === input.tagId)) return this.reader.snapshot(input.id);
+      ids.push(input.tagId);
+    }
+
     if (ids.length > 100)
       throw new StorageError('INVALID_REQUEST', 'A snippet can have at most 100 tags.');
     return this.set({ id: input.id, tagIds: ids });

@@ -25,7 +25,7 @@ export function portableSnapshot(context: StorageContext) {
     snippets: snippets.map(({ textUtf16: _bytes, ...snippet }) => snippet),
     tags,
     memberships: context.db
-      .prepare('SELECT snippetId, tagId FROM snippet_tags ORDER BY snippetId, tagId')
+      .prepare('SELECT snippetId, tagId FROM snippet_tags ORDER BY snippetId, rowid')
       .all()
   });
 }
