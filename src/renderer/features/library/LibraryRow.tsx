@@ -1,4 +1,4 @@
-import type { Snippet } from '../../../shared/contracts/domain';
+import type { SnippetPreview } from '../../../shared/contracts/domain';
 import { HighlightedText } from '../../components/shared/HighlightedText';
 import type { HighlightRange } from '../../lib/highlight';
 import { useLibraryCommands } from './library-commands';
@@ -13,7 +13,7 @@ export function LibraryRow({
   regular,
   positionClass
 }: {
-  snippet: Snippet;
+  snippet: SnippetPreview;
   ranges: readonly HighlightRange[];
   index: number;
   regular: boolean;

@@ -1,38 +1,24 @@
 import { expect, it, vi } from 'vitest';
 
-import { SnippetSession } from '../snippets/snippet-session';
 import { delayedLibraryFixture } from './delayed-library-fixture';
 import { LibraryModel } from './library-model';
+import { libraryPreviewFixture } from './library-preview-test-fixture';
 import { initialQuery } from './page-cache';
 import { selectionScroll } from './virtual-range';
 
 it('browses paged results with command-safe selection across refreshes and newer queries', async () => {
   const fixture = delayedLibraryFixture(1_400);
   const model = new LibraryModel(fixture.bridge);
-  const preview = new SnippetSession({
-    getSnippet: ({ id }) => {
-      const snippet = fixture.items().find((item) => item.id === id);
-
-      return Promise.resolve(
-        snippet === undefined
-          ? { ok: false, error: { code: 'NOT_FOUND', message: 'Snippet no longer exists.' } }
-          : { ok: true, value: { revision: 1, snippet } }
-      );
-    },
-    updateSnippet: () => Promise.reject(new Error('Unused external operation'))
-  });
-  const unsubscribe = model.subscribe(() => {
-    const { selectedId, loading, total } = model.snapshot();
-
-    preview.select(selectedId, loading || total > 0);
-  });
+  const { preview, unsubscribe } = libraryPreviewFixture(fixture, model);
+  const settle = (read: () => unknown, expected: unknown) =>
+    vi.waitFor(() => {
+      expect(read()).toEqual(expected);
+    });
 
   try {
     preview.start();
     model.start();
-    await vi.waitFor(() => {
-      expect(model.snapshot().selectedIndex).toBe(0);
-    });
+    await settle(() => model.snapshot().selectedIndex, 0);
     await model.moveSelection(-1);
     expect(model.snapshot().selectedIndex).toBe(0);
     expect(model.snapshot().revealVersion).toBe(1);
@@ -40,9 +26,7 @@ it('browses paged results with command-safe selection across refreshes and newer
     fixture.holdNext(200);
     const moving = model.moveSelection(1);
 
-    await vi.waitFor(() => {
-      expect(model.snapshot().selectedId).toBeNull();
-    });
+    await settle(() => model.snapshot().selectedId, null);
     const next = model.moveSelection(1);
 
     fixture.release();
@@ -60,9 +44,7 @@ it('browses paged results with command-safe selection across refreshes and newer
 
     for (const index of [400, 600, 800, 1_000, 1_200, 0]) {
       model.ensure(index);
-      await vi.waitFor(() => {
-        expect(model.snapshot().cache.at(index)).toBeDefined();
-      });
+      await settle(() => model.snapshot().cache.at(index) !== undefined, true);
     }
 
     expect(model.snapshot().cache.size).toBeLessThanOrEqual(5);
@@ -74,48 +56,61 @@ it('browses paged results with command-safe selection across refreshes and newer
     model.refresh();
     expect(model.snapshot().selectedId).toBeNull();
     expect(preview.snapshot().snippet?.id).toBe(selected.id);
-    await vi.waitFor(() => {
-      expect(model.snapshot().selectedId).toBe(selected.id);
-    });
+    await settle(() => model.snapshot().selectedId, selected.id);
     const changed = fixture.items().filter((item) => item.id !== selected.id);
 
     changed.splice(805, 0, selected);
     fixture.holdNext(200);
     fixture.change(changed);
-    await vi.waitFor(() => {
-      expect(model.snapshot().cache.revision).toBe(2);
-    });
+    await settle(() => model.snapshot().cache.revision, 2);
     expect(model.snapshot().selectedId).toBeNull();
     const latest = changed.filter((item) => item.id !== selected.id);
 
     latest.splice(905, 0, selected);
     fixture.change(latest);
     fixture.release();
-    await vi.waitFor(() => {
-      expect(model.snapshot().selectedIndex).toBe(905);
-    });
+    await settle(() => model.snapshot().selectedIndex, 905);
     expect(model.snapshot().selectedId).toBe(selected.id);
     expect(preview.snapshot().snippet?.text).toBe('Snippet 201');
+    fixture.copy(selected.id);
+    expect(model.snapshot()).toMatchObject({
+      selectedId: selected.id,
+      selectedIndex: 905,
+      loading: false
+    });
+    expect(model.snapshot().cache.at(905)?.snippet).toMatchObject({
+      copyCount: 1,
+      lastCopiedAt: '2026-10-03T00:00:00Z'
+    });
+    expect(model.snapshot().cache.revision).toBe(4);
+    const copied = latest[1_000];
+
+    if (copied === undefined) throw new Error('Missing owned copy target');
+    fixture.holdNext(1_000);
+    model.ensure(1_000);
+    await settle(() => fixture.requests.at(-1)?.offset, 1_000);
+    fixture.copy(copied.id);
+    fixture.release();
+    await settle(() => model.snapshot().cache.at(1_000)?.snippet.copyCount, 1);
+    expect(model.snapshot()).toMatchObject({
+      selectedId: selected.id,
+      selectedIndex: 905,
+      loading: false
+    });
     fixture.holdNext(200);
     fixture.change(latest);
-    await vi.waitFor(() => {
-      expect(model.snapshot().cache.revision).toBe(4);
-    });
+    await settle(() => model.snapshot().cache.revision, 6);
     const deliberate = latest[5];
 
     if (deliberate === undefined) throw new Error('Missing deliberate owned selection');
     expect(model.select(deliberate.id, 5)).toBe(true);
     fixture.release();
-    await vi.waitFor(() => {
-      expect(preview.snapshot().snippet?.id).toBe(deliberate.id);
-    });
+    await settle(() => preview.snapshot().snippet?.id, deliberate.id);
     expect(model.snapshot().selectedId).toBe(deliberate.id);
     fixture.holdNext(400);
     const oldQueryPage = model.moveSelection(400);
 
-    await vi.waitFor(() => {
-      expect(model.snapshot().selectedId).toBeNull();
-    });
+    await settle(() => model.snapshot().selectedId, null);
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     const requested = fixture.requests.length;
 
@@ -180,10 +175,17 @@ it('browses paged results with command-safe selection across refreshes and newer
     model.query(initialQuery);
     await vi.advanceTimersByTimeAsync(0);
     vi.useRealTimers();
-    fixture.change([], ['snippets', 'tags']);
+    model.query({ ...initialQuery, sort: 'most-copied' });
+    await settle(() => model.snapshot().selectedId, '00000000-0000-4000-8000-000000000000');
+    fixture.copy(deliberate.id);
+    expect(model.snapshot().selectedId).toBeNull();
     await vi.waitFor(() => {
-      expect(model.snapshot().unfilteredTotal).toBe(0);
+      expect(model.snapshot().cache.at(0)?.snippet.id).toBe(deliberate.id);
+      expect(model.snapshot().selectedId).toBe('00000000-0000-4000-8000-000000000000');
+      expect(model.snapshot().selectedIndex).toBe(1);
     });
+    fixture.change([], ['snippets', 'tags']);
+    await settle(() => model.snapshot().unfilteredTotal, 0);
     expect(model.snapshot().selectedId).toBeNull();
     expect(model.snapshot().total).toBe(0);
   } finally {

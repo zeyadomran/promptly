@@ -12,11 +12,11 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 
 | File | Canonical behavior |
 | --- | --- |
-| `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, literal highlights, committed reply/publication isolation and durable reopen |
+| `search/search-library.test.ts` | Real-worker AND/filter/sort/pagination, bounded Unicode/whitespace row previews/highlights with full-text matching/reads, copy-statistics publication, committed reply/publication isolation and durable reopen |
 | `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
-| `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and reveal clearance, typed search debounce and revision/query reconciliation |
+| `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and reveal clearance, copy-only metadata retention/stale-reply rejection and copy-sensitive reordering, typed search debounce and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
-| `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, expiring/replaced copy feedback, capture-only pause, reversible tray visibility and retired native-menu/timer ownership |
+| `main/tray/coordinator.test.ts` | Bounded Unicode/whitespace recent labels, authoritative full-text main-owned copy routing, expiring/replaced copy feedback, capture-only pause, reversible tray visibility and retired native-menu/timer ownership |
 | `main/capture/service.test.ts` | Native Windows selection through real SQLite, conservative normalization, exact recapture, suppression/clear/import cancellation, pre-deferral admission, entered-save retirement and source capability expiry across external helper eviction/replacement |
 | `main/onboarding/coordinator.test.ts` | Real practice capture, durable completion/reopen, unsupported recovery and Skip/owner retirement without fabricated data |
 | `main/capture-toast/service.test.ts` | Committed confirmation replacement, actionable failure feedback/cooldown, silent empty/cancellation, validated open/focus activation, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |

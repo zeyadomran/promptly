@@ -10,6 +10,8 @@ export function decodeSqlText(value: SQLOutputValue | undefined): string | null 
 }
 
 export const tagColumns = 'tags.id, CAST(tags.name AS BLOB) AS name, color, createdAt';
+export const snippetColumns =
+  'id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
 
 /** Preserve every UTF-16 code unit; legacy rows retain their existing UTF-8 fallback. */
 export function decodeSnippetText(

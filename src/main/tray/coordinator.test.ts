@@ -42,7 +42,7 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     }).items[0]?.id;
 
     if (id === undefined || recent?.run === undefined) throw new Error('Expected recent command.');
-    const full = 'edited full '.repeat(8) + '\n你好😀';
+    const full = '\u2003\t'.repeat(1_024) + '😀\u2003&\n'.repeat(60) + '尾';
 
     fixture.store.invoke('updateSnippet', { id, text: full });
     await recent.run();
@@ -52,7 +52,8 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     expect(owned.statuses.at(-1)).toBe('');
     expect(windows).not.toContain('unexpected hide');
     await tray.refresh();
-    expect(owned.menu()[2]?.label).toBe('edited full edited full edited full edited full ed…');
+    expect(owned.menu()[2]?.label).toBe('😀 && '.repeat(12) + '😀 …');
+    expect(owned.recent()[0]?.text.length).toBeLessThanOrEqual(104);
     fixture.store.invoke('deleteSnippet', { id });
     await recent.run();
     expect(clipboard).toEqual([full]);

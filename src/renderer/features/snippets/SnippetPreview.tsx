@@ -20,7 +20,11 @@ export function SnippetPreview() {
         </p>
       </aside>
     );
-  const ranges = matchRanges(snippet.text, parseQuery(library.request.query).text.map(foldText));
+  const ranges = matchRanges(
+    snippet.text,
+    parseQuery(library.request.query).text.map(foldText),
+    previewLimits.highlights
+  );
 
   return (
     <aside className="snippet-preview" aria-label="Snippet preview">
@@ -48,3 +52,5 @@ export function SnippetPreview() {
     </aside>
   );
 }
+
+import { previewLimits } from '../../../shared/contracts/preview-limits';

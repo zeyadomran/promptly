@@ -1,4 +1,4 @@
-import type { SearchPage, SearchRequest } from '../../../shared/contracts/domain';
+import type { ChangeEvent, SearchPage, SearchRequest } from '../../../shared/contracts/domain';
 
 export const PAGE_SIZE = 200;
 export const MAX_CACHED_PAGES = 5;
@@ -16,6 +16,7 @@ export function sameQuery(left: SearchRequest, right: SearchRequest): boolean {
     left.query === right.query &&
     left.sort === right.sort &&
     left.untagged === right.untagged &&
+    (left.preview ?? 'row') === (right.preview ?? 'row') &&
     left.tagIds.join(',') === right.tagIds.join(',')
   );
 }
@@ -33,6 +34,32 @@ export class PageCache {
   promote(revision: number): void {
     // A contiguous settings-only commit proves the library did not change.
     if (this.revision !== undefined && revision === this.revision + 1) this.revision = revision;
+  }
+
+  retainCopy(event: ChangeEvent, sort: SearchRequest['sort']): boolean {
+    const statistics = event.copyStatistics;
+
+    if (
+      statistics === undefined ||
+      event.domains.length !== 1 ||
+      event.domains[0] !== 'snippets' ||
+      (sort !== 'newest' && sort !== 'oldest') ||
+      this.revision === undefined ||
+      event.revision !== this.revision + 1
+    )
+      return false;
+    for (const [offset, page] of this.pages) {
+      this.pages.set(offset, {
+        ...page,
+        revision: event.revision,
+        items: page.items.map((item) =>
+          item.id === statistics.id ? { ...item, ...statistics } : item
+        )
+      });
+    }
+
+    this.revision = event.revision;
+    return true;
   }
 
   add(page: SearchPage): boolean {

@@ -94,7 +94,7 @@ A larger window (~1000 px) with a split view:
 ## 4. Search and filtering
 
 - **Instant, as-you-type** search across snippet text (case-insensitive, substring match; fuzzy matching optional). Use an index and bounded pages for large libraries (SQLite FTS5 or an in-memory index). No debounce or latency benchmark budget gates this pass.
-- Matches are **highlighted** in list rows and in the preview.
+- Matches are **highlighted** in list rows and in the preview, capped at 64 merged ranges. List responses contain at most 1,024 UTF-16 units per row without splitting surrogate pairs; search membership/counts still cover full text. Selected preview, editing, copy and export retain full text.
 - **Tag filters**: selecting one or more tag chips narrows results to snippets that have **all** selected tags (AND). "All" clears the tag filters. "Untagged" remains available in the shared filter picker.
 - **Inline filter syntax** in the search box: `tag:review`, `from:terminal`, combinable with free text (e.g. `tag:testing from:cursor flaky`).
 - Text search and tag filters combine (intersection).
