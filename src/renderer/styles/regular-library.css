@@ -94,9 +94,33 @@
   display: flex;
   align-items: center;
   gap: 5px;
+  min-width: 0;
+  width: max-content;
+  max-width: 100%;
   color: var(--muted-foreground);
   font-size: 12px;
   white-space: nowrap;
+}
+.snippet-preview-source {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.snippet-preview-source-tooltip {
+  max-width: min(320px, calc(100vw - 16px));
+  overflow-wrap: anywhere;
+}
+.snippet-preview-source:focus-visible {
+  outline: 1px solid var(--ring);
+  outline-offset: -1px;
+}
+.snippet-preview-meta > :not(.snippet-preview-source) {
+  flex-shrink: 0;
+}
+.preview-tag-bar > [data-overflow-trailing] {
+  min-width: 0;
+  flex-shrink: 1;
 }
 .preview-tag-bar {
   flex-shrink: 0;

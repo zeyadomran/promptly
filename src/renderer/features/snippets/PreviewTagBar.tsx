@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/too
 import { useLibraryTagActions } from '../library/library-commands';
 import { TagBadge } from '../tags/TagBadge';
 import { TagOverflowRow } from '../tags/TagOverflowRow';
-import { relativeTime } from './relative-time';
+import { PreviewMetadata } from './PreviewMetadata';
 import { useSnippetSession } from './snippet-context';
 
 export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
@@ -73,13 +73,7 @@ export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
           <TooltipContent>Add tag</TooltipContent>
         </Tooltip>
       }
-      trailing={
-        <span className="snippet-preview-meta">
-          <span>{snippet.sourceApp ?? 'No source application'}</span>
-          <span aria-hidden="true">·</span>
-          <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
-        </span>
-      }
+      trailing={<PreviewMetadata snippet={snippet} />}
     />
   );
 }

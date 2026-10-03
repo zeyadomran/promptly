@@ -45,7 +45,15 @@ export function TagOverflowRow({
       const fixed = ['[data-overflow-leading]', '[data-overflow-trailing]'].filter(
         (selector) => element.querySelector(selector) !== null
       );
-      const fixedWidth = fixed.reduce((total, selector) => total + width(selector), 0);
+      const trailingElement = element.querySelector<HTMLElement>('[data-overflow-trailing]');
+      const trailingWidth = width('[data-overflow-trailing-measure]');
+      const fixedWidth = fixed.reduce(
+        (total, selector) =>
+          total + (selector === '[data-overflow-trailing]' ? trailingWidth : width(selector)),
+        0
+      );
+      const overflowWidth = (remaining: number) =>
+        width('[data-overflow-size="' + String(String(remaining).length) + '"]');
       const chips = Array.from(element.querySelectorAll<HTMLElement>('[data-overflow-item]'));
       const widths = chips.map((chip) => chip.getBoundingClientRect().width);
       const endWidth = width('[data-overflow-end]');
@@ -56,6 +64,7 @@ export function TagOverflowRow({
         gap * Math.max(0, fixed.length + widths.length);
 
       if (allWidth <= available) {
+        if (trailingElement !== null) trailingElement.style.maxWidth = '';
         setVisible(widths.length);
         return;
       }
@@ -68,13 +77,25 @@ export function TagOverflowRow({
         const remaining = widths.length - index;
 
         if (remaining === 0) break;
-        const overflowWidth = width(
-          '[data-overflow-size="' + String(String(remaining).length) + '"]'
-        );
-
-        if (used + overflowWidth + gap * (controls + index) <= available) fit = index;
+        if (used + overflowWidth(remaining) + gap * (controls + index) <= available) fit = index;
         else break;
         used += widths[index] ?? 0;
+      }
+
+      if (trailingElement !== null) {
+        // Badges yield first. Only oversized metadata shares the remaining space with its source label.
+        const controlWidth =
+          widths.length === 0
+            ? endWidth
+            : overflowWidth(widths.length - fit) + (endWhenFits ? 0 : endWidth);
+        const controlCount = widths.length === 0 ? 1 : 1 + (endWhenFits ? 0 : 1);
+        const metadataSpace =
+          available -
+          (fixedWidth - trailingWidth) -
+          controlWidth -
+          gap * (fixed.length + controlCount - 1);
+
+        trailingElement.style.maxWidth = String(Math.max(0, metadataSpace)) + 'px';
       }
 
       setVisible(fit);
@@ -120,6 +141,16 @@ export function TagOverflowRow({
         {end}
       </span>
       {trailing !== undefined && <span data-overflow-trailing="">{trailing}</span>}
+      {trailing !== undefined && (
+        <span
+          data-overflow-trailing-measure=""
+          data-overflow-hidden="true"
+          inert
+          aria-hidden="true"
+        >
+          {trailing}
+        </span>
+      )}
       {samples.map((sample, index) => (
         <span
           key={index}

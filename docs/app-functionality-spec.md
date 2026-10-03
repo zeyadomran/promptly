@@ -73,7 +73,7 @@ A larger window (~1000 px) with a split view:
 - Top: search input (supports filter syntax, see §4), then **tag filter chips** that toggle on and off, followed by a dashed **"New tag"** chip.
 - Left: dense **snippet list** (single-line truncated text, tag dots, tags · source, relative time). The selected row is highlighted.
 - Right: **preview pane** for the selected snippet:
-  - A fixed-height header with its tags as single-row badges, a **"+N"** overflow picker and right-aligned **source · relative time** metadata that receives space first. An empty snippet shows **"+ Add tag"**; when all badges fit a small dashed **"+"** adds more.
+  - A fixed-height header with its tags as single-row badges, a **"+N"** overflow picker and right-aligned **source · relative time** metadata that receives space first. If source/time plus the mandatory add/overflow control cannot fit after hiding every badge, preserve the timestamp and truncate only the source label, with full accessible text and a focusable full-name tooltip. This bounded-width fallback is the stated working assumption pending an optional user preference. An empty snippet shows **"+ Add tag"**; when all badges fit a small dashed **"+"** adds more.
   - Full text in monospace with search matches highlighted.
   - Long text scrolls within its own focusable region; metadata and Copy/Edit/More actions remain visible at the supported minimum window size.
   - Actions: **Copy** (↵), **Edit** (inline edit of the text), **⋯** menu (Delete, Duplicate, Open source app, Copy as Markdown code block).
