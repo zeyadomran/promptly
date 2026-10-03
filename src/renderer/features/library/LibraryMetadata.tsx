@@ -25,7 +25,7 @@ export function LibraryMetadata({
           </time>
         )}
         {snippet.sourceApp !== null && (
-          <span className="library-row-source"> · {snippet.sourceApp}</span>
+          <span className="library-row-source">{snippet.sourceApp}</span>
         )}
       </span>
       {snippet.tags.length > 0 && <LibraryRowTags tags={snippet.tags} />}

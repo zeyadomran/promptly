@@ -46,7 +46,6 @@ export function PreviewMetadata({ snippet }: { snippet: Snippet }) {
           <TooltipContent className="snippet-preview-source-tooltip">{source}</TooltipContent>
         )}
       </Tooltip>
-      <span aria-hidden="true">·</span>
       <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
     </span>
   );

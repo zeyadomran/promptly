@@ -131,9 +131,6 @@
 .tag-command-item > svg {
   color: var(--muted-foreground);
 }
-.snippet-source-explanation {
-  padding: 0 8px 4px 34px;
-}
 .library-undo-toast,
 .library-copy-toast {
   bottom: 12px;

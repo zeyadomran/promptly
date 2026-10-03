@@ -1,5 +1,5 @@
-import { CopyPlus, ExternalLink, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CopyPlus, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 import type { Snippet } from '../../../shared/contracts/domain';
 import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
@@ -27,39 +27,8 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
     .replace('DELETE', 'Del')
     .replace('BACKSPACE', 'Backspace')
     .replace('TAB', 'Tab');
-  const [source, setSource] = useState({
-    snippet,
-    available: false,
-    explanation: 'Checking source availability…'
-  });
-  // A new committed snapshot retires availability before the refresh effect runs.
-  const sourceReady = source.snippet === snippet;
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-
-    void window.promptly
-      .getSnippetSource({ id: snippet.id })
-      .then((result) => {
-        if (active)
-          setSource({
-            snippet,
-            ...(result.ok ? result.value : { available: false, explanation: result.error.message })
-          });
-      })
-      .catch(() => {
-        if (active)
-          setSource({
-            snippet,
-            available: false,
-            explanation: 'Unable to verify the source application.'
-          });
-      });
-    return () => {
-      active = false;
-    };
-  }, [snippet]);
   const duplicate = async () => {
     if (!eligible || pending) return;
     setPending(true);
@@ -118,27 +87,6 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
             <CopyPlus aria-hidden="true" />
             Duplicate
           </DropdownMenuItem>
-          <DropdownMenuItem
-            disabled={!eligible || !sourceReady || !source.available}
-            onSelect={() => {
-              void window.promptly
-                .openSnippetSource({ id: snippet.id })
-                .then((result) => {
-                  if (!result.ok) commands?.report(result.error.message);
-                })
-                .catch(() => {
-                  commands?.report('Unable to open the source application.');
-                });
-            }}
-          >
-            <ExternalLink aria-hidden="true" />
-            Open source application
-          </DropdownMenuItem>
-          {(!sourceReady || !source.available) && (
-            <p className="snippet-source-explanation">
-              {sourceReady ? source.explanation : 'Checking source availability…'}
-            </p>
-          )}
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
