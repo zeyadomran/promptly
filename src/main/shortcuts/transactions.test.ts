@@ -3,6 +3,7 @@ import { expect, it, vi } from 'vitest';
 
 import { defaultShortcutSettings } from '../../shared/shortcuts/defaults';
 import { testSettings } from '../settings/settings-test-fixture';
+import { exerciseShortcutRecovery } from './recovery-test-flow';
 import { shortcutFixture } from './shortcut-test-fixture';
 
 it('replaces and resets shortcuts atomically while preserving rejected bindings and other preferences', async () => {
@@ -22,8 +23,16 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
       onboardingComplete: true
     });
     const owned = storage.store.invoke('createSnippet', { text: 'Owned retained snippet' }).snippet;
+    const legacy = storage.store.engine.context.db.prepare(
+      'UPDATE settings SET value = ? WHERE key = ?'
+    );
 
+    legacy.run('"Shift+1"', 'pinShortcut');
+    legacy.run('{"kind":"combination","accelerator":"Shift+1"}', 'saveShortcut');
+
+    fixture.failures.add('Control+F');
     await storage.service.initialize();
+    await exerciseShortcutRecovery(fixture, storage);
     const initial = await storage.service.services.getSettings({});
 
     if (!initial.ok) throw new Error('Expected initial preferences.');
@@ -92,6 +101,8 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
     storage.store.reopen();
     expect(await storage.service.services.getSettings({})).toEqual(reset);
     expect(storage.store.invoke('getSnippet', { id: owned.id }).snippet).toEqual(owned);
+    fixture.shortcuts.stopCommands();
+    expect(fixture.shortcuts.retry()).toBe(false);
   } finally {
     await fixture.shortcuts.close();
     storage.store.dispose();

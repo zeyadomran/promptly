@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { globalBindingAllowed } from '../shortcuts/global-binding';
 import { acceleratorSchema } from './accelerator';
 import { revisionSchema } from './domain';
 import { defaultLocalShortcuts, localShortcutsSchema } from './local-shortcuts';
@@ -43,6 +44,15 @@ export const settingsPatchSchema = settingsSchema
   .refine(
     (patch) =>
       Object.keys(patch).length > 0 && Object.values(patch).every((value) => value !== undefined)
+  )
+  .refine(
+    (patch) =>
+      [
+        patch.openShortcut,
+        patch.pinShortcut,
+        patch.saveShortcut?.kind === 'combination' ? patch.saveShortcut.accelerator : undefined
+      ].every((accelerator) => accelerator == null || globalBindingAllowed(accelerator)),
+    'Global text shortcuts need Ctrl, Alt or Win in addition to Shift.'
   );
 export const settingsSnapshotSchema = z.strictObject({
   revision: revisionSchema,

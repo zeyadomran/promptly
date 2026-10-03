@@ -15,6 +15,7 @@ import {
   tagSchema,
   tagSummarySchema
 } from './domain';
+import { loginStatusSchema } from './login-status';
 import { onboardingStateSchema, onboardingStepSchema } from './onboarding';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
@@ -121,8 +122,10 @@ export const operations = {
     response: revisionResponseSchema
   },
   getSettings: { request: emptySchema, response: settingsSnapshotSchema },
+  getLoginStatus: { request: emptySchema, response: loginStatusSchema },
   updateSettings: { request: settingsPatchSchema, response: settingsSnapshotSchema },
   getShortcutStatus: { request: emptySchema, response: shortcutStatusSchema },
+  retryShortcuts: { request: emptySchema, response: shortcutStatusSchema },
   setCapturePaused: {
     request: z.strictObject({ paused: z.boolean() }),
     response: shortcutStatusSchema
