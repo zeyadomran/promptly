@@ -30,6 +30,20 @@ export function loginTestFixture(directory: string) {
       openAtLogin: loginEntries.get(target) ?? false
     })
   };
+  const createUpgradeExecutable = () => {
+    const filename = path.join(applicationDirectory, 'app-0.2.0', 'Promptly.exe');
 
-  return { applicationDirectory, installedExecutable, stableExecutable, loginEntries, application };
+    mkdirSync(path.dirname(filename));
+    writeFileSync(filename, 'owned fixture, not executed');
+    return filename;
+  };
+
+  return {
+    applicationDirectory,
+    installedExecutable,
+    stableExecutable,
+    loginEntries,
+    application,
+    createUpgradeExecutable
+  };
 }

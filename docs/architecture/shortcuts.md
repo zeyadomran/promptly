@@ -38,11 +38,14 @@ combinations; global shortcuts still require a modifier. Tab stays focus navigat
 Local recording accepts Escape and supplies Cancel; Tab, blur and owner retirement
 still cancel. All bindings wait for key release before committing.
 
-The shared conflict check rejects global/local collisions and duplicate local
+The shared conflict check rejects new global/local collisions and duplicate local
 actions before replacing preferences. Clear/hide and editor cancel can share a key
 because their owners do not overlap. Legacy global bindings that happen to collide
 with a new local default keep working at startup. Settings displays the collision
 until the local binding is changed; unrelated preferences can still be saved.
+Profiles with several legacy collisions can resolve them one binding at a time.
+Renderer and main compare the exact command pair and key for every collision;
+remaining legacy pairs may persist, but replacing one with a new pair is rejected.
 Global registration checks only global commands so upgrading never discards an
 older working native binding solely because a new local default was introduced.
 

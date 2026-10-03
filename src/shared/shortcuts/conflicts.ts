@@ -2,53 +2,93 @@ import type { Settings } from '../contracts/settings';
 import { acceleratorKey, reservedShortcut, type ShortcutPlatform } from './accelerator';
 import { localShortcutIdentities } from './local';
 
+interface Conflict {
+  identity: string;
+  message: string;
+}
+interface Candidate {
+  action: string;
+  label: string;
+  identities: string[];
+}
+
+function conflicts(
+  settings: Settings,
+  platform: ShortcutPlatform,
+  scope: 'all' | 'global'
+): Conflict[] {
+  const globals: [string, string, string | null][] = [
+    [
+      'save',
+      'Save selection',
+      settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null
+    ],
+    ['open', 'Open Promptly', settings.openShortcut],
+    ['pin', 'Toggle always on top', settings.pinShortcut]
+  ];
+  const candidates: Candidate[] = globals.flatMap(([action, label, accelerator]) =>
+    accelerator === null
+      ? []
+      : [{ action, label, identities: [acceleratorKey(accelerator, platform)] }]
+  );
+
+  if (scope === 'all') {
+    for (const action of Object.keys(localShortcutLabels) as (keyof typeof localShortcutLabels)[]) {
+      const accelerator = settings.localShortcuts[action];
+
+      if (accelerator !== null)
+        candidates.push({
+          action,
+          label: localShortcutLabels[action],
+          identities: localShortcutIdentities(accelerator)
+        });
+    }
+  }
+
+  const found: Conflict[] = [];
+  const used = new Map<string, Candidate[]>();
+
+  for (const candidate of candidates) {
+    for (const identity of new Set(candidate.identities)) {
+      const reservation = reservedShortcut(identity.replace(/^\+/, ''), platform);
+
+      if (reservation !== undefined)
+        found.push({ identity: `reserved:${candidate.action}:${identity}`, message: reservation });
+      for (const previous of used.get(identity) ?? []) {
+        if (candidate.action === 'cancelEdit' && previous.action === 'dismiss') continue;
+        found.push({
+          identity: `${identity}:${previous.action}:${candidate.action}`,
+          message: `${candidate.label} already uses the same shortcut as ${previous.label}.`
+        });
+      }
+
+      used.set(identity, [...(used.get(identity) ?? []), candidate]);
+    }
+  }
+
+  return found;
+}
+
 export function shortcutConflict(
   settings: Settings,
   platform: ShortcutPlatform,
   scope: 'all' | 'global' = 'all'
 ): string | undefined {
-  const candidates: [string, string | null][] = [
-    [
-      'Save selection',
-      settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null
-    ],
-    ['Open Promptly', settings.openShortcut],
-    ['Toggle always on top', settings.pinShortcut]
-  ];
-  const used = new Map<string, string>();
+  return conflicts(settings, platform, scope)[0]?.message;
+}
 
-  for (const [label, accelerator] of candidates) {
-    if (accelerator === null) continue;
-    const reserved = reservedShortcut(accelerator, platform);
+/** Older profiles can remove collisions incrementally; no changed binding may introduce one. */
+export function shortcutChangeConflict(
+  previous: Settings,
+  candidate: Settings,
+  platform: ShortcutPlatform
+): string | undefined {
+  const retained = new Set(
+    conflicts(previous, platform, 'all').map((conflict) => conflict.identity)
+  );
 
-    if (reserved !== undefined) return reserved;
-    const identity = acceleratorKey(accelerator, platform);
-    const previous = used.get(identity);
-
-    if (previous !== undefined) return `${label} already uses the same shortcut as ${previous}.`;
-    used.set(identity, label);
-  }
-
-  if (scope === 'global') return undefined;
-  const local = settings.localShortcuts;
-
-  for (const [action, accelerator] of Object.entries(local)) {
-    if (accelerator === null) continue;
-    const reserved = reservedShortcut(accelerator, platform);
-
-    if (reserved !== undefined) return reserved;
-    for (const identity of localShortcutIdentities(accelerator)) {
-      const previous = used.get(identity);
-
-      // Dismissal and editor cancellation have mutually exclusive owners.
-      if (action === 'cancelEdit' && previous === localShortcutLabels.dismiss) continue;
-      if (previous !== undefined)
-        return `${localShortcutLabels[action as keyof typeof local]} already uses the same shortcut as ${previous}.`;
-      used.set(identity, localShortcutLabels[action as keyof typeof local]);
-    }
-  }
-
-  return undefined;
+  return conflicts(candidate, platform, 'all').find((conflict) => !retained.has(conflict.identity))
+    ?.message;
 }
 
 export const localShortcutLabels = {

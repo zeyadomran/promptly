@@ -1,4 +1,3 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { expect, it } from 'vitest';
@@ -46,15 +45,9 @@ it('persists settings across reopen and rolls back rejected native effects', asy
 
   try {
     const fixtureDirectory = path.dirname(fixture.store.filename);
-    const {
-      applicationDirectory,
-      installedExecutable,
-      stableExecutable,
-      loginEntries,
-      application
-    } = loginTestFixture(fixtureDirectory);
+    const installation = loginTestFixture(fixtureDirectory);
 
-    login = loginPreferences(application, installedExecutable);
+    login = loginPreferences(installation.application, installation.installedExecutable);
     seedLegacyShortcutProfile(fixture.store);
     await fixture.service.initialize();
     const initial = await fixture.service.services.getSettings({});
@@ -63,13 +56,12 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     expect(Object.keys(initial.value.settings)).not.toContain('showDockIcon');
     expect(initial.value.settings).toMatchObject({
       openShortcut: 'Control+F',
-      pinShortcut: 'Super+P'
+      pinShortcut: 'Control+T'
     });
-    expect(initial.value.settings.localShortcuts).toMatchObject({
-      copy: 'Return',
-      dismiss: 'Escape',
-      cancelEdit: 'Escape'
-    });
+    expect(initial.value.settings.localShortcuts.cancelEdit).toBe('Escape');
+    expect(await fixture.service.services.updateSettings({ doubleTapWindowMs: 400 })).toMatchObject(
+      { ok: true }
+    );
     expect(await fixture.service.services.updateSettings({ theme: 'light' })).toMatchObject({
       ok: true
     });
@@ -84,19 +76,21 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 2,
+      revision: 3,
       settings: {
         theme: 'light',
         alwaysOnTop: false,
         openShortcut: 'Control+F',
-        pinShortcut: 'Super+P',
+        pinShortcut: 'Control+T',
+        doubleTapWindowMs: 400,
         localShortcuts: { copy: 'Control+K', dismiss: 'Escape', cancelEdit: 'Escape' }
       }
     });
     for (const patch of [
       { localShortcuts: { ...localShortcuts, tag: 'Control+K' } },
-      { localShortcuts: { ...localShortcuts, copy: 'Super+P' } },
-      { pinShortcut: 'Super+T' }
+      { localShortcuts: { ...localShortcuts, copy: 'Control+T' } },
+      { pinShortcut: 'Super+T' },
+      { localShortcuts: { ...localShortcuts, settings: 'Super+L' } }
     ])
       expect(await fixture.service.services.updateSettings(patch)).toMatchObject({
         ok: false,
@@ -112,44 +106,47 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 2,
+      revision: 3,
       settings: { localShortcuts: { copy: 'Control+K' } }
     });
+    expect(
+      await fixture.service.services.updateSettings({
+        localShortcuts: { ...localShortcuts, tag: 'Control+G' }
+      })
+    ).toMatchObject({ ok: true });
     expect(
       await fixture.service.services.updateSettings({ theme: 'dark', alwaysOnTop: true })
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
     expect({ theme, pinned }).toEqual({ theme: 'light', pinned: false });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
-      revision: 2,
-      settings: { theme: 'light', alwaysOnTop: false }
+      revision: 4,
+      settings: { theme: 'light', alwaysOnTop: false, localShortcuts: { tag: 'Control+G' } }
     });
     expect(await fixture.service.services.updateSettings({ launchAtLogin: true })).toMatchObject({
       ok: true,
       value: { settings: { launchAtLogin: true } }
     });
-    expect(loginEntries.get(stableExecutable)).toBe(true);
-    expect(loginEntries.has(installedExecutable)).toBe(false);
-    const upgradedExecutable = path.join(applicationDirectory, 'app-0.2.0', 'Promptly.exe');
+    expect(installation.loginEntries.get(installation.stableExecutable)).toBe(true);
+    expect(installation.loginEntries.has(installation.installedExecutable)).toBe(false);
+    const upgradedExecutable = installation.createUpgradeExecutable();
 
-    mkdirSync(path.dirname(upgradedExecutable));
-    writeFileSync(upgradedExecutable, 'owned fixture, not executed');
-    expect(loginPreferences(application, upgradedExecutable).getLogin()).toBe(true);
+    expect(loginPreferences(installation.application, upgradedExecutable).getLogin()).toBe(true);
     const unpackedExecutable = path.join(fixtureDirectory, 'unpacked', 'Promptly.exe');
-    const unpacked = loginPreferences(application, unpackedExecutable);
+    const unpacked = loginPreferences(installation.application, unpackedExecutable);
 
     unpacked.setLogin(true);
-    expect(loginEntries.get(unpackedExecutable)).toBe(true);
+    expect(installation.loginEntries.get(unpackedExecutable)).toBe(true);
     const development = loginPreferences(
-      { ...application, isPackaged: false },
-      installedExecutable
+      { ...installation.application, isPackaged: false },
+      installation.installedExecutable
     );
 
     development.setLogin(true);
-    expect(loginEntries.get(installedExecutable)).toBe(true);
+    expect(installation.loginEntries.get(installation.installedExecutable)).toBe(true);
     let applicationId = '';
     const setupApplication = {
-      ...application,
+      ...installation.application,
       setAppUserModelId: (identity: string) => {
         applicationId = identity;
       }

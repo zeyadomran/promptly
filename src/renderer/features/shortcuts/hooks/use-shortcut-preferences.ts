@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 
 import { type SettingsPatch, settingsSchema } from '../../../../shared/contracts/settings';
-import { shortcutConflict } from '../../../../shared/shortcuts/conflicts';
+import { shortcutChangeConflict, shortcutConflict } from '../../../../shared/shortcuts/conflicts';
 import { usePreferences } from '../../settings/settings-context';
 
 export function useShortcutPreferences() {
@@ -19,7 +19,11 @@ export function useShortcutPreferences() {
 
       if (!candidate.success)
         throw new Error(candidate.error.issues[0]?.message ?? 'Use a valid key or combination.');
-      const conflict = shortcutConflict(candidate.data, window.promptly.platform);
+      const conflict = shortcutChangeConflict(
+        preferences.settings,
+        candidate.data,
+        window.promptly.platform
+      );
 
       if (conflict !== undefined) throw new Error(conflict);
       const result = await preferences.update(patch);

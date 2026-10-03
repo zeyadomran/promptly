@@ -6,7 +6,7 @@ import {
   settingsSchema,
   type SettingsSnapshot
 } from '../../shared/contracts/settings';
-import { shortcutConflict } from '../../shared/shortcuts/conflicts';
+import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageClient } from '../storage/client';
 import type { SettingsController, SettingsControllers } from './controllers';
 
@@ -89,10 +89,7 @@ export class SettingsService {
     };
     const changed = (key: keyof SettingsPatch) =>
       JSON.stringify(next.settings[key]) !== JSON.stringify(previous.value.settings[key]);
-    const bindingChanged = ['saveShortcut', 'openShortcut', 'pinShortcut', 'localShortcuts'].some(
-      (key) => changed(key as keyof SettingsPatch)
-    );
-    const conflict = bindingChanged ? shortcutConflict(next.settings, 'win32') : undefined;
+    const conflict = shortcutChangeConflict(previous.value.settings, next.settings, 'win32');
 
     if (conflict !== undefined) return failure('CONFLICT', conflict);
 

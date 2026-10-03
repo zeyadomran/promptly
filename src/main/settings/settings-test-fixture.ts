@@ -13,7 +13,7 @@ export function seedLegacyShortcutProfile(store: ReturnType<typeof testStorage>)
   for (const [key, value] of [
     ['showDockIcon', 'false'],
     ['openShortcut', '"Control+F"'],
-    ['pinShortcut', '"Super+P"']
+    ['pinShortcut', '"Control+T"']
   ] as const)
     write.run(key, value);
   database.prepare('DELETE FROM settings WHERE key = ?').run('localShortcuts');
