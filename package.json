@@ -21,7 +21,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit -p tsconfig.main.json && tsc --noEmit -p tsconfig.renderer.json && tsc --noEmit -p tsconfig.tools.json",
-    "test": "vitest run && node --test scripts/release-artifacts.test.mjs",
+    "test": "vitest run && node --test scripts/*.test.mjs",
     "check": "npm run check:static && npm test",
     "check:static": "npm run typecheck && npm run lint && npm run format:check"
   },

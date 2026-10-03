@@ -17,11 +17,19 @@ The GitHub environment `release` must allow `v*` tags and contain these variable
 
 The app registration needs the Artifact Signing Certificate Profile Signer role on the signing account or certificate profile. Its federated credential uses issuer `https://token.actions.githubusercontent.com`, audience `api://AzureADTokenExchange`, and this repository's immutable environment subject: `repo:zeyadomran@45938909/promptly@1400985935:environment:release`. No client secret or exported certificate is used. The Windows runner supplies Azure CLI, the Windows SDK and .NET 8; the workflow downloads the pinned Artifact Signing client.
 
-To release, update `package.json` and the root versions in `package-lock.json` together in a reviewed PR. After merging, push a tag matching that version, such as `v0.1.0`. The tag must point to a commit on `main`. `.github/workflows/release.yml` runs all checks, signs the app, native helpers and Squirrel installer, and requires valid timestamped signatures in the packaged payload. It stages hashes and build provenance before creating a draft GitHub release. Only after all six assets are uploaded does it publish the release and mark it latest. Existing releases are never overwritten.
+To release, update `package.json` and the root versions in `package-lock.json` together in a reviewed PR, then merge it. When both `main` CI jobs pass, the **Release unpublished version** job creates a matching tag on that exact tested commit and dispatches **Signed Windows release** with publication enabled. No manual tag push is required. The first successful run also releases the current version if it has never been tagged or published. PR checks never start publication.
+
+Existing releases (including drafts), versions at or below the latest release, and tags pointing to a different commit are skipped. A failed dispatch can be retried by rerunning the same CI run: the existing tag is retained and dispatched again only when it still points to that tested commit. Tags are never moved. GitHub's built-in token cannot trigger a push workflow by creating a tag, so CI explicitly dispatches the signing workflow on the new tag. This preserves the `release` environment's tag-only policy.
+
+`.github/workflows/release.yml` runs all checks, verifies that the release commit is on `main`, signs the app, native helpers and Squirrel installer, and requires valid timestamped signatures in the packaged payload. It stages hashes and build provenance before creating a draft GitHub release. Only after all six assets are uploaded does it publish the release and mark it latest. Existing releases are never overwritten. Manual stable tag pushes remain supported.
 
 Published assets are `Promptly-x64-Setup.exe`, `Promptly-<version>-full.nupkg`, `RELEASES`, `BUILD.json`, `SHA256SUMS` and this release guide as `README.md`. Keep all three Squirrel assets together; never edit them after publication. Signed packaging refuses a dirty checkout. `BUILD.json` identifies the built commit and artifact hashes.
 
-For a signing check without publication, push a tag `v<version>-validation` (optionally followed by `.1`, `.2`, etc.) and manually dispatch the **Signed Windows release** workflow on that tag. A manual run builds, signs and retains Actions artifacts, but never creates a GitHub release. Validation tags do not trigger release publication.
+For a signing check without publication, push a tag `v<version>-validation` (optionally followed by `.1`, `.2`, etc.) and manually dispatch **Signed Windows release** on that tag with **publish** unchecked (the default). It builds, signs and retains Actions artifacts without publishing. Validation tags cannot be published even when **publish** is checked.
+
+To retry a failed production build, rerun the failed signing run, or dispatch **Signed Windows release** on its exact stable version tag with **publish** checked. If an interrupted upload left a draft, inspect it before deleting that draft and retrying; the workflow refuses to replace its assets automatically.
+
+GitHub also lists these jobs under **Deployments** because they use `environment: release` for OIDC trust, variables and tag restrictions. This is GitHub's record of the signing job, not a hosted application. Installer downloads appear under **Releases** only after publication succeeds.
 
 ## Optional application updates
 
