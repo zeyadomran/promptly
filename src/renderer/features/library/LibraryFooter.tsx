@@ -1,16 +1,13 @@
 import { PinStatus } from '../../components/shared/PinStatus';
 import { usePreferences } from '../settings/settings-context';
-import { useLibrary } from './library-context';
+import { LibraryKeyboardHints } from './LibraryKeyboardHints';
 
 export function LibraryFooter() {
-  const { state } = useLibrary();
   const { settings } = usePreferences();
 
   return (
     <footer className="library-footer">
-      <span aria-live="polite">
-        {state.total} of {state.unfilteredTotal}
-      </span>
+      <LibraryKeyboardHints />
       <PinStatus pinned={settings.alwaysOnTop} />
     </footer>
   );
