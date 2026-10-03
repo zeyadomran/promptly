@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import { type HookFrame, hookFrameSchema } from '../../../shared/contracts/shortcuts';
 import { terminateNative } from '../native/terminate-native';
+import { HelperRecovery, type HookSchedule, scheduleHook } from './helper-recovery';
 
 export interface HookHealth {
   installed: boolean;
@@ -19,17 +20,31 @@ export class NativeKeyboardHook implements KeyboardHook {
   private starting: Promise<void> | undefined;
   private readonly retiring = new Set<Promise<void>>();
   private current: HookHealth = { installed: false };
+  private readonly recovery: HelperRecovery;
+  private cancelStartup: (() => void) | undefined;
 
   constructor(
     private readonly launch: () => ChildProcessWithoutNullStreams,
-    private readonly receive: (frame: HookFrame) => void
-  ) {}
+    private readonly receive: (frame: HookFrame) => void,
+    private readonly schedule: HookSchedule = scheduleHook
+  ) {
+    this.recovery = new HelperRecovery(() => {
+      void Promise.all(this.retiring).then(() => {
+        if (this.recovery.active) void this.launchSession();
+      });
+    }, schedule);
+  }
 
   get health(): HookHealth {
     return { ...this.current };
   }
 
   start(): Promise<void> {
+    this.recovery.start();
+    return this.launchSession();
+  }
+
+  private launchSession(): Promise<void> {
     if (this.starting !== undefined) return this.starting;
     if (this.child !== undefined) return Promise.resolve();
     const startup = new Promise<void>((resolve) => {
@@ -39,12 +54,13 @@ export class NativeKeyboardHook implements KeyboardHook {
       let offset = 0;
       let child: ChildProcessWithoutNullStreams;
       const failed = () => {
-        clearTimeout(timer);
+        cancelDeadline();
         if (this.child === child) {
           this.current = { installed: false };
           this.child = undefined;
           this.receive({ kind: 'reset', timeMs: 0 });
           this.retire(child);
+          this.recovery.failed();
         }
 
         resolve();
@@ -53,12 +69,18 @@ export class NativeKeyboardHook implements KeyboardHook {
       try {
         child = this.launch();
       } catch {
+        this.recovery.failed();
         resolve();
         return;
       }
 
       this.child = child;
-      const timer = setTimeout(failed, 1500);
+      const cancelDeadline = this.schedule(failed, 1500);
+
+      this.cancelStartup = () => {
+        cancelDeadline();
+        resolve();
+      };
 
       child.stderr.resume();
       child.stdin.on('error', failed);
@@ -86,9 +108,19 @@ export class NativeKeyboardHook implements KeyboardHook {
               this.current = {
                 installed: frame.installed
               };
-              clearTimeout(timer);
+              cancelDeadline();
               resolve();
+              if (frame.installed) this.recovery.healthy();
+              else {
+                failed();
+                return;
+              }
             } else if (frame.kind === 'ready') throw new Error('Duplicate keyboard readiness');
+            if (frame.kind === 'health' && !frame.installed) {
+              failed();
+              return;
+            }
+
             if (frame.timeMs < lastTime || performance.now() - offset - frame.timeMs > 600) {
               this.receive({ kind: 'reset', timeMs: frame.timeMs });
             } else this.receive(frame);
@@ -97,7 +129,6 @@ export class NativeKeyboardHook implements KeyboardHook {
               this.current = {
                 installed: this.current.installed && frame.installed
               };
-            if (frame.kind === 'reset') this.current = { installed: false };
             newline = buffer.indexOf(10);
           }
 
@@ -110,11 +141,14 @@ export class NativeKeyboardHook implements KeyboardHook {
 
     this.starting = startup.finally(() => {
       this.starting = undefined;
+      this.cancelStartup = undefined;
     });
     return this.starting;
   }
 
   async stop(): Promise<void> {
+    this.recovery.stop();
+    this.cancelStartup?.();
     const child = this.child;
 
     this.child = undefined;
