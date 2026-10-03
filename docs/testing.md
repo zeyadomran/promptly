@@ -23,7 +23,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |
 | `renderer/features/library/library-keyboard.test.ts` | Configured local commands/cancel, scoped navigation/copy, native typing/activation, editor/IME/overlay ownership and clear-then-hide |
 | `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo, JSON and Markdown export, clear/import/reopen, tag rename/collision/atomic membership merge and tag-only deletion |
-| `main/snippets/tag-picker.test.ts` | Shared picker creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
+| `main/snippets/tag-picker.test.ts` | Shared picker all-tag choices, assigned-first and catalog ordering, creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
 | `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
 | `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |

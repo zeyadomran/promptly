@@ -1,7 +1,7 @@
 import { expect, it, vi } from 'vitest';
 
 import { TagPickerController } from '../../renderer/features/tags/tag-picker-controller';
-import type { ChangeEvent } from '../../shared/contracts/domain';
+import type { ChangeEvent, TagSummary } from '../../shared/contracts/domain';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { resultSchema } from '../../shared/contracts/result';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
@@ -45,6 +45,7 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
       };
     }
   });
+  const choices = (tags: readonly TagSummary[]) => picker.matches(tags).map((tag) => tag.name);
 
   try {
     picker.start();
@@ -127,7 +128,7 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
       { name: 'work', color: 'blue', snippetCount: 1 }
     ]);
     picker.query('');
-    expect(picker.matches(later.value.tags)).toEqual([]);
+    expect(choices(later.value.tags)).toEqual(['later', 'project\0one', 'work']);
     picker.query('o');
     expect(picker.matches(later.value.tags).map((tag) => tag.id)).toEqual([
       nul.value.tag.id,
@@ -139,6 +140,17 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
       work.id,
       nul.value.tag.id
     ]);
+    picker.query('');
+    expect(choices(later.value.tags)).toEqual(['work', 'later', 'project\0one']);
+    storage.reopen();
+    expect(invoke('getSnippet', { id: second.id })).toMatchObject({
+      ok: true,
+      value: { snippet: { tags: [{ id: work.id }] } }
+    });
+    await picker.toggle(work.id);
+    expect(picker.snapshot()).toMatchObject({ open: true, selectedIds: [] });
+    expect(choices(later.value.tags)).toEqual(['later', 'project\0one', 'work']);
+    await picker.toggle(work.id);
     expect(
       invoke('searchSnippets', { ...allSnippets, tagIds: [work.id, nul.value.tag.id] })
     ).toMatchObject({ ok: true, value: { total: 1, items: [{ id: first.id }] } });
@@ -147,6 +159,12 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
 
     if (!removed.ok) throw new Error('Owned catalog unavailable');
     expect(removed.value.tags.find((tag) => tag.id === work.id)?.snippetCount).toBe(1);
+    picker.openCatalog();
+    expect(choices(removed.value.tags)).toEqual(['later', 'project\0one', 'work']);
+    picker.query('o');
+    expect(choices(removed.value.tags)).toEqual(['project\0one', 'work']);
+    await picker.openSnippet(second.id);
+    expect(choices(removed.value.tags)).toEqual(['work', 'later', 'project\0one']);
     expect(invoke('ensureTag', { name: '\uD800' })).toMatchObject({
       ok: false,
       error: { code: 'INVALID_REQUEST' }

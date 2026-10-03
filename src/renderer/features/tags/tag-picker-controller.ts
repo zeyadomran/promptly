@@ -91,9 +91,7 @@ export class TagPickerController {
       matching.filter((tag) => tag.id === id)
     );
 
-    return query === ''
-      ? assigned
-      : [...assigned, ...matching.filter((tag) => !this.state.selectedIds.includes(tag.id))];
+    return [...assigned, ...matching.filter((tag) => !this.state.selectedIds.includes(tag.id))];
   }
   private async read(): Promise<void> {
     const id = this.state.targetId;
