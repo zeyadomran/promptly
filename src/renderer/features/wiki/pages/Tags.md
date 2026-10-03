@@ -20,14 +20,13 @@ in a popover.
 
 ## Manage the catalog
 
-Open [Settings → Tags](promptly:settings/tags). Choose **New tag** to create a name and color, or use a tag's
-Edit, Merge, and Delete controls.
+Open [Settings â†’ Tags](promptly:settings/tags). Choose **New tag** to create a name and color, or use a tag's
+Edit and Delete controls.
 
 Names are trimmed and saved in lowercase. To recolor a tag, choose its **Edit** control,
 select a preset swatch, open the hex-color chip to use the native color chooser. The hex value is `#`
 followed by six hexadecimal digits. Choose **Save tag** to apply.
-An existing name cannot be reused for a separate tag; use **Merge** when combining tags.
+An existing name cannot be reused for a separate tag; choose a different name.
 
-Merging moves the source tag's snippet memberships to the target and removes the source tag.
 Deleting a tag removes that tag from every snippet and keeps the snippets and their text.
 Tag deletion cannot be undone; review the confirmation before applying it.

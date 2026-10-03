@@ -4,7 +4,8 @@ import { wikiResourceUrls } from '../../shared/wiki-resources';
 
 export function applicationServices(
   getVersion: () => string,
-  openExternal: (url: string) => Promise<void>
+  openExternal: (url: string) => Promise<void>,
+  openWiki: () => Promise<void>
 ): Pick<
   DesktopOperations,
   | 'getApplicationInfo'
@@ -42,7 +43,7 @@ export function applicationServices(
     },
     async openWiki() {
       try {
-        await openExternal('https://github.com/zeyadomran/promptly/wiki');
+        await openWiki();
         return { ok: true, value: {} };
       } catch {
         return failure('UNAVAILABLE', 'Unable to open the user wiki. Try again.');

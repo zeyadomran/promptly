@@ -8,7 +8,7 @@ The shortcut can be customized.
 | [General](promptly:settings/general)       | Launch at login, show in system tray, default Compact/Regular size                 |
 | [Shortcuts](promptly:settings/shortcuts)   | Global and in-app bindings, double-tap timing, capture confirmation, normalization |
 | [Appearance](promptly:settings/appearance) | Light, Dark, or System theme; Always on top                                        |
-| [Tags](promptly:settings/tags)             | Create, rename, recolor, merge, or delete tags                                     |
+| [Tags](promptly:settings/tags)             | Create, rename, recolor, or delete tags                                     |
 | [Storage](promptly:settings/storage)       | JSON/Markdown export, JSON import, Clear all                                       |
 | [About](promptly:settings/about)           | Running version, updates, offline wiki, repository and privacy information         |
 
@@ -25,7 +25,7 @@ window to regain access. The tray menu can open Promptly or Settings, copy recen
 pause/resume capture, and **Quit** the app fully.
 
 The version shown is the running app's version. In the installed Windows app, update checks run on startup and can also be requested from
-[Settings â†’ About](promptly:settings/about). Downloading an available update and restarting
+[Settings Ã¢â€ â€™ About](promptly:settings/about). Downloading an available update and restarting
 are explicit choices. Development and unpackaged builds report updates as unavailable.
 Update checks contact GitHub; cloud sync and telemetry are not configured.
 

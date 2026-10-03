@@ -111,6 +111,10 @@ export class WindowLifecycle {
     return window;
   }
 
+  async showWiki(): Promise<void> {
+    publishShellNavigation(await this.show('settings', false), 'wiki');
+  }
+
   hide(): void {
     const window = this.windows.get(this.rootKind());
 

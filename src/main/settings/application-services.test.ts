@@ -7,11 +7,17 @@ it('reads the running app version and opens only its fixed project links through
   let version = '0.2.3';
   let rejectBrowser = false;
   const opened: string[] = [];
+  let view = 'library';
   const services = applicationServices(
     () => version,
     (url) => {
       if (rejectBrowser) return Promise.reject(new Error('Private native error'));
       opened.push(url);
+      return Promise.resolve();
+    },
+    () => {
+      if (rejectBrowser) return Promise.reject(new Error('Private lifecycle error'));
+      view = 'wiki';
       return Promise.resolve();
     }
   );
@@ -50,10 +56,8 @@ it('reads the running app version and opens only its fixed project links through
     ok: true,
     value: {}
   });
-  expect(opened).toEqual([
-    'https://github.com/zeyadomran/promptly',
-    'https://github.com/zeyadomran/promptly/wiki'
-  ]);
+  expect(view).toBe('wiki');
+  expect(opened).toEqual(['https://github.com/zeyadomran/promptly']);
   expect(await dispatchOperation(services, false, 'openPrivacyPolicy', {})).toMatchObject({
     ok: false,
     error: { code: 'UNAUTHORIZED' }
@@ -61,17 +65,13 @@ it('reads the running app version and opens only its fixed project links through
   expect(
     await dispatchOperation(services, true, 'openPrivacyPolicy', { url: 'file:///private' })
   ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
-  expect(opened).toEqual([
-    'https://github.com/zeyadomran/promptly',
-    'https://github.com/zeyadomran/promptly/wiki'
-  ]);
+  expect(opened).toEqual(['https://github.com/zeyadomran/promptly']);
   expect(await dispatchOperation(services, true, 'openPrivacyPolicy', {})).toEqual({
     ok: true,
     value: {}
   });
   expect(opened).toEqual([
     'https://github.com/zeyadomran/promptly',
-    'https://github.com/zeyadomran/promptly/wiki',
     'https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md'
   ]);
   expect(
