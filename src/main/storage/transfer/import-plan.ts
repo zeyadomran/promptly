@@ -1,103 +1,104 @@
 import { randomUUID } from 'node:crypto';
 
-import type { PortableBackup } from '../../../shared/contracts/backup/format';
 import type { ImportPreview } from '../../../shared/contracts/backup/operations';
 import type { StorageContext } from '../context';
-import { ImportTagNames } from './import-tag-names';
+import type { ImportStage } from './import-stage';
+import { conflictId, libraryIdentity, snippetIdentity, storedIdentity } from './library-identity';
 
 export interface ImportPlan {
-  backup: PortableBackup;
-  snippetIds: Map<string, string>;
-  tagIds: Map<string, string>;
-  newTags: Set<string>;
+  stage: ImportStage;
+  identity: string;
   preview: ImportPreview;
   expires: number;
 }
 
-export function planImport(context: StorageContext, backup: PortableBackup): ImportPlan {
-  const snippetIds = new Map<string, string>();
-  const tagIds = new Map<string, string>();
-  const newTags = new Set<string>();
-  const reservedTags = new Set<string>();
-  const reservedSnippets = new Set<string>();
+export function planImport(context: StorageContext, stage: ImportStage): ImportPlan {
   let remappedSnippetIds = 0;
   let remappedTagIds = 0;
   let coalescedTags = 0;
+  let skippedSnippets = 0;
 
-  for (const snippet of backup.snippets) {
-    const conflicting = context.db.prepare('SELECT id FROM snippets WHERE id = ?').get(snippet.id);
-    let id = snippet.id;
+  stage.db.exec('BEGIN');
+  for (const tag of stage.tags()) {
+    const existing = context.db
+      .prepare('SELECT id FROM tags WHERE name = ? COLLATE NOCASE')
+      .get(tag.name);
+    const staged = stage.db
+      .prepare(
+        'SELECT target FROM tags WHERE name = ? COLLATE NOCASE AND target IS NOT NULL LIMIT 1'
+      )
+      .get(tag.name);
+    const sameName = existing?.['id'] ?? staged?.['target'];
+    let target = tag.id;
 
-    if (conflicting !== undefined || reservedSnippets.has(id)) {
-      do {
-        id = randomUUID();
-      } while (
-        reservedSnippets.has(id) ||
-        context.db.prepare('SELECT id FROM snippets WHERE id = ?').get(id) !== undefined
-      );
+    if (sameName !== undefined) {
+      target = String(sameName);
+      if (target !== tag.id) coalescedTags++;
+    } else {
+      let attempt = 0;
 
-      remappedSnippetIds += 1;
+      while (
+        context.db.prepare('SELECT id FROM tags WHERE id = ?').get(target) !== undefined ||
+        stage.db.prepare('SELECT id FROM tags WHERE target = ?').get(target) !== undefined ||
+        stage.db.prepare('SELECT id FROM tags WHERE id = ? AND id <> ?').get(target, tag.id) !==
+          undefined
+      )
+        target = conflictId(tag.id, JSON.stringify(tag), attempt++);
+      if (target !== tag.id) remappedTagIds++;
     }
 
-    reservedSnippets.add(id);
-    snippetIds.set(snippet.id, id);
+    stage.db
+      .prepare('UPDATE tags SET target = ?,fresh = ? WHERE id = ?')
+      .run(target, sameName === undefined ? 1 : 0, tag.id);
   }
 
-  const names = new ImportTagNames(context.db);
+  for (const snippet of stage.snippets()) {
+    const tags = stage.db
+      .prepare(
+        'SELECT DISTINCT target FROM tags JOIN memberships ON tags.id = tagId WHERE snippetId = ?'
+      )
+      .all(snippet.id)
+      .map((row) => String(row['target']));
+    const identity = snippetIdentity(snippet, tags);
+    let target = snippet.id;
+    let attempt = 0;
+    let existing = storedIdentity(context, target);
 
-  try {
-    for (const tag of backup.tags) {
-      const existing = context.db
-        .prepare('SELECT id FROM tags WHERE name = ? COLLATE NOCASE')
-        .get(tag.name);
-      const sameName = existing === undefined ? names.find(tag.name) : String(existing['id']);
-
-      if (sameName !== undefined) {
-        tagIds.set(tag.id, sameName);
-        coalescedTags += 1;
-        continue;
-      }
-
-      let id = tag.id;
-
-      if (
-        reservedTags.has(id) ||
-        context.db.prepare('SELECT id FROM tags WHERE id = ?').get(id) !== undefined
-      ) {
-        do {
-          id = randomUUID();
-        } while (
-          reservedTags.has(id) ||
-          context.db.prepare('SELECT id FROM tags WHERE id = ?').get(id) !== undefined
-        );
-
-        remappedTagIds += 1;
-      }
-
-      tagIds.set(tag.id, id);
-      names.add(tag.name, id);
-      reservedTags.add(id);
-      newTags.add(tag.id);
+    while (
+      (existing !== undefined && existing !== identity) ||
+      stage.db.prepare('SELECT id FROM snippets WHERE target = ?').get(target) !== undefined ||
+      stage.db
+        .prepare('SELECT id FROM snippets WHERE id = ? AND id <> ?')
+        .get(target, snippet.id) !== undefined
+    ) {
+      target = conflictId(snippet.id, identity, attempt++);
+      existing = storedIdentity(context, target);
     }
-  } finally {
-    names.close();
+
+    const skip = existing === identity;
+
+    if (skip) skippedSnippets++;
+    if (target !== snippet.id) remappedSnippetIds++;
+    stage.db
+      .prepare('UPDATE snippets SET target = ?,skip = ? WHERE id = ?')
+      .run(target, skip ? 1 : 0, snippet.id);
   }
 
+  stage.db.exec('COMMIT');
   return {
-    backup,
-    snippetIds,
-    tagIds,
-    newTags,
+    stage,
+    identity: libraryIdentity(context),
     expires: context.now().getTime() + 5 * 60_000,
     preview: {
       token: randomUUID(),
       revision: context.revision(),
-      snippets: backup.snippets.length,
-      tags: backup.tags.length,
-      memberships: backup.memberships.length,
+      snippets: stage.count('snippets'),
+      tags: stage.count('tags'),
+      memberships: stage.count('memberships'),
       remappedSnippetIds,
       remappedTagIds,
-      coalescedTags
+      coalescedTags,
+      skippedSnippets
     }
   };
 }

@@ -10,7 +10,8 @@ export const importPreviewSchema = z.strictObject({
   memberships: z.number().int().nonnegative(),
   remappedSnippetIds: z.number().int().nonnegative(),
   remappedTagIds: z.number().int().nonnegative(),
-  coalescedTags: z.number().int().nonnegative()
+  coalescedTags: z.number().int().nonnegative(),
+  skippedSnippets: z.number().int().nonnegative()
 });
 export type ImportPreview = z.infer<typeof importPreviewSchema>;
 const empty = z.strictObject({});

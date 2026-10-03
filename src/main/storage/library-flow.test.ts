@@ -1,10 +1,14 @@
+import { readFileSync, statSync } from 'node:fs';
+
+import { build } from 'vite';
 import { expect, it } from 'vitest';
 
 import { allSnippets } from './storage-test-fixture';
 import { transferStore } from './transfer/transfer-test-fixture';
+import { workerExportFile } from './transfer/worker-transfer-test-fixture';
 
 // Hosted flow took 8.269s; this is an aggregate real-disk runner budget, not app latency.
-it('round-trips an edited tagged library through duplicate, undo, backup and database reopen', () => {
+it('round-trips an edited tagged library through duplicate, undo, backup and database reopen', async () => {
   const store = transferStore();
   const text = 'Full text\0雪🙂\r\n' + 'unchopped '.repeat(30);
 
@@ -39,9 +43,7 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
         { snippetId: duplicate.id, tagId: tag.id }
       ])
     );
-    expect(
-      Buffer.from(store.invoke('exportLibraryData', { format: 'markdown' }).data).toString('utf8')
-    ).toContain(text);
+    expect(readFileSync(store.exportFile('markdown'), 'utf8')).toContain(text);
     store.invoke('clearLibrary', {});
     expect(store.invoke('searchSnippets', allSnippets).items).toEqual([]);
     const preview = store.prepare(backup);
@@ -87,7 +89,11 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     );
     expect(store.export()).toEqual(beforeMerge);
     store.engine.context.db.exec('DROP TRIGGER reject_tag_merge');
+    store.invoke('setTagMembership', { id: original.id, tagId: target.id, assigned: true });
+    const deletedBeforeMerge = store.invoke('deleteSnippet', { id: original.id });
+
     store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id });
+    store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeMerge.undoToken });
     expect(store.invoke('listTags', {}).tags).toEqual([
       expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 2 })
     ]);
@@ -96,12 +102,54 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
         text,
         tags: [{ id: target.id, color: 'teal' }]
       });
+    const deletedBeforeTagRemoval = store.invoke('deleteSnippet', { id: original.id });
+
     store.invoke('deleteTag', { id: target.id });
+    expect(
+      store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeTagRemoval.undoToken }).snippet
+    ).toMatchObject({ id: original.id, text, tags: [] });
     store.reopen();
     expect(store.invoke('listTags', {}).tags).toEqual([]);
     for (const id of [original.id, duplicate.id])
       expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({ id, text, tags: [] });
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(2);
+    store.invoke('clearLibrary', {});
+    const largeText = '\u0001'.repeat(1_000_000);
+    const largeIds = Array.from(
+      { length: 17 },
+      () => store.invoke('createSnippet', { text: largeText }).snippet.id
+    );
+    const completeBackup = await workerExportFile(store.filename, async (directory) => {
+      await build({
+        configFile: false,
+        logLevel: 'silent',
+        build: {
+          outDir: directory,
+          emptyOutDir: false,
+          lib: {
+            entry: 'src/main/storage/storage-worker.ts',
+            formats: ['cjs'],
+            fileName: () => 'export-worker.cjs'
+          },
+          rollupOptions: { external: [/^node:/] }
+        }
+      });
+    });
+
+    expect(statSync(completeBackup).size).toBeGreaterThan(64 * 1024 * 1024);
+    store.invoke('clearLibrary', {});
+    const largePreview = store.prepareFile(completeBackup);
+
+    expect(largePreview.snippets).toBe(17);
+
+    store.invoke('commitLibraryImport', {
+      token: largePreview.token,
+      revision: largePreview.revision
+    });
+    store.reopen();
+    for (const id of largeIds)
+      expect(store.invoke('getSnippet', { id }).snippet.text).toBe(largeText);
+    expect(statSync(store.exportFile('markdown')).size).toBeGreaterThan(17_000_000);
   } finally {
     store.dispose();
   }

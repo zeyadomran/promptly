@@ -140,15 +140,19 @@ export class StorageClient {
   private fail(error: Error): void {
     if (this.failure !== undefined) return;
     this.failure = error;
-    for (const request of this.pending.values()) {
-      clearTimeout(request.timer);
-      request.reject(error);
-    }
+    const accepted = [...this.pending.values()];
+    const draining = this.draining;
+
+    for (const request of accepted) clearTimeout(request.timer);
 
     this.pending.clear();
-    this.draining?.reject(error);
     this.draining = undefined;
-    void this.worker.terminate();
+    // Callers may own descriptors still used by the worker. Reject only once it
+    // has stopped, while reporting terminal health immediately below.
+    void this.worker.terminate().then(() => {
+      for (const request of accepted) request.reject(error);
+      draining?.reject(error);
+    });
     try {
       this.onFailure(error);
     } catch {

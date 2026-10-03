@@ -4,8 +4,7 @@ import type { DesktopOperations, OperationResponse } from '../../../shared/contr
 import { failure } from '../../../shared/contracts/result';
 import type { StorageClient } from '../client';
 import type { LibraryMutations } from '../library-mutations';
-import { atomicExport } from './atomic-export';
-import { validateExportDestination } from './export-destination';
+import { exportLibraryFile } from './export-request';
 import type { TransferDialogs } from './native-dialogs';
 import { OwnedPreviews } from './previews';
 import { awaitOwnedDialog, TransferRequests } from './requests';
@@ -54,13 +53,15 @@ export class StorageTransfer {
 
         scope.signal.throwIfAborted();
         if (filename === undefined) return { ok: true, value: { status: 'cancelled' } };
-        await validateExportDestination(filename, this.dialogs.protectedFiles);
-        const snapshot = await this.storage.call('exportLibraryData', input);
+        const snapshot = await exportLibraryFile(
+          this.storage,
+          filename,
+          input.format,
+          scope.signal,
+          this.dialogs.protectedFiles
+        );
 
         if (!snapshot.ok) return snapshot;
-        await atomicExport(filename, snapshot.value.data, scope.signal, undefined, () =>
-          validateExportDestination(filename, this.dialogs.protectedFiles)
-        );
         return {
           ok: true,
           value: {

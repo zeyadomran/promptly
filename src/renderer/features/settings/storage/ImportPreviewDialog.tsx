@@ -63,10 +63,13 @@ export function ImportPreviewDialog({
             <dd>{preview.remappedTagIds}</dd>
             <dt>Tags combined by name</dt>
             <dd>{preview.coalescedTags}</dd>
+            <dt>Already present snippets</dt>
+            <dd>{preview.skippedSnippets}</dd>
           </dl>
         )}
         <p className="storage-note">
-          Duplicate texts are preserved. Matching tag names share the existing tag.
+          Identical versions are skipped. Different IDs and conflicting versions are preserved.
+          Matching tag names share the existing tag.
         </p>
         {error !== undefined && (
           <p className="settings-row-error" role="alert">
