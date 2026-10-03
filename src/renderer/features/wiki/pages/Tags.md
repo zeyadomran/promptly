@@ -20,7 +20,7 @@ in a popover.
 
 ## Manage the catalog
 
-Open [Settings â†’ Tags](promptly:settings/tags). Choose **New tag** to create a name and color, or use a tag's
+Open [Settings → Tags](promptly:settings/tags). Choose **New tag** to create a name and color, or use a tag's
 Edit and Delete controls.
 
 Names are trimmed and saved in lowercase. To recolor a tag, choose its **Edit** control,

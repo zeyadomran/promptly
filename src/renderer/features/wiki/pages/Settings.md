@@ -25,7 +25,7 @@ window to regain access. The tray menu can open Promptly or Settings, copy recen
 pause/resume capture, and **Quit** the app fully.
 
 The version shown is the running app's version. In the installed Windows app, update checks run on startup and can also be requested from
-[Settings Ã¢â€ â€™ About](promptly:settings/about). Downloading an available update and restarting
+[Settings → About](promptly:settings/about). Downloading an available update and restarting
 are explicit choices. Development and unpackaged builds report updates as unavailable.
 Update checks contact GitHub; cloud sync and telemetry are not configured.
 
