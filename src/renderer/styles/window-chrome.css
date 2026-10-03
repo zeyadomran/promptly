@@ -6,8 +6,14 @@
 }
 .desktop-content {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   min-height: 0;
+}
+.desktop-view {
+  height: 100%;
+}
+.desktop-view[hidden] {
+  display: none;
 }
 .window-titlebar {
   display: flex;
@@ -21,7 +27,10 @@
   user-select: none;
 }
 .window-titlebar[data-platform='win32'] {
-  padding-right: 140px;
+  padding-right: max(
+    10px,
+    calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px)))
+  );
 }
 .window-titlebar[data-mode='regular'] {
   height: 44px;
@@ -30,39 +39,63 @@
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 12px;
+  font-size: var(--text-window);
   font-weight: 600;
   flex-shrink: 0;
   white-space: nowrap;
 }
+.window-back {
+  -webkit-app-region: no-drag;
+  height: 26px;
+  padding: 0 4px;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 6px;
+}
+.window-back svg {
+  width: 14px;
+  height: 14px;
+}
 .window-title-actions {
   display: flex;
-  gap: 8px;
+  gap: 4px;
   align-items: center;
   margin-left: auto;
   -webkit-app-region: no-drag;
 }
-.window-title-actions button {
+.window-title-actions > button {
   -webkit-app-region: no-drag;
   height: 26px;
-  width: auto;
+  width: 28px;
   min-width: 26px;
   padding: 4px 6px;
+  border-radius: 6px;
 }
 .window-title-actions [data-slot='toggle-group'] {
-  gap: 4px;
   border: 1px solid var(--border);
 }
-.window-title-actions [data-slot='toggle-group-item'][aria-checked='true'] {
-  background: var(--foreground);
-  color: var(--background);
-  box-shadow: inset 0 0 0 1px var(--foreground);
+.window-title-actions [data-slot='toggle-group-item'] {
+  height: 22px;
+  padding: 4px 6px;
 }
-.window-title-actions [data-slot='toggle-group-item'][aria-checked='false'] {
-  color: var(--muted-foreground);
+.window-action-divider {
+  height: 16px;
+  width: 1px;
+  flex-shrink: 0;
+  background: var(--border);
+  margin-inline: 4px;
 }
-.window-titlebar[data-kind='auxiliary'] {
-  height: 38px;
+.window-titlebar[data-mode='compact'] .window-title-actions > button {
+  width: 26px;
+  padding-inline: 4px;
+}
+.window-titlebar[data-mode='compact'] .window-action-divider {
+  margin-inline: 2px;
+}
+.window-titlebar[data-mode='compact'][data-update-visible='true'] .window-label,
+.window-titlebar[data-mode='compact'][data-update-visible='true'] .window-back-label {
+  display: none;
 }
 .window-footer {
   display: flex;
@@ -72,4 +105,9 @@
   border-top: 1px solid var(--border);
   flex-shrink: 0;
   font-size: 11.5px;
+}
+.wiki-unavailable {
+  padding: 24px;
+  font-size: 13px;
+  color: var(--muted-foreground);
 }

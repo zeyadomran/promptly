@@ -2,12 +2,17 @@ import { app, type BrowserWindow, screen } from 'electron';
 
 import { failure } from '../../shared/contracts/result';
 import type { WindowKind, WindowState } from '../../shared/contracts/window';
-import { focusSearchChannel } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
 import { reconcileWindows } from './reconcile-windows';
 import { recoverWindowRenderer, retireWindowRenderer } from './renderer-recovery';
+import {
+  describeRecovery,
+  describeWindow,
+  desktopRootKind,
+  publishShellNavigation
+} from './shell-navigation';
 import { canRecover, concealWindow, type WindowRecovery } from './visibility';
 import { watchWindowLifecycle } from './watch-window-lifecycle';
 import { WindowBounds } from './window-bounds';
@@ -37,9 +42,12 @@ export class WindowLifecycle {
     reconcileWindows(this.windows, this.state().mode);
   };
 
-  async show(kind: WindowKind = 'main'): Promise<BrowserWindow> {
+  async show(kind: WindowKind = 'main', navigate = true): Promise<BrowserWindow> {
+    const view = kind === 'settings' ? 'settings' : 'library';
+
+    if (kind === 'settings') kind = 'main';
     if (this.isClosing()) throw new Error('Promptly is shutting down.');
-    if (kind === 'main') kind = this.rootKind();
+    if (kind === 'main' && view !== 'settings') kind = this.rootKind();
     // App-wide runtime accessibility remains enabled through quit; never disable active assistive support.
     if (kind === 'onboarding' && !app.isAccessibilitySupportEnabled())
       app.setAccessibilitySupportEnabled(true);
@@ -74,12 +82,10 @@ export class WindowLifecycle {
               this.hide();
             },
             closed: () => {
-              const wasReady = this.ready.delete(created);
+              this.ready.delete(created);
 
               if (this.windows.get(kind) !== created) return;
               this.windows.delete(kind);
-              if (kind === 'settings' && wasReady && !this.closing)
-                void this.show().catch(this.onError);
             }
           });
         });
@@ -100,7 +106,8 @@ export class WindowLifecycle {
     if (window.isMinimized()) window.restore();
     window.show();
     window.focus();
-    if (kind === 'main') window.webContents.send(focusSearchChannel);
+    if (kind === 'main' && navigate) publishShellNavigation(window, view);
+
     return window;
   }
 
@@ -135,18 +142,20 @@ export class WindowLifecycle {
   }
 
   private rootKind(): WindowKind {
-    return this.settings.current.settings.onboardingComplete ? 'main' : 'onboarding';
+    return desktopRootKind(
+      this.settings.current.settings.onboardingComplete,
+      this.windows.has('main')
+    );
   }
 
   private state(kind: WindowKind = this.rootKind()): WindowState {
-    if (kind === 'main') kind = this.rootKind();
-    const window = this.windows.get(kind);
-
-    return {
+    if (kind === 'settings') kind = 'main';
+    if (kind === 'main' && !this.windows.has('main')) kind = this.rootKind();
+    return describeWindow(
+      this.windows.get(kind),
       kind,
-      mode: this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode,
-      visible: window?.isVisible() === true && !window.isMinimized()
-    };
+      this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode
+    );
   }
 
   private enqueue(action: () => Promise<WindowState>) {
@@ -165,20 +174,11 @@ export class WindowLifecycle {
 
   readonly services = createWindowOperations({
     state: (kind) => this.state(kind),
-    recovery: () => ({
-      tray: this.recovery.trayAvailable(),
-      trayController: this.recovery.trayControllerAvailable?.() === true,
-      shortcut: this.recovery.shortcutAvailable(),
-      mainReachable:
-        this.state().visible || this.windows.get(this.rootKind())?.isMinimized() === true
-    }),
+    recovery: () => describeRecovery(this.recovery, this.windows.get(this.rootKind())),
     enqueue: (action) => this.enqueue(action),
-    show: (kind) => this.show(kind),
+    show: (kind, navigate) => this.show(kind, navigate),
     hide: () => {
       this.hide();
-    },
-    closeSettings: () => {
-      this.windows.get('settings')?.close();
     },
     switchMode: (mode) => this.bounds?.switchMode(mode) ?? Promise.resolve()
   });

@@ -65,18 +65,13 @@ export function libraryKeyCommand(
   input: LibraryKeyInput,
   shortcuts = defaultLocalShortcuts()
 ): LibraryKeyCommand | undefined {
-  if (input.prevented || input.composing || input.focus === 'overlay') return undefined;
+  if (!input.active || input.prevented || input.composing || input.focus === 'overlay')
+    return undefined;
   const event = keyEvent(input);
   const matches = (action: keyof LocalShortcuts) => localShortcutMatches(shortcuts[action], event);
 
   if (input.focus === 'editor') {
-    if (
-      !input.repeat &&
-      input.active &&
-      input.selected &&
-      editableShortcutAllowed(event) &&
-      matches('tag')
-    )
+    if (!input.repeat && input.selected && editableShortcutAllowed(event) && matches('tag'))
       return 'tag';
     return undefined;
   }
@@ -85,12 +80,12 @@ export function libraryKeyCommand(
   if (input.focus === 'control' && !editableShortcutAllowed(event)) return undefined;
   if (!input.repeat) {
     if (matches('settings')) return 'settings';
-    if (matches('dismiss')) return input.active && input.hasSearch ? 'clear-search' : 'hide';
-    if (input.active && matches('focusSearch')) return 'focus-search';
-    if (input.active && input.selected && matches('tag')) return 'tag';
+    if (matches('dismiss')) return input.hasSearch ? 'clear-search' : 'hide';
+    if (matches('focusSearch')) return 'focus-search';
+    if (input.selected && matches('tag')) return 'tag';
   }
 
-  if (!input.active || input.focus === 'control') return undefined;
+  if (input.focus === 'control') return undefined;
   if (matches('next')) return 'next';
   if (matches('previous')) return 'previous';
   if (input.repeat || !input.selected) return undefined;

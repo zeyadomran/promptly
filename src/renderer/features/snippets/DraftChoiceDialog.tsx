@@ -9,7 +9,13 @@ import {
 } from '../../components/ui/dialog';
 import { useSnippetSession } from './snippet-context';
 
-export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Promise<void> }) {
+export function DraftChoiceDialog({
+  active = true,
+  resumeEditing
+}: {
+  active?: boolean;
+  resumeEditing: () => Promise<void>;
+}) {
   const { session, state } = useSnippetSession();
   const keep = () => {
     session.keep();
@@ -20,14 +26,15 @@ export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Prom
 
   return (
     <Dialog
-      open={state.prompt}
+      open={active && state.prompt}
       onOpenChange={(open) => {
-        if (!open && !state.pending) keep();
+        if (active && !open && !state.pending) keep();
       }}
     >
       <DialogContent
         onCloseAutoFocus={(event) => {
           event.preventDefault();
+          if (!active) return;
           (
             document.querySelector<HTMLElement>('[data-snippet-editor]') ??
             document.querySelector<HTMLElement>('[data-promptly-search]')

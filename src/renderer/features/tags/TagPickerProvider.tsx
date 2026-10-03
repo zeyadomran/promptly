@@ -7,7 +7,13 @@ import { useLibrary } from '../library/library-context';
 import { TagPickerController } from './tag-picker-controller';
 import { TagPickerContent } from './TagPickerContent';
 
-export function TagPickerProvider({ children }: { children: ReactNode }) {
+export function TagPickerProvider({
+  children,
+  active = true
+}: {
+  children: ReactNode;
+  active?: boolean;
+}) {
   const { model, state: library, selection, searchRef } = useLibrary();
   const [picker] = useState(() => new TagPickerController(window.promptly));
   const state = useSyncExternalStore(picker.subscribe, picker.snapshot);
@@ -29,11 +35,13 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
     [trigger]
   );
   const captureTrigger = (element?: HTMLElement) => {
-    const active = document.activeElement;
+    const focusedElement = document.activeElement;
 
     const next =
       element ??
-      (active instanceof HTMLElement && active !== document.body ? active : searchRef.current);
+      (focusedElement instanceof HTMLElement && focusedElement !== document.body
+        ? focusedElement
+        : searchRef.current);
 
     rectangle.current = next?.getBoundingClientRect();
     setTrigger(next);
@@ -63,9 +71,9 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
       }}
     >
       <Popover
-        open={state.open}
+        open={active && state.open}
         onOpenChange={(open) => {
-          if (!open) picker.dismiss();
+          if (active && !open) picker.dismiss();
         }}
       >
         {children}
@@ -93,6 +101,7 @@ export function TagPickerProvider({ children }: { children: ReactNode }) {
             model.query({ ...model.snapshot().request, tagIds: [], untagged: false });
           }}
           restoreFocus={() => {
+            if (!active) return;
             if (
               trigger?.isConnected === true &&
               !trigger.matches(':disabled') &&

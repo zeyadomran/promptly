@@ -55,6 +55,7 @@ export function LibraryCommandProvider({
   }, [commands]);
   useEffect(() => {
     const keyboard = (event: KeyboardEvent) => {
+      if (!active) return;
       const command = libraryKeyCommand(
         {
           key: event.key,
