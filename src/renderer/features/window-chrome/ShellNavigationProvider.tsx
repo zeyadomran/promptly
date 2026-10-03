@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { keyboardFocus } from '../library/keyboard-focus';
+import { keyboardFocus, windowFocusMaySearch } from '../library/keyboard-focus';
 import { useUpdates } from '../settings/hooks/use-updates';
 import { usePreferences } from '../settings/settings-context';
 import { shellGlobalBindings, shellKeyView } from './shell-keyboard';
@@ -52,6 +52,7 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (view !== 'library') return;
     const frame = requestAnimationFrame(() => {
+      if (!windowFocusMaySearch()) return;
       const target = libraryFocus.current;
 
       if (target?.isConnected === true && !target.matches(':disabled'))

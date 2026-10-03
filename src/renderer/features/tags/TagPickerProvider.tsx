@@ -73,56 +73,59 @@ export function TagPickerProvider({
       <Popover
         open={active && state.open}
         onOpenChange={(open) => {
-          if (active && !open) picker.dismiss();
+          if (active && !open && document.querySelector('[data-shell-library][hidden]') === null)
+            picker.dismiss();
         }}
       >
         {children}
         <PopoverAnchor virtualRef={anchor} />
-        <TagPickerContent
-          picker={picker}
-          state={state}
-          tags={library.tags}
-          selectedIds={state.targetId === null ? library.request.tagIds : state.selectedIds}
-          chooseFilter={(id) => {
-            const current = model.snapshot().request;
-            const tagIds = current.tagIds.includes(id)
-              ? current.tagIds.filter((tagId) => tagId !== id)
-              : [...current.tagIds, id];
+        {active && (
+          <TagPickerContent
+            picker={picker}
+            state={state}
+            tags={library.tags}
+            selectedIds={state.targetId === null ? library.request.tagIds : state.selectedIds}
+            chooseFilter={(id) => {
+              const current = model.snapshot().request;
+              const tagIds = current.tagIds.includes(id)
+                ? current.tagIds.filter((tagId) => tagId !== id)
+                : [...current.tagIds, id];
 
-            if (tagIds.length <= 100) model.query({ ...current, tagIds, untagged: false });
-          }}
-          untagged={library.request.untagged}
-          chooseUntagged={() => {
-            const current = model.snapshot().request;
+              if (tagIds.length <= 100) model.query({ ...current, tagIds, untagged: false });
+            }}
+            untagged={library.request.untagged}
+            chooseUntagged={() => {
+              const current = model.snapshot().request;
 
-            model.query({ ...current, tagIds: [], untagged: !current.untagged });
-          }}
-          clearFilters={() => {
-            model.query({ ...model.snapshot().request, tagIds: [], untagged: false });
-          }}
-          restoreFocus={() => {
-            if (!active) return;
-            if (
-              trigger?.isConnected === true &&
-              !trigger.matches(':disabled') &&
-              getComputedStyle(trigger).visibility !== 'hidden'
-            )
-              trigger.focus();
-            else {
-              const add = trigger
-                ?.closest('.tag-overflow-row')
-                ?.querySelector<HTMLButtonElement>('[data-overflow-end] button:not(:disabled)');
-
+              model.query({ ...current, tagIds: [], untagged: !current.untagged });
+            }}
+            clearFilters={() => {
+              model.query({ ...model.snapshot().request, tagIds: [], untagged: false });
+            }}
+            restoreFocus={() => {
+              if (document.querySelector('[data-shell-library][hidden]') !== null) return;
               if (
-                add !== undefined &&
-                add !== null &&
-                getComputedStyle(add).visibility !== 'hidden'
+                trigger?.isConnected === true &&
+                !trigger.matches(':disabled') &&
+                getComputedStyle(trigger).visibility !== 'hidden'
               )
-                add.focus();
-              else selection.focusSearch();
-            }
-          }}
-        />
+                trigger.focus();
+              else {
+                const add = trigger
+                  ?.closest('.tag-overflow-row')
+                  ?.querySelector<HTMLButtonElement>('[data-overflow-end] button:not(:disabled)');
+
+                if (
+                  add !== undefined &&
+                  add !== null &&
+                  getComputedStyle(add).visibility !== 'hidden'
+                )
+                  add.focus();
+                else selection.focusSearch();
+              }
+            }}
+          />
+        )}
       </Popover>
       {!state.open && state.error !== undefined && (
         <p className="library-error" role="alert">

@@ -31,47 +31,49 @@ export function DraftChoiceDialog({
         if (active && !open && !state.pending) keep();
       }}
     >
-      <DialogContent
-        onCloseAutoFocus={(event) => {
-          event.preventDefault();
-          if (!active) return;
-          (
-            document.querySelector<HTMLElement>('[data-snippet-editor]') ??
-            document.querySelector<HTMLElement>('[data-promptly-search]')
-          )?.focus();
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle>Keep your unsaved changes?</DialogTitle>
-          <DialogDescription>
-            Your draft is kept while changing the selection or window mode. Apply it, discard it, or
-            continue editing.
-          </DialogDescription>
-        </DialogHeader>
-        {state.error !== undefined && <p role="alert">{state.error}</p>}
-        <DialogFooter>
-          <Button variant="ghost" disabled={state.pending} onClick={keep}>
-            Keep editing
-          </Button>
-          <Button
-            variant="outline"
-            disabled={state.pending}
-            onClick={() => {
-              session.discard();
-            }}
-          >
-            Discard changes
-          </Button>
-          <Button
-            disabled={state.pending || state.missing}
-            onClick={() => {
-              void session.save();
-            }}
-          >
-            Apply changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+      {active && (
+        <DialogContent
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            if (document.querySelector('[data-shell-library][hidden]') !== null) return;
+            (
+              document.querySelector<HTMLElement>('[data-snippet-editor]') ??
+              document.querySelector<HTMLElement>('[data-promptly-search]')
+            )?.focus();
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>Keep your unsaved changes?</DialogTitle>
+            <DialogDescription>
+              Your draft is kept while changing the selection or window mode. Apply it, discard it,
+              or continue editing.
+            </DialogDescription>
+          </DialogHeader>
+          {state.error !== undefined && <p role="alert">{state.error}</p>}
+          <DialogFooter>
+            <Button variant="ghost" disabled={state.pending} onClick={keep}>
+              Keep editing
+            </Button>
+            <Button
+              variant="outline"
+              disabled={state.pending}
+              onClick={() => {
+                session.discard();
+              }}
+            >
+              Discard changes
+            </Button>
+            <Button
+              disabled={state.pending || state.missing}
+              onClick={() => {
+                void session.save();
+              }}
+            >
+              Apply changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }
