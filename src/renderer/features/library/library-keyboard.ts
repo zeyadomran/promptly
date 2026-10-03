@@ -2,8 +2,9 @@ import {
   defaultLocalShortcuts,
   type LocalShortcuts
 } from '../../../shared/contracts/local-shortcuts';
+import { editableShortcutAllowed } from '../../../shared/shortcuts/editable';
 import type { ShortcutKeyEvent } from '../../../shared/shortcuts/keyboard';
-import { editableShortcutAllowed, localShortcutMatches } from '../../../shared/shortcuts/local';
+import { localShortcutMatches } from '../../../shared/shortcuts/local';
 
 export type LibraryKeyCommand =
   | 'copy'

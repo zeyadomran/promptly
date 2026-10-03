@@ -11,10 +11,11 @@ const descriptions: Record<keyof LocalShortcuts, string> = {
   delete: 'Delete the selected snippet outside search.',
   deleteAlternate: 'Optional second key for deleting a snippet.',
   focusSearch: 'Focus the library search.',
-  tag: 'Open tags for the selected snippet, including during a text edit.',
+  tag: 'Open tags for the selected snippet. During text edits, typing and clipboard keys keep their native behavior.',
   settings: 'Open the Settings window.',
   dismiss: 'Clear search first; otherwise hide the window.',
-  cancelEdit: 'Discard the text draft and return to search.'
+  cancelEdit:
+    'Discard the text draft and return to search. Use Esc, a function key, or a Ctrl/Win combination that keeps text editing keys available.'
 };
 
 export function LocalShortcutSettings({

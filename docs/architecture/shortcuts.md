@@ -51,7 +51,8 @@ AltGr and repeat ownership. Only next/previous repeat. Search and editors retain
 ordinary typing, selection, clipboard and text-navigation keys under remapping;
 buttons retain native activation. The tag command remains available during text
 editing when its binding is safe for editable controls. Editor cancellation owns
-its separate binding. Footer and copy hints show the committed keys. Cmdk/Radix
+its separate binding; validation rejects cancellation keys that native editing
+would always consume and explains the accepted choices. Footer and copy hints show the committed keys. Cmdk/Radix
 selection, arrow navigation, dialog dismissal and native control activation remain
 accessibility controls, rather than additional Promptly command bindings.
 

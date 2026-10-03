@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { editableBindingAllowed } from '../shortcuts/editable';
 import { acceleratorSchema } from './accelerator';
 
 /** Local commands may use a single key; Tab remains native focus navigation. */
@@ -28,7 +29,10 @@ export const localShortcutsSchema = z.strictObject({
   tag: localAcceleratorSchema,
   settings: localAcceleratorSchema,
   dismiss: localAcceleratorSchema,
-  cancelEdit: localAcceleratorSchema
+  cancelEdit: localAcceleratorSchema.refine(
+    editableBindingAllowed,
+    'Cancel text edit needs Esc, a function key, or a Ctrl/Win combination that does not replace text editing or clipboard keys.'
+  )
 });
 
 export type LocalShortcuts = z.infer<typeof localShortcutsSchema>;

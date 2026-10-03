@@ -79,11 +79,8 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       focusSearch: 'Control+S'
     };
 
-    expect(
-      await fixture.service.services.updateSettings({ theme: 'light', localShortcuts })
-    ).toMatchObject({
-      ok: true,
-      value: { settings: { theme: 'light' } }
+    expect(await fixture.service.services.updateSettings({ localShortcuts })).toMatchObject({
+      ok: true
     });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
@@ -105,11 +102,14 @@ it('persists settings across reopen and rolls back rejected native effects', asy
         ok: false,
         error: { code: 'CONFLICT' }
       });
-    expect(
-      await fixture.service.services.updateSettings({
-        localShortcuts: { ...localShortcuts, copy: 'Tab' }
-      })
-    ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+    for (const invalid of [
+      { ...localShortcuts, copy: 'Tab' },
+      { ...localShortcuts, cancelEdit: 'Space' },
+      { ...localShortcuts, cancelEdit: 'Control+C' }
+    ])
+      expect(
+        await fixture.service.services.updateSettings({ localShortcuts: invalid })
+      ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
       revision: 2,

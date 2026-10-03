@@ -17,7 +17,8 @@ export function useShortcutPreferences() {
     try {
       const candidate = settingsSchema.safeParse({ ...preferences.settings, ...patch });
 
-      if (!candidate.success) throw new Error('Use a valid modifier and key combination.');
+      if (!candidate.success)
+        throw new Error(candidate.error.issues[0]?.message ?? 'Use a valid key or combination.');
       const conflict = shortcutConflict(candidate.data, window.promptly.platform);
 
       if (conflict !== undefined) throw new Error(conflict);

@@ -75,7 +75,11 @@ export class SettingsService {
       );
     const parsed = settingsPatchSchema.safeParse(input);
 
-    if (!parsed.success) return failure('INVALID_REQUEST', 'Invalid preference values.');
+    if (!parsed.success)
+      return failure(
+        'INVALID_REQUEST',
+        (parsed.error.issues[0]?.message ?? 'Invalid preference values.').slice(0, 256)
+      );
     const previous = await this.storage.call('getSettings', {});
 
     if (!previous.ok) return previous;
