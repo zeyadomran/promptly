@@ -27,7 +27,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
 | `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
 | `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |
-| `windows/visibility.test.ts` | Reachability when an external recovery route appears or disappears |
+| `windows/visibility.test.ts` | Recorder focus and owner release through real shortcuts, suspended command dispatch, restored open command and reachability on genuine route loss |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
 | `shortcuts/transactions.test.ts` | Legacy global binding startup and rejected OS replacement preserve authoritative preferences and the previous live command |
