@@ -49,7 +49,8 @@ export class LibraryCommandService {
   async copy(id: string, format: 'text' | 'markdown' = 'text'): Promise<void> {
     if (this.closed || this.busy || this.effects.selectedId() !== id) return;
     this.busy = true;
-    this.publish({ error: undefined });
+    clearTimeout(this.timer);
+    this.publish({ copiedId: null, error: undefined });
     try {
       const result = await this.bridge.copySnippet({ id, format });
 

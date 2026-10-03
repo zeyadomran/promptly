@@ -102,7 +102,12 @@ it('keeps failures and uncertain copies honest and never announces success or re
     expect(commands.snapshot()).toEqual({ copiedId: 'owned-id', error: undefined });
     expect(selected).toBe('later-selection');
     expect(notifications).toEqual(['Copied']);
-    expect(requests).toEqual(['owned-id', 'owned-id', 'owned-id']);
+    selected = 'owned-id';
+    uncertain = true;
+    await commands.copy('owned-id');
+    expect(commands.snapshot().copiedId).toBeNull();
+    expect(notifications).toEqual(['Copied']);
+    expect(requests).toEqual(['owned-id', 'owned-id', 'owned-id', 'owned-id']);
   } finally {
     commands.close();
   }

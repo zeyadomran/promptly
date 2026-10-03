@@ -26,6 +26,10 @@ suite, duplicate flow test, new runner, or real clipboard write was added.
    busy gesture admission, later selection during copy, exact preview through reorder,
    and deliberate selection during a delayed refresh. They are regression coverage for
    retained behavior, not additional red-to-green claims.
+4. Extended that failure case to start a new uncertain copy while an earlier success was
+   still visible. It failed with `expected 'owned-id' to be null`. Clearing the previous
+   feedback when the next eligible gesture begins made both command cases pass; a failed
+   gesture cannot leave stale Copied feedback suggesting that its write succeeded.
 
 Focused copy/command/model validation passes: three files, seven tests. Full `npm run check`
 passes strict main/renderer/tools TypeScript, ESLint with no warnings, architecture checks
@@ -47,8 +51,8 @@ The old hide preference stays in the settings schema/repository for profile and 
 compatibility, but its active control and visibility effect are removed. Supplied design
 references and historical receipts remain intact.
 
-Windows installer construction is the remaining package validation command (`npm run make`)
-and records exact build provenance in the ignored output tree. Existing ignored packages,
+Windows installer construction uses `npm run make` and records exact build provenance
+in the ignored output tree. Existing ignored packages,
 native helper output, Vite output and distribution evidence were preserved under
 `out/preserved-issue-19-keep-open-20261002` before building. No running application, user
 profile, clipboard, native preference, or desktop input is used by these checks. Actual
