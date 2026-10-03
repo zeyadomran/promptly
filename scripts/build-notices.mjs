@@ -18,7 +18,8 @@ await mkdir(destination, { recursive: true });
 const notices = [
   'Promptly unsigned development build — third-party notices',
   'Runtime dependency graph and bundled fonts. License files below retain their original terms.',
-  'These notices do not grant a license to Promptly application code or supplied brand assets.',
+  'Promptly first-party code and supplied brand assets: MIT; see PROMPTLY-LICENSE.txt.',
+  'Third-party components retain their own terms; the first-party MIT grant does not replace them.',
   'Electron LICENSE and LICENSES.chromium.html are included at the installation root.',
   'Squirrel.Windows bundled notices: SQUIRREL-COPYING.txt (vendor commit eef37460ae).',
   'Installer dependency notice qualification is incomplete: see LICENSE-PROVENANCE.md.',
@@ -61,6 +62,7 @@ for (const [location, metadata] of packages.sort(([left], [right]) => left.local
   notices.push(...licenses.map((file) => `  ${directory}/${file.name}`));
 }
 
+await copyFile('LICENSE', path.join(destination, 'PROMPTLY-LICENSE.txt'));
 await copyFile('packaging/SQUIRREL-COPYING.txt', path.join(destination, 'SQUIRREL-COPYING.txt'));
 await copyFile('packaging/README.md', path.join(destination, 'LICENSE-PROVENANCE.md'));
 for (const license of await readdir('packaging/licenses'))

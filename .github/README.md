@@ -37,7 +37,7 @@ The `Functional checks (windows-latest)` job clean-install, run strict TypeScrip
 ESLint, architecture and formatting checks, and package the app for Windows x64. Functional service tests run once. CI has no automated
 GUI launch or native E2E suite; packaging does not qualify OS capture, permissions,
 input delivery or activation. Packaged applications require the native manual
-release checks on Windows in [the test policy](../docs/testing.md).
+release checks on Windows in [the test policy](../TESTING.md).
 Require new CI checks in branch protection only after verifying they run
 successfully.
 

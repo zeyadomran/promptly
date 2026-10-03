@@ -1,64 +1,57 @@
 # Promptly
 
-A local Windows x64 desktop library for reusable text snippets.
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="src/renderer/assets/brand/logo-on-dark.svg">
+  <img src="src/renderer/assets/brand/logo.svg" alt="Promptly logo" width="128" height="128">
+</picture>
 
-The application implements sandboxed IPC, SQLite persistence, shared copy/tag commands,
-Compact and Regular libraries, Settings and the native Windows capture pipeline.
-Capture feedback, onboarding and tray are implemented; native/UI release qualification
-remains tracked in the [implementation plan](docs/implementation-plan.md).
-V1 capture uses native Windows UI Automation only: it never simulates Ctrl+C or
-reads/writes the clipboard. Unsupported, failed or empty selections save nothing
-and report their actual state. Clipboard fallback (#12/P10) is **deferred, not implemented**,
-and is not a v1 dependency or release gate. Explicit snippet, Markdown and tray Copy
-actions remain required and intentionally write the clipboard.
-macOS is deferred; its implementation and build target are removed.
+Capture, organize, and reuse text snippets with a shortcut. A local-first Windows app.
 
-## Development
+Keep useful prompts, replies, notes, and code in one searchable library. Select text in a
+supported application, capture it, and copy the complete snippet whenever you need it.
 
-Use Node **22.23.2** and npm **10 or newer** on Windows x64:
+## Features
 
-```sh
-npm ci
-npm run dev
-```
+- **Capture selected text:** save a selection through native Windows UI Automation,
+  with confirmation and first-launch practice capture.
+- **Manage your library:** capture, edit, duplicate, delete, and reuse snippets.
+- **Find what you need:** full-text search, tag filters, sorting, and paged browsing.
+- **Organize with tags:** assign tags, rename them, and merge overlapping tags.
+- **Choose your workspace:** Compact and Regular views, light and dark themes,
+  saved window geometry, and pinning.
+- **Keep commands close:** customizable keyboard shortcuts and a tray menu with
+  recent snippets, capture pause, and quick access to the library.
+- **Keep your data local:** SQLite storage, JSON backup and restore, and Markdown export.
+  The app works offline with bundled assets; no telemetry or cloud sync is configured.
 
-The development server binds to `127.0.0.1:5173` and fails if that port is occupied.
-Renderer edits reload the page; restart development after changing the main process.
-Vite transforms TSX with its built-in JSX support. React Fast Refresh is deferred.
-No fonts, scripts, or other assets are fetched from a CDN by the app.
+## Getting started
 
-```sh
-npm run check        # TypeScript, lint, architecture, formatting, functional tests
-npm run format       # Format maintained source and docs
-npm run package      # Forge: local runnable package in out/, no installers/signing
-```
+Read the [Getting Started guide](https://github.com/zeyadomran/promptly/wiki/Getting-Started)
+and explore the [Promptly wiki](https://github.com/zeyadomran/promptly/wiki) for
+[capture](https://github.com/zeyadomran/promptly/wiki/Capturing-Text),
+[library and search](https://github.com/zeyadomran/promptly/wiki/Library-and-Search),
+[keyboard shortcuts](https://github.com/zeyadomran/promptly/wiki/Keyboard-Shortcuts), and
+[backup and restore](https://github.com/zeyadomran/promptly/wiki/Backup-and-Restore).
 
-CI runs strict static checks and packages the application on Windows x64.
-Shared functional service tests run once, on Windows.
-GUI and native OS interactions are manual release checks described in
-[the test policy](docs/testing.md); automated tests do not qualify those interactions.
+Promptly currently targets **Windows x64**. Available installer builds are unsigned
+development builds; a production release is not yet qualified. Windows 11 is the primary
+development environment; Windows 10 compatibility still needs manual qualification.
+macOS, Linux, x86, and ARM64 are unsupported.
 
-## Process boundaries
+Capture depends on the source application's accessibility provider. Unsupported,
+empty, protected, or failed selections save nothing. Native capture never simulates
+Ctrl+C or reads or writes the clipboard; clipboard capture fallback is deferred.
+Explicit Copy actions write the clipboard. See
+[Troubleshooting](https://github.com/zeyadomran/promptly/wiki/Troubleshooting) for limitations.
 
-- `src/main/`: Electron lifecycle and focused services. Windows deny navigation,
-  popups, webviews, and permission requests.
-- `src/preload/`: a bundled CommonJS script with a read-only platform value exposed
-  through `contextBridge`. No raw IPC, filesystem, shell, or command API.
-- `src/renderer/`: React components, feature folders, hooks, and styles. Browser
-  code imports only renderer/shared modules and approved browser dependencies.
-- `src/shared/`: pure contracts; cannot import any process layer or npm dependency.
+## Contributing and reporting issues
 
-`npm run check:architecture` parses all application TypeScript, including imports,
-re-exports, dynamic imports, and shared modules. It rejects layer escapes, computed
-imports, Node globals, runtime code generation, unscanned JavaScript imports, and
-unapproved packages. New browser or pure shared dependencies need an explicit checker
-allowlist change and review. This is a maintainability gate; runtime isolation also
-uses sandboxing, context isolation, disabled Node integration, and a strict CSP.
+See [CONTRIBUTORS.md](CONTRIBUTORS.md) for contributions and ordinary bug reports,
+[DEVELOPMENT.md](DEVELOPMENT.md) for running and building the app, and
+[SECURITY.md](SECURITY.md) for private vulnerability reports.
 
-Keep one React component per implementation file, with explicit re-export entrypoints.
-Aim for 50–150 lines per module; the architecture gate flags files over 200 lines.
-Business logic belongs in hooks/services rather than JSX. Empty speculative folders
-are omitted; create feature-local modules as their owning issues are implemented.
+## License
 
-See [dependency compatibility](docs/dependency-compatibility.md) and
-[repository maintenance](.github/README.md).
+Promptly's first-party code and supplied brand assets are licensed under the
+[MIT License](LICENSE), copyright 2026 Zeyad Omran. Third-party components retain
+their own terms; see [license provenance and release qualification](packaging/README.md).

@@ -4,7 +4,7 @@ import path from 'node:path';
 import { inspectModule } from './architecture/inspect-module.mjs';
 
 const root = process.cwd();
-const ignored = new Set(['node_modules', '.git', '.vite', 'out', 'docs', 'test-results']);
+const ignored = new Set(['node_modules', '.git', '.vite', 'out', 'test-results']);
 
 async function collect(directory) {
   const entries = await readdir(directory, { withFileTypes: true });

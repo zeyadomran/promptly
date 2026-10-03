@@ -26,7 +26,7 @@ for (const expected of provenance.artifacts) {
   artifacts.push(expected);
 }
 
-await copyFile('docs/releasing.md', path.join(directory, 'README.md'));
+await copyFile('RELEASING.md', path.join(directory, 'README.md'));
 await writeFile(
   path.join(directory, 'BUILD.json'),
   `${JSON.stringify({ ...provenance, artifacts }, null, 2)}\n`

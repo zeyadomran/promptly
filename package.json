@@ -4,6 +4,7 @@
   "version": "0.1.0",
   "description": "A local desktop library for reusable text snippets.",
   "private": true,
+  "license": "MIT",
   "main": ".vite/build/main.cjs",
   "type": "module",
   "engines": {
