@@ -2,10 +2,15 @@ import { screen } from 'electron';
 
 import type { CaptureService } from '../capture/service';
 import type { SettingsService } from '../settings/service';
+import type { WindowLifecycle } from '../windows/window-lifecycle';
 import { createToastWindow } from './create-toast-window';
 import { CaptureToastService } from './service';
 
-export function desktopConfirmation(capture: CaptureService, settings: SettingsService) {
+export function desktopConfirmation(
+  capture: CaptureService,
+  settings: SettingsService,
+  lifecycle: () => WindowLifecycle | undefined
+) {
   const preferences = () => ({
     enabled: settings.current.settings.showConfirmationToast,
     theme: settings.current.settings.theme
@@ -13,6 +18,12 @@ export function desktopConfirmation(capture: CaptureService, settings: SettingsS
   const service = new CaptureToastService(
     {
       create: createToastWindow,
+      openPromptly: async () => {
+        const windows = lifecycle();
+
+        if (windows === undefined) throw new Error('Window lifecycle unavailable.');
+        await windows.show();
+      },
       workArea: (source) => {
         // DWM frames are physical; Electron performs monitor-aware conversion, including negative origins.
         const dip = screen.screenToDipRect(null, source);
