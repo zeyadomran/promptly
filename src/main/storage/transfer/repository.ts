@@ -81,9 +81,11 @@ export class TransferRepository {
   }
 
   private remove(token: string): void {
+    const plan = this.plans.get(token);
+
     clearTimeout(this.expiry.get(token));
     this.expiry.delete(token);
-    this.plans.get(token)?.stage.close();
     this.plans.delete(token);
+    plan?.stage.close();
   }
 }

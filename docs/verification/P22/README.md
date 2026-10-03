@@ -14,6 +14,8 @@ Preview content and conflict decisions are immutable on owned disk. Tokens belon
 
 Main opens an exclusive temporary file beside the chosen destination. The storage worker streams through its internal descriptor capability; main keeps that descriptor open until the writer settles or worker termination is confirmed, then flushes/closes and atomically renames. Failure/cancellation removes the temporary file and leaves a previous destination intact. Destination guards are checked again before rename. The active database and WAL/SHM paths are protected, including canonical directory aliases.
 
+Temporary cleanup retires token/timer ownership before closing or removing files. Filesystem permission failures emit a sanitized warning and may retain temporary files; they cannot replace an already committed import's success/change event or escape an expiry callback.
+
 ## Clear and shutdown
 
 The bridge requires literal `CLEAR ALL`; the accessible dialog disables confirmation until the exact case-sensitive phrase is entered. Clear removes snippets, tags, memberships and undo snapshots; preferences/onboarding remain. The shared `LibraryMutations` owner invalidates queued writes and pre-clear capture tickets synchronously, drains already-running work before erasing, rejects saves during erase and accepts fresh captures afterward. Future capture must obtain `beginCapture()` before native selection and use `commitCapture(ticket, action)`. The capture pipeline and tray are pending issues; no physical capture/tray qualification is claimed here.

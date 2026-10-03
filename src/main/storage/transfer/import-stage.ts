@@ -82,9 +82,15 @@ export class ImportStage {
     if (this.closed) return;
     this.closed = true;
     try {
-      this.db.close();
-    } finally {
-      rmSync(this.directory, { recursive: true, force: true });
+      try {
+        this.db.close();
+      } finally {
+        rmSync(this.directory, { recursive: true, force: true });
+      }
+    } catch {
+      // Retiring a preview is independent of deleting its temporary files. In
+      // particular, cleanup cannot undo a commit or escape an expiry timer.
+      console.warn('Unable to clean up temporary import files. Some files may remain.');
     }
   }
 }
