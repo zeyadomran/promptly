@@ -1,47 +1,11 @@
 import { ExternalLink } from 'lucide-react';
-import { useEffect, useState } from 'react';
 
 import { Button } from '../../../components/ui/button';
+import { useApplicationInfo } from '../hooks/use-application-info';
 import { StorageRow } from '../storage/StorageRow';
 
 export function ApplicationSettings() {
-  const [version, setVersion] = useState<string>();
-  const [versionError, setVersionError] = useState<string>();
-  const [linkError, setLinkError] = useState<string>();
-  const [opening, setOpening] = useState(false);
-
-  useEffect(() => {
-    let active = true;
-
-    void window.promptly
-      .getApplicationInfo({})
-      .then((result) => {
-        if (!active) return;
-        if (result.ok) setVersion(result.value.version);
-        else setVersionError(result.error.message);
-      })
-      .catch(() => {
-        if (active) setVersionError('Unable to read the app version.');
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const openRepository = async () => {
-    if (opening) return;
-    setOpening(true);
-    setLinkError(undefined);
-    try {
-      const result = await window.promptly.openRepository({});
-
-      if (!result.ok) setLinkError(result.error.message);
-    } catch {
-      setLinkError('Unable to open the GitHub repository. Try again.');
-    } finally {
-      setOpening(false);
-    }
-  };
+  const { version, versionError, linkError, opening, openRepository } = useApplicationInfo();
 
   return (
     <section className="application-settings" aria-label="Version and updates">
