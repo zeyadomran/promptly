@@ -112,9 +112,11 @@ export function ShortcutStep({
           recording={recording}
           disabled={pending || preferences.pending}
           onChange={(accelerator) =>
-            accelerator === null
-              ? Promise.resolve()
-              : preferences.apply({ saveShortcut: { kind: 'combination', accelerator } })
+            accelerator === null ? Promise.resolve() : preferences.bind('save', accelerator)
+          }
+          inspect={(accelerator) => preferences.inspect('save', accelerator)}
+          onSwap={(accelerator, collision) =>
+            preferences.swap('save', accelerator, collision.action)
           }
         />
       )}

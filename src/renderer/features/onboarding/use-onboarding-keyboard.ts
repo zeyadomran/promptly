@@ -35,6 +35,7 @@ export function useOnboardingKeyboard({
         prevented: event.defaultPrevented,
         focus: keyboardFocus(event)
       });
+
       if (action === undefined) return;
       event.preventDefault();
       event.stopImmediatePropagation();
@@ -42,7 +43,10 @@ export function useOnboardingKeyboard({
       else if (action.kind === 'finish') finish();
       else theme(action.theme);
     };
+
     window.addEventListener('keydown', handle);
-    return () => window.removeEventListener('keydown', handle);
+    return () => {
+      window.removeEventListener('keydown', handle);
+    };
   }, [disabled, step, navigate, finish, theme]);
 }

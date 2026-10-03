@@ -1,21 +1,18 @@
 import { expect, test } from 'vitest';
 
-import type { OnboardingState } from '../../shared/contracts/onboarding';
 import { type DesktopResult, failure } from '../../shared/contracts/result';
-import { CaptureService } from '../capture/service';
 import { SettingsService } from '../settings/service';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
-import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { allSnippets, testStorage } from '../storage/storage-test-fixture';
 import { OnboardingCoordinator } from './coordinator';
-import type { OnboardingOwner } from './ports';
+import { onboardingCaptureFixture, onboardingOwnerFixture } from './onboarding-test-fixture';
 
 test('first-run completion is durable and skipping creates no practice data', async () => {
   const store = testStorage();
   let completionBarrier: Promise<void> | undefined;
   let failCompletion = false;
-  let releaseCompletion = () => undefined;
+  let releaseCompletion: () => void = () => undefined;
   const call = async <K extends StorageOperation>(name: K, input: StorageRequest<K>) => {
     if (name === 'updateSettings' && completionBarrier !== undefined) {
       await completionBarrier;
@@ -27,24 +24,9 @@ test('first-run completion is durable and skipping creates no practice data', as
 
   const settings = new SettingsService({ call }, { available: [], unavailable: [] });
   let visible: string | undefined;
-  let alive = true;
-  let retired: () => void = () => undefined;
-  const states: OnboardingState[] = [];
+  const lifetime = onboardingOwnerFixture();
+  const { owner, states } = lifetime;
   const keyboard = shortcutFixture((callback) => callback);
-  const owner: OnboardingOwner = {
-    id: 1,
-    windowHandle: '0000000000000123',
-    alive: () => alive,
-    onClose: (listener) => {
-      retired = listener;
-      return () => {
-        retired = () => undefined;
-      };
-    },
-    publish: (state) => {
-      states.push(state);
-    }
-  };
 
   await settings.initialize();
   await keyboard.shortcuts.controller.apply(settings.current.settings);
@@ -61,40 +43,15 @@ test('first-run completion is durable and skipping creates no practice data', as
       keyboard.shortcuts.stopTest(id);
     }
   });
-  const identity = {
-    token: 'a'.repeat(32),
-    source: { pid: 1, name: 'Promptly', id: 'Promptly.exe' },
-    windowHandle: owner.windowHandle
-  };
-  let supported = false;
-  let selected: Promise<void> = Promise.resolve();
+  const selection = { supported: false, pending: Promise.resolve() };
   let release: () => void = () => undefined;
   let reopened: SettingsService | undefined;
-  const capture = new CaptureService({ call }, new LibraryMutations(), {
-    normalize: () => false,
-    admit: () => keyboard.shortcuts.captureAdmission(),
-    now: () => 2,
-    native: {
-      sourceAvailable: () => Promise.resolve(true),
-      foregroundIdentityResult: () => Promise.resolve({ status: 'ok', identity }),
-      captureSelection: async () => {
-        await selected;
-        if (!supported) return { v: 1, id: 'owned', status: 'unsupported' };
-        return {
-          v: 1,
-          id: 'owned',
-          status: 'ok',
-          identity: identity.token,
-          source: identity.source,
-          text: 'A real practice selection',
-          characterCount: 25,
-          elapsedMs: 1,
-          targetIntegrityLevel: 8192
-        };
-      },
-      activateSource: () => Promise.resolve('ok')
-    }
-  });
+  const capture = onboardingCaptureFixture(
+    { call },
+    keyboard.shortcuts,
+    owner.windowHandle,
+    selection
+  );
   let tutorial = coordinator;
   const unsubscribe = capture.subscribe((event) => {
     tutorial.observeCapture(event);
@@ -155,10 +112,9 @@ test('first-run completion is durable and skipping creates no practice data', as
       ok: true
     });
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(0);
-    alive = false;
-    retired();
+    lifetime.close();
     expect(keyboard.shortcuts.captureAdmission()).toBeTypeOf('function');
-    alive = true;
+    lifetime.revive();
     coordinator.step(owner, 'capture');
     expect(await coordinator.finish(owner, false)).toMatchObject({
       ok: false,
@@ -174,7 +130,7 @@ test('first-run completion is durable and skipping creates no practice data', as
     });
     coordinator.step(owner, 'shortcut');
     coordinator.step(owner, 'capture');
-    supported = true;
+    selection.supported = true;
     expect(await capture.capture()).toMatchObject({ ok: true, value: { status: 'saved' } });
     expect(coordinator.state(owner)).toMatchObject({
       ok: true,
@@ -211,7 +167,7 @@ test('first-run completion is durable and skipping creates no practice data', as
 
     tutorial = skipped;
     skipped.step(owner, 'capture');
-    selected = new Promise<void>((resolve) => {
+    selection.pending = new Promise<void>((resolve) => {
       release = resolve;
     });
     const lateCapture = capture.capture();
@@ -221,8 +177,7 @@ test('first-run completion is durable and skipping creates no practice data', as
       value: { completed: true, saved: false }
     });
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(1);
-    alive = false;
-    retired();
+    lifetime.close();
     release();
     expect(await lateCapture).toMatchObject({ ok: true, value: { status: 'duplicate' } });
     expect(states.at(-1)).toMatchObject({ completed: true, saved: false });

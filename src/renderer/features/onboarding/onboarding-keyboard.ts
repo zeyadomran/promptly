@@ -21,7 +21,7 @@ export function onboardingKeyAction(
     input.focus !== 'library' ||
     input.repeat ||
     input.isComposing ||
-    input.altGraph ||
+    input.altGraph === true ||
     input.ctrlKey ||
     input.metaKey ||
     input.altKey ||
@@ -30,16 +30,20 @@ export function onboardingKeyAction(
     return undefined;
   if (input.key === 'Enter') {
     const next = onboardingNext[input.step];
+
     return next === undefined
       ? input.step === 'done'
         ? { kind: 'finish' }
         : undefined
       : { kind: 'step', step: next };
   }
+
   if (input.key === 'ArrowLeft') {
     const back = onboardingBack[input.step];
+
     return back === undefined ? undefined : { kind: 'step', step: back };
   }
+
   if (input.step === 'preferences' && ['1', '2', '3'].includes(input.key))
     return {
       kind: 'theme',

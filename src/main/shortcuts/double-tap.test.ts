@@ -1,46 +1,12 @@
 import { expect, it } from 'vitest';
 
 import type { ShortcutTestState } from '../../shared/contracts/shortcut-test';
-import { DoubleTap } from './double-tap';
+import { completedTapFlow } from './completed-tap-test-flow';
 import { nativeHookFixture } from './native-hook-fixture';
 import { shortcutFixture } from './shortcut-test-fixture';
 
 it('recognizes physical taps across native resync/recovery and retains suppression ownership', async () => {
-  let captures = 0;
-  const observed: { tap: number; elapsedMs: number | undefined }[] = [];
-  const taps = new DoubleTap(
-    'shift',
-    300,
-    () => {
-      captures += 1;
-    },
-    (tapNumber, elapsedMs) => {
-      observed.push({ tap: tapNumber, elapsedMs });
-    }
-  );
-  const press = (mask: number, timeMs: number) => {
-    taps.accept({ kind: 'modifiers', mask, repeat: false, timeMs });
-  };
-
-  press(1, 0);
-  press(0, 20);
-  expect(observed).toEqual([{ tap: 1, elapsedMs: undefined }]);
-  press(2, 100);
-  expect(captures).toBe(0);
-  press(0, 120);
-  expect(captures).toBe(1);
-  expect(observed.at(-1)).toEqual({ tap: 2, elapsedMs: 100 });
-  press(1, 200);
-  press(0, 220);
-  taps.accept({ kind: 'cancel', timeMs: 230 });
-  press(1, 260);
-  press(0, 280);
-  expect(captures).toBe(1);
-  press(1, 600);
-  press(0, 901);
-  press(1, 950);
-  press(0, 970);
-  expect(captures).toBe(1);
+  completedTapFlow();
 
   const expiries = new Set<() => void>();
   const keyboard = shortcutFixture(

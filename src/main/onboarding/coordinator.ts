@@ -6,6 +6,7 @@ import type {
 import { type DesktopResult, failure } from '../../shared/contracts/result';
 import type { CaptureEvent } from '../capture/ports';
 import type { SettingsService } from '../settings/service';
+import { capturedOnboardingState, initialOnboardingState } from './capture-state';
 import type { OnboardingEffects, OnboardingOwner } from './ports';
 
 interface Session {
@@ -36,23 +37,7 @@ export class OnboardingCoordinator {
       event.sourceWindowHandle !== session.owner.windowHandle
     )
       return;
-    if ((event.status === 'saved' || event.status === 'duplicate') && event.preview !== undefined)
-      session.state = {
-        ...session.state,
-        step: 'preferences',
-        saved: true,
-        preview: {
-          id: event.preview.id,
-          text: event.preview.text,
-          sourceApp: event.preview.sourceApp
-        },
-        error: null
-      };
-    else if (event.status === 'failed' || event.status === 'empty')
-      session.state = {
-        ...session.state,
-        error: 'Windows could not save this selection. Select the sample again, or choose Skip.'
-      };
+    session.state = capturedOnboardingState(session.state, event);
     this.notify(session);
   }
 
@@ -186,15 +171,7 @@ export class OnboardingCoordinator {
       owner,
       stop: () => undefined,
       armedAt: Infinity,
-      state: {
-        version: 0,
-        step: 'welcome',
-        saved: false,
-        preview: null,
-        test: { status: 'inactive' },
-        completed: this.settings.current.settings.onboardingComplete,
-        error: null
-      }
+      state: initialOnboardingState(this.settings.current.settings.onboardingComplete)
     };
 
     this.session = session;
