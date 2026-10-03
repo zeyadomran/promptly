@@ -30,7 +30,8 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `storage/startup-failure.test.ts` | Real worker rejects damaged, corrupt-preference and newer databases with safe visible causes while retaining owned file bytes |
 | `lifecycle/failure-recovery.test.ts` | Dead worker rejects commands without replay, retires commands before explicit restart/quit and preserves bounded cleanup ownership |
 | `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |
-| `windows/visibility.test.ts` | Recorder focus and owner release through real shortcuts, suspended command dispatch, restored open command and reachability on genuine route loss |
+| `windows/visibility.test.ts` | Real window/shortcut owners, recorder focus, Open focus/hide, tray/taskbar-aware resume, genuine route loss and durable geometry recovery after rejected writes or authoritative no-op |
+| `windows/renderer-recovery.test.ts` | Real window creation/registry/settings owners with controlled Electron health/dialog effects: explicit waiting, responsive recovery, taskbar-only crash recreation without quitting, explicit Quit retirement and retained saved data |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps, input/hold cancellation, real external helper resync/death/readiness recovery, retry bounds and recorder/sleep/close ownership |
 | `shortcuts/transactions.test.ts` | Legacy global binding startup, atomic shortcut defaults/reset/reopen with retained unrelated settings/data, and rejected OS replacement preserve authoritative preferences and previous live bindings |

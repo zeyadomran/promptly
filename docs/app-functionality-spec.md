@@ -87,7 +87,7 @@ A larger window (~1000 px) with a split view:
 - This keep-open behavior supersedes old automatic/always hide preferences in existing profiles. The legacy setting remains readable for data compatibility but has no effect and is absent from Settings. Tray copy preserves existing visibility and focus.
 
 ### Keyboard navigation
-- `↑/↓` move the selection, `Enter` copies, `Ctrl+F` focuses search, `Ctrl+T` opens the tag picker for the selected snippet, `⌫/Delete` deletes (with undo toast), and `Ctrl+,` opens Settings. A configurable global shortcut can show or hide the window (default Alt+Space).
+- `↑/↓` move the selection, `Enter` copies, `Ctrl+F` focuses search, `Ctrl+T` opens the tag picker for the selected snippet, `⌫/Delete` deletes (with undo toast), and `Ctrl+,` opens Settings. The configurable global Open shortcut (default Alt+Space) shows hidden/minimized windows, focuses visible unfocused windows and hides only a focused window.
 
 ---
 
@@ -124,7 +124,7 @@ Sections:
 - **Shortcuts**:
   - Reset shortcuts restores all global and in-app bindings plus double-tap modifier/timing in one operation. Unrelated settings and library data are retained. Rejected OS registration keeps prior bindings and displays the failure; success is shown only after the authoritative settings transaction commits.
   - Save selection: double-tap modifier (choose the modifier) **or** a recorded key combination. The recorder shows a "Press a key…" focus state, validates the combination, and warns about conflicts with system or known app shortcuts.
-  - Open Promptly (show/hide window): recordable combo.
+  - Open Promptly (show/focus, or hide a focused window): recordable combo.
   - Toggle always on top: optional recordable combo.
   - Double-tap window slider (150–600 ms, default 300 ms).
   - Toggles: show confirmation toast; trim whitespace and terminal prompts.
