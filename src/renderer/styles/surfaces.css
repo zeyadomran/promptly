@@ -226,29 +226,6 @@
 .tag-management-hex-chip[data-disabled='true'] {
   opacity: var(--disabled-opacity);
 }
-.tag-management-select {
-  display: flex;
-  gap: 8px;
-  text-align: left;
-  justify-content: flex-start;
-  font-weight: 400;
-}
-.tag-management-select > span:not(.library-tag-dot) {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.tag-merge-menu {
-  width: var(--radix-dropdown-menu-trigger-width);
-}
-.tag-merge-name {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 @keyframes surface-enter {
   from {
     opacity: 0;

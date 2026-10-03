@@ -121,7 +121,6 @@ export function createDesktopBridge(
     createTag: (request) => call('createTag', request),
     updateTag: (request) => call('updateTag', request),
     deleteTag: (request) => call('deleteTag', request),
-    mergeTags: (request) => call('mergeTags', request),
     getSettings: (request) => call('getSettings', request),
     getLoginStatus: (request) => call('getLoginStatus', request),
     updateSettings: (request) => call('updateSettings', request),

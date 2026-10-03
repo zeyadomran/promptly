@@ -73,19 +73,6 @@
 .tag-management-field {
   font-size: 13px;
 }
-.tag-management-select {
-  width: 100%;
-  min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--background);
-  color: var(--foreground);
-}
-.tag-management-select:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
 @media (width < 640px) {
   .tag-management-toolbar {
     align-items: flex-start;

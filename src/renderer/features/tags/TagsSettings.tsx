@@ -6,7 +6,6 @@ import { tagColors } from '../../lib/tag-palette';
 import { TagDeleteDialog } from '../settings/tags/TagDeleteDialog';
 import { TagEditorDialog } from '../settings/tags/TagEditorDialog';
 import { type TagAction, TagManagementRow } from '../settings/tags/TagManagementRow';
-import { TagMergeDialog } from '../settings/tags/TagMergeDialog';
 import { useTagManagement } from '../settings/tags/use-tag-management';
 
 type Target =
@@ -81,7 +80,7 @@ export function TagsSettings() {
   return (
     <div className="tag-management">
       <div className="tag-management-toolbar">
-        <p>Rename, recolor or combine tags across your library.</p>
+        <p>Rename or recolor tags across your library.</p>
         <Button
           ref={newTag}
           disabled={disabled}
@@ -156,22 +155,7 @@ export function TagsSettings() {
                   ? window.promptly.createTag({ name, color })
                   : window.promptly.updateTag({ id: target.tag.id, name, color }),
               'Tag saved.',
-              'That name is already in use. Choose another name or merge these tags.'
-            );
-
-            finish(target, saved);
-          }}
-        />
-      )}
-      {target?.action === 'merge' && (
-        <TagMergeDialog
-          {...dialog}
-          tag={target.tag}
-          tags={catalog.tags}
-          merge={async (targetId) => {
-            const saved = await catalog.run(
-              () => window.promptly.mergeTags({ sourceId: target.tag.id, targetId }),
-              'Tags merged.'
+              'That name is already in use. Choose another name.'
             );
 
             finish(target, saved);
