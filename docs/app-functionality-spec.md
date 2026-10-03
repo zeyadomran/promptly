@@ -55,6 +55,7 @@ The main window has two **size modes**, toggled from a segmented control in the 
 - **Always on top (pin)** toggle. When on, the window floats above all other apps' windows, where Windows allows; placement above exclusive fullscreen applications is not guaranteed. The state persists across launches and shows in the footer ("Always on top", with a green dot). Works in both size modes.
 - **Theme** toggle: cycles Light → Dark → System.
 - **Size toggle**: Compact / Regular.
+- Header actions use icons with accessible names and tooltips, spaced apart; Settings sits immediately left of the size switcher and the selected size has a contrasting filled state. The header border remains visible below Windows caption buttons.
 
 ### 3a. Compact mode (default)
 A narrow (~440 px), tall panel designed to sit beside a terminal or editor.
@@ -63,8 +64,9 @@ A narrow (~440 px), tall panel designed to sit beside a terminal or editor.
 - **Snippet list** (virtualized, scrollable):
   - Colored **tag dots** on the left of each row (one per tag).
   - Snippet text in monospace, clamped to 2 lines.
-  - Meta line: tag names · source app; plus a right-aligned action hint on the selected row ("↵ Copy") or a transient "✓ Copied" confirmation.
+  - Meta line: tag names · source app; plus a right-aligned Enter icon on the selected row (with an accessible copy hint) or a transient "✓ Copied" confirmation. Rows have no visible "Copy" label.
 - **Footer**: result count ("4 of 128") and pin status.
+- Clickable rows and controls use a pointer cursor. Rows have subtle hover feedback, distinct selected styling, and a list focus outline that stays visible above the first row; hover respects reduced motion.
 
 ### 3b. Regular mode
 A larger window (~1000 px) with a split view:
@@ -74,14 +76,16 @@ A larger window (~1000 px) with a split view:
   - Its tags as badges, plus an **"Add tag"** button (opens a tag picker/creator popover).
   - Source app and time.
   - Full text in monospace with search matches highlighted.
+  - Long text scrolls within its own focusable region; metadata and Copy/Edit/More actions remain visible at the supported minimum window size.
   - Actions: **Copy** (↵), **Edit** (inline edit of the text), **⋯** menu (Delete, Duplicate, Open source app, Copy as Markdown code block).
 - Footer: keyboard hints (↑↓ navigate, ↵ copy, Ctrl+T tag, ⌫ delete), pin status, and result count.
 
 ### Copy behavior (both modes)
 - **Clicking a snippet row copies its full text** to the clipboard immediately. In Regular mode, a single click also selects it for preview.
 - `Enter` copies the selected snippet.
-- On copy: show an inline "✓ Copied" state on the row for ~1.5 s, then update `lastCopiedAt` and `copyCount`.
-- Optional setting: "Hide window after copy" (default off when pinned, on otherwise).
+- Successful copy leaves the window open, keeps the copied row selected and highlighted, and shows that snippet in the Regular preview. Compact stays Compact and carries its selection into Regular. Refresh/reorder preserves the selected snippet by ID; a later deliberate selection wins over an earlier copy completion.
+- After a confirmed write, update `lastCopiedAt` and `copyCount` once and show an accessible in-app Sonner notification titled "Copied" plus inline row feedback for ~1.5 s. Its Open Promptly action uses the show command. Failed or uncertain writes never show success; partial statistics failures report a warning and refresh reads without replaying the write.
+- This keep-open behavior supersedes old automatic/always hide preferences in existing profiles. The legacy setting remains readable for data compatibility but has no effect and is absent from Settings. Tray copy preserves existing visibility and focus.
 
 ### Keyboard navigation
 - `↑/↓` move the selection, `Enter` copies, `Ctrl+F` focuses search, `Ctrl+T` opens the tag picker for the selected snippet, `⌫/Delete` deletes (with undo toast), and `Ctrl+,` opens Settings. A configurable global shortcut can show or hide the window (default Alt+Space).
@@ -116,7 +120,7 @@ A larger window (~1000 px) with a split view:
 Responsive layout: **side navigation** at ≥640 px wide; below that, the navigation becomes **horizontally scrollable tabs** and each label/description stacks above its control.
 
 Sections:
-- **General**: launch at login; show in system tray; hide window after copy; default size mode.
+- **General**: launch at login; show in system tray; default size mode. Copy keeps the window open.
 - **Shortcuts**:
   - Save selection: double-tap modifier (choose the modifier) **or** a recorded key combination. The recorder shows a "Press a key…" focus state, validates the combination, and warns about conflicts with system or known app shortcuts.
   - Open Promptly (show/hide window): recordable combo.

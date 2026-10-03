@@ -26,7 +26,9 @@ export function SnippetPreview() {
   return (
     <aside className="snippet-preview" aria-label="Snippet preview">
       <div className="snippet-preview-meta">
-        <span>{snippet.sourceApp ?? 'No source application'}</span>
+        <span title={snippet.sourceApp ?? undefined}>
+          {snippet.sourceApp ?? 'No source application'}
+        </span>
         <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
       </div>
       <PreviewTagBar snippet={snippet} />

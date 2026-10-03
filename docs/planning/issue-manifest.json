@@ -105,7 +105,7 @@
     "scope": [
       "Define defaults for theme/system, compact startup mode, pin=false, normalization=true, toast=true, Shift double-tap/300 ms, show/hide Alt+Space or Option+Space, and optional pin shortcut.",
       "Persist login/tray options, per-mode bounds, onboarding completion, shortcut configuration, and validated 150–600 ms timing.",
-      "Represent hide-after-copy as an explicit override or automatic default: auto hides when unpinned and stays open when pinned; explicit user choices remain stable.",
+      "Copy keeps the window open regardless of pin state; retain legacy hide-after-copy values only for profile compatibility.",
       "Apply through typed services and notify all windows immediately. Roll back failed OS operations and leave the last working preference active.",
       "Use one persisted pin state for title-bar and Appearance controls; distinguish remembered per-mode geometry from preferred startup mode."
     ],
@@ -387,7 +387,7 @@
   },
   {
     "key": "P17",
-    "title": "Unify copy commands, keyboard navigation, and hide-after-copy behavior",
+    "title": "Unify copy commands, keyboard navigation, and keep-open feedback",
     "phase": 3,
     "deps": [
       "P15",
@@ -399,15 +399,22 @@
     "goal": "Make all library copy paths and shortcuts behave consistently.",
     "scope": [
       "Route row click, Enter, preview Copy, Markdown copy, and later tray copy through one copy service using full stored text.",
-      "Record copyCount/lastCopiedAt only after clipboard write succeeds; update counts immediately and keep the visible Copied state for ~1500 ms when the window remains open.",
-      "Apply auto/explicit hide-after-copy preferences; clicking a regular row selects it before any optional hide.",
+      "Record copyCount/lastCopiedAt once after clipboard write succeeds; keep the window open and show accessible in-app Copied feedback for ~1500 ms.",
+      "Keep copying visible for existing automatic/always profiles; select and highlight the copied row for Regular preview, preserving its ID through refresh/reorder without replacing a later deliberate selection.",
       "Implement arrows, Enter, Cmd/Ctrl+F, Cmd/Ctrl+T, Delete/Backspace with Undo, Cmd/Ctrl+comma, and Esc clear-then-hide.",
       "Scope shortcuts by focus/overlay: arrows/Enter in search may navigate/copy, but Delete/Backspace edits text; editor, IME, menus, dialogs, and tag picker keep their own keys. Emit the tag-picker command for P18."
     ],
     "checks": [
       "One gesture produces one clipboard write and one statistic increment.",
       "Text editing never deletes snippets, and dialogs/IME are not interrupted.",
-      "Copy errors leave counters unchanged and do not hide the window."
+      "Copy errors leave counters unchanged and do not hide the window.",
+      "Confirmed copy shows accessible in-app Copied notification; failed/uncertain copy shows no success and partial statistics failure never replays copy.",
+      "Copied selection remains highlighted and shows the exact Regular preview through refresh/reorder, while a later deliberate selection wins and Compact does not switch modes automatically.",
+      "First selected row cannot obscure the list focus outline; rows have subtle hover feedback and pointer cursors without changing virtual measurements.",
+      "Long preview text scrolls independently, keeping metadata and Copy/Edit/More visible.",
+      "Sort and icon-only header tooltips stay clear of the header; spaced header actions have accessible names and a contrasting selected view, and the border remains below Windows caption buttons.",
+      "Clickable controls use pointer cursors; existing shortcut recorder explains clicking or Enter/Space to change a binding.",
+      "Rows omit visible Copy wording while retaining an icon and accessible copy hint; Settings sits immediately left of the view switcher and touched button labels have no ellipses."
     ],
     "verify": "Extend the existing canonical public functional service flow only where needed; keep real internal services/storage and fake external OS/time boundaries. Run strict types, ESLint, Prettier, functional tests and Windows packaging. UI, native delivery, NVDA and distribution requirements are manual Windows release checks where relevant. Performance measurements and budgets are skipped for this pass. No automated GUI/E2E suite, duplicate flow tests, stress gates or new test infrastructure."
   },
@@ -475,7 +482,7 @@
     "scope": [
       "Implement side navigation at >=640 px and horizontally scrollable tabs below 640 px; stack labels/descriptions and controls while keeping switch rows inline.",
       "Create separate SettingsWindow, SettingsNavigation, SettingsSection, SettingsRow, GeneralSettings, and AppearanceSettings files; mount Tags, Shortcuts, and Storage sections through clear feature entrypoints.",
-      "Wire launch at login, tray visibility, hide-after-copy override/default, startup size mode, theme, and pin to immediate settings services.",
+      "Wire launch at login, tray visibility, startup size mode, theme, and pin to immediate settings services; copying always keeps the window open and the legacy hide preference has no active control.",
       "Provide Windows visibility and native-operation status; ensure a working way to reopen Promptly before hiding tray routes.",
       "Handle rejected native preference changes with inline errors and rollback, without a Save button."
     ],

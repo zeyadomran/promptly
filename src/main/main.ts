@@ -127,8 +127,7 @@ if (primaryInstance)
         dialogs,
         settings,
         keyboard,
-        windowsSelection,
-        () => lifecycle
+        windowsSelection
       );
       confirmation = desktopConfirmation(library.capture.service, settings, () => lifecycle);
       onboarding = desktopOnboarding(

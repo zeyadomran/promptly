@@ -24,7 +24,6 @@ export function SizeControl({
         <TooltipTrigger asChild>
           <ToggleGroupItem value="compact" aria-label="Compact">
             <RectangleVertical aria-hidden="true" />
-            {mode === 'regular' && <span>Compact</span>}
           </ToggleGroupItem>
         </TooltipTrigger>
         <TooltipContent>Compact</TooltipContent>
@@ -33,7 +32,6 @@ export function SizeControl({
         <TooltipTrigger asChild>
           <ToggleGroupItem value="regular" aria-label="Regular">
             <RectangleHorizontal aria-hidden="true" />
-            {mode === 'regular' && <span>Regular</span>}
           </ToggleGroupItem>
         </TooltipTrigger>
         <TooltipContent>Regular</TooltipContent>

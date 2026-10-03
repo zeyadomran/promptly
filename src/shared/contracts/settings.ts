@@ -19,6 +19,7 @@ export const windowBoundsSchema = z.strictObject({
 export const settingsSchema = z.strictObject({
   launchAtLogin: z.boolean(),
   showInTray: z.boolean(),
+  // Retained for old profiles/backups; copying always leaves window visibility unchanged.
   hideAfterCopy: z.enum(['automatic', 'always', 'never']),
   defaultSizeMode: z.enum(['compact', 'regular']),
   saveShortcut: shortcutSchema,
@@ -54,7 +55,7 @@ export function defaultSettings(): Settings {
   return {
     launchAtLogin: false,
     showInTray: true,
-    hideAfterCopy: 'automatic',
+    hideAfterCopy: 'never',
     defaultSizeMode: 'compact',
     saveShortcut: { kind: 'double-tap', modifier: 'shift' },
     openShortcut: 'Alt+Space',
@@ -67,11 +68,4 @@ export function defaultSettings(): Settings {
     rememberedBounds: { compact: null, regular: null },
     onboardingComplete: false
   };
-}
-
-export function shouldHideAfterCopy(settings: Settings): boolean {
-  return (
-    settings.hideAfterCopy === 'always' ||
-    (settings.hideAfterCopy === 'automatic' && !settings.alwaysOnTop)
-  );
 }

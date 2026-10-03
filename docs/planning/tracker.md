@@ -83,7 +83,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 - [ ] [P14 — Implement substring search, filter syntax, sorting, and paginated queries](https://github.com/zeyadomran/promptly/issues/16)
 - [ ] [P15 — Build the compact library with virtualized snippet rows](https://github.com/zeyadomran/promptly/issues/17)
 - [ ] [P16 — Build the regular split view and snippet editing/actions](https://github.com/zeyadomran/promptly/issues/18)
-- [ ] [P17 — Unify copy commands, keyboard navigation, and hide-after-copy behavior](https://github.com/zeyadomran/promptly/issues/19)
+- [ ] [P17 — Unify copy commands, keyboard navigation, and keep-open feedback](https://github.com/zeyadomran/promptly/issues/19)
 - [ ] [P18 — Implement tag creation, filtering, and the reusable multi-select picker](https://github.com/zeyadomran/promptly/issues/20)
 
 ### Phase 4: Settings and daily workflows

@@ -1,7 +1,6 @@
 import type { CopyOutcome } from '../../shared/contracts/copy';
 import type { DesktopOperations } from '../../shared/contracts/operations';
 import { failure } from '../../shared/contracts/result';
-import { type Settings, shouldHideAfterCopy } from '../../shared/contracts/settings';
 import type { StorageClient } from '../storage/client';
 import type { LibraryMutations } from '../storage/library-mutations';
 import type { TransferOwner } from '../storage/transfer/requests';
@@ -13,8 +12,6 @@ export interface CopyEffects {
   platform: string;
   owner: (id: number) => TransferOwner | undefined;
   writeText: (text: string) => Promise<void>;
-  settings: () => Settings;
-  hide: (owner: TransferOwner) => Promise<boolean>;
 }
 
 export class CopyService {
@@ -30,7 +27,7 @@ export class CopyService {
 
   readonly services: Pick<DesktopOperations, 'copySnippet'> = {
     copySnippet: (input, context) =>
-      this.requests.run(context, (signal, owner) => this.copy(input, signal, owner, owner))
+      this.requests.run(context, (signal, owner) => this.copy(input, signal, owner))
   };
 
   copyFromMain(input: { id: string; format: 'text' | 'markdown' }, owner: MainCopyOwner) {
@@ -40,8 +37,7 @@ export class CopyService {
   private copy(
     input: { id: string; format: 'text' | 'markdown' },
     signal: AbortSignal,
-    owner: Pick<TransferOwner, 'isAlive'>,
-    window?: TransferOwner
+    owner: Pick<TransferOwner, 'isAlive'>
   ) {
     return this.mutations.run(async () => {
       signal.throwIfAborted();
@@ -71,15 +67,6 @@ export class CopyService {
           };
       } catch {
         outcome.warnings.push('STATISTICS_UNCONFIRMED');
-      }
-
-      try {
-        if (window !== undefined && shouldHideAfterCopy(this.effects.settings())) {
-          if (signal.aborted || !owner.isAlive() || !(await this.effects.hide(window)))
-            outcome.warnings.push('WINDOW_NOT_HIDDEN');
-        }
-      } catch {
-        outcome.warnings.push('WINDOW_NOT_HIDDEN');
       }
 
       return { ok: true, value: outcome };

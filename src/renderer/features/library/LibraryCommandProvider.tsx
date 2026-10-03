@@ -6,6 +6,7 @@ import { LibraryCommandService } from './library-command-service';
 import { LibraryCommandsContext, useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
 import { libraryKeyCommand } from './library-keyboard';
+import { LibraryCopyToast, notifyCopied } from './LibraryCopyToast';
 import { LibraryUndoToast } from './LibraryUndoToast';
 
 export function LibraryCommandProvider({
@@ -23,6 +24,7 @@ export function LibraryCommandProvider({
     () =>
       new LibraryCommandService(window.promptly, {
         selectedId: () => model.snapshot().selectedId,
+        copied: notifyCopied,
         refresh: () => {
           model.refresh();
         },
@@ -135,6 +137,7 @@ export function LibraryCommandProvider({
       }}
     >
       {children}
+      <LibraryCopyToast visible={active && state.copiedId !== null} />
       {active && undo !== undefined && (
         <LibraryUndoToast
           undo={undo.run}

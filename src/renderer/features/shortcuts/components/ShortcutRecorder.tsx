@@ -68,7 +68,7 @@ export function ShortcutRecorder({
           {active ? (
             snapshot.candidate === undefined ? (
               <span role="status">
-                {snapshot.phase === 'starting' ? 'Starting…' : 'Press a key…'}
+                {snapshot.phase === 'starting' ? 'Starting' : 'Press a key'}
               </span>
             ) : (
               <ShortcutKeycaps
@@ -77,9 +77,9 @@ export function ShortcutRecorder({
               />
             )
           ) : mine && snapshot.phase === 'saving' ? (
-            'Applying…'
+            'Applying'
           ) : value === null ? (
-            'Click to record…'
+            'Click to record'
           ) : (
             <ShortcutKeycaps accelerator={value} platform={window.promptly.platform} />
           )}
@@ -114,7 +114,7 @@ export function ShortcutRecorder({
           ? snapshot.candidate === undefined
             ? 'Escape cancels. Tab leaves recording.'
             : 'Release the keys to apply. Escape cancels.'
-          : `${value === null ? 'No binding. ' : `Current binding: ${shortcutLabel(value, window.promptly.platform)}. `}Enter or Space to record a combination.`}
+          : `${value === null ? 'No binding. ' : `Current binding: ${shortcutLabel(value, window.promptly.platform)}. `}Click the shortcut, or focus it and press Enter or Space, to change it.`}
       </p>
       {error !== undefined && (
         <p className="settings-row-error" role="alert">
