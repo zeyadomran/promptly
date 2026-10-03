@@ -108,8 +108,7 @@ export class Shortcuts {
       this.closing,
       this.accelerators,
       this.controller,
-      this.taps,
-      this.recover
+      this.taps
     );
   }
 
