@@ -15,10 +15,11 @@
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: 8px;
-  box-shadow: 0 0 0 3px var(--muted);
+  box-shadow: none;
 }
 .regular-library .library-search:focus-within {
-  box-shadow: 0 0 0 3px var(--ring);
+  border-color: var(--ring);
+  box-shadow: var(--focus-shadow);
 }
 .regular-filter-hint {
   color: var(--muted-foreground);
@@ -45,7 +46,20 @@
 .regular-library-results {
   position: relative;
   min-height: 0;
-  padding: 6px 0;
+  flex: 1;
+}
+.regular-library-list {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+.regular-library .library-row {
+  padding: 12px 16px 10px 12px;
+  gap: 14px;
+}
+.regular-library .library-row-tags {
+  gap: 10px;
 }
 .snippet-preview {
   display: flex;
@@ -176,19 +190,6 @@
   min-height: 34px;
   gap: 10px;
   padding: 5px 14px;
-}
-.regular-keyboard-hints,
-.regular-footer-status {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.regular-keyboard-hints span {
-  white-space: nowrap;
-}
-.regular-keyboard-hints kbd {
-  font-family: inherit;
-  color: var(--foreground);
 }
 
 .snippet-draft-notice {
