@@ -1,4 +1,4 @@
-import { X } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import type { KeyboardEvent } from 'react';
 
 import type { TagSummary } from '../../../shared/contracts/domain';
@@ -44,6 +44,12 @@ export function TagPickerItem({
       )}
       <span className="library-tag-dot" style={tagColorStyle(tag.color)} aria-hidden="true" />
       <span className="tag-picker-name">{tag.name}</span>
+      {!filter && selected && (
+        <>
+          <Check aria-hidden="true" size={14} />
+          <span className="sr-only">Applied</span>
+        </>
+      )}
       {filter ? (
         <span className="tag-picker-count" aria-label={String(tag.snippetCount) + ' snippets'}>
           {tag.snippetCount}

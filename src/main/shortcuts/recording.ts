@@ -9,8 +9,7 @@ export function updateRecording(
   closing: boolean,
   accelerators: Accelerators,
   controller: SettingsController,
-  taps: DoubleTap,
-  recover: () => void
+  taps: DoubleTap
 ): void {
   if (closing) {
     if (active) throw new Error('Shortcuts are shutting down.');
@@ -36,5 +35,4 @@ export function updateRecording(
   }
 
   taps.reset();
-  if (active) recover();
 }
