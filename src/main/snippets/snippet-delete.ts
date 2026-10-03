@@ -25,12 +25,11 @@ export class SnippetDelete {
     if (snippet === undefined) throw new StorageError('NOT_FOUND', 'Undo expired or unavailable.');
     if (context.db.prepare('SELECT id FROM snippets WHERE id = ?').get(snippet.id) !== undefined)
       throw new StorageError('CONFLICT', 'The deleted snippet cannot be restored.');
-    for (const tag of snippet.tags) {
-      if (context.db.prepare('SELECT id FROM tags WHERE id = ?').get(tag.id) === undefined)
-        throw new StorageError('CONFLICT', 'A deleted tag prevents restoration.');
-    }
+    const tags = snippet.tags.filter(
+      (tag) => context.db.prepare('SELECT id FROM tags WHERE id = ?').get(tag.id) !== undefined
+    );
 
-    this.writes.insert(snippet);
+    this.writes.insert({ ...snippet, tags });
     context.afterCommit(() => {
       context.undo.remove(input.undoToken);
     });

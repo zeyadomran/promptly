@@ -23,6 +23,8 @@ export const portableSnippetSchema = z.strictObject({
   lastCopiedAt: date.nullable(),
   copyCount: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
 });
+export const portableTagSchema = tagSchema.extend({ createdAt: date });
+export const membershipSchema = z.strictObject({ snippetId: idSchema, tagId: idSchema });
 export const backupSchema = z
   .strictObject({
     format: z.literal('promptly-library'),
