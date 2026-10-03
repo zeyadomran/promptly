@@ -1,40 +1,41 @@
-import { useEffect, useRef } from 'react';
+import '../../../styles/updates.css';
 
 import { Button } from '../../../components/ui/button';
+import { Field, FieldContent, FieldDescription, FieldLabel } from '../../../components/ui/field';
+import { updateDescription, updatePercent } from '../hooks/update-presentation';
 import { useUpdates } from '../hooks/use-updates';
-import { StorageRow } from '../storage/StorageRow';
+import { UpdateProgressBar } from './UpdateProgressBar';
 
 export function UpdateSettings() {
   const { state, error, act } = useUpdates();
-  const button = useRef<HTMLButtonElement>(null);
   const status = state?.status;
-
-  useEffect(() => {
-    if ((state?.focusRequest ?? 0) === 0) return;
-    button.current?.scrollIntoView({ block: 'center', behavior: 'instant' });
-    button.current?.focus({ preventScroll: true });
-  }, [state?.focusRequest]);
-
   const label =
     status === 'available'
-      ? 'Update'
+      ? 'Download'
       : status === 'ready'
         ? 'Restart now'
         : status === 'checking'
-          ? 'Checking…'
+          ? 'Checking'
           : status === 'updating'
-            ? 'Updating…'
-            : 'Check for updates';
+            ? 'Downloading'
+            : status === 'error'
+              ? 'Retry'
+              : 'Check for updates';
 
   return (
-    <div>
-      <StorageRow
-        label="Updates"
-        description="Checks automatically when Promptly starts. You choose when to update."
-      >
+    <Field className="settings-field storage-row update-settings-row" data-inline="false">
+      <FieldContent>
+        <FieldLabel asChild>
+          <h2>Updates</h2>
+        </FieldLabel>
+        <FieldDescription id="update-status" role="status" aria-live="polite">
+          {updateDescription(state, error)}
+        </FieldDescription>
+        {status === 'updating' && <UpdateProgressBar percent={updatePercent(state)} />}
+      </FieldContent>
+      <div className="settings-field-control">
         <Button
-          ref={button}
-          variant="outline"
+          variant={status === 'ready' ? 'default' : 'outline'}
           aria-describedby="update-status"
           disabled={
             state === undefined ||
@@ -48,15 +49,7 @@ export function UpdateSettings() {
         >
           {label}
         </Button>
-      </StorageRow>
-      <p
-        id="update-status"
-        className="text-muted-foreground text-sm"
-        role="status"
-        aria-live="polite"
-      >
-        {error ?? state?.message ?? 'Reading update status…'}
-      </p>
-    </div>
+      </div>
+    </Field>
   );
 }
