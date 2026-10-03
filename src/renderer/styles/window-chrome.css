@@ -81,7 +81,7 @@
 .window-size-control {
   flex-shrink: 0;
 }
-.window-size-control [data-slot='toggle-group-item'] {
+.window-size-control[data-slot='toggle-group'] [data-slot='toggle-group-item'] {
   flex: none;
   width: 26px;
   height: 22px;
