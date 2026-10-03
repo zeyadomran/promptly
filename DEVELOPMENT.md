@@ -55,7 +55,8 @@ Performance qualification is skipped by the recorded user decision, not claimed 
   No raw IPC, filesystem, shell, or command API is exposed to the renderer.
 - `src/renderer/`: React components, feature folders, hooks, and styles. Browser
   code imports only renderer/shared modules and approved browser dependencies.
-- `src/shared/`: pure contracts; cannot import any process layer or npm dependency.
+- `src/shared/`: pure contracts; cannot import any process layer or unapproved npm dependency.
+  Zod is the approved dependency for shared contract validation.
 
 SQLite is owned by a main-process worker. Snippet, tag, search, settings, and transfer
 services publish committed state through validated contracts. The Windows selection
