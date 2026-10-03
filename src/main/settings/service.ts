@@ -1,3 +1,4 @@
+import type { LoginStatus } from '../../shared/contracts/login-status';
 import type { DesktopOperations } from '../../shared/contracts/operations';
 import { type DesktopResult, failure } from '../../shared/contracts/result';
 import {
@@ -10,6 +11,7 @@ import {
 import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageClient } from '../storage/client';
 import type { SettingsController, SettingsControllers } from './controllers';
+import { SettingsEffects } from './effects';
 
 type SettingsStorage = Pick<StorageClient, 'call'>;
 
@@ -19,23 +21,22 @@ export class SettingsService {
   private closing = false;
   private effectsFailed = false;
   private snapshot: SettingsSnapshot | undefined;
-  private readonly disabledControllers = new Set<SettingsController>();
+  private readonly effects: SettingsEffects;
 
   isUnavailable(key: keyof Settings): boolean {
-    return (
-      this.controllers.unavailable.includes(key) ||
-      [...this.disabledControllers].some((controller) => controller.keys.includes(key))
-    );
+    return this.effects.isUnavailable(key);
   }
 
   get startupUnavailable(): readonly (keyof Settings)[] {
-    return [...this.disabledControllers].flatMap((controller) => [...controller.keys]);
+    return this.effects.startupUnavailable;
   }
 
   constructor(
     private readonly storage: SettingsStorage,
     private readonly controllers: SettingsControllers
-  ) {}
+  ) {
+    this.effects = new SettingsEffects(controllers);
+  }
 
   initialize(): Promise<SettingsSnapshot> {
     if (this.closing) return Promise.reject(new Error('Preferences are shutting down.'));
@@ -49,7 +50,7 @@ export class SettingsService {
     const result = await this.storage.call('getSettings', {});
 
     if (!result.ok) throw new Error(result.error.message);
-    await this.apply(result.value, undefined);
+    await this.effects.apply(result.value, undefined);
     this.snapshot = result.value;
     return result.value;
   }
@@ -59,25 +60,44 @@ export class SettingsService {
     return structuredClone(this.snapshot);
   }
 
-  readonly services: Pick<DesktopOperations, 'getSettings' | 'updateSettings'> = {
-    getSettings: () => this.enqueue(() => this.storage.call('getSettings', {})),
-    updateSettings: (patch) => this.enqueue(() => this.update(patch))
-  };
+  readonly services: Pick<DesktopOperations, 'getSettings' | 'updateSettings' | 'getLoginStatus'> =
+    {
+      getSettings: () => this.enqueue(() => this.storage.call('getSettings', {})),
+      getLoginStatus: () =>
+        this.enqueue(() => Promise.resolve({ ok: true, value: this.loginStatus() })),
+      updateSettings: (patch) => this.enqueue(() => this.update(patch))
+    };
 
   async close(): Promise<void> {
     this.closing = true;
     await this.tail;
   }
 
-  private enqueue(
-    action: () => Promise<DesktopResult<SettingsSnapshot>>
-  ): Promise<DesktopResult<SettingsSnapshot>> {
+  private enqueue<T>(action: () => Promise<DesktopResult<T>>): Promise<DesktopResult<T>> {
     if (this.closing)
       return Promise.resolve(failure('UNAVAILABLE', 'Preferences are shutting down.'));
     const result = this.tail.then(action);
 
     this.tail = result.catch(() => undefined);
     return result;
+  }
+
+  private loginStatus(): LoginStatus {
+    const requested = this.current.settings.launchAtLogin;
+
+    try {
+      if (
+        this.effectsFailed ||
+        this.isUnavailable('launchAtLogin') ||
+        this.controllers.loginStatus === undefined
+      )
+        throw new Error('Login status unavailable.');
+      const { registered, enabled } = this.controllers.loginStatus();
+
+      return { requested, registered, enabled, available: true };
+    } catch {
+      return { requested, registered: false, enabled: false, available: false };
+    }
   }
 
   private async update(input: SettingsPatch): Promise<DesktopResult<SettingsSnapshot>> {
@@ -119,7 +139,12 @@ export class SettingsService {
     let failed: DesktopResult<SettingsSnapshot>;
 
     try {
-      await this.apply(next, previous.value, applied);
+      await this.effects.apply(
+        next,
+        previous.value,
+        applied,
+        Object.keys(parsed.data) as (keyof Settings)[]
+      );
       const committed = await this.storage.call('updateSettings', parsed.data);
 
       if (committed.ok) {
@@ -138,7 +163,7 @@ export class SettingsService {
     }
 
     try {
-      await this.rollback(previous.value, applied);
+      await this.effects.rollback(previous.value, applied);
     } catch {
       this.effectsFailed = true;
       return failure(
@@ -148,50 +173,5 @@ export class SettingsService {
     }
 
     return failed;
-  }
-
-  private async apply(
-    next: SettingsSnapshot,
-    previous: SettingsSnapshot | undefined,
-    applied: SettingsController[] = []
-  ): Promise<void> {
-    for (const controller of this.controllers.available) {
-      if (this.disabledControllers.has(controller)) continue;
-      if (
-        previous !== undefined &&
-        !controller.keys.some(
-          (key) => JSON.stringify(next.settings[key]) !== JSON.stringify(previous.settings[key])
-        )
-      )
-        continue;
-      applied.push(controller);
-      try {
-        await controller.apply(next.settings);
-      } catch (error) {
-        if (previous === undefined && controller.optionalStartup === true) {
-          this.disabledControllers.add(controller);
-          controller.quarantine?.();
-          continue;
-        }
-
-        throw new Error(
-          `Unable to apply ${controller.name}. ${error instanceof Error ? error.message : 'Native registration failed.'} Your previous preference remains active.`,
-          { cause: error }
-        );
-      }
-    }
-  }
-
-  private async rollback(previous: SettingsSnapshot, applied: SettingsController[]): Promise<void> {
-    const outcomes = await Promise.allSettled(
-      [...applied]
-        .reverse()
-        .map((controller) => Promise.resolve().then(() => controller.apply(previous.settings)))
-    );
-
-    if (outcomes.some((outcome) => outcome.status === 'rejected')) {
-      for (const controller of applied) controller.quarantine?.();
-      throw new Error('Rollback failed');
-    }
   }
 }

@@ -28,6 +28,7 @@ export function trayFixture() {
   let menu: readonly TrayItem[] = [];
   let destroyed = true;
   let pausedIcon = false;
+  const statuses: string[] = [];
   let captured = 0;
   let denied = false;
   let readHeld = Promise.resolve();
@@ -87,7 +88,9 @@ export function trayFixture() {
           setPaused: (value) => {
             pausedIcon = value;
           },
-          setStatus: () => undefined,
+          setStatus: (message) => {
+            statuses.push(message);
+          },
           destroy: () => {
             destroyed = true;
           }
@@ -123,6 +126,7 @@ export function trayFixture() {
     copy,
     tray,
     menu: () => menu,
+    statuses,
     pausedIcon: () => pausedIcon,
     captured: () => captured,
     deny: (value: boolean) => {

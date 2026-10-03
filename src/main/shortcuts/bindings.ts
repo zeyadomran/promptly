@@ -1,6 +1,7 @@
 import type { Settings } from '../../shared/contracts/settings';
 import { acceleratorKey, windowsAccelerator } from '../../shared/shortcuts/accelerator';
 import { shortcutConflict } from '../../shared/shortcuts/conflicts';
+import { globalBindingAllowed } from '../../shared/shortcuts/global-binding';
 
 export { acceleratorKey, shortcutLabel } from '../../shared/shortcuts/accelerator';
 
@@ -23,7 +24,7 @@ export function bindings(settings: Settings, platform: NodeJS.Platform): Binding
     ['pin', settings.pinShortcut]
   ];
   const entries = candidates.flatMap(([action, accelerator]) =>
-    accelerator === null
+    accelerator === null || !globalBindingAllowed(accelerator)
       ? []
       : [
           {

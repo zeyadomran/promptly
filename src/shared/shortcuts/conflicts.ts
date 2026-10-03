@@ -1,5 +1,6 @@
 import type { Settings } from '../contracts/settings';
 import { acceleratorKey, reservedShortcut, type ShortcutPlatform } from './accelerator';
+import { globalBindingAllowed } from './global-binding';
 import { localShortcutIdentities } from './local';
 
 interface Conflict {
@@ -27,7 +28,7 @@ function conflicts(
     ['pin', 'Toggle always on top', settings.pinShortcut]
   ];
   const candidates: Candidate[] = globals.flatMap(([action, label, accelerator]) =>
-    accelerator === null
+    accelerator === null || !globalBindingAllowed(accelerator)
       ? []
       : [{ action, label, identities: [acceleratorKey(accelerator, platform)] }]
   );

@@ -28,10 +28,11 @@ export function SettingSwitch({
     >
       <Switch
         checked={checked}
+        disabled={disabled || mutation.pending}
         aria-busy={mutation.pending}
         aria-disabled={disabled || mutation.pending}
         onCheckedChange={(value) => {
-          if (mutation.pending) return;
+          if (disabled || mutation.pending) return;
           void mutation.apply(patch(value));
         }}
       />

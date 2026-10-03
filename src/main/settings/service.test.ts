@@ -3,8 +3,10 @@ import path from 'node:path';
 import { expect, it } from 'vitest';
 
 import { defaultSettings } from '../../shared/contracts/settings';
-import { loginPreferences, prepareSquirrelLogin } from './login-preferences';
+import { loginController } from './login-controller';
+import { loginPreferences } from './login-preferences';
 import { loginTestFixture } from './login-test-fixture';
+import { exerciseLoginInstallation } from './login-test-flow';
 import { seedLegacyShortcutProfile, testSettings } from './settings-test-fixture';
 
 it('persists settings across reopen and rolls back rejected native effects', async () => {
@@ -13,6 +15,7 @@ it('persists settings across reopen and rolls back rejected native effects', asy
   let login: ReturnType<typeof loginPreferences>;
   const fixture = testSettings({
     unavailable: [],
+    loginStatus: () => login.getLoginState(),
     available: [
       {
         keys: ['theme'],
@@ -22,15 +25,13 @@ it('persists settings across reopen and rolls back rejected native effects', asy
           return Promise.resolve();
         }
       },
-      {
-        keys: ['launchAtLogin'],
-        name: 'launch at login',
-        apply: (settings) => {
-          login.setLogin(settings.launchAtLogin);
-          if (login.getLogin() !== settings.launchAtLogin) throw new Error('Login was rejected.');
-          return Promise.resolve();
-        }
-      },
+      loginController({
+        setLogin: (...args) => {
+          login.setLogin(...args);
+        },
+        getLogin: () => login.getLogin(),
+        getLoginState: () => login.getLoginState()
+      }),
       {
         keys: ['alwaysOnTop'],
         name: 'pin',
@@ -48,8 +49,18 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     const installation = loginTestFixture(fixtureDirectory);
 
     login = loginPreferences(installation.application, installation.installedExecutable);
+    installation.loginEntries.set(installation.stableExecutable, true);
+    installation.approved.set(installation.stableExecutable, false);
+    fixture.store.engine.context.db
+      .prepare('UPDATE settings SET value = ? WHERE key = ?')
+      .run('true', 'launchAtLogin');
     seedLegacyShortcutProfile(fixture.store);
     await fixture.service.initialize();
+    expect(installation.approved.get(installation.stableExecutable)).toBe(false);
+    expect(await fixture.service.services.getLoginStatus({})).toEqual({
+      ok: true,
+      value: { requested: true, registered: true, enabled: false, available: true }
+    });
     const initial = await fixture.service.services.getSettings({});
 
     if (!initial.ok) throw new Error('Expected retained Windows preferences.');
@@ -59,6 +70,8 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       pinShortcut: 'Control+T'
     });
     expect(initial.value.settings.localShortcuts.cancelEdit).toBe('Escape');
+    expect(initial.value.settings.localShortcuts.copy).toBe('Control+K');
+    expect(initial.value.settings.localShortcuts.deleteAlternate).toBeNull();
     expect(await fixture.service.services.updateSettings({ doubleTapWindowMs: 400 })).toMatchObject(
       { ok: true }
     );
@@ -118,6 +131,13 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       await fixture.service.services.updateSettings({ theme: 'dark', alwaysOnTop: true })
     ).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
     expect({ theme, pinned }).toEqual({ theme: 'light', pinned: false });
+    expect(
+      await fixture.service.services.updateSettings({ launchAtLogin: true, alwaysOnTop: true })
+    ).toMatchObject({
+      ok: false,
+      error: { code: 'CONFLICT' }
+    });
+    expect(installation.approved.get(installation.stableExecutable)).toBe(false);
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
       revision: 4,
@@ -128,62 +148,12 @@ it('persists settings across reopen and rolls back rejected native effects', asy
       value: { settings: { launchAtLogin: true } }
     });
     expect(installation.loginEntries.get(installation.stableExecutable)).toBe(true);
+    expect(await fixture.service.services.getLoginStatus({})).toEqual({
+      ok: true,
+      value: { requested: true, registered: true, enabled: true, available: true }
+    });
     expect(installation.loginEntries.has(installation.installedExecutable)).toBe(false);
-    const upgradedExecutable = installation.createUpgradeExecutable();
-
-    expect(loginPreferences(installation.application, upgradedExecutable).getLogin()).toBe(true);
-    const unpackedExecutable = path.join(fixtureDirectory, 'unpacked', 'Promptly.exe');
-    const unpacked = loginPreferences(installation.application, unpackedExecutable);
-
-    unpacked.setLogin(true);
-    expect(installation.loginEntries.get(unpackedExecutable)).toBe(true);
-    const development = loginPreferences(
-      { ...installation.application, isPackaged: false },
-      installation.installedExecutable
-    );
-
-    development.setLogin(true);
-    expect(installation.loginEntries.get(installation.installedExecutable)).toBe(true);
-    let applicationId = '';
-    const setupApplication = {
-      ...installation.application,
-      setAppUserModelId: (identity: string) => {
-        applicationId = identity;
-      }
-    };
-    const cleanupErrors: unknown[] = [];
-    const reportCleanupError = (error: unknown) => cleanupErrors.push(error);
-
-    prepareSquirrelLogin(
-      setupApplication,
-      '--squirrel-updated',
-      reportCleanupError,
-      upgradedExecutable
-    );
-    expect(login.getLogin()).toBe(true);
-    prepareSquirrelLogin(
-      setupApplication,
-      '--squirrel-uninstall',
-      reportCleanupError,
-      upgradedExecutable
-    );
-    expect(applicationId).toBe('com.squirrel.Promptly.Promptly');
-    expect(login.getLogin()).toBe(false);
-    expect(cleanupErrors).toEqual([]);
-    const deniedCleanup = new Error('Native removal denied');
-
-    prepareSquirrelLogin(
-      {
-        ...setupApplication,
-        setLoginItemSettings: () => {
-          throw deniedCleanup;
-        }
-      },
-      '--squirrel-uninstall',
-      reportCleanupError,
-      upgradedExecutable
-    );
-    expect(cleanupErrors).toEqual([deniedCleanup]);
+    exerciseLoginInstallation(installation, fixtureDirectory, login);
     fixture.store.reopen();
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
       settings: { launchAtLogin: true, theme: 'light' }

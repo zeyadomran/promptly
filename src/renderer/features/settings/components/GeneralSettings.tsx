@@ -1,5 +1,6 @@
 import { useWindowRecovery } from '../hooks/use-window-recovery';
 import { usePreferences } from '../settings-context';
+import { LoginSettings } from './LoginSettings';
 import { SettingChoice } from './SettingChoice';
 import { SettingSwitch } from './SettingSwitch';
 
@@ -9,13 +10,7 @@ export function GeneralSettings() {
 
   return (
     <>
-      <SettingSwitch
-        label="Launch at login"
-        description="Open Promptly when you sign in to your computer."
-        checked={settings.launchAtLogin}
-        disabled={window.promptly.platform === 'unsupported'}
-        patch={(launchAtLogin) => ({ launchAtLogin })}
-      />
+      <LoginSettings />
       <SettingSwitch
         label="Show in system tray"
         description={

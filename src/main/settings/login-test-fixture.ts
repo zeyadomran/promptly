@@ -7,6 +7,7 @@ export function loginTestFixture(directory: string) {
   const installedExecutable = path.join(applicationDirectory, 'app-0.1.0', 'Promptly.exe');
   const stableExecutable = path.join(applicationDirectory, 'Promptly.exe');
   const loginEntries = new Map<string, boolean>();
+  const approved = new Map<string, boolean>();
 
   mkdirSync(path.dirname(installedExecutable), { recursive: true });
   for (const filename of [
@@ -19,15 +20,31 @@ export function loginTestFixture(directory: string) {
     isPackaged: true,
     setLoginItemSettings: ({
       path: target,
-      openAtLogin
+      openAtLogin,
+      enabled = true
     }: {
       path: string;
       openAtLogin: boolean;
+      enabled?: boolean;
     }) => {
       loginEntries.set(target, openAtLogin);
+      approved.set(target, openAtLogin && enabled);
     },
     getLoginItemSettings: ({ path: target }: { path: string }) => ({
-      openAtLogin: loginEntries.get(target) ?? false
+      openAtLogin: loginEntries.get(target) ?? false,
+      executableWillLaunchAtLogin:
+        loginEntries.get(target) === true && approved.get(target) !== false,
+      launchItems:
+        loginEntries.get(target) === true
+          ? [
+              {
+                name: 'com.squirrel.Promptly.Promptly',
+                scope: 'user',
+                args: [],
+                enabled: approved.get(target) !== false
+              }
+            ]
+          : []
     })
   };
   const createUpgradeExecutable = () => {
@@ -43,6 +60,7 @@ export function loginTestFixture(directory: string) {
     installedExecutable,
     stableExecutable,
     loginEntries,
+    approved,
     application,
     createUpgradeExecutable
   };
