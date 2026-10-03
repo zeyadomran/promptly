@@ -1,0 +1,199 @@
+.titlebar-update,
+.update-progress-bar {
+  --update-accent: #ecc237;
+  --update-progress: 0%;
+}
+
+.titlebar-update {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 26px;
+  flex-shrink: 0;
+  padding: 0 10px 0 8px;
+  border: 1px solid color-mix(in oklch, var(--update-accent) 60%, var(--border));
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--update-accent) 16%, var(--background));
+  color: var(--foreground);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  overflow: hidden;
+  animation: update-appear 150ms ease-out;
+  -webkit-app-region: no-drag;
+}
+
+.titlebar-update:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.titlebar-update-label,
+.titlebar-update-percent,
+.titlebar-update-icon {
+  position: relative;
+  z-index: 1;
+}
+.titlebar-update-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.titlebar-update-icon svg {
+  width: 13px;
+  height: 13px;
+  stroke-width: 1.5;
+}
+.titlebar-update-percent {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  margin-left: auto;
+}
+.titlebar-update[data-status='updating'] {
+  width: 148px;
+  cursor: default;
+}
+.titlebar-update[data-status='updating'] .titlebar-update-icon {
+  animation: update-bob 1.1s ease-in-out infinite;
+}
+.titlebar-update[data-status='ready'] {
+  background: var(--foreground);
+  border-color: var(--foreground);
+  color: var(--background);
+}
+.titlebar-update[data-status='error'] {
+  background: var(--background);
+  border-color: var(--border);
+  color: var(--destructive);
+}
+.titlebar-update-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--update-progress);
+  background: color-mix(in oklch, var(--update-accent) 42%, var(--background));
+  transition: width 150ms linear;
+}
+.titlebar-update[data-indeterminate='true'] .titlebar-update-fill {
+  width: 38%;
+  animation: update-sweep 1.5s ease-in-out infinite;
+}
+.titlebar-update[data-compact='true']:not([data-status='ready']) {
+  width: 26px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+  overflow: visible;
+}
+.titlebar-update-dot {
+  position: absolute;
+  top: 1px;
+  right: 1px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--update-accent);
+  box-shadow: 0 0 0 2px var(--background);
+}
+.titlebar-update[data-compact='true'][data-status='updating'] .titlebar-update-fill {
+  inset: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: conic-gradient(var(--update-accent) var(--update-progress), var(--border) 0);
+  transition: none;
+}
+.titlebar-update[data-compact='true'][data-status='updating'] .titlebar-update-fill::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--background);
+}
+.titlebar-update[data-compact='true'][data-status='updating'] .titlebar-update-icon svg {
+  width: 10px;
+  height: 10px;
+}
+.titlebar-update[data-compact='true'][data-indeterminate='true'] .titlebar-update-fill {
+  background: conic-gradient(var(--update-accent) 25%, var(--border) 0);
+  animation: update-spin 1.5s linear infinite;
+}
+
+.update-progress-bar {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  height: 4px;
+  overflow: hidden;
+  background: var(--muted);
+  border-radius: 999px;
+  margin-top: 8px;
+}
+.update-progress-bar > span {
+  display: block;
+  height: 100%;
+  width: var(--update-progress);
+  background: var(--update-accent);
+  transition: width 150ms linear;
+}
+.update-progress-bar[data-indeterminate='true'] > span {
+  width: 38%;
+  animation: update-sweep 1.5s ease-in-out infinite;
+}
+.update-settings-row [data-slot='field-description'],
+.settings-window .update-settings-row [data-slot='field-description'] {
+  display: block;
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
+}
+
+@keyframes update-appear {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes update-bob {
+  0%,
+  100% {
+    transform: translateY(-1.5px);
+  }
+  50% {
+    transform: translateY(1.5px);
+  }
+}
+@keyframes update-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(365%);
+  }
+}
+@keyframes update-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .titlebar-update,
+  .titlebar-update[data-status='updating'] .titlebar-update-icon,
+  .titlebar-update[data-indeterminate='true'] .titlebar-update-fill,
+  .titlebar-update[data-compact='true'][data-indeterminate='true'] .titlebar-update-fill,
+  .update-progress-bar[data-indeterminate='true'] > span {
+    animation: none;
+  }
+  .titlebar-update-fill,
+  .update-progress-bar > span {
+    transition: none;
+  }
+}

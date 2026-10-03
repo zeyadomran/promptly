@@ -1,5 +1,18 @@
 import { z } from 'zod';
 
+export const updateProgressSchema = z
+  .strictObject({
+    percent: z.number().min(0).max(100).optional(),
+    transferred: z.number().nonnegative().optional(),
+    total: z.number().positive().optional()
+  })
+  .refine(
+    ({ transferred, total }) =>
+      transferred === undefined || total === undefined || transferred <= total,
+    'Transferred bytes must not exceed the total.'
+  );
+export type UpdateProgress = z.infer<typeof updateProgressSchema>;
+
 export const updateStateSchema = z.strictObject({
   revision: z.number().int().nonnegative(),
   status: z.enum([
@@ -13,6 +26,8 @@ export const updateStateSchema = z.strictObject({
     'unavailable'
   ]),
   version: z.string().optional(),
+  progress: updateProgressSchema.optional(),
+  retryOperation: z.enum(['check', 'install', 'restart']).optional(),
   message: z.string(),
   focusRequest: z.number().int().nonnegative()
 });

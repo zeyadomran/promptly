@@ -1,56 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 
-import type { UpdateState } from '../../../../shared/contracts/updates';
+import { actOnUpdate, getUpdateSnapshot, subscribeUpdates } from './updates-store';
 
+/** One update stream per renderer, shared by the shell and About controls. */
 export function useUpdates(onFocus?: () => void) {
-  const [state, setState] = useState<UpdateState>();
-  const [error, setError] = useState<string>();
-  const revision = useRef(-1);
+  const snapshot = useSyncExternalStore(subscribeUpdates, getUpdateSnapshot);
   const focusRequest = useRef(0);
-  const accept = useCallback(
-    (next: UpdateState) => {
-      if (next.revision < revision.current) return;
-      revision.current = next.revision;
-      setState(next);
-      if (next.focusRequest > focusRequest.current) {
-        focusRequest.current = next.focusRequest;
-        onFocus?.();
-      }
-    },
-    [onFocus]
-  );
+  const request = snapshot.state?.focusRequest ?? 0;
 
   useEffect(() => {
-    let active = true;
-    const stop = window.promptly.subscribeUpdates(accept);
+    if (onFocus === undefined || request <= focusRequest.current) return;
+    focusRequest.current = request;
+    onFocus();
+  }, [onFocus, request]);
 
-    void window.promptly.getUpdateState({}).then((result) => {
-      if (!active) return;
-      if (result.ok) accept(result.value);
-      else setError(result.error.message);
-    });
-    return () => {
-      active = false;
-      stop();
-    };
-  }, [accept]);
-
-  const act = async () => {
-    setError(undefined);
-    if (state?.status === 'ready') {
-      const restarted = await window.promptly.restartForUpdate({});
-
-      if (!restarted.ok) setError(restarted.error.message);
-      return;
-    }
-
-    const result = await (state?.status === 'available'
-      ? window.promptly.installUpdate({})
-      : window.promptly.checkForUpdates({}));
-
-    if (result.ok) accept(result.value);
-    else setError(result.error.message);
-  };
-
-  return { state, error, act };
+  return { ...snapshot, act: actOnUpdate };
 }

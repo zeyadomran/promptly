@@ -42,6 +42,8 @@ Add functional coverage when its behavior is implemented; absent features have n
 
 The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, retry, concurrent requests and shutdown. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
 
+The renderer update-stream flow in `renderer/features/settings/hooks/updates-store.test.ts` covers shared stream ownership, stale initial reads, shutdown and routing retries to the failed IPC operation. The service flow also validates optional provider progress; the Windows Squirrel adapter has no progress event and stays indeterminate.
+
 Release automation has one canonical flow in `scripts/schedule-release.test.mjs`: exact-commit tagging, publishing dispatch, existing-release/tag protection, downgrade prevention and failed-dispatch retry. `scripts/release-validation.test.mjs` verifies publication versus validation-only dispatch with real Git ancestry. These tests use a fake GitHub HTTP boundary and temporary Git repositories; they never create real releases.
 
 ## Manual release checks

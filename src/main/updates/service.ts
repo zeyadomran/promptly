@@ -1,9 +1,13 @@
-import type { UpdateState } from '../../shared/contracts/updates';
+import {
+  type UpdateProgress,
+  updateProgressSchema,
+  type UpdateState
+} from '../../shared/contracts/updates';
 
 export interface UpdatePorts {
   available: boolean;
   findRelease: () => Promise<string | undefined>;
-  apply: (version: string) => Promise<void>;
+  apply: (version: string, progress: (progress: UpdateProgress) => void) => Promise<void>;
   restart: () => void;
   notify: (version: string, open: () => void) => void;
   openSettings: () => Promise<void>;
@@ -14,6 +18,7 @@ export class UpdateService {
   private current: UpdateState;
   private closed = false;
   private restarting = false;
+  private attempt = 0;
   private readonly isClosed = () => this.closed;
   private readonly notified = new Set<string>();
 
@@ -29,7 +34,10 @@ export class UpdateService {
   }
 
   get state(): UpdateState {
-    return { ...this.current };
+    return {
+      ...this.current,
+      ...(this.current.progress === undefined ? {} : { progress: { ...this.current.progress } })
+    };
   }
 
   private set(change: Partial<UpdateState>): void {
@@ -45,7 +53,13 @@ export class UpdateService {
       ['checking', 'updating', 'ready'].includes(this.current.status)
     )
       return this.state;
-    this.set({ status: 'checking', message: 'Checking for updates…' });
+    this.set({
+      status: 'checking',
+      version: undefined,
+      progress: undefined,
+      retryOperation: undefined,
+      message: 'Checking for updates…'
+    });
     try {
       const version = await this.ports.findRelease();
 
@@ -70,6 +84,7 @@ export class UpdateService {
     } catch {
       this.set({
         status: 'error',
+        retryOperation: 'check',
         message: 'Unable to check for updates. Check your connection and try again.'
       });
     }
@@ -80,22 +95,41 @@ export class UpdateService {
   async install(): Promise<UpdateState> {
     const version = this.current.version;
 
-    if (this.closed || this.current.status !== 'available' || version === undefined)
+    if (
+      this.closed ||
+      !(
+        this.current.status === 'available' ||
+        (this.current.status === 'error' && this.current.retryOperation === 'install')
+      ) ||
+      version === undefined
+    )
       return this.state;
+    const attempt = ++this.attempt;
+
     this.set({
       status: 'updating',
-      message: `Updating to ${version}… You can keep using Promptly.`
+      progress: undefined,
+      retryOperation: undefined,
+      message: `Downloading Promptly ${version}. You can keep using Promptly.`
     });
     try {
-      await this.ports.apply(version);
+      await this.ports.apply(version, (progress) => {
+        if (this.closed || this.current.status !== 'updating' || attempt !== this.attempt) return;
+        const parsed = updateProgressSchema.safeParse(progress);
+
+        if (parsed.success) this.set({ progress: parsed.data });
+      });
       this.set({
         status: 'ready',
+        progress: undefined,
         message: `Version ${version} is installed. Restart when you’re ready.`
       });
     } catch {
       this.set({
-        status: 'available',
-        message: 'Unable to update. Check your connection and try Update again.'
+        status: 'error',
+        progress: undefined,
+        retryOperation: 'install',
+        message: 'Unable to update. Check your connection and retry the download.'
       });
     }
 
@@ -103,9 +137,26 @@ export class UpdateService {
   }
 
   restart(): void {
-    if (this.closed || this.restarting || this.current.status !== 'ready') return;
+    if (
+      this.closed ||
+      this.restarting ||
+      !(
+        this.current.status === 'ready' ||
+        (this.current.status === 'error' && this.current.retryOperation === 'restart')
+      )
+    )
+      return;
     this.restarting = true;
-    this.ports.restart();
+    try {
+      this.ports.restart();
+    } catch {
+      this.restarting = false;
+      this.set({
+        status: 'error',
+        retryOperation: 'restart',
+        message: 'Unable to restart for the update. Try restarting again.'
+      });
+    }
   }
 
   close(): void {
