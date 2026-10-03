@@ -26,6 +26,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `main/snippets/tag-picker.test.ts` | Shared picker creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
 | `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
 | `settings/service.test.ts` | Successful preference save/reopen, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
+| `settings/application-services.test.ts` | Running app version, authorized fixed repository opening, malformed URL rejection and external browser failure through desktop operations |
 | `windows/visibility.test.ts` | Reachability when an external recovery route appears or disappears |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |

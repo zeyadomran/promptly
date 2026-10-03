@@ -1,6 +1,6 @@
 import path from 'node:path';
 
-import { app, ipcMain, nativeTheme } from 'electron';
+import { app, ipcMain, nativeTheme, shell } from 'electron';
 
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
@@ -15,6 +15,7 @@ import {
 } from './platform/native/selection-options';
 import type { WindowsSelection } from './platform/windows/windows-selection';
 import { createWindowsSelection } from './platform/windows/windows-selection';
+import { applicationServices } from './settings/application-services';
 import {
   electronSettingsControllers,
   updateWindowBackgrounds
@@ -144,6 +145,10 @@ if (primaryInstance)
         {
           ...library.services,
           ...settings.services,
+          ...applicationServices(
+            () => app.getVersion(),
+            (url) => shell.openExternal(url)
+          ),
           ...shortcutServices(keyboard.shortcuts, () => {
             tray?.changed();
           }),

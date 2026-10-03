@@ -47,7 +47,7 @@ export function OnboardingFooter({
         }}
       >
         {pending
-          ? 'Saving…'
+          ? 'Saving'
           : state.step === 'welcome'
             ? 'Get started'
             : state.step === 'shortcut'

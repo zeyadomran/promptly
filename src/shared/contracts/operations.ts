@@ -34,6 +34,11 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 
 export const operations = {
   ...transferOperations,
+  getApplicationInfo: {
+    request: emptySchema,
+    response: z.strictObject({ version: z.string().min(1).max(128) })
+  },
+  openRepository: { request: emptySchema, response: emptySchema },
   getOnboardingState: { request: emptySchema, response: onboardingStateSchema },
   setOnboardingStep: {
     request: z.strictObject({ step: onboardingStepSchema }),

@@ -74,6 +74,8 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
+    getApplicationInfo: (request) => call('getApplicationInfo', request),
+    openRepository: (request) => call('openRepository', request),
     getOnboardingState: (request) => call('getOnboardingState', request),
     setOnboardingStep: (request) => call('setOnboardingStep', request),
     finishOnboarding: (request) => call('finishOnboarding', request),

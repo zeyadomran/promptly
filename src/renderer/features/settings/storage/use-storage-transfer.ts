@@ -4,7 +4,6 @@ import type { ImportPreview } from '../../../../shared/contracts/backup/operatio
 import type { DesktopResult } from '../../../../shared/contracts/result';
 
 export function useStorageTransfer() {
-  const [directory, setDirectory] = useState<string>();
   const [preview, setPreview] = useState<ImportPreview>();
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string>();
@@ -16,11 +15,6 @@ export function useStorageTransfer() {
 
   useEffect(() => {
     active.current = true;
-    void window.promptly.getStorageLocation({}).then((result) => {
-      if (!active.current) return;
-      if (result.ok) setDirectory(result.value.directory);
-      else setError(result.error.message);
-    });
     return () => {
       active.current = false;
       if (token.current !== undefined)
@@ -124,12 +118,7 @@ export function useStorageTransfer() {
     return result?.ok === true;
   };
 
-  const reveal = async () => {
-    await run(() => window.promptly.revealStorageLocation({}));
-  };
-
   return {
-    directory,
     preview,
     pending,
     error,
@@ -139,7 +128,6 @@ export function useStorageTransfer() {
     chooseImport,
     cancelImport,
     confirmImport,
-    clear,
-    reveal
+    clear
   };
 }
