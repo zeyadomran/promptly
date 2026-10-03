@@ -32,6 +32,12 @@
     calc(100vw - env(titlebar-area-x, 0px) - env(titlebar-area-width, calc(100vw - 138px)))
   );
 }
+.window-titlebar[data-platform='win32'] .window-title-actions {
+  margin-right: 8px;
+}
+.window-titlebar[data-platform='win32'][data-mode='compact'] .window-title-actions {
+  gap: 3px;
+}
 .window-titlebar[data-mode='regular'] {
   height: 44px;
 }
