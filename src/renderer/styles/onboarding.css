@@ -380,7 +380,7 @@
 }
 .onboarding-footer button {
   font-size: 13px;
-  padding-inline: 0;
+  padding-inline: 12px;
   color: var(--muted-foreground);
 }
 .onboarding-footer .onboarding-continue {
