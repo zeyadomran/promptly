@@ -1,7 +1,8 @@
 import { RectangleHorizontal, RectangleVertical } from 'lucide-react';
 
 import type { SizeMode } from '../../../shared/contracts/window';
-import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
+import { SegmentedControl } from '../../components/shared/SegmentedControl';
+import { ToggleGroupItem } from '../../components/ui/toggle-group';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 
 export function SizeControl({
@@ -12,8 +13,8 @@ export function SizeControl({
   onChange: (mode: SizeMode) => void;
 }) {
   return (
-    <ToggleGroup
-      type="single"
+    <SegmentedControl
+      className="window-size-control"
       value={mode}
       aria-label="Window size"
       onValueChange={(value) => {
@@ -36,6 +37,6 @@ export function SizeControl({
         </TooltipTrigger>
         <TooltipContent>Regular</TooltipContent>
       </Tooltip>
-    </ToggleGroup>
+    </SegmentedControl>
   );
 }

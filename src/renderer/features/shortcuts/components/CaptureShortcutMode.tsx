@@ -3,7 +3,8 @@ import { useId, useState } from 'react';
 import type { Settings } from '../../../../shared/contracts/settings';
 import type { Modifier } from '../../../../shared/contracts/shortcuts';
 import type { ShortcutCollision, ShortcutEdit } from '../../../../shared/shortcuts/shortcut-edit';
-import { ToggleGroup, ToggleGroupItem } from '../../../components/ui/toggle-group';
+import { SegmentedControl } from '../../../components/shared/SegmentedControl';
+import { ToggleGroupItem } from '../../../components/ui/toggle-group';
 import type { useShortcutRecording } from '../hooks/use-shortcut-recording';
 import { DoubleTapKeycaps } from './DoubleTapKeycaps';
 import { DoubleTapWindow } from './DoubleTapWindow';
@@ -47,8 +48,7 @@ export function CaptureShortcutMode({
         <p>Saves the text you’ve selected in another app.</p>
       </div>
       <div className="shortcut-capture-controls">
-        <ToggleGroup
-          type="single"
+        <SegmentedControl
           value={mode}
           aria-label="Capture shortcut mode"
           className="shortcut-mode-toggle"
@@ -68,7 +68,7 @@ export function CaptureShortcutMode({
         >
           <ToggleGroupItem value="double-tap">Double-tap</ToggleGroupItem>
           <ToggleGroupItem value="combination">Key combination</ToggleGroupItem>
-        </ToggleGroup>
+        </SegmentedControl>
         {mode === 'double-tap' ? (
           <>
             <div className="shortcut-modifier-row">
