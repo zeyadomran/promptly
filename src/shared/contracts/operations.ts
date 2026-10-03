@@ -40,6 +40,7 @@ export const operations = {
     response: z.strictObject({ version: z.string().min(1).max(128) })
   },
   openRepository: { request: emptySchema, response: emptySchema },
+  openWiki: { request: emptySchema, response: emptySchema },
   getOnboardingState: { request: emptySchema, response: onboardingStateSchema },
   setOnboardingStep: {
     request: z.strictObject({ step: onboardingStepSchema }),
