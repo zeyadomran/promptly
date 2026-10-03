@@ -1,57 +1,65 @@
-import { ArrowDownWideNarrow } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
+import { useState } from 'react';
 
-import type { SearchRequest } from '../../../shared/contracts/domain';
 import { Button } from '../../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger
 } from '../../components/ui/dropdown-menu';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
+import { useShellNavigation } from '../window-chrome/shell-navigation';
 import { useLibrary } from './library-context';
-
-const sorts: { value: SearchRequest['sort']; label: string }[] = [
-  { value: 'newest', label: 'Newest first' },
-  { value: 'oldest', label: 'Oldest first' },
-  { value: 'most-copied', label: 'Most copied' },
-  { value: 'recently-copied', label: 'Recently copied' }
-];
+import { librarySortOptions } from './library-sort-options';
+import { LibrarySortItem } from './LibrarySortItem';
 
 export function LibrarySort() {
   const { state, model } = useLibrary();
+  const { view } = useShellNavigation();
+  const [open, setOpen] = useState(false);
+  const current = librarySortOptions.find((sort) => sort.value === state.request.sort);
+
+  if (current === undefined) return null;
+  const Icon = current.icon;
 
   return (
-    <DropdownMenu>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-xs" aria-label="Sort snippets">
-              <ArrowDownWideNarrow aria-hidden="true" />
-            </Button>
-          </DropdownMenuTrigger>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" sideOffset={6}>
-          Sort snippets
-        </TooltipContent>
-      </Tooltip>
-      <DropdownMenuContent align="end">
-        <DropdownMenuRadioGroup
-          value={state.request.sort}
-          onValueChange={(value) => {
-            const sort = sorts.find((item) => item.value === value);
-
-            if (sort !== undefined) model.query({ ...state.request, sort: sort.value });
+    <DropdownMenu open={view === 'library' && open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="xs"
+          className="library-sort-trigger"
+          aria-label={'Sort snippets: ' + current.label}
+        >
+          <Icon aria-hidden="true" />
+          {current.label}
+          <ChevronDown aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      {view === 'library' && (
+        <DropdownMenuContent
+          align="end"
+          className="library-sort-menu"
+          onCloseAutoFocus={(event) => {
+            if (document.querySelector('[data-shell-library][hidden]') !== null)
+              event.preventDefault();
           }}
         >
-          {sorts.map((sort) => (
-            <DropdownMenuRadioItem key={sort.value} value={sort.value}>
-              {sort.label}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
+          <div className="library-sort-heading">Sort by</div>
+          <DropdownMenuRadioGroup
+            value={state.request.sort}
+            onValueChange={(value) => {
+              const sort = librarySortOptions.find((item) => item.value === value);
+
+              if (sort !== undefined) model.query({ ...state.request, sort: sort.value });
+            }}
+          >
+            {librarySortOptions.map((sort) => (
+              <LibrarySortItem key={sort.value} {...sort} />
+            ))}
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      )}
     </DropdownMenu>
   );
 }

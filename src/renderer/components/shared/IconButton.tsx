@@ -9,18 +9,28 @@ interface IconButtonProps extends Omit<
   'children' | 'asChild' | 'size'
 > {
   label: string;
+  shortcut?: string | undefined;
   icon: LucideIcon;
 }
 
-export function IconButton({ label, icon: Icon, ...props }: IconButtonProps) {
+export function IconButton({ label, shortcut, icon: Icon, ...props }: IconButtonProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={label} {...props}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          data-promptly-icon-button
+          aria-label={label}
+          {...props}
+        >
           <Icon aria-hidden="true" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent>
+        {label}
+        {shortcut !== undefined && <kbd className="ml-2 font-mono opacity-60">{shortcut}</kbd>}
+      </TooltipContent>
     </Tooltip>
   );
 }

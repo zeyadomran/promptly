@@ -49,6 +49,18 @@ it('keeps recording focus and a reachable window when its external recovery rout
   };
 
   try {
+    const settings = await lifecycle.show('settings');
+
+    expect(settings).toBe(window);
+    expect(await lifecycle.services.openDesktopWindow({ kind: 'settings' })).toMatchObject({
+      ok: true,
+      value: { kind: 'main', visible: true }
+    });
+    expect(await lifecycle.services.returnToMainWindow({})).toMatchObject({
+      ok: true,
+      value: { kind: 'main', visible: true }
+    });
+    expect(window.isDestroyed()).toBe(false);
     lifecycle.hide();
     expect(window.isMinimized()).toBe(true);
     await fixture.shortcuts.controller.apply(fixture.settings);

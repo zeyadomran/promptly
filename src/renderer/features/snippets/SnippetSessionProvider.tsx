@@ -9,9 +9,11 @@ import { SnippetSession } from './snippet-session';
 
 export function SnippetSessionProvider({
   mode,
+  active = true,
   children,
   onModeChange
 }: {
+  active?: boolean;
   mode: SizeMode;
   children: ReactNode;
   onModeChange: (mode: SizeMode) => Promise<void>;
@@ -35,12 +37,12 @@ export function SnippetSessionProvider({
     session.select(library.selectedId, library.loading || library.total > 0);
   }, [session, library.selectedId, library.loading, library.total]);
   useEffect(() => {
-    if (mode === 'compact') session.warnModeChange();
-  }, [mode, session]);
+    if (active && mode === 'compact') session.warnModeChange();
+  }, [active, mode, session]);
   return (
     <SnippetContext value={{ session, state }}>
       {children}
-      <DraftChoiceDialog resumeEditing={() => onModeChange('regular')} />
+      <DraftChoiceDialog active={active} resumeEditing={() => onModeChange('regular')} />
     </SnippetContext>
   );
 }

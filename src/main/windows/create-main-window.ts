@@ -24,6 +24,7 @@ export async function createMainWindow(
   kind: WindowKind = 'main',
   created?: (window: BrowserWindow) => void
 ): Promise<BrowserWindow> {
+  if (kind === 'settings') kind = 'main';
   const snapshot = settingsSnapshotSchema.parse(
     initial ?? { revision: 0, settings: defaultSettings() }
   );
@@ -49,8 +50,7 @@ export async function createMainWindow(
   isolatedSession.setPermissionCheckHandler(() => false);
 
   const window = new BrowserWindow({
-    title:
-      kind === 'settings' ? 'Settings' : kind === 'onboarding' ? 'Set up Promptly' : 'Promptly',
+    title: kind === 'onboarding' ? 'Set up Promptly' : 'Promptly',
     ...bounds,
     minWidth: Math.min(geometry.minWidth, bounds.width),
     minHeight: Math.min(geometry.minHeight, bounds.height),
@@ -61,7 +61,7 @@ export async function createMainWindow(
     autoHideMenuBar: true,
     titleBarOverlay: {
       // Leave the renderer's bottom border below the native caption buttons.
-      height: kind === 'main' ? 39 : 37,
+      height: kind === 'onboarding' ? 37 : preferences.defaultSizeMode === 'regular' ? 43 : 39,
       color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
       symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
     },
