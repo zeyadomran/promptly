@@ -38,6 +38,7 @@ it('keeps recording focus and a reachable window when its external recovery rout
 
   await lifecycle.show();
   const tutorial = ControlledWindow.instances.at(-1);
+
   await lifecycle.showWiki();
   const window = ControlledWindow.instances.at(-1);
 
@@ -51,7 +52,10 @@ it('keeps recording focus and a reachable window when its external recovery rout
 
   try {
     expect(window).not.toBe(tutorial);
-    expect(window.webContents.sent.at(-1)).toEqual({ channel: 'promptly:shell-navigation', payload: 'wiki' });
+    expect(window.webContents.sent.at(-1)).toEqual({
+      channel: 'promptly:shell-navigation',
+      payload: 'wiki'
+    });
     expect(tutorial?.isDestroyed()).toBe(false);
     const settings = await lifecycle.show('settings');
 

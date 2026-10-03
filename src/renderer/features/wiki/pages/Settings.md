@@ -8,7 +8,7 @@ The shortcut can be customized.
 | [General](promptly:settings/general)       | Launch at login, show in system tray, default Compact/Regular size                 |
 | [Shortcuts](promptly:settings/shortcuts)   | Global and in-app bindings, double-tap timing, capture confirmation, normalization |
 | [Appearance](promptly:settings/appearance) | Light, Dark, or System theme; Always on top                                        |
-| [Tags](promptly:settings/tags)             | Create, rename, recolor, or delete tags                                     |
+| [Tags](promptly:settings/tags)             | Create, rename, recolor, or delete tags                                            |
 | [Storage](promptly:settings/storage)       | JSON/Markdown export, JSON import, Clear all                                       |
 | [About](promptly:settings/about)           | Running version, updates, offline wiki, repository and privacy information         |
 
