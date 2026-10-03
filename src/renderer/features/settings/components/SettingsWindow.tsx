@@ -66,6 +66,7 @@ export function SettingsWindow() {
           </SettingsSection>
           <SettingsSection
             value="shortcuts"
+            grouped={false}
             title="Shortcuts"
             description="Keyboard access to Promptly."
           >

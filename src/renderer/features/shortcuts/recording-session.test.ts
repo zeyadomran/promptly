@@ -48,6 +48,7 @@ it('records a combination only after suppression, releases before saving and can
   session.handleKey({ ...key, isComposing: true });
   session.handleKey({ ...key, repeat: true });
   session.handleKey({ ...key, key: 'Control', code: 'ControlLeft' });
+  expect(session.snapshot).toMatchObject({ preview: 'Control', candidate: undefined });
   session.handleKey({ ...key, ctrlKey: false });
   expect(session.snapshot.phase).toBe('recording');
   session.handleKey(key);
@@ -125,6 +126,25 @@ it('records a combination only after suppression, releases before saving and can
   session.handleKeyUp({ ...key, key: 'ArrowDown', code: 'ArrowDown', ctrlKey: false });
   await session.settled();
   expect(saved.at(-1)).toBe('Down');
+  const collision = { action: 'focusSearch', label: 'Focus search', swapAllowed: true } as const;
+
+  await session.start('tag', commit, 'local', () => ({ kind: 'conflict', collision }));
+  session.handleKey({ ...key, key: 'f', code: 'KeyF' });
+  expect(session.snapshot.collision).toEqual(collision);
+  expect(suppressed).toBe(true);
+  session.handleKeyUp({ ...key, key: 'f', code: 'KeyF', ctrlKey: false });
+  await session.settled();
+  expect(session.snapshot).toMatchObject({ phase: 'conflict', candidate: 'Control+F', collision });
+  expect(suppressed).toBe(false);
+  expect(saved.at(-1)).toBe('Down');
+  await session.resolveConflict(() => {
+    expect(suppressed).toBe(false);
+    saved.push('Swapped once');
+    return Promise.resolve();
+  });
+  expect(session.snapshot.phase).toBe('idle');
+  expect(saved.at(-1)).toBe('Swapped once');
+  await session.cancel();
   await session.start('next', commit, 'local');
   expect(session.handleKey({ ...key, key: 'Tab', code: 'Tab', ctrlKey: false })).toBe(false);
   await session.settled();
