@@ -1,10 +1,17 @@
 import { X } from 'lucide-react';
+import type { KeyboardEvent } from 'react';
 
 import type { TagSummary } from '../../../shared/contracts/domain';
 import { Button } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/checkbox';
 import { CommandItem } from '../../components/ui/command-item';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { tagColorStyle } from '../../lib/tag-palette';
+
+function stopNestedActivation(event: KeyboardEvent<HTMLElement>): void {
+  // Leave native button/checkbox activation intact; cmdk must not activate another selected row.
+  if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+}
 
 export function TagPickerItem({
   tag,
@@ -27,6 +34,8 @@ export function TagPickerItem({
           tabIndex={-1}
           disabled={disabled}
           aria-label={'Filter by ' + tag.name}
+          onKeyDown={stopNestedActivation}
+          onKeyUp={stopNestedActivation}
           onCheckedChange={toggle}
           onClick={(event) => {
             event.stopPropagation();
@@ -40,23 +49,30 @@ export function TagPickerItem({
           {tag.snippetCount}
         </span>
       ) : selected ? (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          className="tag-picker-remove"
-          disabled={disabled}
-          aria-label={'Remove ' + tag.name}
-          onPointerDown={(event) => {
-            event.preventDefault();
-            event.stopPropagation();
-          }}
-          onClick={(event) => {
-            event.stopPropagation();
-            toggle();
-          }}
-        >
-          <X aria-hidden="true" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon-xs"
+              className="tag-picker-remove"
+              disabled={disabled}
+              aria-label={'Remove ' + tag.name}
+              onKeyDown={stopNestedActivation}
+              onKeyUp={stopNestedActivation}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+              }}
+              onClick={(event) => {
+                event.stopPropagation();
+                toggle();
+              }}
+            >
+              <X aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Remove {tag.name}</TooltipContent>
+        </Tooltip>
       ) : (
         <span className="tag-picker-add">Add</span>
       )}

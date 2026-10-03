@@ -57,13 +57,14 @@
   gap: 6px;
   padding: 7px 6px;
   border-radius: 4px;
-  cursor: default;
+  cursor: pointer;
 }
 .tag-command-item[data-selected='true'] {
   background: var(--accent);
   color: var(--accent-foreground);
 }
 .tag-command-item[data-disabled='true'] {
+  cursor: default;
   opacity: 0.5;
   pointer-events: none;
 }

@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import type { Snippet } from '../../../shared/contracts/domain';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryTagActions } from '../library/library-commands';
 import { TagBadge } from '../tags/TagBadge';
 import { TagOverflowRow } from '../tags/TagOverflowRow';
@@ -48,24 +49,29 @@ export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
         </Badge>
       )}
       end={
-        <Badge asChild variant="outline" className="tag-badge preview-add-tag">
-          <Button
-            data-tag-picker-trigger={'preview-add-' + snippet.id}
-            variant="outline"
-            size="xs"
-            className="tag-overflow-trigger"
-            disabled={disabled}
-            aria-label="Add tag"
-            aria-haspopup="dialog"
-            aria-expanded={tags?.activeTrigger === 'preview-add-' + snippet.id}
-            onClick={(event) => {
-              open(event.currentTarget);
-            }}
-          >
-            <Plus aria-hidden="true" />
-            {snippet.tags.length === 0 && 'Add tag'}
-          </Button>
-        </Badge>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge asChild variant="outline" className="tag-badge preview-add-tag">
+              <Button
+                data-tag-picker-trigger={'preview-add-' + snippet.id}
+                variant="outline"
+                size="xs"
+                className="tag-overflow-trigger"
+                disabled={disabled}
+                aria-label="Add tag"
+                aria-haspopup="dialog"
+                aria-expanded={tags?.activeTrigger === 'preview-add-' + snippet.id}
+                onClick={(event) => {
+                  open(event.currentTarget);
+                }}
+              >
+                <Plus aria-hidden="true" />
+                {snippet.tags.length === 0 && 'Add tag'}
+              </Button>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>Add tag</TooltipContent>
+        </Tooltip>
       }
       trailing={
         <span className="snippet-preview-meta">

@@ -1,6 +1,7 @@
 import { Plus } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
+import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { tagColorStyle } from '../../lib/tag-palette';
 import { TagName } from '../tags/TagName';
 import { TagOverflowRow } from '../tags/TagOverflowRow';
@@ -44,20 +45,29 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
       items={tags.map((tag) => ({
         id: tag.id,
         content: (
-          <Button
-            variant="ghost"
-            size="xs"
-            className="library-tag-chip"
-            aria-pressed={selected.includes(tag.id)}
-            aria-label={tag.name + ', ' + String(tag.snippetCount) + ' snippets'}
-            disabled={!selected.includes(tag.id) && selected.length >= 100}
-            onClick={() => {
-              toggle(tag.id);
-            }}
-          >
-            <span aria-hidden="true" className="library-tag-dot" style={tagColorStyle(tag.color)} />
-            <TagName name={tag.name} />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="xs"
+                className="library-tag-chip"
+                aria-pressed={selected.includes(tag.id)}
+                aria-label={tag.name + ', ' + String(tag.snippetCount) + ' snippets'}
+                disabled={!selected.includes(tag.id) && selected.length >= 100}
+                onClick={() => {
+                  toggle(tag.id);
+                }}
+              >
+                <span
+                  aria-hidden="true"
+                  className="library-tag-dot"
+                  style={tagColorStyle(tag.color)}
+                />
+                <TagName name={tag.name} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>{tag.name}</TooltipContent>
+          </Tooltip>
         )
       }))}
       overflow={(hidden, measuring) => (
@@ -78,22 +88,27 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
         </Button>
       )}
       end={
-        <Button
-          data-tag-picker-trigger="filter-create"
-          variant="ghost"
-          size={regular ? 'xs' : 'icon-xs'}
-          className="library-create-tag tag-overflow-trigger"
-          aria-label="Create tag"
-          aria-haspopup="dialog"
-          aria-expanded={actions?.activeTrigger === 'filter-create'}
-          disabled={actions === undefined}
-          onClick={(event) => {
-            actions?.createTag(event.currentTarget);
-          }}
-        >
-          <Plus aria-hidden="true" />
-          {regular && 'New tag'}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              data-tag-picker-trigger="filter-create"
+              variant="ghost"
+              size={regular ? 'xs' : 'icon-xs'}
+              className="library-create-tag tag-overflow-trigger"
+              aria-label="Create tag"
+              aria-haspopup="dialog"
+              aria-expanded={actions?.activeTrigger === 'filter-create'}
+              disabled={actions === undefined}
+              onClick={(event) => {
+                actions?.createTag(event.currentTarget);
+              }}
+            >
+              <Plus aria-hidden="true" />
+              {regular && 'New tag'}
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Create tag</TooltipContent>
+        </Tooltip>
       }
     />
   );
