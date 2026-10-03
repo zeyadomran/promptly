@@ -2,6 +2,7 @@ import { acceleratorKey } from '../../../../shared/shortcuts/accelerator';
 import { Button } from '../../../components/ui/button';
 import { CaptureShortcutMode } from '../../shortcuts/components/CaptureShortcutMode';
 import { DoubleTapWindow } from '../../shortcuts/components/DoubleTapWindow';
+import { RetryShortcuts } from '../../shortcuts/components/RetryShortcuts';
 import { ShortcutConflictStatus } from '../../shortcuts/components/ShortcutConflictStatus';
 import { ShortcutRecorder } from '../../shortcuts/components/ShortcutRecorder';
 import { useShortcutPreferences } from '../../shortcuts/hooks/use-shortcut-preferences';
@@ -85,6 +86,7 @@ export function ShortcutSettings() {
         onChange={(doubleTapWindowMs) => apply({ doubleTapWindowMs })}
       />
       <ShortcutConflictStatus status={status} error={error} />
+      <RetryShortcuts status={status} disabled={inactive} />
       <LocalShortcutSettings
         value={settings.localShortcuts}
         recording={recording}

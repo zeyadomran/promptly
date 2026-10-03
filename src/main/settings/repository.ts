@@ -32,6 +32,10 @@ export class SettingsRepository {
     // Earlier preference rows may have represented the hide override as a boolean.
     if (typeof values['hideAfterCopy'] === 'boolean')
       values['hideAfterCopy'] = values['hideAfterCopy'] ? 'always' : 'never';
+    const local = values['localShortcuts'];
+
+    if (local !== null && typeof local === 'object' && !Array.isArray(local))
+      values['localShortcuts'] = { ...defaults.localShortcuts, ...local };
     const parsed = settingsSchema.safeParse({ ...defaults, ...values });
 
     if (!parsed.success) throw new StorageStartupError('preferences');

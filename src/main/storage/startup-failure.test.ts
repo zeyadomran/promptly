@@ -30,6 +30,9 @@ it('rejects damaged and newer databases with safe startup guidance and retains o
     });
     for (const [name, cause] of [
       ['preferences', 'Stored preferences are invalid. Restore the database from backup.'],
+      ['local-null', 'Stored preferences are invalid. Restore the database from backup.'],
+      ['local-invalid', 'Stored preferences are invalid. Restore the database from backup.'],
+      ['local-extra', 'Stored preferences are invalid. Restore the database from backup.'],
       [
         'newer',
         'This database was created by a newer Promptly version. Install that version or a newer release.'
@@ -53,7 +56,17 @@ it('rejects damaged and newer databases with safe startup guidance and retains o
           database
             .prepare('UPDATE settings SET value = ? WHERE key = ?')
             .run('private malformed preference value', 'theme');
-        else database.exec('PRAGMA user_version = 999');
+        else if (name.startsWith('local-')) {
+          const values = {
+            'local-null': null,
+            'local-invalid': { copy: 7 },
+            'local-extra': { copy: 'Return', unknownCommand: 'Escape' }
+          };
+
+          database
+            .prepare('UPDATE settings SET value = ? WHERE key = ?')
+            .run(JSON.stringify(values[name as keyof typeof values]), 'localShortcuts');
+        } else database.exec('PRAGMA user_version = 999');
         database.close();
       }
 

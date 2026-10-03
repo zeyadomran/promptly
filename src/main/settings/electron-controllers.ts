@@ -4,6 +4,7 @@ import type { Settings } from '../../shared/contracts/settings';
 import { updateNativeChrome } from '../windows/native-chrome';
 import { isOverlayWindow } from '../windows/overlay-windows';
 import type { SettingsController, SettingsControllers } from './controllers';
+import { loginController } from './login-controller';
 import type { NativePreferences } from './login-preferences';
 import { loginPreferences } from './login-preferences';
 
@@ -50,18 +51,9 @@ export function electronSettingsControllers(
           return Promise.resolve();
         }
       },
-      {
-        name: 'launch at login',
-        optionalStartup: true,
-        keys: ['launchAtLogin'],
-        apply: (settings: Settings) => {
-          native.setLogin(settings.launchAtLogin);
-          if (native.getLogin() !== settings.launchAtLogin)
-            throw new Error('Login preference was rejected.');
-          return Promise.resolve();
-        }
-      }
+      loginController(native)
     ],
+    loginStatus: native.getLoginState,
     unavailable: [
       ...(tray === undefined ? (['showInTray'] as const) : []),
       ...(shortcuts === undefined ? (['saveShortcut', 'openShortcut', 'pinShortcut'] as const) : [])

@@ -16,7 +16,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `renderer/features/snippets/snippet-session.test.ts` | Dirty draft cancellation/application, missing/imported data and stale selection reads |
 | `renderer/features/library/library-model.test.ts` | Paged browsing, command-eligible selection and reveal clearance, typed search debounce and revision/query reconciliation |
 | `main/copy/service.test.ts` | Authoritative copy/Markdown, durable statistics, external clipboard/database failure and entered-write retirement |
-| `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, capture-only pause, reversible tray visibility and retired native-menu ownership |
+| `main/tray/coordinator.test.ts` | Updated recent items, authoritative main-owned copy routing, expiring/replaced copy feedback, capture-only pause, reversible tray visibility and retired native-menu/timer ownership |
 | `main/capture/service.test.ts` | Native Windows selection through real SQLite, conservative normalization, exact recapture, suppression/clear/import cancellation, pre-deferral admission, entered-save retirement and source capability expiry across external helper eviction/replacement |
 | `main/onboarding/coordinator.test.ts` | Real practice capture, durable completion/reopen, unsupported recovery and Skip/owner retirement without fabricated data |
 | `main/capture-toast/service.test.ts` | Committed confirmation replacement, actionable failure feedback/cooldown, silent empty/cancellation, validated open/focus activation, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |
@@ -25,7 +25,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo through deleted/merged tags, complete JSON Lines and Markdown export, >64 MiB/17-million-unit restore/reopen, tag rename/collision/atomic membership merge and tag-only deletion |
 | `main/snippets/tag-picker.test.ts` | Shared picker all-tag choices, assigned-first and catalog ordering, creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
 | `storage/transfer/import-safety.test.ts` | Invalid/missing/incomplete import rejection, atomic collision/membership handling, cleanup permission failures preserve committed replies/publication and safe expiry, idempotent versions and deliberate duplicates, immutable previews, unrelated revision tolerance and content/tag conflict rejection |
-| `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
+| `settings/service.test.ts` | Missing nested legacy defaults, durable preference changes and conflict rejection, observed Windows-disabled login state under spaced installation paths, explicit enable/native approval rollback and uninstall cleanup without changing retained preferences |
 | `settings/startup-effects.test.ts` | Optional native startup failure retains requested preferences, exposes unavailable controls and permits unrelated durable changes |
 | `storage/startup-failure.test.ts` | Real worker rejects damaged, corrupt-preference and newer databases with safe visible causes while retaining owned file bytes |
 | `lifecycle/failure-recovery.test.ts` | Dead worker rejects commands without replay, retires commands before explicit restart/quit and preserves bounded cleanup ownership |
@@ -34,7 +34,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `windows/renderer-recovery.test.ts` | Real window creation/registry/settings owners with controlled Electron health/dialog effects: explicit waiting, responsive recovery, taskbar-only crash recreation without quitting, explicit Quit retirement and retained saved data |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps, input/hold cancellation, real external helper resync/death/readiness recovery, retry bounds and recorder/sleep/close ownership |
-| `shortcuts/transactions.test.ts` | Legacy global binding startup, atomic shortcut defaults/reset/reopen with retained unrelated settings/data, and rejected OS replacement preserve authoritative preferences and previous live bindings |
+| `shortcuts/transactions.test.ts` | Safe unavailable legacy text bindings, explicit registration retry with recorder/sleep/shutdown guards, atomic defaults/reset/reopen and rejected OS replacement preserve authoritative preferences/data and previous live bindings |
 | `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad/local key mapping, Escape recording and Tab exit, key release before commit, cancellation and stale acquisition retirement through fake IPC |
 | `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 
