@@ -5,10 +5,13 @@ import type { Shortcuts } from '../shortcuts/service';
 import type { StorageClient } from '../storage/client';
 import { TrayFeedback } from './feedback';
 import { trayLabel } from './label';
+import { trayMenu } from './menu';
 import type { TrayHandle, TrayItem, TrayNative } from './ports';
 
 interface TrayCommands {
   copy: () => CopyService | undefined;
+  updateReady: () => boolean;
+  restartForUpdate: () => void;
   open: (kind: 'main' | 'settings') => Promise<void>;
   recover: () => Promise<void>;
   quit: () => void;
@@ -100,28 +103,17 @@ export class TrayCoordinator {
             run: () => this.copy(snippet.id, owner)
           }));
 
-          const menu: TrayItem[] = [
-            { label: 'Open Promptly', run: () => this.open('main') },
-            { type: 'separator' },
-            ...items,
-            { type: 'separator' },
-            {
-              label: this.shortcuts.status.capturePaused ? 'Resume capture' : 'Pause capture',
-              run: async () => {
-                if (!this.available) return;
-                this.shortcuts.setPaused(!this.shortcuts.status.capturePaused);
-                await this.refresh();
-              }
+          const menu = trayMenu(items, this.shortcuts.status, {
+            open: (kind) => this.open(kind),
+            pause: async () => {
+              if (!this.available) return;
+              this.shortcuts.setPaused(!this.shortcuts.status.capturePaused);
+              await this.refresh();
             },
-            { label: 'Settings', run: () => this.open('settings') },
-            {
-              label: 'Quit',
-              run: () => {
-                this.commands.quit();
-                return Promise.resolve();
-              }
-            }
-          ];
+            updateReady: this.commands.updateReady,
+            restartForUpdate: this.commands.restartForUpdate,
+            quit: this.commands.quit
+          });
 
           handle?.setMenu(menu.map((item) => this.ownedItem(item, owner)));
         } while (seen !== this.version);

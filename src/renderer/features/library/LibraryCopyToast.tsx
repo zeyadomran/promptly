@@ -5,8 +5,8 @@ import { LibraryCopyToastContent } from './LibraryCopyToastContent';
 
 const confirmationId = 'library-copy';
 
-export function notifyCopied(): void {
-  toast.custom(() => <LibraryCopyToastContent />, {
+export function notifyCopied(preview?: string): void {
+  toast.custom(() => <LibraryCopyToastContent preview={preview} />, {
     id: confirmationId,
     duration: Infinity,
     dismissible: false

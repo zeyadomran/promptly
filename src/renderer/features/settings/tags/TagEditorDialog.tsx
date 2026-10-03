@@ -1,15 +1,11 @@
 import { useId, useRef, useState } from 'react';
 
-import {
-  customTagColorSchema,
-  tagInputNameSchema,
-  type TagSummary
-} from '../../../../shared/contracts/domain';
+import { tagInputNameSchema, type TagSummary } from '../../../../shared/contracts/domain';
 import { Button } from '../../../components/ui/button';
 import { DialogFooter } from '../../../components/ui/dialog';
 import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
-import { type TagColor, tagColorHex } from '../../../lib/tag-palette';
+import { type TagColor } from '../../../lib/tag-palette';
 import { TagColorPicker } from './TagColorPicker';
 import { TagDialog, type TagDialogProps } from './TagDialog';
 
@@ -25,7 +21,6 @@ export function TagEditorDialog({
 }) {
   const [name, setName] = useState(tag?.name ?? '');
   const [color, setColor] = useState(tag?.color ?? initialColor);
-  const [colorDraft, setColorDraft] = useState(tagColorHex(tag?.color ?? initialColor));
   const [validation, setValidation] = useState<string>();
   const composing = useRef(false);
   const nameId = useId();
@@ -42,9 +37,6 @@ export function TagEditorDialog({
           event.preventDefault();
           if (dialog.pending || composing.current) return;
           const parsed = tagInputNameSchema.safeParse(name);
-          const parsedColor = customTagColorSchema.safeParse(colorDraft);
-
-          if (!parsedColor.success) return;
 
           if (!parsed.success) {
             setValidation('Enter a name of 1–64 characters using well-formed Unicode.');
@@ -79,17 +71,9 @@ export function TagEditorDialog({
           <span>Color</span>
           <TagColorPicker
             color={color}
-            draft={colorDraft}
             disabled={dialog.pending}
             change={(chosen) => {
               setColor(chosen);
-              setColorDraft(tagColorHex(chosen));
-            }}
-            changeDraft={(draft) => {
-              setColorDraft(draft);
-              const parsed = customTagColorSchema.safeParse(draft);
-
-              if (parsed.success) setColor(parsed.data);
             }}
           />
         </div>
@@ -102,10 +86,7 @@ export function TagEditorDialog({
           <Button type="button" variant="outline" disabled={dialog.pending} onClick={dialog.close}>
             Cancel
           </Button>
-          <Button
-            type="submit"
-            disabled={dialog.pending || !customTagColorSchema.safeParse(colorDraft).success}
-          >
+          <Button type="submit" disabled={dialog.pending}>
             {dialog.pending ? 'Saving' : 'Save tag'}
           </Button>
         </DialogFooter>

@@ -1,7 +1,8 @@
-import { MoreHorizontal } from 'lucide-react';
+import { CopyPlus, ExternalLink, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { Snippet } from '../../../shared/contracts/domain';
+import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { Button } from '../../components/ui/button';
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
+import { usePreferences } from '../settings/settings-context';
 import { useShellNavigation } from '../window-chrome/shell-navigation';
 
 export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
@@ -20,6 +22,11 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
   const [open, setOpen] = useState(false);
   const commands = useLibraryCommands();
   const { model } = useLibrary();
+  const { settings } = usePreferences();
+  const deleteShortcut = shortcutLabel(settings.localShortcuts.delete, window.promptly.platform)
+    .replace('DELETE', 'Del')
+    .replace('BACKSPACE', 'Backspace')
+    .replace('TAB', 'Tab');
   const [source, setSource] = useState({
     snippet,
     available: false,
@@ -99,6 +106,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
               void commands?.copy(snippet.id, 'markdown');
             }}
           >
+            <FileCode aria-hidden="true" />
             Copy as Markdown
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -107,6 +115,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
               void duplicate();
             }}
           >
+            <CopyPlus aria-hidden="true" />
             Duplicate
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -122,6 +131,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
                 });
             }}
           >
+            <ExternalLink aria-hidden="true" />
             Open source application
           </DropdownMenuItem>
           {(!sourceReady || !source.available) && (
@@ -137,7 +147,9 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
               void commands?.deleteSelected();
             }}
           >
+            <Trash2 aria-hidden="true" />
             Delete snippet
+            <span className="menu-shortcut">{deleteShortcut}</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       )}

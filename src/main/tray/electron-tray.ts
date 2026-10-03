@@ -9,6 +9,7 @@ import {
   Tray
 } from 'electron';
 
+import { trayOpenItem } from './menu';
 import type { TrayItem, TrayNative } from './ports';
 
 /** The taskbar theme follows Windows system UI, independently of the app theme setting. */
@@ -54,7 +55,7 @@ export function electronTray(onError: () => void): TrayNative {
 
       nativeTheme.on('updated', changed);
       tray.on('click', () => {
-        invoke(menu[0]);
+        invoke(trayOpenItem(menu));
       });
       update();
       return {
@@ -64,7 +65,11 @@ export function electronTray(onError: () => void): TrayNative {
           tray.setContextMenu(
             Menu.buildFromTemplate(
               items.map<MenuItemConstructorOptions>((item) => ({
-                label: item.label ?? '',
+                // A display hint does not install another accelerator or intercept native input.
+                label:
+                  item.shortcut !== undefined && item.shortcut !== ''
+                    ? `${item.label ?? ''}\t${item.shortcut}`
+                    : (item.label ?? ''),
                 type: item.type ?? 'normal',
                 checked: item.checked ?? false,
                 enabled: item.enabled ?? true,
