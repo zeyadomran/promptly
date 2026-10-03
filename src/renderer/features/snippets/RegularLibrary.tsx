@@ -1,6 +1,7 @@
 import { Button } from '../../components/ui/button';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
+import { libraryDisplay } from '../library/library-display';
 import { LibraryEmpty } from '../library/LibraryEmpty';
 import { LibraryList } from '../library/LibraryList';
 import { LibraryListHeader } from '../library/LibraryListHeader';
@@ -11,6 +12,7 @@ import { SnippetPreview } from './SnippetPreview';
 
 export function RegularLibrary() {
   const { state, model } = useLibrary();
+  const display = libraryDisplay(state);
   const commands = useLibraryCommands();
 
   return (
@@ -39,11 +41,11 @@ export function RegularLibrary() {
         <div className="regular-library-list">
           <LibraryListHeader />
           <div className="regular-library-results" aria-busy={state.loading}>
-            {state.loading && state.total === 0 ? (
+            {state.loading && display.total === 0 ? (
               <p role="status" className="library-empty">
                 Loading snippets…
               </p>
-            ) : state.total === 0 ? (
+            ) : display.total === 0 ? (
               <LibraryEmpty />
             ) : (
               <LibraryList regular />

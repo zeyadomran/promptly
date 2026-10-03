@@ -1,6 +1,12 @@
 import { expect, it, vi } from 'vitest';
 
 import { delayedLibraryFixture } from './delayed-library-fixture';
+import { libraryDisplay } from './library-display';
+import {
+  expectLibraryCopyRefresh,
+  expectLibraryReadFailure,
+  expectRetainedLibraryRefresh
+} from './library-display-test-fixture';
 import { expectLibraryGeometry } from './library-geometry-test-fixture';
 import { LibraryModel } from './library-model';
 import { libraryPreviewFixture } from './library-preview-test-fixture';
@@ -19,6 +25,7 @@ it('browses paged results with command-safe selection across refreshes and newer
     preview.start();
     model.start();
     await settle(() => model.snapshot().selectedIndex, 0);
+    await expectRetainedLibraryRefresh(fixture, model, expect, settle);
     await model.moveSelection(-1);
     expect(model.snapshot().selectedIndex).toBe(0);
     expect(model.snapshot().revealVersion).toBe(1);
@@ -72,17 +79,7 @@ it('browses paged results with command-safe selection across refreshes and newer
     await settle(() => model.snapshot().selectedIndex, 905);
     expect(model.snapshot().selectedId).toBe(selected.id);
     expect(preview.snapshot().snippet?.text).toBe('Snippet 201');
-    fixture.copy(selected.id);
-    expect(model.snapshot()).toMatchObject({
-      selectedId: selected.id,
-      selectedIndex: 905,
-      loading: false
-    });
-    expect(model.snapshot().cache.at(905)?.snippet).toMatchObject({
-      copyCount: 1,
-      lastCopiedAt: '2026-10-03T00:00:00Z'
-    });
-    expect(model.snapshot().cache.revision).toBe(4);
+    expectLibraryCopyRefresh(fixture, model, selected.id, expect);
     const copied = latest[1_000];
 
     if (copied === undefined) throw new Error('Missing owned copy target');
@@ -122,6 +119,8 @@ it('browses paged results with command-safe selection across refreshes and newer
     await vi.advanceTimersByTimeAsync(199);
     expect(model.snapshot()).toMatchObject({ loading: true, total: 0, selectedId: null });
     expect(model.snapshot().cache.size).toBe(0);
+    expect(libraryDisplay(model.snapshot()).total).toBe(1_400);
+    expect(libraryDisplay(model.snapshot()).cache.size).toBeGreaterThan(0);
     expect(fixture.requests.slice(requested)).toEqual([]);
     model.query({ ...initialQuery, query: 'Snippet 999' }, true);
     model.ensure(0);
@@ -143,6 +142,7 @@ it('browses paged results with command-safe selection across refreshes and newer
     expect(model.snapshot().cache.size).toBe(0);
     await vi.advanceTimersByTimeAsync(1);
     expect(model.snapshot().total).toBe(1);
+    await expectLibraryReadFailure(fixture, model, expect, settle);
     model.query({ ...initialQuery, query: 'missing' }, true);
     model.query({ ...model.snapshot().request, sort: 'oldest', untagged: true });
     await vi.advanceTimersByTimeAsync(0);

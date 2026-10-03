@@ -1,15 +1,17 @@
 import { useEffect } from 'react';
 
 import { useLibrary } from './library-context';
+import { libraryDisplay } from './library-display';
 import { LibraryRow } from './LibraryRow';
 import { useLibraryRange } from './use-library-range';
 import { useVirtualStyles } from './use-virtual-styles';
 
 export function LibraryList({ regular = false }: { regular?: boolean }) {
   const { state, model } = useLibrary();
+  const display = libraryDisplay(state);
   const { scroller, range } = useLibraryRange(
-    state.total,
-    state.selectedIndex,
+    display.total,
+    display.selectedIndex,
     state.revealVersion,
     regular
   );
@@ -37,7 +39,7 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
         rows.some(
           (row) =>
             row.index === state.selectedIndex &&
-            state.cache.at(row.index)?.snippet.id === state.selectedId
+            display.cache.at(row.index)?.snippet.id === state.selectedId
         )
           ? `snippet-${state.selectedId}`
           : undefined
@@ -45,7 +47,7 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
     >
       <div className={`library-virtual-space ${scope}`}>
         {rows.map((row) => {
-          const item = state.cache.at(row.index);
+          const item = display.cache.at(row.index);
 
           return item === undefined ? (
             <div
