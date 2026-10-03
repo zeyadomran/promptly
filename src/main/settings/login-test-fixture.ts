@@ -33,7 +33,7 @@ export function loginTestFixture(directory: string) {
     getLoginItemSettings: ({ path: target }: { path: string }) => {
       // Electron 44.5.1 formats the exact Run comparator but parses launch-item lookup.
       const exact = target.startsWith('"') && target.endsWith('"') ? target.slice(1, -1) : target;
-      const lookup = target.match(/^"([^"]*)"/)?.[1] ?? target.split(/\s/)[0] ?? '';
+      const lookup = /^"([^"]*)"/.exec(target)?.[1] ?? target.split(/\s/)[0] ?? '';
       const found = loginEntries.get(lookup) === true;
 
       return {
