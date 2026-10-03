@@ -88,6 +88,9 @@
   top: 14px;
   right: 14px;
 }
+[data-slot='dialog-header'] {
+  text-align: left;
+}
 [data-slot='dialog-title'] {
   font-size: 16px;
   font-weight: 600;
