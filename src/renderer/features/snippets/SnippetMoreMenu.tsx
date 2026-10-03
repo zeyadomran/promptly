@@ -23,7 +23,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
   const [source, setSource] = useState({
     snippet,
     available: false,
-    explanation: 'Checking source availability…'
+    explanation: 'Checking source availabilityâ€¦'
   });
   // A new committed snapshot retires availability before the refresh effect runs.
   const sourceReady = source.snippet === snippet;
@@ -129,7 +129,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
           </DropdownMenuItem>
           {(!sourceReady || !source.available) && (
             <p className="snippet-source-explanation">
-              {sourceReady ? source.explanation : 'Checking source availability…'}
+              {sourceReady ? source.explanation : 'Checking source availabilityâ€¦'}
             </p>
           )}
           <DropdownMenuSeparator />
