@@ -2,9 +2,12 @@ import { BookOpen, ChevronLeft, Settings } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import type { SizeMode } from '../../../shared/contracts/window';
+import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { IconButton } from '../../components/shared/IconButton';
 import { Logo } from '../../components/shared/Logo';
 import { Button } from '../../components/ui/button';
+import { usePreferences } from '../settings/settings-context';
+import { shellGlobalBindings, wikiShortcutAvailable } from './shell-keyboard';
 import { useShellNavigation } from './shell-navigation';
 import { SizeControl } from './SizeControl';
 import { WindowPreferences } from './WindowPreferences';
@@ -21,6 +24,11 @@ export function WindowTitleBar({
   updateVisible?: boolean;
 }) {
   const { view, showLibrary, toggleView } = useShellNavigation();
+  const { settings } = usePreferences();
+  const wikiShortcut = wikiShortcutAvailable(
+    settings.localShortcuts,
+    shellGlobalBindings(settings)
+  );
 
   return (
     <header
@@ -55,8 +63,8 @@ export function WindowTitleBar({
         <WindowPreferences />
         <IconButton
           label="Wiki"
-          shortcut="F1"
-          aria-keyshortcuts="F1"
+          shortcut={wikiShortcut ? 'F1' : undefined}
+          aria-keyshortcuts={wikiShortcut ? 'F1' : undefined}
           icon={BookOpen}
           aria-pressed={view === 'wiki'}
           className={view === 'wiki' ? 'bg-muted' : undefined}
@@ -66,6 +74,7 @@ export function WindowTitleBar({
         />
         <IconButton
           label="Settings"
+          shortcut={shortcutLabel(settings.localShortcuts.settings, window.promptly.platform)}
           icon={Settings}
           aria-pressed={view === 'settings'}
           className={view === 'settings' ? 'bg-muted' : undefined}

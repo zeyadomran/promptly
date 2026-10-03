@@ -64,7 +64,7 @@
   margin-left: auto;
   -webkit-app-region: no-drag;
 }
-.window-title-actions > button {
+.window-title-actions [data-promptly-icon-button] {
   -webkit-app-region: no-drag;
   height: 26px;
   width: 28px;
@@ -86,7 +86,7 @@
   background: var(--border);
   margin-inline: 4px;
 }
-.window-titlebar[data-mode='compact'] .window-title-actions > button {
+.window-titlebar[data-mode='compact'] .window-title-actions [data-promptly-icon-button] {
   width: 26px;
   padding-inline: 4px;
 }

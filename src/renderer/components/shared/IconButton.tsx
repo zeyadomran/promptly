@@ -17,7 +17,13 @@ export function IconButton({ label, shortcut, icon: Icon, ...props }: IconButton
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button variant="ghost" size="icon-sm" aria-label={label} {...props}>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          data-promptly-icon-button
+          aria-label={label}
+          {...props}
+        >
           <Icon aria-hidden="true" />
         </Button>
       </TooltipTrigger>

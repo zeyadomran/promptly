@@ -3,7 +3,7 @@ import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } fro
 import { keyboardFocus } from '../library/keyboard-focus';
 import { useUpdates } from '../settings/hooks/use-updates';
 import { usePreferences } from '../settings/settings-context';
-import { shellKeyView } from './shell-keyboard';
+import { shellGlobalBindings, shellKeyView } from './shell-keyboard';
 import { type SettingsSectionId, ShellNavigationContext, type ShellView } from './shell-navigation';
 
 export function ShellNavigationProvider({ children }: { children: ReactNode }) {
@@ -83,7 +83,8 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
           prevented: event.defaultPrevented,
           overlay: keyboardFocus(event) === 'overlay'
         },
-        settings.localShortcuts
+        settings.localShortcuts,
+        shellGlobalBindings(settings)
       );
 
       if (next === undefined) return;
@@ -97,7 +98,7 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('keydown', keydown);
     };
-  }, [view, settings.localShortcuts, showLibrary, showSettings, showWiki]);
+  }, [view, settings, showLibrary, showSettings, showWiki]);
   const navigation = useMemo(
     () => ({
       view,
