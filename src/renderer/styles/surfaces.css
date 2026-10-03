@@ -68,9 +68,16 @@
   color: var(--muted-foreground);
 }
 [data-slot='tooltip-content'] {
+  max-width: min(
+    360px,
+    calc(100vw - 16px),
+    var(--radix-tooltip-content-available-width, calc(100vw - 16px))
+  );
   border-radius: 6px;
   padding: 6px 10px;
   font-size: 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 [data-slot='tooltip-content'] kbd {
   font:
