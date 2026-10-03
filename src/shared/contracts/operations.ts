@@ -43,6 +43,7 @@ export const operations = {
   },
   openRepository: { request: emptySchema, response: emptySchema },
   openWiki: { request: emptySchema, response: emptySchema },
+  openPrivacyPolicy: { request: emptySchema, response: emptySchema },
   getOnboardingState: { request: emptySchema, response: onboardingStateSchema },
   setOnboardingStep: {
     request: z.strictObject({ step: onboardingStepSchema }),

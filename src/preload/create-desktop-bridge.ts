@@ -84,6 +84,7 @@ export function createDesktopBridge(
     getApplicationInfo: (request) => call('getApplicationInfo', request),
     openRepository: (request) => call('openRepository', request),
     openWiki: (request) => call('openWiki', request),
+    openPrivacyPolicy: (request) => call('openPrivacyPolicy', request),
     getOnboardingState: (request) => call('getOnboardingState', request),
     setOnboardingStep: (request) => call('setOnboardingStep', request),
     finishOnboarding: (request) => call('finishOnboarding', request),
