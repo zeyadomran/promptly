@@ -5,10 +5,8 @@ import { Button } from '../../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '../../components/ui/dropdown-menu';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
@@ -53,16 +51,6 @@ export function LibrarySort() {
             </DropdownMenuRadioItem>
           ))}
         </DropdownMenuRadioGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onSelect={() => {
-            void window.promptly.quitApplication({}).then((result) => {
-              if (!result.ok) model.reportError(result.error);
-            });
-          }}
-        >
-          Quit Promptly
-        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );

@@ -1,4 +1,4 @@
-import { selectionScroll, virtualRange } from './virtual-range';
+import { ROW_HEIGHT, ROW_STRIDE, selectionScroll, virtualRange } from './virtual-range';
 
 /** Owns DOM observations outside render and publishes immutable range snapshots. */
 export class VirtualRangeStore {
@@ -8,8 +8,8 @@ export class VirtualRangeStore {
   private count = 0;
 
   constructor(
-    private rowHeight = 78,
-    private rowStride = 80
+    private rowHeight = ROW_HEIGHT,
+    private rowStride = ROW_STRIDE
   ) {}
 
   snapshot = () => this.value;

@@ -59,6 +59,7 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
               snippet={item.snippet}
               ranges={item.ranges}
               index={row.index}
+              regular={regular}
               positionClass={`virtual-row-${String(row.index)}`}
             />
           );
