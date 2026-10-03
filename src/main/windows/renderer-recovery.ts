@@ -1,4 +1,4 @@
-import { app, type BrowserWindow, dialog } from 'electron';
+import { app, type BrowserWindow, dialog, type WebContents } from 'electron';
 
 interface RendererOwner {
   closing: () => boolean;
@@ -11,6 +11,7 @@ const recoveries = new WeakMap<BrowserWindow, RendererRecovery>();
 
 /** A slow renderer keeps its window and draft until the user explicitly chooses reload. */
 class RendererRecovery {
+  private readonly contents: WebContents;
   private dead = false;
   private unresponsive = false;
   private retired = false;
@@ -21,7 +22,8 @@ class RendererRecovery {
     private readonly window: BrowserWindow,
     private readonly owner: RendererOwner
   ) {
-    window.webContents.on('render-process-gone', this.crashed);
+    this.contents = window.webContents;
+    this.contents.on('render-process-gone', this.crashed);
     window.on('unresponsive', this.stalled);
     window.on('responsive', this.responsive);
     window.once('closed', this.close);
@@ -106,7 +108,8 @@ class RendererRecovery {
   readonly close = () => {
     this.retired = true;
     this.decision?.abort();
-    this.window.webContents.removeListener('render-process-gone', this.crashed);
+    // Electron's native BrowserWindow is already destroyed when 'closed' runs.
+    this.contents.removeListener('render-process-gone', this.crashed);
     this.window.removeListener('unresponsive', this.stalled);
     this.window.removeListener('responsive', this.responsive);
   };

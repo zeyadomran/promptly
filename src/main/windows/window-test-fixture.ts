@@ -20,7 +20,7 @@ class ControlledContents extends EventEmitter {
 /** Controlled Electron boundary: internal lifecycle, registry and persistence remain real. */
 export class ControlledWindow extends EventEmitter {
   static readonly instances: ControlledWindow[] = [];
-  readonly webContents = new ControlledContents();
+  private readonly contents = new ControlledContents();
   visible = false;
   focused = false;
   minimized = false;
@@ -36,6 +36,11 @@ export class ControlledWindow extends EventEmitter {
       height: options.height ?? 560
     };
     ControlledWindow.instances.push(this);
+  }
+
+  get webContents(): ControlledContents {
+    if (this.destroyed) throw new TypeError('Object has been destroyed');
+    return this.contents;
   }
 
   isDestroyed = () => this.destroyed;
@@ -82,8 +87,8 @@ export class ControlledWindow extends EventEmitter {
   destroy = () => {
     this.destroyed = true;
     this.visible = false;
-    this.webContents.destroyed = true;
-    this.webContents.emit('destroyed');
+    this.contents.destroyed = true;
+    this.contents.emit('destroyed');
     this.emit('closed');
     if (ControlledWindow.instances.every((window) => window.isDestroyed()))
       desktopBoundary.app.emit('window-all-closed');
