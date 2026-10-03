@@ -30,7 +30,7 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `windows/visibility.test.ts` | Recorder focus and owner release through real shortcuts, suspended command dispatch, restored open command and reachability on genuine route loss |
 | `platform/native/native-process.test.ts` | Hung external provider deadline and retired-process rejection |
 | `shortcuts/double-tap.test.ts` | Completed physical modifier taps and cancellation by intervening input or a hold |
-| `shortcuts/transactions.test.ts` | Legacy global binding startup and rejected OS replacement preserve authoritative preferences and the previous live command |
+| `shortcuts/transactions.test.ts` | Legacy global binding startup, atomic shortcut defaults/reset/reopen with retained unrelated settings/data, and rejected OS replacement preserve authoritative preferences and previous live bindings |
 | `renderer/features/shortcuts/recording-session.test.ts` | Recorder suppression, logical/numpad/local key mapping, Escape recording and Tab exit, key release before commit, cancellation and stale acquisition retirement through fake IPC |
 | `shortcuts/session-shutdown.test.ts` | A late native resume cannot revive commands after accepted shutdown |
 

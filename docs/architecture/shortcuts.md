@@ -38,6 +38,13 @@ clear search or hide, and cancel a text edit. Defaults retain the original keys.
 row read the defaults. Each committed change survives the existing SQLite settings
 transaction and change notification path. Local keys may be single keys or
 combinations; global shortcuts still require a modifier. Tab stays focus navigation.
+Reset shortcuts restores the shipped capture/open/pin bindings, every local binding
+and double-tap modifier/timing through one existing settings transaction. It changes
+only those shortcut fields; capture preferences, appearance, onboarding and library
+data are retained. The button stays disabled during recording or a pending change,
+reports pending/success status and shares authoritative registration errors. A
+rejected default registration (including Alt+Space) retains all previous bindings
+and saved preferences, without selecting an alternate or claiming reset success.
 Local recording accepts Escape and supplies Cancel; Tab, blur and owner retirement
 still cancel. All bindings wait for key release before committing.
 

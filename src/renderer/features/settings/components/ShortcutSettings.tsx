@@ -8,6 +8,7 @@ import { useShortcutPreferences } from '../../shortcuts/hooks/use-shortcut-prefe
 import { useShortcutRecording } from '../../shortcuts/hooks/use-shortcut-recording';
 import { useShortcutStatus } from '../../shortcuts/hooks/use-shortcut-status';
 import { LocalShortcutSettings } from './LocalShortcutSettings';
+import { ResetShortcutsButton } from './ResetShortcutsButton';
 import { SettingsRow } from './SettingsRow';
 import { SettingSwitch } from './SettingSwitch';
 
@@ -90,6 +91,7 @@ export function ShortcutSettings() {
         disabled={pending}
         onChange={(localShortcuts) => apply({ localShortcuts })}
       />
+      <ResetShortcutsButton disabled={inactive} apply={apply} />
       <h2 className="shortcut-group-heading">When saving</h2>
       <SettingSwitch
         label="Show confirmation toast"
