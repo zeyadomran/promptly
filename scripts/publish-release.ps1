@@ -1,7 +1,8 @@
 $ErrorActionPreference = 'Stop'
 $tag = $env:GITHUB_REF_NAME
 $version = (Get-Content package.json -Raw | ConvertFrom-Json).version
-if ($tag -cne "v$version" -or $env:GITHUB_EVENT_NAME -ne 'push') { throw 'Publication requires an exact version tag push.' }
+$publishing = $env:GITHUB_EVENT_NAME -eq 'push' -or ($env:GITHUB_EVENT_NAME -eq 'workflow_dispatch' -and $env:PROMPTLY_PUBLISH_RELEASE -eq 'true')
+if ($tag -cne "v$version" -or -not $publishing) { throw 'Publication requires an exact version tag and publication enabled.' }
 $directory = "out/staged/Promptly-$version-signed-win32-x64"
 $artifacts = @(Get-ChildItem -LiteralPath $directory -File | ForEach-Object { $_.FullName })
 if ($artifacts.Count -ne 6) { throw 'Expected Setup, nupkg, RELEASES, README, BUILD and checksums.' }

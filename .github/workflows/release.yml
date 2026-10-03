@@ -4,6 +4,11 @@ on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+']
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish this stable version tag after signing (false validates only)
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -23,6 +28,7 @@ jobs:
       id-token: write
     env:
       PROMPTLY_SIGN_RELEASE: 'true'
+      PROMPTLY_PUBLISH_RELEASE: ${{ github.event_name == 'push' || inputs.publish }}
       AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
       AZURE_SIGNING_PROFILE: ${{ vars.AZURE_SIGNING_PROFILE }}
       AZURE_SIGNING_ENDPOINT: ${{ vars.AZURE_SIGNING_ENDPOINT }}
@@ -65,7 +71,7 @@ jobs:
           if-no-files-found: error
           retention-days: 14
       - name: Publish complete GitHub release
-        if: github.event_name == 'push'
+        if: github.event_name == 'push' || inputs.publish
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}

@@ -2,7 +2,10 @@ import { execFileSync } from 'node:child_process';
 import { readFile } from 'node:fs/promises';
 
 const { version } = JSON.parse(await readFile('package.json', 'utf8'));
-const publishing = process.env['GITHUB_EVENT_NAME'] === 'push';
+const publishing =
+  process.env['GITHUB_EVENT_NAME'] === 'push' ||
+  (process.env['GITHUB_EVENT_NAME'] === 'workflow_dispatch' &&
+    process.env['PROMPTLY_PUBLISH_RELEASE'] === 'true');
 const tag = process.env['GITHUB_REF_NAME'];
 const validationTag =
   tag === `v${version}-validation` ||
