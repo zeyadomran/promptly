@@ -14,9 +14,10 @@ Library tag controls also let you find filters, clear filters with **All**, or s
 snippets. Creating a tag from a library filter control creates a catalog tag; use the snippet
 picker to assign it to a snippet.
 
-Both library views show colored indicators for every tag assigned to a snippet. When tag
-chips do not fit in the available space, use the overflow control to open the remaining tags
-in a popover.
+Each library row shows up to five tag-color segments. A snippet with more than five tags shows
+four tag colors plus a neutral segment. Tag names that do not fit appear as a `+n` count;
+this label does not open a menu, and clicking the row copies the snippet. Select the snippet
+and use the configured tag shortcut (**Ctrl+T** by default) to see or edit all assigned tags.
 
 ## Manage the catalog
 
