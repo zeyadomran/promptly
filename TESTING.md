@@ -40,6 +40,8 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 
 Add functional coverage when its behavior is implemented; absent features have no placeholders. Native provider fixtures are controlled external Node processes, not proof of actual OS capture or activation. Do not add stress, screenshot matrices, performance gates or diagnostic frameworks unless explicitly requested. Failures in retained functional behavior block merging.
 
+The onboarding keyboard flow in `renderer/features/onboarding/onboarding-keyboard.test.ts` covers Enter/Back navigation and theme choices while preserving editor, control, overlay, recorder and IME ownership. The shortcut and onboarding service flows also cover owned non-saving detection, real tap intervals, timer expiry, retirement, captured previews and durable completion destinations without changing the selected window size.
+
 The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, retry, concurrent requests and shutdown. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
 
 The renderer update-stream flow in `renderer/features/settings/hooks/updates-store.test.ts` covers shared stream ownership, stale initial reads, shutdown and routing retries to the failed IPC operation. The service flow also validates optional provider progress; the Windows Squirrel adapter has no progress event and stays indeterminate.
