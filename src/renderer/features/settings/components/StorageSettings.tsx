@@ -39,7 +39,7 @@ export function StorageSettings() {
       </StorageRow>
       <StorageRow
         label="Import"
-        description="Choose a Promptly JSON backup and review it before importing."
+        description="Choose a Promptly JSON Lines or legacy JSON backup and review it before importing."
       >
         <Button
           variant="outline"

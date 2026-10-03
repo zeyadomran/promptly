@@ -98,9 +98,11 @@ in-memory path, which preserves the full decoded text.
 Delete stores main-owned opaque UUID snapshots only after commit. Undo lasts
 30 seconds, consumes a token only after a successful restoration, and is bounded
 to 100 entries/8 MiB. It does not survive relaunch. Missing/expired tokens return
-`NOT_FOUND`; an existing snippet ID or deleted tag returns `CONFLICT`. Clear-all
+`NOT_FOUND`; an occupied snippet ID returns `CONFLICT`. Clear-all
 invalidates every token after its transaction commits. A renamed/recolored tag
-restores its current metadata rather than resurrecting old tag state.
+restores its current metadata rather than resurrecting old tag state. Deleted or
+merged-away tag IDs are omitted: undo still restores the snippet's exact text
+and surviving memberships without resurrecting deliberately removed tags.
 
 ## Verification evidence
 

@@ -24,6 +24,7 @@ const reads = new Set<StorageOperation>([
 export class StorageEngine {
   readonly context: StorageContext;
   private readonly handlers: StorageHandlers;
+  private readonly transfer: TransferRepository;
 
   constructor(filename: string, now?: () => Date) {
     this.context = new StorageContext(filename, now);
@@ -31,6 +32,8 @@ export class StorageEngine {
     const writes = new SnippetWrites(reader);
     const deletion = new SnippetDelete(writes);
     const transfer = new TransferRepository(writes);
+
+    this.transfer = transfer;
     const tags = new TagRepository(reader);
     let settings: SettingsRepository;
 
@@ -116,6 +119,7 @@ export class StorageEngine {
   }
 
   close(): void {
+    this.transfer.clearPlans();
     this.context.undo.clear();
     this.context.db.close();
   }
