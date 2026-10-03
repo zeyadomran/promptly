@@ -18,6 +18,9 @@ shortcuts and modifier recognition; each authorized WebContents owns its scope.
 Completion, renderer destruction, main-frame navigation and renderer failure
 release that owner. Resets, overflow, sleep and fresh hook sessions retain owners.
 Owner release during shutdown stays idempotent without re-enabling shortcuts.
+Successful recording suppression and owner release preserve the recorder window's
+focus. Temporary suppression does not show the main window as recovery; actual
+route loss on resume and failed native rollback still recover visibility.
 The shared P21 recorder controls now wire Settings to that scoped API. A renderer
 owns one recording session across its capture/open/pin controls. IPC transitions
 serialize, newer requests retire older acquires, and key input is accepted only
