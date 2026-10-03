@@ -112,6 +112,7 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
     await call('setSnippetTags', { id: row.id, tagIds: [one.id, two.id] });
   await call('setSnippetTags', { id: c.id, tagIds: [one.id] });
   await call('recordSuccessfulCopy', { id: b.id });
+  expect(published.at(-1)).toMatchObject({ copyStatistics: { id: b.id, copyCount: 1 } });
   const request: SearchRequest = {
     query: 'tag:"CODE REVIEW" tag:testing from:terminal "%b_c" review',
     tagIds: [one.id, two.id],
@@ -163,4 +164,27 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
   expect(await call('getSnippet', { id: c.id })).toMatchObject({
     snippet: { text: 'Committed despite subscriber failure' }
   });
+  const large = 'a '.repeat(499_990) + '😀 hidden-needle';
+
+  await call('updateSnippet', { id: c.id, text: large });
+  const hidden = await call('searchSnippets', { ...request, query: 'hidden-needle', tagIds: [] });
+
+  expect(hidden.total).toBe(1);
+  expect(hidden.items[0]?.text).toHaveLength(1_024);
+  expect(hidden.matches?.[c.id]).toEqual([]);
+  const repeated = await call('searchSnippets', {
+    ...request,
+    query: 'a hidden-needle',
+    tagIds: []
+  });
+
+  expect(repeated.matches?.[c.id]).toHaveLength(64);
+  expect(await call('getSnippet', { id: c.id })).toMatchObject({ snippet: { text: large } });
+  const whitespace = ' '.repeat(1_023) + '😀needle';
+
+  await call('updateSnippet', { id: c.id, text: whitespace });
+  const boundary = await call('searchSnippets', { ...request, query: 'needle', tagIds: [] });
+
+  expect(boundary).toMatchObject({ total: 1, items: [{ id: c.id, text: ' '.repeat(1_023) }] });
+  expect(await call('getSnippet', { id: c.id })).toMatchObject({ snippet: { text: whitespace } });
 });

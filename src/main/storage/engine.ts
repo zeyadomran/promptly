@@ -6,7 +6,7 @@ import { SnippetReader } from '../snippets/snippet-reader';
 import { SnippetWrites } from '../snippets/snippet-writes';
 import { TagRepository } from '../snippets/tag-repository';
 import { StorageContext, StorageError } from './context';
-import type { StorageHandlers, StorageOperation, WorkerReply } from './protocol';
+import type { StorageHandlers, StorageOperation, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
 import { TransferRepository } from './transfer/repository';
 
@@ -104,6 +104,17 @@ export class StorageEngine {
       const reply: WorkerReply = { id, result };
 
       if (!reads.has(operation)) reply.change = this.change(operation);
+      if (operation === 'recordSuccessfulCopy' && reply.change !== undefined && result.ok) {
+        // The selected operation's response schema was validated inside the transaction.
+        const { snippet } = result.value as StorageResponse<'recordSuccessfulCopy'>;
+
+        reply.change.copyStatistics = {
+          id: snippet.id,
+          copyCount: snippet.copyCount,
+          lastCopiedAt: snippet.lastCopiedAt
+        };
+      }
+
       return reply;
     } catch (error) {
       if (error instanceof StorageError) return { id, result: failure(error.code, error.message) };

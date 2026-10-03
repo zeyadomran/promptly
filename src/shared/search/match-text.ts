@@ -1,3 +1,5 @@
+import { originalRanges } from './original-ranges';
+
 export interface MatchRange {
   start: number;
   end: number;
@@ -20,27 +22,14 @@ export function foldText(text: string): string {
 }
 
 /** Translate folded matches (including expansions) back to original UTF-16 offsets. */
-export function matchRanges(text: string, terms: readonly string[]): MatchRange[] {
+export function matchRanges(
+  text: string,
+  terms: readonly string[],
+  limit = Infinity
+): MatchRange[] {
   if (terms.length === 0) return [];
   const ascii = !/[^\p{ASCII}]/u.test(text);
-  let folded = '';
-  const starts: number[] = [];
-  const ends: number[] = [];
-  let offset = 0;
-
-  for (const character of ascii ? '' : text) {
-    const lower = character.toLowerCase();
-
-    folded += lower;
-    for (const _unit of lower.split('')) {
-      starts.push(offset);
-      ends.push(offset + character.length);
-    }
-
-    offset += character.length;
-  }
-
-  if (ascii) folded = text.toLowerCase();
+  const folded = foldText(text);
 
   const ranges: MatchRange[] = [];
 
@@ -48,19 +37,17 @@ export function matchRanges(text: string, terms: readonly string[]): MatchRange[
     if (term === '') continue;
     let start = folded.indexOf(term);
     let previous: MatchRange | undefined;
+    let count = 0;
 
     while (start !== -1) {
-      const originalStart = ascii ? start : starts[start];
-      const originalEnd = ascii ? start + term.length : ends[start + term.length - 1];
-
-      if (originalStart !== undefined && originalEnd !== undefined) {
-        // Compress adjacent/overlapping occurrences without dropping any matched text.
-        if (previous !== undefined && originalStart <= previous.end)
-          previous.end = Math.max(previous.end, originalEnd);
-        else {
-          previous = { start: originalStart, end: originalEnd };
-          ranges.push(previous);
-        }
+      // Bound intermediate occurrences per term, then union the earliest visible ranges.
+      if (previous !== undefined && start <= previous.end)
+        previous.end = Math.max(previous.end, start + term.length);
+      else {
+        if (count === limit) break;
+        previous = { start, end: start + term.length };
+        ranges.push(previous);
+        count += 1;
       }
 
       start = folded.indexOf(term, start + 1);
@@ -79,5 +66,7 @@ export function matchRanges(text: string, terms: readonly string[]): MatchRange[
     else merged.push(range);
   }
 
-  return merged;
+  const bounded = merged.slice(0, limit);
+
+  return ascii ? bounded : originalRanges(text, bounded);
 }

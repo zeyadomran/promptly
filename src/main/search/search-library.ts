@@ -1,6 +1,8 @@
 import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/domain';
+import { previewLimits } from '../../shared/contracts/preview-limits';
 import { matchRanges } from '../../shared/search/match-text';
 import type { StorageContext } from '../storage/context';
+import { rowPreview } from './row-preview';
 import { compileSearchFilter } from './search-filter';
 import type { SearchEntry } from './search-snapshot';
 import { SearchSnapshot } from './search-snapshot';
@@ -45,12 +47,13 @@ export class SearchLibrary {
 
     for (const entry of entries) {
       if (!filter.matches(entry)) continue;
-      if (total >= request.offset && items.length < request.limit) items.push(entry.snippet);
+      if (total >= request.offset && items.length < request.limit)
+        items.push({ ...entry.snippet, text: rowPreview(entry.snippet.text, request.preview) });
       total += 1;
     }
 
     const matches = Object.fromEntries(
-      items.map((item) => [item.id, matchRanges(item.text, filter.text)])
+      items.map((item) => [item.id, matchRanges(item.text, filter.text, previewLimits.highlights)])
     );
 
     return {

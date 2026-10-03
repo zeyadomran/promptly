@@ -1,7 +1,6 @@
 import type { DesktopBridge } from '../../../shared/contracts/desktop-bridge';
 import type { SearchPage, SearchRequest } from '../../../shared/contracts/domain';
-import type { DesktopResult } from '../../../shared/contracts/result';
-import type { DesktopError } from '../../../shared/contracts/result';
+import type { DesktopError, DesktopResult } from '../../../shared/contracts/result';
 import { createSearchClient } from '../../lib/desktop-client';
 import { LibraryCursor } from './library-cursor';
 import { initialLibraryState } from './library-state';
@@ -23,19 +22,21 @@ export class LibraryModel {
 
   private connect(): void {
     this.client = createSearchClient(
-      {
-        searchSnippets: this.bridge.searchSnippets,
-        subscribeChanges: (listener) =>
-          this.bridge.subscribeChanges((event) => {
-            if (event.domains.includes('snippets') || event.domains.includes('tags')) {
-              this.invalidate();
-              void this.refreshSummary();
-            } else this.state.cache.promote(event.revision);
-            listener(event);
-          })
-      },
-      (result, request) => {
-        this.receive(result, request);
+      this.bridge,
+      (result, request) => this.receive(result, request),
+      (event) => {
+        if (this.state.cache.retainCopy(event, this.state.request.sort)) {
+          this.publish();
+          return false;
+        }
+
+        const relevant = event.domains.includes('snippets') || event.domains.includes('tags');
+
+        if (relevant) {
+          this.invalidate();
+          void this.refreshSummary();
+        } else this.state.cache.promote(event.revision);
+        return relevant;
       }
     );
   }

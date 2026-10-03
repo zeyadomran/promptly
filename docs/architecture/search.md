@@ -39,23 +39,33 @@ distinct from ordinary sigma. This explicitly avoids locale/context-dependent
 offset changes. Combining sequences, emoji, punctuation and embedded NUL remain
 in the stored string.
 
+Search pages carry `SnippetPreview` rows with at most 1,024 UTF-16 units of text,
+ending before a split surrogate pair. A preview may contain only whitespace even
+when the authoritative snippet has later content. Matching and counts still use
+the complete stored text: a match beyond the prefix returns its row and contributes
+to the count, without inventing a highlight inside the visible prefix.
+
 `SearchPage.matches` maps each returned UUID to original UTF-16 start/end ranges,
 including lowercase expansions and surrogate pairs. Only free-text terms produce
-snippet-text highlights. Every occurrence of every term contributes to the union
-of matched text, including later terms and later positions. Adjacent/overlapping
-spans are compressed before transport without losing coverage; Unicode scalar
-boundaries remain intact. `HighlightedText` safely renders the complete union and
-React escapes every segment. There is no occurrence-count truncation.
+snippet-text highlights. Row and full-preview highlights retain at most 64 merged
+ranges. Intermediate occurrences are capped per term before merging; later text
+remains selectable and copyable without a highlight. Unicode offsets use a
+forward-only cursor instead of allocating an offset array for every text unit.
+`HighlightedText` safely renders these ranges and React escapes every segment.
 When CSS Custom Highlight and StaticRange are available, `HighlightedText`
-renders one escaped text node and registers the complete range union. A pooled
+renders one escaped text node and registers the bounded range union. A pooled
 document registry keeps independent component ownership through updates/unmount;
 other highlight names are untouched. Static external CSS applies existing theme
 colors under CSP. Unsupported runtimes retain the escaped `<mark>` fallback.
 Invalid and surrogate-splitting offsets are ignored in both paths. Native
 highlighting does not split or otherwise alter selectable snippet text.
-The shared renderer helper uses exactly the worker's fold/range rules. Full text
-still travels in each returned `Snippet`; preview rendering does not truncate
-storage or search. Every process boundary validates the complete response.
+The shared renderer helper uses exactly the worker's fold/range rules. Selected
+snippet reads, editing, copy and export remain authoritative full-text paths.
+Every process boundary validates the complete response. Tray queries request
+`preview: 'tray'`: the worker collapses whitespace/control characters while keeping
+at most 52 Unicode characters, including enough non-space text to detect label
+truncation. This preserves useful labels after long whitespace prefixes. Main
+formats those bounded previews into 50-character labels and escapes ampersands.
 
 ## Index choice and consistency
 
@@ -90,7 +100,12 @@ active IPC plus one latest queued request. Superseded results are cancelled
 logically immediately. An active named IPC cannot be physically aborted; it
 finishes before the queued latest request. Responses carry the request that
 produced them; hooks can avoid rendering data for another current input. Revision
-events refetch, older snapshots retry once, and disposal drops in-flight replies.
+events advance the known revision, older snapshots retry once, and disposal drops
+in-flight replies. A contiguous copy-statistics event patches all cached row
+metadata without retiring selection or walking pages for newest/oldest sorts;
+text, membership and those orders cannot change from a copy. Most-copied and
+recently-copied sorts reconcile normally. Missing revision continuity, content
+changes and tag changes retain the full invalidation path.
 The active library model publishes typed input immediately and retires cached pages
 and command-eligible selection. Nonempty typing waits for 200 ms without another
 edit before querying; only the latest input is sent. Pagination and late replies
@@ -104,7 +119,8 @@ client retains its existing coalescing and stale-response protection.
 One deterministic Node test builds the real storage worker, creates four owned
 snippets, and queries through `StorageClient`. It checks literal punctuation,
 quoted tag/source and selected-ID intersections, most-copied pagination, complete
-Unicode/NUL text, highlight offsets, and one committed edit invalidation. The
+Unicode/NUL text, bounded prefixes/highlights, matches beyond a prefix, whitespace
+and surrogate boundaries, copy-statistics publication and committed edit invalidation. The
 worker is terminated before its temporary files are removed.
 
 The user-approved minimal test cleanup retired the 10k renderer benchmark,

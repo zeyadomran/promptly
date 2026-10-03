@@ -1,3 +1,4 @@
+import { searchPageSchema, type SnippetPreview } from '../../shared/contracts/domain';
 import { CopyService } from '../copy/service';
 import type { SettingsController } from '../settings/controllers';
 import { testSettings } from '../settings/settings-test-fixture';
@@ -26,6 +27,7 @@ export function trayFixture() {
   const clipboard: string[] = [];
   const windows: string[] = [];
   let menu: readonly TrayItem[] = [];
+  let recent: SnippetPreview[] = [];
   let destroyed = true;
   let pausedIcon = false;
   let captured = 0;
@@ -37,6 +39,7 @@ export function trayFixture() {
       const result = await fixture.storage.call(name, input);
 
       if (name === 'searchSnippets') {
+        if (result.ok) recent = searchPageSchema.parse(result.value).items;
         readEntered();
         await readHeld;
       }
@@ -123,6 +126,7 @@ export function trayFixture() {
     copy,
     tray,
     menu: () => menu,
+    recent: () => recent,
     pausedIcon: () => pausedIcon,
     captured: () => captured,
     deny: (value: boolean) => {

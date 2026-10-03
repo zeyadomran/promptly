@@ -82,7 +82,8 @@ export class TrayCoordinator {
             untagged: false,
             sort: 'newest',
             offset: 0,
-            limit: 5
+            limit: 5,
+            preview: 'tray'
           });
 
           if (!this.available) return;

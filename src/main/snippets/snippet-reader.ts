@@ -3,10 +3,7 @@ import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { SearchLibrary } from '../search/search-library';
 import type { StorageContext } from '../storage/context';
 import { StorageError } from '../storage/context';
-import { decodeSnippetText, decodeSqlText, tagColumns } from '../storage/sql-text';
-
-const columns =
-  'id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
+import { decodeSnippetText, decodeSqlText, snippetColumns, tagColumns } from '../storage/sql-text';
 
 export class SnippetReader {
   private readonly search: SearchLibrary;
@@ -16,7 +13,9 @@ export class SnippetReader {
   }
 
   get(id: string): Snippet {
-    const row = this.context.db.prepare(`SELECT ${columns} FROM snippets WHERE id = ?`).get(id);
+    const row = this.context.db
+      .prepare(`SELECT ${snippetColumns} FROM snippets WHERE id = ?`)
+      .get(id);
 
     if (row === undefined) throw new StorageError('NOT_FOUND', 'Snippet not found.');
     const tags = this.context.db

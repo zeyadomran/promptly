@@ -1,12 +1,14 @@
 import type { DesktopBridge } from '../../shared/contracts/desktop-bridge';
-import type { SearchPage, SearchRequest } from '../../shared/contracts/domain';
+import type { ChangeEvent, SearchPage, SearchRequest } from '../../shared/contracts/domain';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { failure } from '../../shared/contracts/result';
 
 /** Owns transient queries only; desktop services own the authoritative library. */
 export function createSearchClient(
   bridge: Pick<DesktopBridge, 'searchSnippets' | 'subscribeChanges'>,
-  receive: (result: DesktopResult<SearchPage>, request: SearchRequest) => void
+  receive: (result: DesktopResult<SearchPage>, request: SearchRequest) => void,
+  changed: (event: ChangeEvent) => boolean = (event) =>
+    event.domains.includes('snippets') || event.domains.includes('tags')
 ) {
   let query: SearchRequest | undefined;
   let requestVersion = 0;
@@ -63,9 +65,9 @@ export function createSearchClient(
   }
 
   const unsubscribe = bridge.subscribeChanges((event) => {
-    if (event.revision < knownRevision) return;
+    if (event.revision <= knownRevision) return;
     knownRevision = event.revision;
-    if (event.domains.includes('snippets') || event.domains.includes('tags')) schedule();
+    if (changed(event)) schedule();
   });
 
   return {

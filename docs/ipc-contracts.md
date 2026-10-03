@@ -21,7 +21,8 @@ documents native availability, rollback, bootstrap, and shutdown contracts.
 Every successful reply carries the authoritative revision. Services publish a
 `ChangeEvent` **after** a durable commit through the installer's `publish` method.
 Revisions must strictly increase across snippets, tags, and settings. Events
-contain affected domains, never replacement data. Subscribe performs a revision
+contain affected domains. Copy commits additionally carry bounded authoritative
+`copyStatistics` (ID, count, last-copy time), without snippet text. Subscribe performs a revision
 handshake to cover changes between a first query and listener registration.
 Preload shares one Electron listener across consumers, provides idempotent
 unsubscribe, and disposes on unload. Main accepts only registered windows at the
@@ -32,7 +33,8 @@ with restrictive CSP. External links are currently denied; no arbitrary URL open
 is exposed.
 
 `createSearchClient` in `src/renderer/lib/desktop-client.ts` refetches authoritative
-pages on library/tag events, ignores old search responses and older revisions,
+pages on library/tag events, with a library policy that retains rows for contiguous
+copy-only changes under newest/oldest sorts. It ignores old search responses and older revisions,
 retries one query racing a commit, and drops pending results on disposal. Other
 views must follow the same invalidation pattern for settings/tag snapshots.
 `SnippetText` renders snippets through React text children, never HTML parsing.
@@ -40,8 +42,10 @@ views must follow the same invalidation pattern for settings/tag snapshots.
 ## Service integration rules
 
 - Search accepts query, AND tag IDs, untagged state, sort, offset, and a page size
-  of 1–200. Pagination responses include revision, items, total, offset, hasMore,
-  optional UUID-keyed UTF-16 match ranges. See
+  of 1–200, and optional row/tray preview mode. Pagination responses include revision,
+  bounded preview items (1,024 UTF-16 units each), total, offset, hasMore,
+  and optional UUID-keyed UTF-16 match ranges (at most 64 per row). Counts and
+  membership cover the complete text, including matches outside the preview. See
   [search semantics](architecture/search.md). Existing named bridge methods remain
   compatible; the production worker supplies ranges.
 - Snippet and tag IDs are UUIDs; timestamps are UTC ISO strings. Full snippet text

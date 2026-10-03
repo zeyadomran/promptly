@@ -4,7 +4,7 @@ import type { Snippet, Tag } from '../../shared/contracts/domain';
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { foldText } from '../../shared/search/match-text';
 import type { StorageContext } from '../storage/context';
-import { decodeSnippetText, decodeSqlText, tagColumns } from '../storage/sql-text';
+import { decodeSnippetText, decodeSqlText, snippetColumns, tagColumns } from '../storage/sql-text';
 import { installSearchChangeLog } from './change-log';
 
 export interface SearchEntry {
@@ -14,9 +14,6 @@ export interface SearchEntry {
   tagNames: Set<string>;
   tagIds: Set<string>;
 }
-
-export const snippetColumns =
-  'id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, CAST(sourceApp AS BLOB) AS sourceApp, sourceAppId, lastCopiedAt, copyCount';
 
 export class SearchSnapshot {
   readonly entries = new Map<string, SearchEntry>();

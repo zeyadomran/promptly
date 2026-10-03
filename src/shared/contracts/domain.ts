@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { previewLimits } from './preview-limits';
 import { tagPresetColors } from './tag-colors';
 
 export const idSchema = z.uuid();
@@ -55,11 +56,16 @@ export const searchRequestSchema = z.strictObject({
   untagged: z.boolean(),
   sort: z.enum(['newest', 'oldest', 'most-copied', 'recently-copied']),
   offset: z.number().int().nonnegative().max(1_000_000),
-  limit: z.number().int().min(1).max(200)
+  limit: z.number().int().min(1).max(200),
+  preview: z.enum(['row', 'tray']).optional()
+});
+// A valid full snippet can start with whitespace, and tray normalization can be empty.
+export const snippetPreviewSchema = snippetSchema.extend({
+  text: z.string().max(previewLimits.textUnits)
 });
 export const searchPageSchema = z.strictObject({
   revision: revisionSchema,
-  items: z.array(snippetSchema).max(200),
+  items: z.array(snippetPreviewSchema).max(200),
   total: z.number().int().nonnegative(),
   offset: z.number().int().nonnegative(),
   hasMore: z.boolean(),
@@ -69,12 +75,17 @@ export const searchPageSchema = z.strictObject({
       z
         .array(
           z.strictObject({
-            start: z.number().int().nonnegative(),
-            end: z.number().int().positive()
+            start: z
+              .number()
+              .int()
+              .nonnegative()
+              .max(previewLimits.textUnits - 1),
+            end: z.number().int().positive().max(previewLimits.textUnits)
           })
         )
-        .max(1_000_000)
+        .max(previewLimits.highlights)
     )
+    .refine((matches) => Object.keys(matches).length <= 200)
     .optional()
 });
 export const snippetSnapshotSchema = z.strictObject({
@@ -82,12 +93,18 @@ export const snippetSnapshotSchema = z.strictObject({
   snippet: snippetSchema
 });
 export const revisionSnapshotSchema = z.strictObject({ revision: revisionSchema });
+export const copyStatisticsSchema = snippetSchema.pick({
+  id: true,
+  copyCount: true,
+  lastCopiedAt: true
+});
 export const changeEventSchema = z.strictObject({
   revision: revisionSchema,
   domains: z
     .array(z.enum(['snippets', 'tags', 'settings']))
     .min(1)
-    .max(3)
+    .max(3),
+  copyStatistics: copyStatisticsSchema.optional()
 });
 export const captureResultSchema = z.discriminatedUnion('status', [
   z.strictObject({ status: z.literal('empty'), revision: revisionSchema }),
@@ -101,6 +118,7 @@ export const captureResultSchema = z.discriminatedUnion('status', [
 export type Tag = z.infer<typeof tagSchema>;
 export type TagSummary = z.infer<typeof tagSummarySchema>;
 export type Snippet = z.infer<typeof snippetSchema>;
+export type SnippetPreview = z.infer<typeof snippetPreviewSchema>;
 export type SearchRequest = z.infer<typeof searchRequestSchema>;
 export type SearchPage = z.infer<typeof searchPageSchema>;
 export type ChangeEvent = z.infer<typeof changeEventSchema>;

@@ -20,6 +20,17 @@ export function libraryFixture(count = 1_000) {
     searchSnippets: (request: SearchRequest): Promise<DesktopResult<SearchPage>> => {
       const filtered = items.filter((item) => item.text.includes(request.query));
 
+      if (request.sort === 'most-copied')
+        filtered.sort(
+          (left, right) => right.copyCount - left.copyCount || left.id.localeCompare(right.id)
+        );
+      if (request.sort === 'recently-copied')
+        filtered.sort(
+          (left, right) =>
+            (right.lastCopiedAt ?? '').localeCompare(left.lastCopiedAt ?? '') ||
+            left.id.localeCompare(right.id)
+        );
+
       return Promise.resolve({
         ok: true,
         value: {
@@ -43,6 +54,23 @@ export function libraryFixture(count = 1_000) {
   return {
     bridge,
     items: () => items,
+    copy: (id: string) => {
+      const item = items.find((snippet) => snippet.id === id);
+
+      if (item === undefined) throw new Error('Missing owned copy target');
+      const copyStatistics = {
+        id,
+        copyCount: item.copyCount + 1,
+        lastCopiedAt: '2026-10-03T00:00:00Z'
+      };
+
+      items = items.map((snippet) =>
+        snippet.id === id ? { ...snippet, ...copyStatistics } : snippet
+      );
+      revision += 1;
+      for (const listener of listeners)
+        listener({ revision, domains: ['snippets'], copyStatistics });
+    },
     change: (next: Snippet[], domains: ChangeEvent['domains'] = ['snippets']) => {
       items = next;
       revision += 1;
