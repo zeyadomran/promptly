@@ -11,4 +11,7 @@ internal static class NativeMethods
     [DllImport("user32.dll")] internal static extern uint GetWindowThreadProcessId(IntPtr window, out uint pid);
     [DllImport("user32.dll")] internal static extern bool IsWindow(IntPtr window);
     [DllImport("user32.dll")] internal static extern bool SetForegroundWindow(IntPtr window);
+    [DllImport("user32.dll")] internal static extern bool IsIconic(IntPtr window);
+    [DllImport("user32.dll")] internal static extern bool ShowWindowAsync(IntPtr window, int command);
+    [DllImport("user32.dll")] internal static extern IntPtr GetAncestor(IntPtr window, uint flags);
 }

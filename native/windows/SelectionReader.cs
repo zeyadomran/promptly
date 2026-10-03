@@ -20,6 +20,7 @@ internal static class SelectionReader
         var timer = Stopwatch.StartNew();
         var result = Protocol.Result("providerError");
         SourceIdentity identity = null;
+        AutomationElement focused = null;
         try
         {
             identity = options.Identity == null ? SourceIdentity.Record() : SourceIdentity.Resolve(options.Identity);
@@ -33,33 +34,28 @@ internal static class SelectionReader
             if (!allowed) result["status"] = "permissionDenied";
             else
             {
-                var focused = AutomationElement.FocusedElement;
-                if (focused == null || focused.Current.ProcessId != identity.Pid)
-                    result["status"] = "foregroundChanged";
-                else if (focused.Current.IsPassword) result["status"] = "secureInput";
-                else
+                string status;
+                var provider = SelectionResolver.Resolve(identity, out focused, out status);
+                result["status"] = status;
+                if (provider != null)
                 {
-                    object provider;
-                    if (focused.TryGetCurrentPattern(TextPattern.Pattern, out provider))
+                    var ranges = provider.GetSelection();
+                    if (ranges.Length > 4096) return Protocol.Result("selectionTooLarge");
+                    var text = new StringBuilder();
+                    int index = 0;
+                    foreach (var range in ranges)
                     {
-                        var ranges = ((TextPattern)provider).GetSelection();
-                        if (ranges.Length > 4096) return Protocol.Result("selectionTooLarge");
-                        var text = new StringBuilder();
-                        int index = 0;
-                        foreach (var range in ranges)
-                        {
-                            // Provider order, with a literal LF between ranges; never trim or normalize.
-                            if (index++ > 0) text.Append('\n');
-                            int remaining = Protocol.SelectionUnits - text.Length;
-                            if (remaining < 0) return Protocol.Result("selectionTooLarge");
-                            var part = range.GetText(remaining + 1);
-                            if (part.Length > remaining) return Protocol.Result("selectionTooLarge");
-                            text.Append(part);
-                        }
-                        result["status"] = text.Length == 0 ? "empty" : "ok";
-                        result["characterCount"] = text.Length;
-                        if (options.IncludeText && text.Length > 0) result["text"] = text.ToString();
+                        // Provider order, with a literal LF between ranges; never trim or normalize.
+                        if (index++ > 0) text.Append('\n');
+                        int remaining = Protocol.SelectionUnits - text.Length;
+                        if (remaining < 0) return Protocol.Result("selectionTooLarge");
+                        var part = range.GetText(remaining + 1);
+                        if (part.Length > remaining) return Protocol.Result("selectionTooLarge");
+                        text.Append(part);
                     }
+                    result["status"] = text.Length == 0 ? "empty" : "ok";
+                    result["characterCount"] = text.Length;
+                    if (options.IncludeText && text.Length > 0) result["text"] = text.ToString();
                 }
             }
         }
@@ -67,6 +63,8 @@ internal static class SelectionReader
         catch (ElementNotAvailableException) { result = Protocol.Result("foregroundChanged"); }
         catch (Exception) { result = Protocol.Result("providerError"); }
         if (identity != null && !identity.Valid(true)) result = Protocol.Result("foregroundChanged");
+        if (result.ContainsKey("characterCount") && (int)result["characterCount"] > 0 &&
+            !SelectionResolver.StillFocused(focused)) result = Protocol.Result("foregroundChanged");
         result["elapsedMs"] = timer.Elapsed.TotalMilliseconds;
         return result;
     }

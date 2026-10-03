@@ -46,6 +46,7 @@ export function captureFixture() {
   let time = 0;
   const events: CaptureEvent[] = [];
   const native: CaptureNative = {
+    sourceAvailable: () => Promise.resolve(true),
     foregroundIdentityResult: () => Promise.resolve({ status: 'ok', identity }),
     captureSelection: async () => {
       os.selecting = true;

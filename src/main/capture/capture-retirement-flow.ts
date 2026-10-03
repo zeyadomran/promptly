@@ -35,7 +35,7 @@ export async function assertQueuedResetRetirement(fixture: Fixture, id: string) 
   assert.equal(completed?.ok, false);
   assert.equal(completed.error.code, 'CONFLICT');
   assert.equal(store.invoke('getRevision', {}).revision, beforeReset);
-  assert.equal(sources.available(id), true);
+  assert.equal(await sources.available(id), true);
   keyboard.hook.health.installed = true;
   keyboard.frame({
     kind: 'ready',
@@ -61,7 +61,7 @@ export async function assertImportRetirement(
   const importedId = '11111111-1111-4111-8111-111111111111';
   const importedTagId = '22222222-2222-4222-8222-222222222222';
 
-  assert.equal(sources.available(retainedId), true);
+  assert.equal(await sources.available(retainedId), true);
   os.importFilename = path.join(path.dirname(store.filename), 'owned-import.json');
   writeFileSync(
     os.importFilename,
@@ -114,7 +114,7 @@ export async function assertImportRetirement(
 
     assert.equal(retired.ok, false);
     assert.equal(retired.error.code, 'CONFLICT');
-    assert.equal(sources.available(retainedId), false);
+    assert.equal(await sources.available(retainedId), false);
     const snippet = store.invoke('getSnippet', { id: importedId }).snippet;
 
     assert.equal(snippet.text, 'Imported record');

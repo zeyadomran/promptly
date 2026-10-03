@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 
 import { assertImportRetirement, assertQueuedResetRetirement } from './capture-retirement-flow';
 import { captureFixture } from './capture-test-fixture';
+import { assertSourceCapabilityLifetime } from './source-capability-flow';
 
 it('captures through native selection, durable normalization and the shared mutation lifetime', async () => {
   const fixture = captureFixture();
@@ -12,6 +13,7 @@ it('captures through native selection, durable normalization and the shared muta
     throw new Error('Owned consumer failure');
   });
   try {
+    await assertSourceCapabilityLifetime();
     const saved = await service.capture();
 
     expect(saved).toMatchObject({
@@ -83,6 +85,9 @@ it('captures through native selection, durable normalization and the shared muta
     expect(await service.capture()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
     os.failNative = true;
     expect(await service.capture()).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
+    expect(events.at(-1)?.message).toBe(
+      'This focused control does not expose a supported native text selection. No snippet was saved.'
+    );
     os.failNative = false;
     os.integrity = null;
     expect(await service.capture()).toMatchObject({ ok: false });
@@ -118,7 +123,7 @@ it('captures through native selection, durable normalization and the shared muta
     ).toMatchObject({ ok: true });
     release();
     expect(await cleared).toMatchObject({ ok: false, error: { code: 'CONFLICT' } });
-    expect(sources.available(id)).toBe(false);
+    expect(await sources.available(id)).toBe(false);
     await assertImportRetirement(fixture, async () => {
       await expect.poll(() => os.selecting).toBe(true);
     });

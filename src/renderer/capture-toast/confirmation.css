@@ -83,6 +83,12 @@ body {
   text-overflow: ellipsis;
   color: var(--muted-foreground);
 }
+.confirmation[data-status='failed'] .confirmation-preview {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  white-space: normal;
+}
 .logo-dark {
   display: none;
 }

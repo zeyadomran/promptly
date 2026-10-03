@@ -18,8 +18,13 @@ export class CaptureSources {
     }
   }
 
-  available(id: string): boolean {
-    return this.identities.has(id) && this.native !== undefined;
+  async available(id: string): Promise<boolean> {
+    const identity = this.identities.get(id);
+
+    if (identity === undefined || this.native === undefined) return false;
+    const available = await this.native.sourceAvailable(identity);
+
+    return available && this.identities.get(id) === identity;
   }
 
   async activate(id: string): Promise<DesktopResult<Record<string, never>>> {

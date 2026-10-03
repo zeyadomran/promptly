@@ -33,7 +33,7 @@ internal static class Program
                     foreach (var key in request.Keys)
                         if (key != "v" && key != "id" && key != "command" &&
                             !(command == "capture" && (key == "expectedPid" || key == "includeText" || key == "identity")) &&
-                            !(command == "activate" && key == "identity")) throw new ArgumentException();
+                            !((command == "activate" || command == "validate") && key == "identity")) throw new ArgumentException();
                     if (command == "capabilities")
                         result = new Dictionary<string, object> { { "status", "ok" }, { "platform", "win32" },
                             { "selection", "UIAutomation.TextPattern" }, { "warmupReady", warmupReady },
@@ -47,16 +47,13 @@ internal static class Program
                         if (identity != null) result["bounds"] = identity.Bounds();
                         if (identity != null) result["windowHandle"] = identity.Window.ToInt64().ToString("x16");
                     }
-                    else if (command == "activate")
+                    else if (command == "activate" || command == "validate")
                     {
                         object token;
                         if (!request.TryGetValue("identity", out token) || !(token is string) || ((string)token).Length != 32)
                             throw new ArgumentException();
                         var identity = SourceIdentity.Resolve((string)token);
-                        int? targetIntegrity;
-                        result = Protocol.Result(identity == null || !identity.Valid(false) ? "foregroundChanged" :
-                            !ProcessAccess.CanRead(identity.Pid, identity.Started, out targetIntegrity) ? "permissionDenied" :
-                            NativeMethods.SetForegroundWindow(identity.Window) && identity.Valid(true) ? "ok" : "activationDenied");
+                        result = Protocol.Result(command == "validate" ? SourceActivation.Validate(identity) : SourceActivation.Activate(identity));
                     }
                     else if (command == "stop") { result = Protocol.Result("ok"); stop = true; }
                 }
