@@ -67,7 +67,7 @@ export function TagMergeDialog({
                     style={tagColorStyle(item.color)}
                     aria-hidden="true"
                   />
-                  <span className="tag-picker-name">{item.name}</span>
+                  <span className="tag-merge-name">{item.name}</span>
                   <span className="tag-picker-count">{item.snippetCount}</span>
                 </DropdownMenuRadioItem>
               ))}

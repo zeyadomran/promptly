@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 import { Button } from '../../components/ui/button';
 import {
   Dialog,
@@ -11,6 +13,7 @@ import { useSnippetSession } from './snippet-context';
 
 export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Promise<void> }) {
   const { session, state } = useSnippetSession();
+  const keepButton = useRef<HTMLButtonElement>(null);
   const keep = () => {
     session.keep();
     void resumeEditing().catch(() => {
@@ -26,6 +29,10 @@ export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Prom
       }}
     >
       <DialogContent
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          keepButton.current?.focus();
+        }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
           (
@@ -53,7 +60,7 @@ export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Prom
           >
             Discard
           </Button>
-          <Button variant="outline" disabled={state.pending} onClick={keep}>
+          <Button ref={keepButton} variant="outline" disabled={state.pending} onClick={keep}>
             Keep editing
           </Button>
           <Button

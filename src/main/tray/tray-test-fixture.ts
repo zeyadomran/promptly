@@ -7,6 +7,7 @@ import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest } from '../storage/protocol';
 import { UpdateService } from '../updates/service';
 import { TrayCoordinator } from './coordinator';
+import { trayOpenItem } from './menu';
 import type { TrayItem } from './ports';
 
 export function trayFixture() {
@@ -148,6 +149,7 @@ export function trayFixture() {
     tray,
     updates,
     menu: () => menu,
+    leftClick: () => trayOpenItem(menu)?.run?.(),
     recent: () => recent,
     statuses,
     pausedIcon: () => pausedIcon,

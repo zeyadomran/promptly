@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import type { trayFixture } from './tray-test-fixture';
 
 export async function assertReadyUpdateMenu(owned: ReturnType<typeof trayFixture>) {
+  assert.equal(owned.menu().find((item) => item.label === 'Recent')?.enabled, false);
+  assert.equal(owned.menu().find((item) => item.command === 'open')?.shortcut, 'Alt+Space');
   assert.equal(
     owned.menu().some((item) => item.label === 'Restart to update'),
     false
@@ -36,4 +38,14 @@ export function assertReadyEmptyMenu(owned: ReturnType<typeof trayFixture>) {
       .filter(Boolean),
     ['Recent', 'Open Promptly', 'Pause capture', 'Settings', 'Restart to update', 'Quit Promptly']
   );
+}
+
+export async function assertTrayOpenCollision(owned: ReturnType<typeof trayFixture>) {
+  owned.fixture.store.invoke('createSnippet', { text: 'Open Promptly' });
+  await owned.tray.refresh();
+  const copied = [...owned.clipboard];
+
+  await owned.leftClick();
+  assert.equal(owned.windows.at(-1), 'main');
+  assert.deepEqual(owned.clipboard, copied);
 }

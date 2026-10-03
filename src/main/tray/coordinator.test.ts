@@ -2,7 +2,11 @@ import { expect, it, vi } from 'vitest';
 
 import { closeSettingsStorage } from '../lifecycle/close-settings-storage';
 import { trayFixture } from './tray-test-fixture';
-import { assertReadyEmptyMenu, assertReadyUpdateMenu } from './tray-update-flow';
+import {
+  assertReadyEmptyMenu,
+  assertReadyUpdateMenu,
+  assertTrayOpenCollision
+} from './tray-update-flow';
 
 it('keeps recent commands authoritative and capture-only pause reachable through reversible tray visibility', async () => {
   const owned = trayFixture();
@@ -98,9 +102,9 @@ it('keeps recent commands authoritative and capture-only pause reachable through
       .find((item) => item.label === 'Settings')
       ?.run?.();
     expect(windows.slice(-2)).toEqual(['main', 'settings']);
-    expect(owned.menu().find((item) => item.label === 'Recent')?.enabled).toBe(false);
-    expect(owned.menu().find((item) => item.label === 'Open Promptly')?.shortcut).toBe('Alt+Space');
     const restart = await assertReadyUpdateMenu(owned);
+
+    await assertTrayOpenCollision(owned);
 
     fixture.store.invoke('clearLibrary', {});
     await tray.refresh();

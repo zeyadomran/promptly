@@ -9,6 +9,7 @@ import {
   Tray
 } from 'electron';
 
+import { trayOpenItem } from './menu';
 import type { TrayItem, TrayNative } from './ports';
 
 /** The taskbar theme follows Windows system UI, independently of the app theme setting. */
@@ -54,7 +55,7 @@ export function electronTray(onError: () => void): TrayNative {
 
       nativeTheme.on('updated', changed);
       tray.on('click', () => {
-        invoke(menu.find((item) => item.label === 'Open Promptly'));
+        invoke(trayOpenItem(menu));
       });
       update();
       return {

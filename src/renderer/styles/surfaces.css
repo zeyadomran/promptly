@@ -239,6 +239,13 @@
 .tag-merge-menu {
   width: var(--radix-dropdown-menu-trigger-width);
 }
+.tag-merge-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 @keyframes surface-enter {
   from {
     opacity: 0;

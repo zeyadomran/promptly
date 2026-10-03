@@ -1,6 +1,10 @@
 import type { ShortcutStatus } from '../../shared/contracts/shortcuts';
 import type { TrayItem } from './ports';
 
+export function trayOpenItem(items: readonly TrayItem[]): TrayItem | undefined {
+  return items.find((item) => item.command === 'open');
+}
+
 export function trayMenu(
   recent: TrayItem[],
   shortcuts: ShortcutStatus,
@@ -16,7 +20,12 @@ export function trayMenu(
     { label: 'Recent', enabled: false },
     ...recent,
     { type: 'separator' },
-    { label: 'Open Promptly', shortcut: shortcuts.labels.open, run: () => commands.open('main') },
+    {
+      command: 'open',
+      label: 'Open Promptly',
+      shortcut: shortcuts.labels.open,
+      run: () => commands.open('main')
+    },
     { label: shortcuts.capturePaused ? 'Resume capture' : 'Pause capture', run: commands.pause },
     { label: 'Settings', run: () => commands.open('settings') },
     ...(commands.updateReady()
