@@ -140,8 +140,15 @@
   width: 38%;
   animation: update-sweep 1.5s ease-in-out infinite;
 }
-.update-settings-row [data-slot='field-description'] {
+.update-settings-row [data-slot='field-description'],
+.settings-window .update-settings-row [data-slot='field-description'] {
   display: block;
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip-path: none;
+  white-space: normal;
 }
 
 @keyframes update-appear {

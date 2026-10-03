@@ -23,7 +23,7 @@ export function UpdateSettings() {
               : 'Check for updates';
 
   return (
-    <Field className="settings-field storage-row update-settings-row" data-inline="false">
+    <Field className="settings-field storage-row update-settings-row" data-inline="true">
       <FieldContent>
         <FieldLabel asChild>
           <h2>Updates</h2>
