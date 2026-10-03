@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { dispatchOperation } from '../ipc/dispatch-operation';
 import { applicationServices } from './application-services';
 
-it('reads the running app version and opens only its fixed repository through authorized desktop operations', async () => {
+it('reads the running app version and opens only its fixed repository and wiki through authorized desktop operations', async () => {
   let version = '0.2.3';
   let rejectBrowser = false;
   const opened: string[] = [];
@@ -38,9 +38,29 @@ it('reads the running app version and opens only its fixed repository through au
     value: {}
   });
   expect(opened).toEqual(['https://github.com/zeyadomran/promptly']);
+  expect(await dispatchOperation(services, false, 'openWiki', {})).toMatchObject({
+    ok: false,
+    error: { code: 'UNAUTHORIZED' }
+  });
+  expect(
+    await dispatchOperation(services, true, 'openWiki', { url: 'file:///private' })
+  ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+  expect(opened).toEqual(['https://github.com/zeyadomran/promptly']);
+  expect(await dispatchOperation(services, true, 'openWiki', {})).toEqual({
+    ok: true,
+    value: {}
+  });
+  expect(opened).toEqual([
+    'https://github.com/zeyadomran/promptly',
+    'https://github.com/zeyadomran/promptly/wiki'
+  ]);
   rejectBrowser = true;
   expect(await dispatchOperation(services, true, 'openRepository', {})).toEqual({
     ok: false,
     error: { code: 'UNAVAILABLE', message: 'Unable to open the GitHub repository. Try again.' }
+  });
+  expect(await dispatchOperation(services, true, 'openWiki', {})).toEqual({
+    ok: false,
+    error: { code: 'UNAVAILABLE', message: 'Unable to open the user wiki. Try again.' }
   });
 });

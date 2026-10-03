@@ -24,20 +24,28 @@ export function useApplicationInfo() {
     };
   }, []);
 
-  const openRepository = async () => {
+  const openLink = async (operation: 'openRepository' | 'openWiki', failureMessage: string) => {
     if (opening) return;
     setOpening(true);
     setLinkError(undefined);
     try {
-      const result = await window.promptly.openRepository({});
+      const result = await window.promptly[operation]({});
 
       if (!result.ok) setLinkError(result.error.message);
     } catch {
-      setLinkError('Unable to open the GitHub repository. Try again.');
+      setLinkError(failureMessage);
     } finally {
       setOpening(false);
     }
   };
 
-  return { version, versionError, linkError, opening, openRepository };
+  return {
+    version,
+    versionError,
+    linkError,
+    opening,
+    openRepository: () =>
+      openLink('openRepository', 'Unable to open the GitHub repository. Try again.'),
+    openWiki: () => openLink('openWiki', 'Unable to open the user wiki. Try again.')
+  };
 }
