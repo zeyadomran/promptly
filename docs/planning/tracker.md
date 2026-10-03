@@ -54,7 +54,7 @@ macOS support, Linux support, cloud sync, accounts, sharing, rich text/image sni
 
 - [x] #55 Remove macOS implementation and restrict builds to Windows x64.
 - Windows capture (#13), tag management (#22), capture feedback (#15), tray (#26) and onboarding (#25) are implemented; their issues remain open for manual acceptance evidence.
-- Unsigned installers (PR #62), source accessibility audit (PR #63) and pinned installer notices (PR #64) are merged. Actual installation (#28), accessibility/native/distribution release qualification (#29/#30) and Microsoft.Web.Xdt 2.1.1 terms remain pending; see the [release checklist](../qa/release-checklist.md).
+- Unsigned installers (PR #62), source accessibility audit (PR #63), pinned installer notices (PR #64) and uninstall login-entry cleanup (PR #74) are merged. A [bounded Windows 11 install/upgrade/uninstall/reinstall cycle](../releasing.md#recorded-windows-11-lifecycle) preserved the owned database and restored the environment baseline. Remaining #28 compatibility/native checks, accessibility (#29), checklist qualification requirements and Microsoft.Web.Xdt 2.1.1 terms stay unresolved; see the [release checklist](../qa/release-checklist.md).
 
 ## Implementation issues
 
