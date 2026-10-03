@@ -6,6 +6,7 @@ import type { DesktopResult } from '../../shared/contracts/result';
 import { resultSchema } from '../../shared/contracts/result';
 import type { StorageOperation, StorageRequest, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
+import { readStorageStartupCause, StorageStartupError } from './startup-failure';
 
 interface PendingRequest {
   resolve: (value: unknown) => void;
@@ -26,22 +27,24 @@ export class StorageClient {
   private failure: Error | undefined;
   private closing: Promise<void> | undefined;
   private draining: DrainWaiter | undefined;
+  private startupFailure: unknown;
   readonly ready: Promise<number>;
 
   constructor(
     workerFile: string,
     databaseFile: string,
-    onChange: (change: ChangeEvent) => void = () => undefined
+    onChange: (change: ChangeEvent) => void = () => undefined,
+    private readonly onFailure: (error: Error) => void = () => undefined
   ) {
     this.worker = new Worker(workerFile, { workerData: databaseFile });
     this.ready = this.register(0, 10_000).then((value) => {
       const result = resultSchema(revisionSnapshotSchema).parse(value);
 
-      if (!result.ok) throw new Error(result.error.message);
+      if (!result.ok) throw new StorageStartupError(readStorageStartupCause(this.startupFailure));
       return result.value.revision;
     });
     this.worker.on('message', (reply: WorkerReply) => {
-      if (reply.change !== undefined) onChange(changeEventSchema.parse(reply.change));
+      if (reply.id === 0) this.startupFailure = reply.startupFailure;
       const request = this.pending.get(reply.id);
 
       if (request !== undefined) clearTimeout(request.timer);
@@ -50,6 +53,15 @@ export class StorageClient {
       if (this.pending.size === 0) {
         this.draining?.resolve();
         this.draining = undefined;
+      }
+
+      // A committed reply must settle even if a renderer or another subscriber has retired.
+      if (reply.change !== undefined) {
+        try {
+          onChange(changeEventSchema.parse(reply.change));
+        } catch {
+          console.warn('Unable to publish a committed storage change.');
+        }
       }
     });
     this.worker.on('error', () => {
@@ -126,6 +138,7 @@ export class StorageClient {
   }
 
   private fail(error: Error): void {
+    if (this.failure !== undefined) return;
     this.failure = error;
     for (const request of this.pending.values()) {
       clearTimeout(request.timer);
@@ -136,5 +149,10 @@ export class StorageClient {
     this.draining?.reject(error);
     this.draining = undefined;
     void this.worker.terminate();
+    try {
+      this.onFailure(error);
+    } catch {
+      console.error('Unable to report storage recovery.');
+    }
   }
 }

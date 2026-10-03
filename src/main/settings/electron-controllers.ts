@@ -52,6 +52,7 @@ export function electronSettingsControllers(
       },
       {
         name: 'launch at login',
+        optionalStartup: true,
         keys: ['launchAtLogin'],
         apply: (settings: Settings) => {
           native.setLogin(settings.launchAtLogin);

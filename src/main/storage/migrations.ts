@@ -1,6 +1,7 @@
 import type { DatabaseSync } from 'node:sqlite';
 
 import { defaultSettings } from '../../shared/contracts/settings';
+import { StorageStartupError } from './startup-failure';
 
 export interface Migration {
   version: number;
@@ -56,8 +57,7 @@ export function migrate(db: DatabaseSync, versions: readonly Migration[] = migra
   const current = Number(row?.['user_version']);
   const latest = versions.at(-1)?.version ?? 0;
 
-  if (!Number.isSafeInteger(current) || current > latest)
-    throw new Error('Unsupported database version.');
+  if (!Number.isSafeInteger(current) || current > latest) throw new StorageStartupError('newer');
   if (versions.some((migration, index) => migration.version !== index + 1))
     throw new Error('Migration versions must be contiguous.');
   if (current === latest) return;

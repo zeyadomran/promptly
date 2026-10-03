@@ -56,7 +56,13 @@ export class WindowRegistry {
         continue;
       }
 
-      if (trusted.contents.mainFrame.url === trusted.url) trusted.contents.send(channel, value);
+      try {
+        if (trusted.contents.mainFrame.url === trusted.url) trusted.contents.send(channel, value);
+      } catch {
+        // A renderer can retire between validation and send; keep other subscribers current.
+        this.subscribers.delete(id);
+        console.warn('Unable to notify a retired Promptly window.');
+      }
     }
   }
 }

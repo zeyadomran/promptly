@@ -7,7 +7,10 @@ import { installDesktopIpc } from './ipc/install-desktop-ipc';
 import { createLibraryServices } from './library-services';
 import { ownApplication } from './lifecycle/application-startup';
 import { closeDesktopResources } from './lifecycle/close-desktop-resources';
+import { desktopRecovery } from './lifecycle/desktop-recovery';
 import { createDesktopShutdown } from './lifecycle/desktop-shutdown';
+import { installWindowOpenCommands } from './lifecycle/open-library-window';
+import { warnStartupPreferences } from './lifecycle/preference-warning';
 import { desktopOnboarding } from './onboarding/desktop-onboarding';
 import {
   observeSelectionStartup,
@@ -23,7 +26,8 @@ import {
 import { SettingsService } from './settings/service';
 import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
 import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
-import { StorageClient } from './storage/client';
+import type { StorageClient } from './storage/client';
+import { desktopStorage } from './storage/desktop-storage';
 import { LibraryMutations } from './storage/library-mutations';
 import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
 import type { TrayCoordinator } from './tray/coordinator';
@@ -33,7 +37,7 @@ import { lifecycleServices } from './windows/lifecycle-services';
 import { observeOrdinaryWindowClosure } from './windows/overlay-windows';
 import { WindowLifecycle } from './windows/window-lifecycle';
 
-let desktop: ReturnType<typeof installDesktopIpc>;
+let desktop: ReturnType<typeof installDesktopIpc> | undefined;
 let storage: StorageClient | undefined;
 let settings: SettingsService | undefined;
 let lifecycle: WindowLifecycle | undefined;
@@ -70,19 +74,12 @@ const shutdown = createDesktopShutdown({
   }
 });
 const primaryInstance = ownApplication();
-
-app.on('second-instance', () => {
-  openWindow();
-});
-
-function openWindow(): void {
-  void (async () => {
-    await lifecycle?.show();
-  })().catch((error: unknown) => {
-    console.error('Unable to open Promptly:', error);
-    shutdown.fatal();
-  });
-}
+const recovery = desktopRecovery(() => {
+  keyboard?.shortcuts.stopCommands();
+  tray?.stopCommands();
+  desktop?.dispose();
+}, shutdown.fatal);
+const openWindow = installWindowOpenCommands(() => lifecycle, recovery);
 
 if (primaryInstance)
   void app
@@ -91,16 +88,19 @@ if (primaryInstance)
       windowsSelection = createWindowsSelection(selectionLaunchOptions());
       observeSelectionStartup(windowsSelection.ready(), 'Windows');
 
-      storage = new StorageClient(
-        path.join(__dirname, 'storage-worker.cjs'),
-        path.join(app.getPath('userData'), 'promptly.sqlite'),
+      storage = desktopStorage(
         (change) => {
-          desktop.publish(change);
+          desktop?.publish(change);
           if (change.domains.includes('snippets')) tray?.changed();
           if (change.domains.includes('settings')) confirmation?.refreshPreferences();
+        },
+        () => {
+          void recovery.storage();
         }
       );
       const revision = await storage.ready;
+
+      if (recovery.isActive()) return;
 
       keyboard = createDesktopShortcuts(
         () => lifecycle,
@@ -117,6 +117,8 @@ if (primaryInstance)
         electronSettingsControllers(undefined, keyboard.shortcuts.controller, tray.controller)
       );
       await settings.initialize();
+      await warnStartupPreferences(settings, recovery);
+      if (recovery.isActive()) return;
       const dialogs = nativeTransferDialogs(
         app.getPath('userData'),
         path.join(app.getPath('userData'), 'promptly.sqlite')
@@ -165,7 +167,8 @@ if (primaryInstance)
         settings,
         {
           trayAvailable: () => tray?.available === true,
-          trayControllerAvailable: () => tray !== undefined,
+          trayControllerAvailable: () =>
+            tray !== undefined && settings?.isUnavailable('showInTray') !== true,
           shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true
         },
         (error) => {
@@ -176,16 +179,13 @@ if (primaryInstance)
       installDesktopMenu(openWindow, () => lifecycle);
       nativeTheme.on('updated', updateWindowBackgrounds);
       openWindow();
-      app.on('activate', () => {
-        openWindow();
-      });
     })
     .catch((error: unknown) => {
-      console.error('Unable to initialize Promptly:', error);
-      shutdown.fatal();
+      void recovery.startup(error);
     });
 
 app.on('before-quit', (event) => {
+  recovery.close();
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
   shutdown.beforeQuit(event);

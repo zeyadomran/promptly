@@ -31,7 +31,9 @@ with no OS notification permission dependency. Its Open Promptly action uses the
 show command. Rejected/uncertain IPC never announces success. Selection is established
 before copy and preserved by ID through statistics-driven refresh/reorder; completion
 does not replace a later deliberate selection. The Regular preview keeps long text in its
-own scroll area with actions visible, and Compact carries selection into Regular.
+own scroll area with actions visible. Compact carries its command cursor into Regular,
+while every Compact card uses the filled appearance without `aria-selected`. Keyboard
+focus is distinguished from Regular's persistent preview selection.
 
 Electron 44.5.1's installed declarations and [pinned clipboard documentation](https://raw.githubusercontent.com/electron/electron/v44.5.1/docs/api/clipboard.md)
 define `writeText` as `Promise<void>`. The injected port matches this asynchronous API.

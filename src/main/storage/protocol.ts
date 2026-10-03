@@ -13,6 +13,7 @@ import {
 import { operations } from '../../shared/contracts/operations';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { captureInputSchema } from '../../shared/contracts/storage';
+import type { StorageStartupCause } from './startup-failure';
 
 export const storageOperations = {
   getSettings: operations.getSettings,
@@ -70,4 +71,5 @@ export interface WorkerReply {
   id: number;
   result: DesktopResult<unknown>;
   change?: ChangeEvent;
+  startupFailure?: StorageStartupCause;
 }
