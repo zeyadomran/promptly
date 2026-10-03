@@ -8,7 +8,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
 export default defineConfig(
-  globalIgnores(['.vite/**', 'out/**', 'node_modules/**', 'docs/**', 'test-results/**']),
+  globalIgnores(['.vite/**', 'out/**', 'node_modules/**', 'test-results/**']),
   {
     files: ['**/*.{ts,tsx,mjs}'],
     plugins: { 'simple-import-sort': simpleImportSort },

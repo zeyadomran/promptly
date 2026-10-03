@@ -1,8 +1,8 @@
-> Historical research notes only. The disposable executables, scripts and automated native fixtures described below have been removed. Current Windows-only production helpers live under native/windows and native/keyboard/windows; no macOS runtime or build target remains. Historical receipts are retained in docs/verification.
+> Historical research notes only. The disposable executables, scripts and automated native fixtures described below have been removed. Current Windows-only production helpers live under native/windows and native/keyboard/windows; no macOS runtime or build target remains. Historical receipts are retained in [Git history](https://github.com/zeyadomran/promptly/tree/292f584f0424f8b2101d71472d40efc427804be4/docs/verification). The commands below describe the removed research harness and are not current development instructions; use [DEVELOPMENT.md](../../DEVELOPMENT.md).
 
 # Disposable native capture feasibility harness
 
-This is P03 research code, outside application modules. It compiles unsigned platform executables and checks a private stdio protocol. It never writes to the clipboard or injects Copy/keys. It is not universal selection support. See [the adapter decision and actual evidence matrix](../../docs/architecture/native-capture-decision.md).
+This is P03 research code, outside application modules. It compiles unsigned platform executables and checks a private stdio protocol. It never writes to the clipboard or injects Copy/keys. It is not universal selection support. See [the historical adapter decision and actual evidence matrix](https://github.com/zeyadomran/promptly/blob/292f584f0424f8b2101d71472d40efc427804be4/docs/architecture/native-capture-decision.md).
 
 Windows (PowerShell; OS .NET Framework compiler):
 
@@ -39,7 +39,7 @@ Missing or changed identity is reported as cleanup unverified without signaling
 that candidate. Readiness and cleanup receipts retain only stage/mode, timing,
 PID, exit/signal/error codes and byte counts. The native CI workflow retains
 `test-results/native-feasibility/fixture-lifecycle.json` on success or failure.
-See [the retained failure and follow-up evidence](../../docs/verification/P03/README.md).
+See [the retained failure and follow-up evidence](https://github.com/zeyadomran/promptly/blob/292f584f0424f8b2101d71472d40efc427804be4/docs/verification/P03/README.md).
 
 Windows owned fixtures emit flushed, fixed startup-stage markers on stderr from
 main entry through WPF construction, run/source initialization, Loaded/rendered
