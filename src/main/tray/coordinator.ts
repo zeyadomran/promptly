@@ -9,6 +9,8 @@ import type { TrayHandle, TrayItem, TrayNative } from './ports';
 
 interface TrayCommands {
   copy: () => CopyService | undefined;
+  updateReady: () => boolean;
+  restartForUpdate: () => void;
   open: (kind: 'main' | 'settings') => Promise<void>;
   recover: () => Promise<void>;
   quit: () => void;
@@ -101,10 +103,14 @@ export class TrayCoordinator {
           }));
 
           const menu: TrayItem[] = [
-            { label: 'Open Promptly', run: () => this.open('main') },
-            { type: 'separator' },
+            { label: 'Recent', enabled: false },
             ...items,
             { type: 'separator' },
+            {
+              label: 'Open Promptly',
+              shortcut: this.shortcuts.status.labels.open,
+              run: () => this.open('main')
+            },
             {
               label: this.shortcuts.status.capturePaused ? 'Resume capture' : 'Pause capture',
               run: async () => {
@@ -114,8 +120,20 @@ export class TrayCoordinator {
               }
             },
             { label: 'Settings', run: () => this.open('settings') },
+            ...(this.commands.updateReady()
+              ? [
+                  {
+                    label: 'Restart to update',
+                    run: () => {
+                      if (this.commands.updateReady()) this.commands.restartForUpdate();
+                      return Promise.resolve();
+                    }
+                  }
+                ]
+              : []),
+            { type: 'separator' },
             {
-              label: 'Quit',
+              label: 'Quit Promptly',
               run: () => {
                 this.commands.quit();
                 return Promise.resolve();

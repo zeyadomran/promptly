@@ -1,4 +1,4 @@
-import { MoreHorizontal } from 'lucide-react';
+import { CopyPlus, ExternalLink, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import type { Snippet } from '../../../shared/contracts/domain';
@@ -89,6 +89,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
             void commands?.copy(snippet.id, 'markdown');
           }}
         >
+          <FileCode aria-hidden="true" />
           Copy as Markdown
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -97,6 +98,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
             void duplicate();
           }}
         >
+          <CopyPlus aria-hidden="true" />
           Duplicate
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -112,6 +114,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
               });
           }}
         >
+          <ExternalLink aria-hidden="true" />
           Open source application
         </DropdownMenuItem>
         {(!sourceReady || !source.available) && (
@@ -127,7 +130,9 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
             void commands?.deleteSelected();
           }}
         >
+          <Trash2 aria-hidden="true" />
           Delete snippet
+          <span className="menu-shortcut">Del</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -21,15 +21,16 @@ it('keeps recent commands authoritative and capture-only pause reachable through
         .map((item) => item.label)
         .filter(Boolean)
     ).toEqual([
-      'Open Promptly',
+      'Recent',
       'seventh',
       'sixth',
       'fifth',
       'fourth',
       'third',
+      'Open Promptly',
       'Pause capture',
       'Settings',
-      'Quit'
+      'Quit Promptly'
     ]);
     const recent = owned.menu().find((item) => item.label === 'seventh');
     const id = fixture.store.invoke('searchSnippets', {
@@ -52,7 +53,7 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     expect(owned.statuses.at(-1)).toBe('');
     expect(windows).not.toContain('unexpected hide');
     await tray.refresh();
-    expect(owned.menu()[2]?.label).toBe('😀 && '.repeat(12) + '😀 …');
+    expect(owned.menu()[1]?.label).toBe('😀 && '.repeat(12) + '😀 …');
     expect(owned.recent()[0]?.text.length).toBeLessThanOrEqual(104);
     fixture.store.invoke('deleteSnippet', { id });
     await recent.run();
@@ -96,6 +97,23 @@ it('keeps recent commands authoritative and capture-only pause reachable through
       .find((item) => item.label === 'Settings')
       ?.run?.();
     expect(windows.slice(-2)).toEqual(['main', 'settings']);
+    expect(owned.menu().find((item) => item.label === 'Recent')?.enabled).toBe(false);
+    expect(owned.menu().find((item) => item.label === 'Open Promptly')?.shortcut).toBe('Alt+Space');
+    expect(owned.menu().some((item) => item.label === 'Restart to update')).toBe(false);
+    await owned.updates.check();
+    await tray.refresh();
+    expect(owned.menu().some((item) => item.label === 'Restart to update')).toBe(false);
+    await owned.updates.install();
+    await tray.refresh();
+    const restart = owned.menu().find((item) => item.label === 'Restart to update');
+
+    expect(restart?.run).toBeDefined();
+    expect(
+      owned
+        .menu()
+        .slice(-3)
+        .map((item) => item.label ?? item.type)
+    ).toEqual(['Restart to update', 'separator', 'Quit Promptly']);
     fixture.store.invoke('clearLibrary', {});
     await tray.refresh();
     expect(
@@ -103,7 +121,14 @@ it('keeps recent commands authoritative and capture-only pause reachable through
         .menu()
         .map((item) => item.label)
         .filter(Boolean)
-    ).toEqual(['Open Promptly', 'Pause capture', 'Settings', 'Quit']);
+    ).toEqual([
+      'Recent',
+      'Open Promptly',
+      'Pause capture',
+      'Settings',
+      'Restart to update',
+      'Quit Promptly'
+    ]);
     fixture.store.invoke('createSnippet', { text: 'Owned feedback retirement' });
     await tray.refresh();
     await owned
@@ -116,6 +141,8 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     });
     expect(tray.available).toBe(false);
     expect(windows.at(-1)).toBe('recovered');
+    await restart?.run?.();
+    expect(windows).not.toContain('update restart');
     expect(vi.getTimerCount()).toBe(0);
     const retiredStatuses = [...owned.statuses];
 
@@ -146,7 +173,13 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     read.release();
     await Promise.all([refreshing, showing]);
     expect(owned.menu().map((item) => item.label)).toContain('Open Promptly');
-    const quit = owned.menu().find((item) => item.label === 'Quit');
+    const quit = owned.menu().find((item) => item.label === 'Quit Promptly');
+
+    await owned
+      .menu()
+      .find((item) => item.label === 'Restart to update')
+      ?.run?.();
+    expect(windows.at(-1)).toBe('update restart');
 
     await quit?.run?.();
     expect(windows.at(-1)).toBe('quit');
@@ -175,6 +208,7 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     expect(tray.available).toBe(false);
   } finally {
     await tray.close();
+    owned.updates.close();
     await copy.close();
     await fixture.service.close();
     await keyboard.shortcuts.close();

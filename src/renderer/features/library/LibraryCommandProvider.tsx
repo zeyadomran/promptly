@@ -26,7 +26,12 @@ export function LibraryCommandProvider({
     () =>
       new LibraryCommandService(window.promptly, {
         selectedId: () => model.snapshot().selectedId,
-        copied: notifyCopied,
+        copied: (id) => {
+          const cache = model.snapshot().cache;
+          const index = cache.indexOf(id);
+
+          notifyCopied(index === undefined ? undefined : cache.at(index)?.snippet.text);
+        },
         refresh: () => {
           model.refresh();
         },

@@ -106,7 +106,11 @@ if (primaryInstance)
         storage,
         keyboard.shortcuts,
         () => library?.copy,
-        () => lifecycle
+        () => lifecycle,
+        () => updates?.ready() === true,
+        () => {
+          updates?.restart();
+        }
       );
       settings = new SettingsService(
         storage,
@@ -139,7 +143,10 @@ if (primaryInstance)
 
       updates = createDesktopUpdates(
         () => desktop?.windows,
-        () => lifecycle
+        () => lifecycle,
+        () => {
+          tray?.changed();
+        }
       );
       desktop = installDesktopIpc(
         ipcMain,

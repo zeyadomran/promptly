@@ -55,7 +55,9 @@ export function ClearLibraryDialog({ pending, error, clear }: ClearLibraryProps)
           </DialogDescription>
         </DialogHeader>
         <div className="storage-confirmation">
-          <Label htmlFor="clear-library-confirmation">Type CLEAR ALL to confirm</Label>
+          <Label htmlFor="clear-library-confirmation">
+            Type <span className="font-mono">CLEAR ALL</span> to confirm
+          </Label>
           <Input
             id="clear-library-confirmation"
             autoComplete="off"

@@ -43,17 +43,18 @@ export function DraftChoiceDialog({ resumeEditing }: { resumeEditing: () => Prom
         </DialogHeader>
         {state.error !== undefined && <p role="alert">{state.error}</p>}
         <DialogFooter>
-          <Button variant="ghost" disabled={state.pending} onClick={keep}>
-            Keep editing
-          </Button>
           <Button
-            variant="outline"
+            className="draft-discard"
+            variant="ghost"
             disabled={state.pending}
             onClick={() => {
               session.discard();
             }}
           >
-            Discard changes
+            Discard
+          </Button>
+          <Button variant="outline" disabled={state.pending} onClick={keep}>
+            Keep editing
           </Button>
           <Button
             disabled={state.pending || state.missing}
