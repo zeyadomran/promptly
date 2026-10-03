@@ -1,24 +1,35 @@
 import { expect, it } from 'vitest';
 
+import type { ShortcutTestState } from '../../shared/contracts/shortcut-test';
 import { DoubleTap } from './double-tap';
 import { nativeHookFixture } from './native-hook-fixture';
 import { shortcutFixture } from './shortcut-test-fixture';
 
 it('recognizes physical taps across native resync/recovery and retains suppression ownership', async () => {
   let captures = 0;
-  const taps = new DoubleTap('shift', 300, () => {
-    captures += 1;
-  });
+  const observed: { tap: number; elapsedMs: number | undefined }[] = [];
+  const taps = new DoubleTap(
+    'shift',
+    300,
+    () => {
+      captures += 1;
+    },
+    (tapNumber, elapsedMs) => {
+      observed.push({ tap: tapNumber, elapsedMs });
+    }
+  );
   const press = (mask: number, timeMs: number) => {
     taps.accept({ kind: 'modifiers', mask, repeat: false, timeMs });
   };
 
   press(1, 0);
   press(0, 20);
+  expect(observed).toEqual([{ tap: 1, elapsedMs: undefined }]);
   press(2, 100);
   expect(captures).toBe(0);
   press(0, 120);
   expect(captures).toBe(1);
+  expect(observed.at(-1)).toEqual({ tap: 2, elapsedMs: 100 });
   press(1, 200);
   press(0, 220);
   taps.accept({ kind: 'cancel', timeMs: 230 });
@@ -31,7 +42,19 @@ it('recognizes physical taps across native resync/recovery and retains suppressi
   press(0, 970);
   expect(captures).toBe(1);
 
-  const keyboard = shortcutFixture((callback) => callback);
+  const expiries = new Set<() => void>();
+  const keyboard = shortcutFixture(
+    (callback) => callback,
+    'win32',
+    () => undefined,
+    (callback, delay) => {
+      expect(delay).toBe(300);
+      expiries.add(callback);
+      return () => {
+        expiries.delete(callback);
+      };
+    }
+  );
   let nativeCaptures = 0;
 
   keyboard.commands.capture = () => {
@@ -47,6 +70,41 @@ it('recognizes physical taps across native resync/recovery and retains suppressi
 
   try {
     await keyboard.shortcuts.controller.apply(keyboard.settings);
+    const testStates: ShortcutTestState[] = [];
+    const consent = keyboard.shortcuts.captureAdmission();
+
+    keyboard.shortcuts.startTest(7, (state) => {
+      testStates.push(state);
+    });
+    expect(consent?.()).toBe(false);
+    expect(keyboard.shortcuts.captureAdmission()).toBeUndefined();
+    keyboard.tap(1);
+    expect(testStates.at(-1)?.status).toBe('tap');
+    for (const expire of expiries) expire();
+    expiries.clear();
+    expect(testStates.at(-1)?.status).toBe('waiting');
+    await native.send([...tap, ...tap]);
+    expect(testStates.map((state) => state.status)).toEqual([
+      'waiting',
+      'tap',
+      'waiting',
+      'tap',
+      'detected'
+    ]);
+    expect(testStates.at(-1)?.elapsedMs).toBe(2);
+    expect(nativeCaptures).toBe(0);
+    keyboard.shortcuts.record(7, true);
+    expect(testStates.at(-1)?.status).toBe('inactive');
+    await native.send([...tap, ...tap]);
+    expect(nativeCaptures).toBe(0);
+    keyboard.shortcuts.release(7);
+    keyboard.shortcuts.startTest(7, (state) => {
+      testStates.push(state);
+    });
+    keyboard.shortcuts.stopTest(99);
+    expect(keyboard.shortcuts.captureAdmission()).toBeUndefined();
+    keyboard.shortcuts.stopTest(7);
+    expect(expiries.size).toBe(0);
     await native.send([...tap, ...tap]);
     expect(nativeCaptures).toBe(1);
     const admitted = keyboard.shortcuts.captureAdmission();
@@ -58,7 +116,12 @@ it('recognizes physical taps across native resync/recovery and retains suppressi
     expect(nativeCaptures).toBe(2);
     const beforeExit = keyboard.shortcuts.captureAdmission();
 
+    keyboard.shortcuts.startTest(7, (state) => {
+      testStates.push(state);
+    });
     await native.exit();
+    expect(testStates.at(-1)?.status).toBe('unavailable');
+    keyboard.shortcuts.stopTest(7);
     expect(beforeExit?.()).toBe(false);
     expect(keyboard.shortcuts.status.hook).toBe('unavailable');
     expect(native.pendingDelays).toEqual([250]);
@@ -122,6 +185,20 @@ it('recognizes physical taps across native resync/recovery and retains suppressi
     expect(nativeCaptures).toBe(6);
 
     await native.exit();
+    await keyboard.shortcuts.controller.apply({
+      ...keyboard.settings,
+      saveShortcut: { kind: 'combination', accelerator: 'Control+Alt+F9' }
+    });
+    keyboard.shortcuts.startTest(7, (state) => {
+      testStates.push(state);
+    });
+    keyboard.registered.get('Control+Alt+F9')?.();
+    expect(testStates.at(-1)).toEqual({ status: 'detected' });
+    expect(nativeCaptures).toBe(6);
+    await keyboard.shortcuts.sleep();
+    expect(testStates.at(-1)).toEqual({ status: 'inactive' });
+    keyboard.registered.get('Control+Alt+F9')?.();
+    expect(nativeCaptures).toBe(6);
     await keyboard.shortcuts.close();
     const closedProcesses = native.processes;
 

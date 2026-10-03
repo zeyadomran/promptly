@@ -133,7 +133,8 @@ if (primaryInstance)
         library.capture.service,
         settings,
         dialogs.owner,
-        () => lifecycle
+        () => lifecycle,
+        keyboard.shortcuts
       );
       const recorders = recorderServices(keyboard.shortcuts);
 

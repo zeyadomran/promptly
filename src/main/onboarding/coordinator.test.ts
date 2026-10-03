@@ -4,6 +4,7 @@ import type { OnboardingState } from '../../shared/contracts/onboarding';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { CaptureService } from '../capture/service';
 import { SettingsService } from '../settings/service';
+import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
 import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { allSnippets, testStorage } from '../storage/storage-test-fixture';
@@ -19,6 +20,7 @@ test('first-run completion is durable and skipping creates no practice data', as
   let alive = true;
   let retired: () => void = () => undefined;
   const states: OnboardingState[] = [];
+  const keyboard = shortcutFixture((callback) => callback);
   const owner: OnboardingOwner = {
     id: 1,
     windowHandle: '0000000000000123',
@@ -35,11 +37,18 @@ test('first-run completion is durable and skipping creates no practice data', as
   };
 
   await settings.initialize();
+  await keyboard.shortcuts.controller.apply(settings.current.settings);
   const coordinator = new OnboardingCoordinator(settings, {
     now: () => 1,
-    openCompact: () => {
-      visible = 'compact';
+    complete: (_id, destination) => {
+      visible = destination;
       return Promise.resolve();
+    },
+    startTest: (id, publish) => {
+      keyboard.shortcuts.startTest(id, publish);
+    },
+    stopTest: (id) => {
+      keyboard.shortcuts.stopTest(id);
     }
   });
   const identity = {
@@ -53,7 +62,7 @@ test('first-run completion is durable and skipping creates no practice data', as
   let reopened: SettingsService | undefined;
   const capture = new CaptureService({ call }, new LibraryMutations(), {
     normalize: () => false,
-    admit: () => () => true,
+    admit: () => keyboard.shortcuts.captureAdmission(),
     now: () => 2,
     native: {
       sourceAvailable: () => Promise.resolve(true),
@@ -86,6 +95,23 @@ test('first-run completion is durable and skipping creates no practice data', as
       ok: true,
       value: { step: 'welcome', saved: false }
     });
+    coordinator.step(owner, 'shortcut');
+    expect(keyboard.shortcuts.captureAdmission()).toBeUndefined();
+    keyboard.tap(10);
+    expect(coordinator.state(owner)).toMatchObject({
+      ok: true,
+      value: { test: { status: 'tap' }, saved: false }
+    });
+    keyboard.tap(190);
+    expect(coordinator.state(owner)).toMatchObject({
+      ok: true,
+      value: { step: 'detected', test: { status: 'detected', elapsedMs: 180 }, saved: false }
+    });
+    expect(store.invoke('searchSnippets', allSnippets).total).toBe(0);
+    alive = false;
+    retired();
+    expect(keyboard.shortcuts.captureAdmission()).toBeTypeOf('function');
+    alive = true;
     coordinator.step(owner, 'capture');
     expect(await coordinator.finish(owner, false)).toMatchObject({
       ok: false,
@@ -103,12 +129,20 @@ test('first-run completion is durable and skipping creates no practice data', as
     coordinator.step(owner, 'capture');
     supported = true;
     expect(await capture.capture()).toMatchObject({ ok: true, value: { status: 'saved' } });
-    expect(coordinator.state(owner)).toMatchObject({ ok: true, value: { saved: true } });
-    expect(await coordinator.finish(owner, false)).toMatchObject({
+    expect(coordinator.state(owner)).toMatchObject({
+      ok: true,
+      value: {
+        saved: true,
+        preview: { text: 'A real practice selection', sourceApp: 'Promptly' },
+        step: 'preferences'
+      }
+    });
+    await settings.services.updateSettings({ defaultSizeMode: 'regular' });
+    expect(await coordinator.finish(owner, false, 'wiki')).toMatchObject({
       ok: true,
       value: { completed: true }
     });
-    expect(visible).toBe('compact');
+    expect(visible).toBe('wiki');
     expect(store.invoke('searchSnippets', allSnippets).total).toBe(1);
     await coordinator.close();
     await settings.close();
@@ -117,13 +151,15 @@ test('first-run completion is durable and skipping creates no practice data', as
 
     await reopened.initialize();
     expect(reopened.current.settings.onboardingComplete).toBe(true);
-    expect(reopened.current.settings.defaultSizeMode).toBe('compact');
+    expect(reopened.current.settings.defaultSizeMode).toBe('regular');
     expect(await reopened.services.updateSettings({ onboardingComplete: false })).toMatchObject({
       ok: true
     });
     const skipped = new OnboardingCoordinator(reopened, {
       now: () => 1,
-      openCompact: () => Promise.resolve()
+      complete: () => Promise.resolve(),
+      startTest: () => undefined,
+      stopTest: () => undefined
     });
 
     tutorial = skipped;
@@ -154,6 +190,7 @@ test('first-run completion is durable and skipping creates no practice data', as
     await reopened?.close();
     await coordinator.close();
     await settings.close();
+    await keyboard.shortcuts.close();
     store.dispose();
   }
 });

@@ -1,4 +1,8 @@
-import type { OnboardingState, OnboardingStep } from '../../shared/contracts/onboarding';
+import type {
+  OnboardingDestination,
+  OnboardingState,
+  OnboardingStep
+} from '../../shared/contracts/onboarding';
 import { type DesktopResult, failure } from '../../shared/contracts/result';
 import type { CaptureEvent } from '../capture/ports';
 import type { SettingsService } from '../settings/service';
@@ -33,7 +37,17 @@ export class OnboardingCoordinator {
     )
       return;
     if ((event.status === 'saved' || event.status === 'duplicate') && event.preview !== undefined)
-      session.state = { ...session.state, saved: true, error: null };
+      session.state = {
+        ...session.state,
+        step: 'preferences',
+        saved: true,
+        preview: {
+          id: event.preview.id,
+          text: event.preview.text,
+          sourceApp: event.preview.sourceApp
+        },
+        error: null
+      };
     else if (event.status === 'failed' || event.status === 'empty')
       session.state = {
         ...session.state,
@@ -57,13 +71,39 @@ export class OnboardingCoordinator {
       return failure('UNAUTHORIZED', 'The tutorial window is unavailable.');
     if (this.finishing !== undefined)
       return failure('UNAVAILABLE', 'Wait for onboarding to finish.');
+    if (step === 'detected' && session.state.test.status !== 'detected')
+      return failure('CONFLICT', 'Test your shortcut before continuing.');
+    this.effects.stopTest(session.owner.id);
     session.armedAt = this.effects.now();
-    session.state = { ...session.state, step, error: null };
+    session.state = {
+      ...session.state,
+      step,
+      error: null,
+      test: { status: 'inactive' },
+      ...(step === 'capture' ? { saved: false, preview: null } : {})
+    };
+    if (step === 'shortcut') {
+      this.effects.startTest(session.owner.id, (test) => {
+        if (!this.current(session) || !['shortcut', 'detected'].includes(session.state.step))
+          return;
+        session.state = {
+          ...session.state,
+          test,
+          ...(test.status === 'detected' ? { step: 'detected' } : {})
+        };
+        this.notify(session);
+      });
+    }
+
     this.notify(session);
     return { ok: true, value: { ...session.state } };
   }
 
-  finish(owner: OnboardingOwner, skip: boolean): Promise<DesktopResult<OnboardingState>> {
+  finish(
+    owner: OnboardingOwner,
+    skip: boolean,
+    destination: OnboardingDestination = 'library'
+  ): Promise<DesktopResult<OnboardingState>> {
     const session = this.owned(owner);
 
     if (session === undefined)
@@ -75,7 +115,8 @@ export class OnboardingCoordinator {
         failure('CONFLICT', 'Capture selected text successfully, or choose Skip.')
       );
     session.armedAt = Infinity;
-    const finishing = this.complete(session).finally(() => {
+    this.effects.stopTest(session.owner.id);
+    const finishing = this.complete(session, destination).finally(() => {
       this.finishing = undefined;
     });
 
@@ -89,10 +130,12 @@ export class OnboardingCoordinator {
     await this.finishing;
   }
 
-  private async complete(session: Session): Promise<DesktopResult<OnboardingState>> {
+  private async complete(
+    session: Session,
+    destination: OnboardingDestination
+  ): Promise<DesktopResult<OnboardingState>> {
     const result = await this.settings.services.updateSettings({
-      onboardingComplete: true,
-      defaultSizeMode: 'compact'
+      onboardingComplete: true
     });
 
     if (!result.ok) {
@@ -105,7 +148,7 @@ export class OnboardingCoordinator {
     session.state = { ...session.state, completed: true };
     this.notify(session);
     try {
-      await this.effects.openCompact(session.owner.id);
+      await this.effects.complete(session.owner.id, destination);
       return { ok: true, value: { ...session.state } };
     } catch {
       return failure('UNAVAILABLE', 'Setup was saved. Reopen Promptly to continue.');
@@ -132,6 +175,8 @@ export class OnboardingCoordinator {
         version: 0,
         step: 'welcome',
         saved: false,
+        preview: null,
+        test: { status: 'inactive' },
         completed: this.settings.current.settings.onboardingComplete,
         error: null
       }
@@ -145,6 +190,7 @@ export class OnboardingCoordinator {
   }
 
   private retire(): void {
+    if (this.session !== undefined) this.effects.stopTest(this.session.owner.id);
     this.session?.stop();
     this.session = undefined;
   }

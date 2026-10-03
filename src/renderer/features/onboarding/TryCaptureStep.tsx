@@ -1,5 +1,3 @@
-import { Check } from 'lucide-react';
-
 import { saveShortcutLabel } from '../library/save-shortcut-label';
 import { usePreferences } from '../settings/settings-context';
 import { useShortcutStatus } from '../shortcuts/hooks/use-shortcut-status';
@@ -7,7 +5,7 @@ import { useShortcutStatus } from '../shortcuts/hooks/use-shortcut-status';
 const sample =
   'Read the failing tests first. Explain the root cause in two sentences, then propose the smallest fix.';
 
-export function TryCaptureStep({ saved }: { saved: boolean }) {
+export function TryCaptureStep() {
   const preferences = usePreferences();
   const status = useShortcutStatus(preferences.revision, 'idle');
   const unavailable =
@@ -16,12 +14,9 @@ export function TryCaptureStep({ saved }: { saved: boolean }) {
 
   return (
     <div className="onboarding-step-body">
-      <h1 tabIndex={-1}>
-        Highlight the prompt, then {saveShortcutLabel(preferences.settings.saveShortcut)}
-      </h1>
+      <h1 tabIndex={-1}>Now save something.</h1>
       <p className="onboarding-description">
-        Select the text below and use your shortcut. The confirmation appears only after your
-        selection is saved.
+        Select the prompt, then {saveShortcutLabel(preferences.settings.saveShortcut)}.
       </p>
       <div className="onboarding-terminal">
         <div aria-hidden="true">
@@ -35,20 +30,12 @@ export function TryCaptureStep({ saved }: { saved: boolean }) {
           spellCheck={false}
         />
       </div>
-      <div className="onboarding-practice-status" role="status" aria-live="polite">
-        {saved ? (
-          <p className="onboarding-saved">
-            <Check aria-hidden="true" />
-            Saved. Nice.
-          </p>
-        ) : (
-          <p>
-            {unavailable
-              ? 'Your capture listener is unavailable or paused. Go Back to change your shortcut, or choose Skip.'
-              : 'Waiting for a successful capture. If Windows cannot read this selection, you can Skip and try an app that supports text selection later.'}
-          </p>
-        )}
-      </div>
+      <p className="onboarding-practice-status" role="status" aria-live="polite">
+        <span className="onboarding-wait-dot" aria-hidden="true" />
+        {unavailable
+          ? 'Your capture listener is unavailable or paused. Go Back to change your shortcut, or choose Skip.'
+          : 'Waiting for your capture…'}
+      </p>
     </div>
   );
 }

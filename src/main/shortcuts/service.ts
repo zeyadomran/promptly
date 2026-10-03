@@ -1,4 +1,5 @@
 import type { Settings } from '../../shared/contracts/settings';
+import type { ShortcutTestState } from '../../shared/contracts/shortcut-test';
 import type { HookFrame, ShortcutStatus } from '../../shared/contracts/shortcuts';
 import type { KeyboardHook } from '../platform/keyboard/keyboard-hook';
 import type { SettingsController } from '../settings/controllers';
@@ -11,6 +12,7 @@ import { HookSession } from './hook-session';
 import { updateRecording } from './recording';
 import { recoverBindings } from './registration-recovery';
 import { shortcutController } from './settings-controller';
+import { ShortcutTest } from './shortcut-test';
 import { shortcutStatus } from './status';
 
 export class Shortcuts {
@@ -20,6 +22,9 @@ export class Shortcuts {
   private readonly recorders = new Set<number>();
   private paused = false;
   private closing = false;
+  private testing: ShortcutTest | undefined;
+  private testOwner: number | undefined;
+  private modifierMask = 0;
   private readonly session: HookSession;
   private readonly admission = new CaptureAdmission(() => !this.blockedCapture);
 
@@ -27,7 +32,17 @@ export class Shortcuts {
     api: AcceleratorApi,
     private readonly commands: ShortcutCommands,
     private readonly platform: NodeJS.Platform,
-    private readonly recover: () => void = () => undefined
+    private readonly recover: () => void = () => undefined,
+    private readonly scheduleTest: (callback: () => void, delay: number) => () => void = (
+      callback,
+      delay
+    ) => {
+      const timer = setTimeout(callback, delay);
+
+      return () => {
+        clearTimeout(timer);
+      };
+    }
   ) {
     this.accelerators = new Accelerators(api, (action) => {
       this.dispatch(action);
@@ -37,6 +52,7 @@ export class Shortcuts {
     });
     this.session = new HookSession(
       () => {
+        this.retireTest('inactive');
         this.taps.reset();
         this.admission.invalidate();
       },
@@ -47,6 +63,7 @@ export class Shortcuts {
     this.controller = shortcutController({
       previous: () => this.preferences,
       commit: (settings) => {
+        this.retireTest('inactive');
         this.preferences = settings;
         this.admission.invalidate();
       },
@@ -84,6 +101,17 @@ export class Shortcuts {
   }
 
   receive(frame: HookFrame): void {
+    if (frame.kind === 'modifiers' || frame.kind === 'ready') this.modifierMask = frame.mask;
+    if (frame.kind === 'reset' && this.session.hook?.health.installed !== true)
+      this.retireTest('unavailable');
+    if ((frame.kind === 'health' || frame.kind === 'ready') && !frame.installed)
+      this.retireTest('unavailable');
+    if (this.testing !== undefined) {
+      this.taps.reset(this.modifierMask);
+      this.testing.receive(frame);
+      return;
+    }
+
     if (frame.kind === 'health' || frame.kind === 'reset' || frame.kind === 'ready')
       this.admission.invalidate();
     if (
@@ -101,12 +129,14 @@ export class Shortcuts {
   }
 
   setPaused(paused: boolean): void {
+    this.retireTest('inactive');
     this.admission.invalidate();
     this.paused = paused;
     this.taps.reset();
   }
 
   record(owner: number, active: boolean): void {
+    if (active) this.retireTest('inactive');
     this.admission.invalidate();
     updateRecording(
       this.recorders,
@@ -120,7 +150,57 @@ export class Shortcuts {
   }
 
   release(owner: number): void {
+    this.stopTest(owner);
     if (this.recorders.has(owner)) this.record(owner, false);
+  }
+
+  startTest(owner: number, publish: (state: ShortcutTestState) => void): void {
+    this.retireTest('inactive');
+    this.admission.invalidate();
+    this.taps.reset(this.modifierMask);
+    this.testOwner = owner;
+    const settings = this.preferences;
+
+    if (
+      settings === undefined ||
+      this.closing ||
+      this.session.sleeping ||
+      this.paused ||
+      this.recorders.size > 0 ||
+      this.accelerators.failed ||
+      this.status.capture !== 'registered'
+    ) {
+      publish({ status: 'unavailable' });
+      return;
+    }
+
+    this.testing = new ShortcutTest(
+      owner,
+      structuredClone(settings),
+      this.modifierMask,
+      publish,
+      this.scheduleTest
+    );
+    publish({ status: 'waiting' });
+  }
+
+  stopTest(owner: number): void {
+    if (this.testOwner !== owner) return;
+    this.testing?.close();
+    this.testing = undefined;
+    this.testOwner = undefined;
+    this.admission.invalidate();
+    this.taps.reset(this.modifierMask);
+  }
+
+  private retireTest(status: 'inactive' | 'unavailable'): void {
+    const testing = this.testing;
+
+    this.testing = undefined;
+    if (testing === undefined) return;
+    this.admission.invalidate();
+    this.taps.reset(this.modifierMask);
+    testing.retire(status);
   }
 
   get recoveryAvailable(): boolean {
@@ -176,11 +256,24 @@ export class Shortcuts {
       this.session.sleeping ||
       this.paused ||
       this.recorders.size > 0 ||
+      this.testOwner !== undefined ||
       this.accelerators.failed
     );
   }
 
   private dispatch(action: ShortcutAction): void {
+    if (action === 'capture' && this.testing !== undefined) {
+      if (
+        !this.closing &&
+        !this.session.sleeping &&
+        !this.paused &&
+        this.recorders.size === 0 &&
+        !this.accelerators.failed
+      )
+        this.testing.combination();
+      return;
+    }
+
     if (
       this.closing ||
       this.session.sleeping ||

@@ -17,7 +17,8 @@ export class DoubleTap {
   constructor(
     private modifier: Modifier,
     private windowMs: number,
-    private readonly trigger: () => void
+    private readonly trigger: () => void,
+    private readonly observe: (tap: 1 | 2, elapsedMs?: number) => void = () => undefined
   ) {}
 
   configure(modifier: Modifier, windowMs: number): void {
@@ -80,8 +81,14 @@ export class DoubleTap {
     }
 
     if (this.firstRelease !== undefined && frame.timeMs - this.firstRelease <= this.windowMs) {
+      const elapsedMs = frame.timeMs - this.firstRelease;
+
       this.firstRelease = undefined;
+      this.observe(2, elapsedMs);
       this.trigger();
-    } else this.firstRelease = frame.timeMs;
+    } else {
+      this.firstRelease = frame.timeMs;
+      this.observe(1);
+    }
   }
 }
