@@ -144,6 +144,21 @@ it('records a combination only after suppression, releases before saving and can
   });
   expect(session.snapshot.phase).toBe('idle');
   expect(saved.at(-1)).toBe('Swapped once');
+  await session.start('tag', commit, 'local', () => ({ kind: 'conflict', collision }));
+  session.handleKey({ ...key, key: 'f', code: 'KeyF' });
+  session.handleKeyUp({ ...key, key: 'f', code: 'KeyF', ctrlKey: false });
+  await session.settled();
+  const savedBeforeCancel = [...saved];
+  const cancelledSwap = session.resolveConflict(() => {
+    saved.push('Cancelled swap');
+    return Promise.resolve();
+  });
+
+  await session.cancel();
+  await cancelledSwap;
+  expect(saved).toEqual(savedBeforeCancel);
+  expect(session.snapshot.phase).toBe('idle');
+  expect(suppressed).toBe(false);
   await session.cancel();
   await session.start('next', commit, 'local');
   expect(session.handleKey({ ...key, key: 'Tab', code: 'Tab', ctrlKey: false })).toBe(false);

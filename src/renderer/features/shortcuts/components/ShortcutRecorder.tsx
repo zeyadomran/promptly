@@ -1,6 +1,6 @@
 import { X } from 'lucide-react';
 import type { ComponentProps } from 'react';
-import { useId, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
 
 import type { ShortcutCollision, ShortcutEdit } from '../../../../shared/shortcuts/shortcut-edit';
 import { Button } from '../../../components/ui/button';
@@ -45,6 +45,11 @@ export function ShortcutRecorder({
   const disabled = props.disabled === true || clearing || snapshot.phase === 'saving';
   const hintId = `${id}-hint`;
   const candidate = mine ? snapshot.candidate : undefined;
+  const button = useRef<HTMLButtonElement>(null);
+
+  useLayoutEffect(() => {
+    if (active) button.current?.focus({ preventScroll: true });
+  }, [active]);
 
   return (
     <div
@@ -64,6 +69,7 @@ export function ShortcutRecorder({
         )}
         <Button
           {...props}
+          ref={button}
           id={id}
           type="button"
           variant="outline"

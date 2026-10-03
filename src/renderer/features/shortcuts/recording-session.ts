@@ -161,6 +161,7 @@ export class ShortcutRecordingSession {
 
     this.publish({ ...this.snapshot, phase: 'saving', error: undefined });
     return this.enqueue(async () => {
+      if (request !== this.request) return;
       await commit();
       if (request === this.request)
         this.publish({
