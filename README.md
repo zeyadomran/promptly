@@ -16,7 +16,7 @@ supported application, capture it, and copy the complete snippet whenever you ne
   with confirmation and first-launch practice capture.
 - **Manage your library:** capture, edit, duplicate, delete, and reuse snippets.
 - **Find what you need:** full-text search, tag filters, sorting, and paged browsing.
-- **Organize with tags:** assign tags, rename them, and merge overlapping tags.
+- **Organize with tags:** assign tags, rename them, and customize their colors.
 - **Choose your workspace:** Compact and Regular views, light and dark themes,
   saved window geometry, and pinning.
 - **Keep commands close:** customizable keyboard shortcuts and a tray menu with

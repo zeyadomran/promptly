@@ -119,12 +119,6 @@ export const operations = {
     response: tagSnapshotSchema
   },
   deleteTag: { request: idRequestSchema, response: revisionResponseSchema },
-  mergeTags: {
-    request: z
-      .strictObject({ sourceId: idSchema, targetId: idSchema })
-      .refine((request) => request.sourceId !== request.targetId),
-    response: revisionResponseSchema
-  },
   getSettings: { request: emptySchema, response: settingsSnapshotSchema },
   getLoginStatus: { request: emptySchema, response: loginStatusSchema },
   updateSettings: { request: settingsPatchSchema, response: settingsSnapshotSchema },

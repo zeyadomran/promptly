@@ -79,35 +79,37 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
       expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 1 }),
       expect.objectContaining({ id: tag.id, name: 'project', color: '#a17bcd', snippetCount: 2 })
     ]);
-    const beforeMerge = store.export();
-
-    // Inject only the external SQLite write failure; observe atomicity through the public export.
-    store.engine.context.db.exec(`CREATE TRIGGER reject_tag_merge BEFORE DELETE ON tags
-      BEGIN SELECT RAISE(ABORT, 'owned write failure'); END;`);
-    expect(() => store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id })).toThrow(
-      'CONFLICT'
-    );
-    expect(store.export()).toEqual(beforeMerge);
-    store.engine.context.db.exec('DROP TRIGGER reject_tag_merge');
     store.invoke('setTagMembership', { id: original.id, tagId: target.id, assigned: true });
-    const deletedBeforeMerge = store.invoke('deleteSnippet', { id: original.id });
+    store.reopen();
 
-    store.invoke('mergeTags', { sourceId: tag.id, targetId: target.id });
-    store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeMerge.undoToken });
     expect(store.invoke('listTags', {}).tags).toEqual([
-      expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 2 })
+      expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 2 }),
+      expect.objectContaining({ id: tag.id, name: 'project', color: '#a17bcd', snippetCount: 2 })
     ]);
-    for (const id of [original.id, duplicate.id])
-      expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({
-        text,
-        tags: [{ id: target.id, color: 'teal' }]
-      });
+    for (const id of [original.id, duplicate.id]) {
+      const snippet = store.invoke('getSnippet', { id }).snippet;
+
+      expect(snippet.text).toBe(text);
+      expect(snippet.tags).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ id: target.id, name: 'archive', color: 'teal' }),
+          expect.objectContaining({ id: tag.id, name: 'project', color: '#a17bcd' })
+        ])
+      );
+      expect(snippet.tags).toHaveLength(2);
+    }
+
     const deletedBeforeTagRemoval = store.invoke('deleteSnippet', { id: original.id });
 
     store.invoke('deleteTag', { id: target.id });
     expect(
       store.invoke('undoDeleteSnippet', { undoToken: deletedBeforeTagRemoval.undoToken }).snippet
-    ).toMatchObject({ id: original.id, text, tags: [] });
+    ).toMatchObject({
+      id: original.id,
+      text,
+      tags: [{ id: tag.id, name: 'project', color: '#a17bcd' }]
+    });
+    store.invoke('deleteTag', { id: tag.id });
     store.reopen();
     expect(store.invoke('listTags', {}).tags).toEqual([]);
     for (const id of [original.id, duplicate.id])
