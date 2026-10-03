@@ -61,14 +61,16 @@ export function loginPreferences(
     statSync(path.resolve(directory, '..', 'Update.exe'), { throwIfNoEntry: false })?.isFile() ===
       true;
   const target = installed ? stable : executable;
+  // Electron parses lookup as a command line; its exact Run comparator strips these quotes.
+  const statusOptions = { path: `"${target}"`, args: [] };
 
   return {
     setLogin: (openAtLogin, enabled = true) => {
       application.setLoginItemSettings({ openAtLogin, enabled, path: target, args: [] });
     },
-    getLogin: () => application.getLoginItemSettings({ path: target, args: [] }).openAtLogin,
+    getLogin: () => application.getLoginItemSettings(statusOptions).openAtLogin,
     getLoginState: () => {
-      const status = application.getLoginItemSettings({ path: target, args: [] });
+      const status = application.getLoginItemSettings(statusOptions);
       const entry = status.launchItems.find(
         (item) =>
           item.name === 'com.squirrel.Promptly.Promptly' &&

@@ -51,6 +51,12 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     login = loginPreferences(installation.application, installation.installedExecutable);
     installation.loginEntries.set(installation.stableExecutable, true);
     installation.approved.set(installation.stableExecutable, false);
+    expect(
+      installation.application.getLoginItemSettings({ path: installation.stableExecutable })
+    ).toMatchObject({
+      openAtLogin: true,
+      launchItems: []
+    });
     fixture.store.engine.context.db
       .prepare('UPDATE settings SET value = ? WHERE key = ?')
       .run('true', 'launchAtLogin');
