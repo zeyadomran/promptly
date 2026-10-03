@@ -32,7 +32,7 @@ export function OnboardingFooter({
   return (
     <footer className="onboarding-footer">
       <div>
-        {back !== undefined && (
+        {back !== undefined && state.step !== 'done' && (
           <Button
             variant="ghost"
             disabled={pending}
@@ -43,9 +43,11 @@ export function OnboardingFooter({
             <ShortcutKey>←</ShortcutKey>Back
           </Button>
         )}
-        <Button variant="ghost" disabled={pending} onClick={skip}>
-          {state.step === 'welcome' || state.step === 'guide' ? 'Set up later' : 'Skip'}
-        </Button>
+        {state.step !== 'done' && (
+          <Button variant="ghost" disabled={pending} onClick={skip}>
+            {state.step === 'welcome' || state.step === 'guide' ? 'Set up later' : 'Skip'}
+          </Button>
+        )}
         {state.step === 'done' && (
           <Button
             variant="ghost"

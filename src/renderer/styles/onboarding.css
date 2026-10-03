@@ -60,6 +60,10 @@
   line-height: 1.65;
   color: var(--muted-foreground);
 }
+.onboarding-description .shortcut-keycaps {
+  display: inline-flex;
+  vertical-align: middle;
+}
 .onboarding-splash {
   padding-top: 24px;
 }
