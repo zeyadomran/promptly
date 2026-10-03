@@ -108,7 +108,15 @@ it('browses paged results with command-safe selection across refreshes and newer
       expect(preview.snapshot().snippet?.id).toBe(deliberate.id);
     });
     expect(model.snapshot().selectedId).toBe(deliberate.id);
+    fixture.holdNext(400);
+    const oldQueryPage = model.moveSelection(400);
+
+    await vi.waitFor(() => {
+      expect(model.snapshot().selectedId).toBeNull();
+    });
     model.query({ ...initialQuery, query: 'Snippet 999' });
+    fixture.release();
+    await oldQueryPage;
     await vi.waitFor(() => {
       expect(model.snapshot().total).toBe(1);
     });
