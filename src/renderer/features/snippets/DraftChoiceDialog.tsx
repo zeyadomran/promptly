@@ -1,3 +1,5 @@
+import { useRef } from 'react';
+
 import { Button } from '../../components/ui/button';
 import {
   Dialog,
@@ -17,6 +19,7 @@ export function DraftChoiceDialog({
   resumeEditing: () => Promise<void>;
 }) {
   const { session, state } = useSnippetSession();
+  const keepButton = useRef<HTMLButtonElement>(null);
   const keep = () => {
     session.keep();
     void resumeEditing().catch(() => {
@@ -33,6 +36,10 @@ export function DraftChoiceDialog({
     >
       {active && (
         <DialogContent
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            keepButton.current?.focus();
+          }}
           onCloseAutoFocus={(event) => {
             event.preventDefault();
             if (document.querySelector('[data-shell-library][hidden]') !== null) return;
@@ -51,17 +58,18 @@ export function DraftChoiceDialog({
           </DialogHeader>
           {state.error !== undefined && <p role="alert">{state.error}</p>}
           <DialogFooter>
-            <Button variant="ghost" disabled={state.pending} onClick={keep}>
-              Keep editing
-            </Button>
             <Button
-              variant="outline"
+              className="draft-discard"
+              variant="ghost"
               disabled={state.pending}
               onClick={() => {
                 session.discard();
               }}
             >
-              Discard changes
+              Discard
+            </Button>
+            <Button ref={keepButton} variant="outline" disabled={state.pending} onClick={keep}>
+              Keep editing
             </Button>
             <Button
               disabled={state.pending || state.missing}

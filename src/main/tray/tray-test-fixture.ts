@@ -5,7 +5,9 @@ import { testSettings } from '../settings/settings-test-fixture';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
 import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest } from '../storage/protocol';
+import { UpdateService } from '../updates/service';
 import { TrayCoordinator } from './coordinator';
+import { trayOpenItem } from './menu';
 import type { TrayItem } from './ports';
 
 export function trayFixture() {
@@ -75,6 +77,19 @@ export function trayFixture() {
     }
   };
   const copy = new CopyService(fixture.storage, mutations, copyEffects);
+  const updates = new UpdateService({
+    available: true,
+    findRelease: () => Promise.resolve('1.0.0'),
+    apply: () => Promise.resolve(),
+    restart: () => {
+      windows.push('update restart');
+    },
+    notify: () => undefined,
+    openSettings: () => Promise.resolve(),
+    publish: () => {
+      tray.changed();
+    }
+  });
   const tray = new TrayCoordinator(
     transport,
     keyboard.shortcuts,
@@ -102,6 +117,10 @@ export function trayFixture() {
     },
     {
       copy: () => copy,
+      updateReady: () => updates.state.status === 'ready',
+      restartForUpdate: () => {
+        updates.restart();
+      },
       open: (kind) => {
         windows.push(kind);
         return Promise.resolve();
@@ -128,7 +147,9 @@ export function trayFixture() {
     windows,
     copy,
     tray,
+    updates,
     menu: () => menu,
+    leftClick: () => trayOpenItem(menu)?.run?.(),
     recent: () => recent,
     statuses,
     pausedIcon: () => pausedIcon,
