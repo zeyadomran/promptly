@@ -5,6 +5,7 @@ import { onboardingKeyAction } from './onboarding-keyboard';
 it('navigates onboarding and chooses themes while preserving keyboard ownership', () => {
   const input = {
     key: 'Enter',
+    code: 'Enter',
     ctrlKey: false,
     metaKey: false,
     altKey: false,
@@ -16,6 +17,7 @@ it('navigates onboarding and chooses themes while preserving keyboard ownership'
     prevented: false,
     focus: 'library' as const
   };
+
   expect(onboardingKeyAction(input)).toEqual({ kind: 'step', step: 'guide' });
   expect(onboardingKeyAction({ ...input, step: 'shortcut' })).toBeUndefined();
   expect(onboardingKeyAction({ ...input, step: 'capture' })).toBeUndefined();
