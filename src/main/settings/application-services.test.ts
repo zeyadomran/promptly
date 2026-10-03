@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { dispatchOperation } from '../ipc/dispatch-operation';
 import { applicationServices } from './application-services';
 
-it('reads the running app version and opens only its fixed repository and wiki through authorized desktop operations', async () => {
+it('reads the running app version and opens only its fixed project links through authorized desktop operations', async () => {
   let version = '0.2.3';
   let rejectBrowser = false;
   const opened: string[] = [];
@@ -54,6 +54,26 @@ it('reads the running app version and opens only its fixed repository and wiki t
     'https://github.com/zeyadomran/promptly',
     'https://github.com/zeyadomran/promptly/wiki'
   ]);
+  expect(await dispatchOperation(services, false, 'openPrivacyPolicy', {})).toMatchObject({
+    ok: false,
+    error: { code: 'UNAUTHORIZED' }
+  });
+  expect(
+    await dispatchOperation(services, true, 'openPrivacyPolicy', { url: 'file:///private' })
+  ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+  expect(opened).toEqual([
+    'https://github.com/zeyadomran/promptly',
+    'https://github.com/zeyadomran/promptly/wiki'
+  ]);
+  expect(await dispatchOperation(services, true, 'openPrivacyPolicy', {})).toEqual({
+    ok: true,
+    value: {}
+  });
+  expect(opened).toEqual([
+    'https://github.com/zeyadomran/promptly',
+    'https://github.com/zeyadomran/promptly/wiki',
+    'https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md'
+  ]);
   rejectBrowser = true;
   expect(await dispatchOperation(services, true, 'openRepository', {})).toEqual({
     ok: false,
@@ -62,5 +82,9 @@ it('reads the running app version and opens only its fixed repository and wiki t
   expect(await dispatchOperation(services, true, 'openWiki', {})).toEqual({
     ok: false,
     error: { code: 'UNAVAILABLE', message: 'Unable to open the user wiki. Try again.' }
+  });
+  expect(await dispatchOperation(services, true, 'openPrivacyPolicy', {})).toEqual({
+    ok: false,
+    error: { code: 'UNAVAILABLE', message: 'Unable to open the privacy policy. Try again.' }
   });
 });

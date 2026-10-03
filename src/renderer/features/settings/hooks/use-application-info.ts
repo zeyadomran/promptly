@@ -24,7 +24,10 @@ export function useApplicationInfo() {
     };
   }, []);
 
-  const openLink = async (operation: 'openRepository' | 'openWiki', failureMessage: string) => {
+  const openLink = async (
+    operation: 'openRepository' | 'openWiki' | 'openPrivacyPolicy',
+    failureMessage: string
+  ) => {
     if (opening) return;
     setOpening(true);
     setLinkError(undefined);
@@ -46,6 +49,8 @@ export function useApplicationInfo() {
     opening,
     openRepository: () =>
       openLink('openRepository', 'Unable to open the GitHub repository. Try again.'),
-    openWiki: () => openLink('openWiki', 'Unable to open the user wiki. Try again.')
+    openWiki: () => openLink('openWiki', 'Unable to open the user wiki. Try again.'),
+    openPrivacyPolicy: () =>
+      openLink('openPrivacyPolicy', 'Unable to open the privacy policy. Try again.')
   };
 }

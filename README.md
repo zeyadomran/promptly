@@ -48,6 +48,8 @@ Explicit Copy actions write the clipboard. See
 
 ## Contributing and reporting issues
 
+Read the [Privacy Policy](PRIVACY.md) for local storage, capture, updates, and information you choose to share. It is also available from General Settings in the app.
+
 See [CONTRIBUTORS.md](CONTRIBUTORS.md) for contributions and ordinary bug reports,
 [DEVELOPMENT.md](DEVELOPMENT.md) for running and building the app, and
 [SECURITY.md](SECURITY.md) for private vulnerability reports.

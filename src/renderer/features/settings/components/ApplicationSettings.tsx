@@ -6,7 +6,7 @@ import { StorageRow } from '../storage/StorageRow';
 import { UpdateSettings } from './UpdateSettings';
 
 export function ApplicationSettings() {
-  const { version, versionError, linkError, opening, openRepository, openWiki } =
+  const { version, versionError, linkError, opening, openRepository, openWiki, openPrivacyPolicy } =
     useApplicationInfo();
 
   return (
@@ -46,6 +46,21 @@ export function ApplicationSettings() {
             }}
           >
             Open wiki
+            <ExternalLink aria-hidden="true" />
+          </a>
+        </Button>
+      </StorageRow>
+      <StorageRow label="Privacy" description="Read how Promptly handles your information.">
+        <Button variant="outline" asChild>
+          <a
+            href="https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md"
+            aria-disabled={opening}
+            onClick={(event) => {
+              event.preventDefault();
+              void openPrivacyPolicy();
+            }}
+          >
+            Privacy policy
             <ExternalLink aria-hidden="true" />
           </a>
         </Button>
