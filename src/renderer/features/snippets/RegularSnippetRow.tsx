@@ -1,7 +1,7 @@
 import type { Snippet } from '../../../shared/contracts/domain';
 import { HighlightedText } from '../../components/shared/HighlightedText';
 import type { HighlightRange } from '../../lib/highlight';
-import { tagColorClasses } from '../../lib/tag-palette';
+import { tagColorStyle } from '../../lib/tag-palette';
 import { LibraryCopyStatus } from '../library/LibraryCopyStatus';
 import { relativeTime } from './relative-time';
 
@@ -48,7 +48,8 @@ export function RegularSnippetRow({
               key={tag.id}
               title={tag.name}
               aria-label={tag.name}
-              className={`library-tag-dot ${tagColorClasses[tag.color]}`}
+              className="library-tag-dot"
+              style={tagColorStyle(tag.color)}
             />
           ))}
           <span className="library-row-source">

@@ -9,7 +9,7 @@ import { CommandInput } from '../../components/ui/command-input';
 import { CommandItem } from '../../components/ui/command-item';
 import { PopoverClose } from '../../components/ui/popover';
 import { PopoverContent } from '../../components/ui/popover-content';
-import { tagColorClasses } from '../../lib/tag-palette';
+import { tagColorStyle } from '../../lib/tag-palette';
 import type { TagPickerController } from './tag-picker-controller';
 
 export function TagPickerContent({
@@ -104,7 +104,8 @@ export function TagPickerContent({
                 }}
               >
                 <span
-                  className={`library-tag-dot ${tagColorClasses[tag.color]}`}
+                  className="library-tag-dot"
+                  style={tagColorStyle(tag.color)}
                   aria-hidden="true"
                 />
                 <span className="tag-picker-name">{tag.name}</span>

@@ -4,7 +4,7 @@ import type { Tag } from '../../../shared/contracts/domain';
 import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
-import { tagColorClasses } from '../../lib/tag-palette';
+import { tagColorStyle } from '../../lib/tag-palette';
 
 export function TagBadge({
   name,
@@ -14,7 +14,7 @@ export function TagBadge({
 }: Pick<Tag, 'name' | 'color'> & { onRemove?: () => void; disabled?: boolean }) {
   return (
     <Badge variant="outline" className="tag-badge">
-      <span className={`library-tag-dot ${tagColorClasses[color]}`} aria-hidden="true" />
+      <span className="library-tag-dot" style={tagColorStyle(color)} aria-hidden="true" />
       <span className="tag-badge-name">{name}</span>
       {onRemove !== undefined && (
         <Tooltip>

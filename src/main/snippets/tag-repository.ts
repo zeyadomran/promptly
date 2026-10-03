@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
-import { tagColorSchema, tagSchema, tagSummarySchema } from '../../shared/contracts/domain';
+import { tagSchema, tagSummarySchema } from '../../shared/contracts/domain';
+import { tagPresetColors } from '../../shared/contracts/tag-colors';
 import { StorageError } from '../storage/context';
 import type { StorageRequest } from '../storage/protocol';
 import { decodeSqlText, tagColumns } from '../storage/sql-text';
@@ -33,7 +34,7 @@ export class TagRepository {
   create(input: StorageRequest<'createTag'>) {
     const { context } = this.reader;
     const count = Number(context.db.prepare('SELECT COUNT(*) AS count FROM tags').get()?.['count']);
-    const color = input.color ?? tagColorSchema.options[count % tagColorSchema.options.length];
+    const color = input.color ?? tagPresetColors[count % tagPresetColors.length];
     const id = randomUUID();
 
     context.db
