@@ -2,7 +2,7 @@ import { Plus } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
-import { tagColorClasses } from '../../lib/tag-palette';
+import { tagColorStyle } from '../../lib/tag-palette';
 import { useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
 
@@ -40,7 +40,7 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
             model.query({ ...state.request, tagIds, untagged: false });
           }}
         >
-          <span aria-hidden="true" className={`library-tag-dot ${tagColorClasses[tag.color]}`} />
+          <span aria-hidden="true" className="library-tag-dot" style={tagColorStyle(tag.color)} />
           {tag.name}
         </Button>
       ))}

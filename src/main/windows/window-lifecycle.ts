@@ -1,7 +1,6 @@
 import { app, type BrowserWindow, screen } from 'electron';
 
 import { failure } from '../../shared/contracts/result';
-import { shouldHideAfterCopy } from '../../shared/contracts/settings';
 import type { WindowKind, WindowState } from '../../shared/contracts/window';
 import { focusSearchChannel } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
@@ -100,21 +99,6 @@ export class WindowLifecycle {
     const window = this.windows.get(this.rootKind());
 
     if (window !== undefined) concealWindow(window, this.recovery);
-  }
-
-  async hideAfterCopy(senderId: number): Promise<boolean> {
-    const result = await this.enqueue(() => {
-      const window = this.windows.get('main');
-
-      if (window === undefined || window.isDestroyed() || window.webContents.id !== senderId)
-        throw new Error('The copy window is no longer available.');
-      if (shouldHideAfterCopy(this.settings.current.settings)) this.hide();
-      return Promise.resolve(this.state());
-    });
-
-    return (
-      result.ok && (!shouldHideAfterCopy(this.settings.current.settings) || !result.value.visible)
-    );
   }
 
   async toggle(): Promise<void> {

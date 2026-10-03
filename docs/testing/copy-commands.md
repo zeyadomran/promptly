@@ -5,8 +5,8 @@
 Production bootstrap installs `CopyService` in the trusted sender-context IPC routes.
 It shares the authoritative mutation queue with edits, imports and clear. Compact rows
 select before requesting a copy; the library command provider owns keyboard commands,
-copied feedback, delete and Undo. Regular preview and tray layouts remain future work,
-using the same named copy operation. No user clipboard or native input was touched.
+copied feedback, delete and Undo. Regular preview and tray copy use the same named copy
+operation. No user clipboard or native input was touched.
 
 The service accepts one copy per live trusted window, with at most 16 active requests.
 It uses the existing `LibraryMutations` owner to serialize the authoritative full-text
@@ -17,12 +17,21 @@ remains owned until completion and its accepted statistics update drains before 
 retirement. The existing desktop shutdown has a separate 40-second fatal cleanup limit;
 that limit cannot guarantee completion of an indefinitely stalled native write.
 
-After a confirmed clipboard write, statistics or hide errors produce `status: copied`
-with `STATISTICS_UNCONFIRMED` or `WINDOW_NOT_HIDDEN`. They never trigger another clipboard
+After a confirmed clipboard write, statistics errors produce `status: copied`
+with `STATISTICS_UNCONFIRMED`. They never trigger another clipboard
 write or statistics retry. Refresh/reopen is the intended statistics repair path, since
-a failed worker response does not prove that the transaction failed. The hide policy is
-read after asynchronous statistics work and checked again inside the serialized window
-command. Only the still-owned main window may be hidden.
+a failed worker response does not prove that the transaction failed. Copy has no window
+visibility effects: it keeps an open window open even for legacy automatic/always profiles,
+and never opens or focuses a hidden window for tray copy. The obsolete hide control/effect
+is removed; persisted values remain readable for compatibility. Escape still explicitly hides.
+
+Confirmed renderer copy shows accessible in-app Sonner "Copied" feedback for 1500 ms,
+alongside row feedback. It uses headless Sonner and CSS styling under the packaged CSP,
+with no OS notification permission dependency. Its Open Promptly action uses the existing
+show command. Rejected/uncertain IPC never announces success. Selection is established
+before copy and preserved by ID through statistics-driven refresh/reorder; completion
+does not replace a later deliberate selection. The Regular preview keeps long text in its
+own scroll area with actions visible, and Compact carries selection into Regular.
 
 Electron 44.5.1's installed declarations and [pinned clipboard documentation](https://raw.githubusercontent.com/electron/electron/v44.5.1/docs/api/clipboard.md)
 define `writeText` as `Promise<void>`. The injected port matches this asynchronous API.
@@ -43,7 +52,9 @@ whitespace or Unicode. The scan has no argument-count overflow for many disjoint
 Functional service tests use real SQLite and an external clipboard fake for authoritative
 text/Markdown and durable statistics, clipboard rejection, external database persistence
 failure and entered-write retirement. A public renderer command case verifies partial
-success feedback for1500ms and read-only refresh without replaying IPC; a keyboard case
+success notification/feedback for 1500ms, failed/uncertain outcomes and read-only refresh
+without replaying IPC; the canonical model flow checks exact preview through reorder
+and later deliberate selection. A keyboard case
 verifies navigation, text/IME/overlay ownership and clear-then-hide Escape behavior.
 The older27-case checkpoint was consolidated under the functional-only test policy;
 that history is not new qualification evidence.

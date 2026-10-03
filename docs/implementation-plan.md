@@ -153,7 +153,7 @@ Issue dependency links define execution order within phases. P06/P13 design/wind
 | P14 | [Implement substring search, filter syntax, sorting, and paginated queries](planning/issues/P14.md) | P04, P02 |
 | P15 | [Build the compact library with virtualized snippet rows](planning/issues/P15.md) | P06, P13, P14 |
 | P16 | [Build the regular split view and snippet editing/actions](planning/issues/P16.md) | P15, P04 |
-| P17 | [Unify copy commands, keyboard navigation, and hide-after-copy behavior](planning/issues/P17.md) | P15, P16, P05 |
+| P17 | [Unify copy commands, keyboard navigation, and keep-open feedback](planning/issues/P17.md) | P15, P16, P05 |
 | P18 | [Implement tag creation, filtering, and the reusable multi-select picker](planning/issues/P18.md) | P04, P06, P17 |
 
 ### Phase 4: Settings and daily workflows

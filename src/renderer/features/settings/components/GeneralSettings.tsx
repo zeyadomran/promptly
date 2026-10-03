@@ -28,25 +28,6 @@ export function GeneralSettings() {
         patch={(showInTray) => ({ showInTray })}
       />
       <SettingChoice
-        label="Hide after copy"
-        description={
-          settings.hideAfterCopy === 'automatic'
-            ? `Automatic ${settings.alwaysOnTop ? 'keeps the window visible while pinned' : 'hides the window when it is not pinned'}.`
-            : 'Choose whether copying hides the window.'
-        }
-        value={settings.hideAfterCopy}
-        choices={[
-          { value: 'automatic', label: 'Automatic' },
-          { value: 'always', label: 'Always' },
-          { value: 'never', label: 'Never' }
-        ]}
-        patch={(hideAfterCopy) =>
-          hideAfterCopy === 'automatic' || hideAfterCopy === 'always' || hideAfterCopy === 'never'
-            ? { hideAfterCopy }
-            : undefined
-        }
-      />
-      <SettingChoice
         label="Default size"
         description="The size used when Promptly starts. Your current window size stays unchanged."
         value={settings.defaultSizeMode}

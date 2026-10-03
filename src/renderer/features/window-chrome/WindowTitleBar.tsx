@@ -27,8 +27,7 @@ export function WindowTitleBar({
         <span className="window-label">{title ?? 'Promptly'}</span>
       </div>
       <div className="window-title-actions">
-        <WindowPreferences mode={mode} />
-        {title === undefined && <SizeControl mode={mode} onChange={setMode} />}
+        <WindowPreferences />
         {title === undefined && (
           <IconButton
             label="Settings"
@@ -38,6 +37,7 @@ export function WindowTitleBar({
             }}
           />
         )}
+        {title === undefined && <SizeControl mode={mode} onChange={setMode} />}
       </div>
     </header>
   );

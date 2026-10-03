@@ -1,4 +1,4 @@
-import { type TagColor, tagColorClasses } from '../../lib/tag-palette';
+import { type TagColor, tagColorStyle } from '../../lib/tag-palette';
 import { cn } from '../../lib/utils';
 
 interface TagDotProps {
@@ -13,9 +13,9 @@ export function TagDot({ color, label, size = 'chip' }: TagDotProps) {
     <span
       className={cn(
         'inline-block shrink-0 rounded-[2px]',
-        tagColorClasses[color],
         size === 'chip' ? 'size-1.5' : 'size-[7px]'
       )}
+      style={tagColorStyle(color)}
       aria-hidden={label === undefined ? true : undefined}
       role={label === undefined ? undefined : 'img'}
       aria-label={label}

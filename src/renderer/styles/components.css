@@ -16,6 +16,14 @@
   opacity: 0.45;
 }
 
+[data-slot='button']:not(:disabled),
+[data-slot='toggle']:not(:disabled),
+[data-slot='toggle-group-item']:not(:disabled),
+[data-slot='switch']:not(:disabled),
+[data-slot='slider-thumb']:not([data-disabled]) {
+  cursor: pointer;
+}
+
 [data-slot='button']:focus-visible,
 [data-slot='input']:focus-visible,
 [data-slot='toggle']:focus-visible,

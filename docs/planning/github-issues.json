@@ -177,7 +177,7 @@
   {
     "key": "P17",
     "number": 19,
-    "title": "[P17] Unify copy commands, keyboard navigation, and hide-after-copy behavior",
+    "title": "[P17] Unify copy commands, keyboard navigation, and keep-open feedback",
     "url": "https://github.com/zeyadomran/promptly/issues/19",
     "phase": 3,
     "dependencies": [

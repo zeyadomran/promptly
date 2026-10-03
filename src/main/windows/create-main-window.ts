@@ -60,7 +60,8 @@ export async function createMainWindow(
     titleBarStyle: 'hidden',
     autoHideMenuBar: true,
     titleBarOverlay: {
-      height: kind === 'main' ? 40 : 38,
+      // Leave the renderer's bottom border below the native caption buttons.
+      height: kind === 'main' ? 39 : 37,
       color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
       symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
     },

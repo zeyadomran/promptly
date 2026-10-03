@@ -10,7 +10,13 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
 
   try {
     const original = store.invoke('createSnippet', { text: 'Draft' }).snippet;
-    const tag = store.invoke('createTag', { name: 'work' }).tag;
+    const tag = store.invoke('createTag', { name: 'work', color: '#12abef' }).tag;
+
+    expect(tag.color).toBe('#12abef');
+    expect(
+      store.engine.run(1, 'updateTag', { id: tag.id, name: 'work', color: '#bad' }).result
+    ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+    expect(store.invoke('listTags', {}).tags[0]?.color).toBe('#12abef');
 
     store.invoke('setSnippetTags', { id: original.id, tagIds: [tag.id] });
     store.invoke('updateSnippet', { id: original.id, text });
@@ -26,6 +32,7 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     expect(backup.snippets).toHaveLength(2);
     expect(backup.snippets.every((snippet) => snippet.text === text)).toBe(true);
     expect(backup.tags.map((item) => item.name)).toEqual(['work']);
+    expect(backup.tags[0]?.color).toBe('#12abef');
     expect(backup.memberships).toEqual(
       expect.arrayContaining([
         { snippetId: original.id, tagId: tag.id },
@@ -43,6 +50,7 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     store.reopen();
     expect(store.export()).toEqual(backup);
     expect(store.invoke('getSnippet', { id: original.id }).snippet.text).toBe(text);
+    expect(store.invoke('getSnippet', { id: original.id }).snippet.tags[0]?.color).toBe('#12abef');
     expect(store.invoke('searchSnippets', { ...allSnippets, tagIds: [tag.id] }).items).toHaveLength(
       2
     );
@@ -52,22 +60,22 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     const renamed = store.engine.run(2, 'updateTag', {
       id: tag.id,
       name: '  PROJECT  ',
-      color: 'purple'
+      color: '  #A17BCD  '
     });
 
     expect(renamed).toMatchObject({
-      result: { ok: true, value: { tag: { id: tag.id, name: 'project', color: 'purple' } } },
+      result: { ok: true, value: { tag: { id: tag.id, name: 'project', color: '#a17bcd' } } },
       change: { domains: ['tags', 'snippets'] }
     });
     expect(store.invoke('getSnippet', { id: original.id }).snippet.tags).toEqual([
-      expect.objectContaining({ id: tag.id, name: 'project', color: 'purple' })
+      expect.objectContaining({ id: tag.id, name: 'project', color: '#a17bcd' })
     ]);
     expect(() =>
       store.invoke('updateTag', { id: target.id, name: 'PROJECT', color: 'red' })
     ).toThrow('CONFLICT');
     expect(store.invoke('listTags', {}).tags).toEqual([
       expect.objectContaining({ id: target.id, name: 'archive', color: 'teal', snippetCount: 1 }),
-      expect.objectContaining({ id: tag.id, name: 'project', color: 'purple', snippetCount: 2 })
+      expect.objectContaining({ id: tag.id, name: 'project', color: '#a17bcd', snippetCount: 2 })
     ]);
     const beforeMerge = store.export();
 
