@@ -3,7 +3,6 @@ import { parseQuery } from '../../../shared/search/parse-query';
 import { HighlightedText } from '../../components/shared/HighlightedText';
 import { useLibrary } from '../library/library-context';
 import { PreviewTagBar } from './PreviewTagBar';
-import { relativeTime } from './relative-time';
 import { useSnippetSession } from './snippet-context';
 import { SnippetActions } from './SnippetActions';
 import { SnippetEditor } from './SnippetEditor';
@@ -25,12 +24,6 @@ export function SnippetPreview() {
 
   return (
     <aside className="snippet-preview" aria-label="Snippet preview">
-      <div className="snippet-preview-meta">
-        <span title={snippet.sourceApp ?? undefined}>
-          {snippet.sourceApp ?? 'No source application'}
-        </span>
-        <time dateTime={snippet.createdAt}>{relativeTime(snippet.createdAt)}</time>
-      </div>
       <PreviewTagBar snippet={snippet} />
       {state.editing && snippet.id !== library.selectedId && (
         <p className="snippet-draft-notice" role="status">

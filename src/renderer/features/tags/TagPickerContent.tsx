@@ -1,4 +1,4 @@
-import { Check, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useRef } from 'react';
 
 import type { TagSummary } from '../../../shared/contracts/domain';
@@ -7,10 +7,9 @@ import { Button } from '../../components/ui/button';
 import { Command, CommandEmpty, CommandGroup, CommandList } from '../../components/ui/command';
 import { CommandInput } from '../../components/ui/command-input';
 import { CommandItem } from '../../components/ui/command-item';
-import { PopoverClose } from '../../components/ui/popover';
 import { PopoverContent } from '../../components/ui/popover-content';
-import { tagColorStyle } from '../../lib/tag-palette';
 import type { TagPickerController } from './tag-picker-controller';
+import { TagPickerItem } from './TagPickerItem';
 
 export function TagPickerContent({
   picker,
@@ -18,6 +17,9 @@ export function TagPickerContent({
   tags,
   selectedIds,
   chooseFilter,
+  clearFilters,
+  untagged,
+  chooseUntagged,
   restoreFocus
 }: {
   picker: TagPickerController;
@@ -25,6 +27,9 @@ export function TagPickerContent({
   tags: readonly TagSummary[];
   selectedIds: readonly string[];
   chooseFilter: (id: string) => void;
+  clearFilters: () => void;
+  untagged: boolean;
+  chooseUntagged: () => void;
   restoreFocus: () => void;
 }) {
   const composing = useRef(false);
@@ -81,8 +86,8 @@ export function TagPickerContent({
     >
       <Command label="Tags" shouldFilter={false} vimBindings={false}>
         <CommandInput
-          placeholder="Search or create a tag…"
-          aria-label="Search or create a tag"
+          placeholder={state.targetId === null ? 'Filter tags…' : 'Add or find a tag…'}
+          aria-label={state.targetId === null ? 'Filter tags' : 'Add or find a tag'}
           value={state.query}
           onValueChange={(query) => {
             picker.query(query);
@@ -94,31 +99,29 @@ export function TagPickerContent({
             heading={state.targetId === null ? 'Filter tags (match all)' : 'Snippet tags'}
           >
             {picker.matches(tags).map((tag) => (
-              <CommandItem
+              <TagPickerItem
                 key={tag.id}
-                value={tag.id}
+                tag={tag}
+                filter={state.targetId === null}
+                selected={selectedIds.includes(tag.id)}
                 disabled={disabled || (!selectedIds.includes(tag.id) && selectedIds.length >= 100)}
-                onSelect={() => {
+                toggle={() => {
                   if (state.targetId === null) chooseFilter(tag.id);
                   else void picker.toggle(tag.id);
                 }}
-              >
-                <span
-                  className="library-tag-dot"
-                  style={tagColorStyle(tag.color)}
-                  aria-hidden="true"
-                />
-                <span className="tag-picker-name">{tag.name}</span>
-                <span
-                  className="tag-picker-count"
-                  aria-label={`${String(tag.snippetCount)} snippets`}
-                >
-                  {tag.snippetCount}
-                </span>
-                {selectedIds.includes(tag.id) && <Check aria-label="Selected" size={14} />}
-              </CommandItem>
+              />
             ))}
           </CommandGroup>
+          {state.targetId === null &&
+            (state.query.trim() === '' ||
+              'untagged'.includes(state.query.trim().toLowerCase())) && (
+              <CommandGroup heading="Other filters">
+                <CommandItem value="untagged" onSelect={chooseUntagged} disabled={disabled}>
+                  <span className="tag-picker-name">Untagged</span>
+                  {untagged && <span>Selected</span>}
+                </CommandItem>
+              </CommandGroup>
+            )}
           {create && (
             <CommandGroup heading="Create tag">
               <CommandItem
@@ -129,7 +132,7 @@ export function TagPickerContent({
                 }}
               >
                 <Plus aria-hidden="true" size={14} />
-                <span className="tag-picker-name">Create “{name.data}”</span>
+                <span className="tag-picker-name">Create tag '{name.data}'</span>
               </CommandItem>
             </CommandGroup>
           )}
@@ -140,14 +143,19 @@ export function TagPickerContent({
           {disabled
             ? 'Updating tags…'
             : state.targetId === null
-              ? 'Select filters or create a tag.'
+              ? String(selectedIds.length) + ' selected'
               : 'Changes save immediately.'}
         </span>
-        <PopoverClose asChild>
-          <Button variant="ghost" size="xs">
-            Done
+        {state.targetId === null && (
+          <Button
+            variant="ghost"
+            size="xs"
+            disabled={disabled || (selectedIds.length === 0 && !untagged)}
+            onClick={clearFilters}
+          >
+            Clear
           </Button>
-        </PopoverClose>
+        )}
       </div>
       {state.query.trim() !== '' && !name.success && (
         <p className="library-error">Use 1–64 characters of well-formed Unicode.</p>

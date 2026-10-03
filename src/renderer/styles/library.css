@@ -47,13 +47,14 @@
   gap: 6px;
   min-height: 42px;
   padding: 8px 14px;
-  overflow-x: auto;
+  overflow: hidden;
   flex-shrink: 0;
 }
 .library-tag-chip {
   height: 24px;
   padding: 3px 8px;
-  gap: 5px;
+  gap: 6px;
+  background: var(--muted);
   border-radius: 999px;
   border: 1px solid var(--border);
   font-size: 11.5px;
@@ -73,9 +74,9 @@
   border-radius: 50%;
 }
 .library-tag-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
   flex-shrink: 0;
 }
 .library-results {
@@ -133,12 +134,26 @@
   box-shadow: inset 0 0 0 1px var(--ring);
 }
 .library-row-dots {
-  width: 7px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  padding-top: 6px;
-  overflow: hidden;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 6px;
+  grid-template-rows: repeat(5, 6px);
+  gap: 2px;
+  width: max-content;
+  flex-shrink: 0;
+  align-self: center;
+}
+.library-row-dots[data-dot-rows='1'] {
+  grid-template-rows: 6px;
+}
+.library-row-dots[data-dot-rows='2'] {
+  grid-template-rows: repeat(2, 6px);
+}
+.library-row-dots[data-dot-rows='3'] {
+  grid-template-rows: repeat(3, 6px);
+}
+.library-row-dots[data-dot-rows='4'] {
+  grid-template-rows: repeat(4, 6px);
 }
 .library-row-content {
   min-width: 0;

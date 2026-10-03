@@ -60,9 +60,9 @@ The main window has two **size modes**, toggled from a segmented control in the 
 ### 3a. Compact mode (default)
 A narrow (~440 px), tall panel designed to sit beside a terminal or editor.
 - **Search input** at the top, auto-focused when the window opens. `Esc` clears the search, or hides the window if the search is already empty.
-- **Tag filter chips**: "All", then tags (horizontally scrollable), then a **"+" button** to create a new tag inline.
+- **Tag filter chips**: "All", selected tags first, then as many complete tag chips as fit on one row, a **"+N"** overflow picker and a dashed **"+"** new-tag control pinned right. Tags never wrap or scroll sideways; with an empty catalog only the new-tag control remains.
 - **Snippet list** (virtualized, scrollable):
-  - Colored **tag dots** on the left of each row (one per tag).
+  - Colored **tag dots** on the left of each row: every assigned tag, using the same bounded grid in both modes (6px squares, 2px gaps, at most five rows).
   - Snippet text in monospace, clamped to 2 lines.
   - Meta line: tag names · source app; plus a right-aligned Enter icon on the selected row (with an accessible copy hint) or a transient "✓ Copied" confirmation. Rows have no visible "Copy" label.
 - **Footer**: result count ("4 of 128") and pin status.
@@ -73,8 +73,7 @@ A larger window (~1000 px) with a split view:
 - Top: search input (supports filter syntax, see §4), then **tag filter chips** that toggle on and off, followed by a dashed **"New tag"** chip.
 - Left: dense **snippet list** (single-line truncated text, tag dots, tags · source, relative time). The selected row is highlighted.
 - Right: **preview pane** for the selected snippet:
-  - Its tags as badges, plus an **"Add tag"** button (opens a tag picker/creator popover).
-  - Source app and time.
+  - A fixed-height header with its tags as single-row badges, a **"+N"** overflow picker and right-aligned **source · relative time** metadata that receives space first. If source/time plus the mandatory add/overflow control cannot fit after hiding every badge, preserve the timestamp and truncate only the source label, with full accessible text and a focusable full-name tooltip. This bounded-width fallback is the stated working assumption pending an optional user preference. An empty snippet shows **"+ Add tag"**; when all badges fit a small dashed **"+"** adds more.
   - Full text in monospace with search matches highlighted.
   - Long text scrolls within its own focusable region; metadata and Copy/Edit/More actions remain visible at the supported minimum window size.
   - Actions: **Copy** (↵), **Edit** (inline edit of the text), **⋯** menu (Delete, Duplicate, Open source app, Copy as Markdown code block).
@@ -96,7 +95,7 @@ A larger window (~1000 px) with a split view:
 
 - **Instant, as-you-type** search across snippet text (case-insensitive, substring match; fuzzy matching optional). Use an index and bounded pages for large libraries (SQLite FTS5 or an in-memory index). No debounce or latency benchmark budget gates this pass.
 - Matches are **highlighted** in list rows and in the preview.
-- **Tag filters**: selecting one or more tag chips narrows results to snippets that have **all** selected tags (AND). "All" clears the tag filters. "Untagged" is available as a filter in Regular mode.
+- **Tag filters**: selecting one or more tag chips narrows results to snippets that have **all** selected tags (AND). "All" clears the tag filters. "Untagged" remains available in the shared filter picker.
 - **Inline filter syntax** in the search box: `tag:review`, `from:terminal`, combinable with free text (e.g. `tag:testing from:cursor flaky`).
 - Text search and tag filters combine (intersection).
 - Sort: Newest (default), Oldest, Most copied, Recently copied.
@@ -107,9 +106,10 @@ A larger window (~1000 px) with a split view:
 ## 5. Tagging
 
 - Create tags from: the "+" chip next to the filter chips, the "Add tag" button in the preview, the tag picker (Ctrl+T), or Settings → Tags.
-- The tag picker is a searchable popover (shadcn Command). Typing a name that doesn't exist offers "Create tag '…'". It supports multi-select.
+- Every tag entrypoint uses the same 240px shadcn Command-in-Popover picker. Filter mode has search, color squares, checkboxes, snippet counts and a selected-count/Clear footer. Snippet mode lists assigned tags in saved addition order with remove actions; queries show matching assigned tags first, then other matching catalog tags with an Add hint. A name with no exact match offers "Create tag '<name>'". Add/remove/filter changes apply immediately and keep the picker open; Escape closes and returns focus.
+- Overflow uses actual rendered widths and ResizeObserver, reserving All/new-tag controls or preview metadata before fitting complete chips. Long chip names display the first 20 characters plus an ellipsis with a full-name tooltip. Open overflow triggers retain their anchor if resizing or mutations hide them.
 - New tags get the next color from the palette automatically; users can recolor them.
-- Remove a tag from a snippet by clicking its badge's ×.
+- Remove a tag from a snippet using its picker row's ×.
 - Settings → Tags: rename, recolor, merge two tags, delete (removes it from snippets but keeps the snippets), and view the snippet count per tag.
 - Tagging is **not** offered in the save toast. Users tag from the main window.
 

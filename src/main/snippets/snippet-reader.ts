@@ -21,7 +21,7 @@ export class SnippetReader {
     if (row === undefined) throw new StorageError('NOT_FOUND', 'Snippet not found.');
     const tags = this.context.db
       .prepare(
-        `SELECT ${tagColumns} FROM tags JOIN snippet_tags ON tagId = tags.id WHERE snippetId = ? ORDER BY tags.name, tags.id`
+        `SELECT ${tagColumns} FROM tags JOIN snippet_tags ON tagId = tags.id WHERE snippetId = ? ORDER BY snippet_tags.rowid`
       )
       .all(id)
       .map((tag) => tagSchema.parse({ ...tag, name: decodeSqlText(tag['name']) }));

@@ -39,6 +39,18 @@ it('routes library navigation and copy while preserving text, IME, and overlay o
   expect(libraryKeyCommand({ ...input, composing: true })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'Escape' })).toBe('clear-search');
   expect(libraryKeyCommand({ ...input, key: 'Escape', hasSearch: false })).toBe('hide');
+  const editorTag = { ...input, key: 't', ctrl: true, focus: 'editor' as const };
+
+  expect(libraryKeyCommand(editorTag)).toBe('tag');
+  expect(libraryKeyCommand({ ...editorTag, ctrl: false, meta: true, key: 'T' })).toBe('tag');
+  expect(libraryKeyCommand({ ...editorTag, composing: true })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, repeat: true })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, prevented: true })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, active: false })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, selected: false })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, focus: 'overlay' })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, shift: true })).toBeUndefined();
+  expect(libraryKeyCommand({ ...editorTag, alt: true })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'f', ctrl: true, focus: 'editor' })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'f', ctrl: true })).toBe('focus-search');
 });

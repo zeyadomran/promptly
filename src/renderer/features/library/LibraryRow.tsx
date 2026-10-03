@@ -48,6 +48,11 @@ export function LibraryRow({
       id={`snippet-${snippet.id}`}
       role="option"
       aria-selected={selected}
+      aria-description={
+        snippet.tags.length === 0
+          ? 'Untagged'
+          : 'Tags: ' + snippet.tags.map((tag) => tag.name).join(', ')
+      }
       aria-posinset={index + 1}
       aria-setsize={state.total}
       data-snippet-id={snippet.id}

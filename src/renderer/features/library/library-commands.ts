@@ -9,6 +9,7 @@ export interface LibraryCommandsPort {
   error: string | undefined;
 }
 export interface LibraryTagActions {
+  readonly activeTrigger?: string | null;
   createTag(trigger?: HTMLElement): void;
   editSelectedTags(id: string, trigger?: HTMLElement): void;
   removeTag?(snippetId: string, tagId: string): Promise<void>;

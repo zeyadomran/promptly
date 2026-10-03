@@ -83,10 +83,28 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
 
     expect(members).toMatchObject({
       ok: true,
-      value: { snippet: { tags: [{ id: nul.value.tag.id }, { id: work.id }] } }
+      value: { snippet: { tags: [{ id: work.id }, { id: nul.value.tag.id }] } }
     });
     await vi.waitFor(() => {
       expect(picker.snapshot().loading).toBe(false);
+    });
+    picker.query('');
+    const ordered = invoke('listTags', {});
+
+    if (!ordered.ok) throw new Error('Owned catalog unavailable');
+    expect(picker.matches(ordered.value.tags).map((tag) => tag.id)).toEqual([
+      work.id,
+      nul.value.tag.id
+    ]);
+    picker.query('o');
+    expect(picker.matches(ordered.value.tags).map((tag) => tag.id)).toEqual([
+      work.id,
+      nul.value.tag.id
+    ]);
+    storage.reopen();
+    expect(invoke('getSnippet', { id: first.id })).toMatchObject({
+      ok: true,
+      value: { snippet: { tags: [{ id: work.id }, { id: nul.value.tag.id }] } }
     });
     held = new Promise<void>((resolve) => {
       release = resolve;
@@ -108,7 +126,19 @@ it('creates and edits tags on the captured snippet with authoritative names, mem
       { name: 'project\0one', color: 'green', snippetCount: 1 },
       { name: 'work', color: 'blue', snippetCount: 1 }
     ]);
+    picker.query('');
+    expect(picker.matches(later.value.tags)).toEqual([]);
+    picker.query('o');
+    expect(picker.matches(later.value.tags).map((tag) => tag.id)).toEqual([
+      nul.value.tag.id,
+      work.id
+    ]);
     await picker.toggle(work.id);
+    expect(picker.snapshot().open).toBe(true);
+    expect(picker.matches(later.value.tags).map((tag) => tag.id)).toEqual([
+      work.id,
+      nul.value.tag.id
+    ]);
     expect(
       invoke('searchSnippets', { ...allSnippets, tagIds: [work.id, nul.value.tag.id] })
     ).toMatchObject({ ok: true, value: { total: 1, items: [{ id: first.id }] } });

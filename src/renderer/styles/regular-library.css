@@ -26,11 +26,12 @@
   white-space: nowrap;
 }
 .regular-library .library-tags {
-  flex-wrap: wrap;
-  overflow-y: auto;
-  max-height: 120px;
   min-height: 0;
   padding: 14px 0 0;
+}
+.regular-library .library-tag-chip {
+  height: 26px;
+  font-size: 12.5px;
 }
 .regular-library .library-create-tag {
   border-radius: 999px;
@@ -90,30 +91,44 @@
   color: var(--muted-foreground);
 }
 .snippet-preview-meta {
-  flex-shrink: 0;
   display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  color: var(--muted-foreground);
-  font-size: 11.5px;
-}
-.snippet-preview-meta > span {
+  align-items: center;
+  gap: 5px;
   min-width: 0;
+  width: max-content;
+  max-width: 100%;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  white-space: nowrap;
+}
+.snippet-preview-source {
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.snippet-preview-meta time {
-  white-space: nowrap;
+.snippet-preview-source-tooltip {
+  max-width: min(320px, calc(100vw - 16px));
+  overflow-wrap: anywhere;
+}
+.snippet-preview-source:focus-visible {
+  outline: 1px solid var(--ring);
+  outline-offset: -1px;
+}
+.snippet-preview-meta > :not(.snippet-preview-source) {
+  flex-shrink: 0;
+}
+.preview-tag-bar > [data-overflow-trailing] {
+  min-width: 0;
+  flex-shrink: 1;
 }
 .preview-tag-bar {
   flex-shrink: 0;
+  height: 32px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  max-height: 72px;
-  overflow-y: auto;
   gap: 6px;
+  overflow: hidden;
 }
 .preview-add-tag {
   border-style: dashed;

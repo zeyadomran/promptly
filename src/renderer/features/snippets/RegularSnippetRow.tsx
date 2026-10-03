@@ -1,8 +1,8 @@
 import type { Snippet } from '../../../shared/contracts/domain';
 import { HighlightedText } from '../../components/shared/HighlightedText';
 import type { HighlightRange } from '../../lib/highlight';
-import { tagColorStyle } from '../../lib/tag-palette';
 import { LibraryCopyStatus } from '../library/LibraryCopyStatus';
+import { LibraryTagDots } from '../library/LibraryTagDots';
 import { relativeTime } from './relative-time';
 
 export function RegularSnippetRow({
@@ -29,12 +29,18 @@ export function RegularSnippetRow({
       id={`snippet-${snippet.id}`}
       role="option"
       aria-selected={selected}
+      aria-description={
+        snippet.tags.length === 0
+          ? 'Untagged'
+          : 'Tags: ' + snippet.tags.map((tag) => tag.name).join(', ')
+      }
       aria-posinset={index + 1}
       aria-setsize={total}
       data-snippet-id={snippet.id}
       className={`library-row regular-row ${positionClass}`}
       onClick={onSelect}
     >
+      <LibraryTagDots tags={snippet.tags} />
       <div className="library-row-content">
         <div className="library-row-text">
           <HighlightedText text={snippet.text} ranges={ranges} />
@@ -43,15 +49,6 @@ export function RegularSnippetRow({
           {relativeTime(snippet.createdAt)}
         </time>
         <div className="library-row-meta">
-          {snippet.tags.slice(0, 3).map((tag) => (
-            <span
-              key={tag.id}
-              title={tag.name}
-              aria-label={tag.name}
-              className="library-tag-dot"
-              style={tagColorStyle(tag.color)}
-            />
-          ))}
           <span className="library-row-source">
             {[snippet.tags.map((tag) => tag.name).join(', '), snippet.sourceApp]
               .filter(Boolean)
