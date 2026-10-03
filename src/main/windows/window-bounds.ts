@@ -15,6 +15,7 @@ export function displayAreas() {
 
 /** Owns stable normal geometry; maximize/fullscreen and animation frames never become preferences. */
 export class WindowBounds {
+  mode: SizeMode;
   private timer: ReturnType<typeof setTimeout> | undefined;
   private tail: Promise<void> = Promise.resolve();
   private stopped = false;
@@ -25,9 +26,9 @@ export class WindowBounds {
   constructor(
     private readonly window: BrowserWindow,
     private readonly settings: SettingsService,
-    public mode: SizeMode,
     private readonly onError: (error: unknown) => void
   ) {
+    this.mode = settings.current.settings.defaultSizeMode;
     window.on('move', this.changed);
     window.on('resize', this.changed);
     window.on('will-move', this.interrupt);
@@ -84,6 +85,9 @@ export class WindowBounds {
         });
 
         if (!result.ok) throw new Error(result.error.message);
+      })
+      .then(() => {
+        this.saveError = undefined;
       })
       .catch((error: unknown) => {
         this.saveError =

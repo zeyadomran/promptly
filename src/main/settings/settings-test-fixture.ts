@@ -16,7 +16,7 @@ export function seedLegacyShortcutProfile(store: ReturnType<typeof testStorage>)
     ['pinShortcut', '"Control+T"']
   ] as const)
     write.run(key, value);
-  database.prepare('DELETE FROM settings WHERE key = ?').run('localShortcuts');
+  write.run('localShortcuts', JSON.stringify({ copy: 'Control+K', deleteAlternate: null }));
 }
 
 export function testSettings(

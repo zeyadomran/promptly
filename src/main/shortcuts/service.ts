@@ -3,20 +3,15 @@ import type { HookFrame, ShortcutStatus } from '../../shared/contracts/shortcuts
 import type { KeyboardHook } from '../platform/keyboard/keyboard-hook';
 import type { SettingsController } from '../settings/controllers';
 import { type AcceleratorApi, Accelerators } from './accelerators';
-import { bindings, type ShortcutAction } from './bindings';
+import { type ShortcutAction } from './bindings';
 import { CaptureAdmission } from './capture-admission';
+import type { ShortcutCommands } from './commands';
 import { DoubleTap } from './double-tap';
 import { HookSession } from './hook-session';
 import { updateRecording } from './recording';
+import { recoverBindings } from './registration-recovery';
 import { shortcutController } from './settings-controller';
 import { shortcutStatus } from './status';
-
-export interface ShortcutCommands {
-  capture: () => void;
-  open: () => void;
-  pin: () => void;
-  captureAvailable: () => boolean;
-}
 
 export class Shortcuts {
   private readonly accelerators: Accelerators;
@@ -46,9 +41,7 @@ export class Shortcuts {
         this.admission.invalidate();
       },
       () => {
-        if (this.preferences !== undefined)
-          this.accelerators.replace(bindings(this.preferences, this.platform), true);
-        if (!this.accelerators.registered('open')) this.recover();
+        recoverBindings(this.preferences, this.accelerators, this.platform, this.recover);
       }
     );
     this.controller = shortcutController({
@@ -71,6 +64,20 @@ export class Shortcuts {
   }
 
   readonly controller: SettingsController;
+
+  retry(): boolean {
+    if (
+      this.closing ||
+      this.session.sleeping ||
+      this.recorders.size > 0 ||
+      this.accelerators.failed
+    )
+      return false;
+    this.admission.invalidate();
+    this.taps.reset();
+    recoverBindings(this.preferences, this.accelerators, this.platform, this.recover);
+    return true;
+  }
 
   captureAdmission(): (() => boolean) | undefined {
     return this.admission.begin();

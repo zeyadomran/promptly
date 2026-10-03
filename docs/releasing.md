@@ -21,6 +21,29 @@ npm run stage:unsigned
 
 `make` packages once and builds the per-user Squirrel installer. CI runs `make` instead of a separate package step. The repository pins the approved electron-winstaller install script, which selects its bundled host-architecture 7-Zip binary; it does not install software on the build machine.
 
+Forge flips the packaged Electron fuses before distribution: RunAsNode,
+NODE_OPTIONS (including NODE_EXTRA_CA_CERTS) and Node CLI inspection are disabled;
+embedded ASAR integrity validation and loading the app only from ASAR are enabled.
+The existing `asar: true` packaging embeds the Windows ASAR header hash. Storage
+uses Node worker threads; the Windows helpers remain separate resources and do
+not use RunAsNode. Development Electron is unchanged.
+
+Inspect the actual packaged binary after `make`:
+
+```powershell
+npx --no-install electron-fuses read --app out/Promptly-win32-x64/Promptly.exe
+```
+
+Confirm the five values above and retain that output with the build provenance.
+Also verify normal renderer, storage worker, native helper and Squirrel startup
+in the bounded distribution check. Fuse values alone do not qualify runtime
+behavior. These unsigned builds cannot prevent a user with write access from
+replacing the executable, ASAR or external helpers. See the primary
+[Forge fuse plugin](https://www.electronforge.io/config/plugins/fuses),
+[Electron fuse](https://www.electronjs.org/docs/latest/tutorial/fuses) and
+[ASAR integrity](https://www.electronjs.org/docs/latest/tutorial/asar-integrity)
+documentation.
+
 Maker output is `out/make/squirrel.windows/x64/`: `Promptly-unsigned-dev-x64-Setup.exe`, `Promptly-<version>-full.nupkg`, `RELEASES`, and `BUILD-PROVENANCE.json`. No delta feed or remote release URL is configured. Setup and the application executable use locally generated ICO assets from the supplied brand SVG; original source/provenance assets remain unchanged. The checked-in NuGet template retains electron-winstaller 5.4.4's file projection and omits its optional remote icon URL; Setup uses the local icon. Review this projection when upgrading the maker.
 
 Staging writes `out/staged/Promptly-<version>-unsigned-dev-win32-x64/`, including these artifacts, this guide, `BUILD.json` and SHA-256 checksums. Metadata captures the revision and dirty flag during packaging and binds hashes after make. Staging verifies those hashes; it never relabels old binaries with the staging checkout's HEAD. Dirty local builds are allowed and explicitly identified.

@@ -3,6 +3,8 @@ import type { CopyService } from '../copy/service';
 import type { SettingsController } from '../settings/controllers';
 import type { Shortcuts } from '../shortcuts/service';
 import type { StorageClient } from '../storage/client';
+import { TrayFeedback } from './feedback';
+import { trayLabel } from './label';
 import type { TrayHandle, TrayItem, TrayNative } from './ports';
 
 interface TrayCommands {
@@ -21,13 +23,16 @@ export class TrayCoordinator {
   private commandsStopped = false;
   private version = 0;
   private refreshing: Promise<void> | undefined;
+  private readonly feedback: TrayFeedback;
 
   constructor(
     private readonly storage: Pick<StorageClient, 'call'>,
     private readonly shortcuts: Shortcuts,
     private readonly native: TrayNative,
     private readonly commands: TrayCommands
-  ) {}
+  ) {
+    this.feedback = new TrayFeedback(commands.error);
+  }
 
   get available(): boolean {
     return !this.closing && this.handle !== undefined && !this.handle.isDestroyed();
@@ -91,7 +96,7 @@ export class TrayCoordinator {
           if (!result.ok) throw new Error('Recent tray snippets are unavailable.');
           if (owner === undefined) return;
           const items: TrayItem[] = result.value.items.map((snippet) => ({
-            label: this.label(snippet.text),
+            label: trayLabel(snippet.text),
             run: () => this.copy(snippet.id, owner)
           }));
 
@@ -133,15 +138,6 @@ export class TrayCoordinator {
       .catch(this.commands.error);
   }
 
-  private label(text: string): string {
-    const plain = Array.from(text, (unit) =>
-      unit.charCodeAt(0) < 32 || unit.charCodeAt(0) === 127 ? ' ' : unit
-    ).join('');
-    const units = Array.from(plain.replace(/\s+/g, ' ').trim());
-
-    return (units.slice(0, 50).join('') + (units.length > 50 ? '…' : '')).replaceAll('&', '&&');
-  }
-
   private ownedItem(item: TrayItem, owner: MainCopyOwner): TrayItem {
     const run = item.run;
 
@@ -160,7 +156,8 @@ export class TrayCoordinator {
     const result = await service.copyFromMain({ id, format: 'text' }, owner);
 
     if (!this.isCurrent(owner)) return;
-    this.handle?.setStatus(
+    this.feedback.show(
+      this.handle,
       !result.ok
         ? 'Copy failed'
         : result.value.warnings.length > 0
@@ -179,6 +176,7 @@ export class TrayCoordinator {
   }
 
   private retire(): void {
+    this.feedback.retire();
     this.owner?.close();
     this.owner = undefined;
     this.handle?.destroy();
@@ -188,6 +186,7 @@ export class TrayCoordinator {
   stopCommands(): void {
     // Settings still owns apply/rollback until its accepted work has drained.
     this.commandsStopped = true;
+    this.feedback.retire();
     this.owner?.close();
   }
 

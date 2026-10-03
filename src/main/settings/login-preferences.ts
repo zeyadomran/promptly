@@ -2,14 +2,30 @@ import { statSync } from 'node:fs';
 import path from 'node:path';
 
 export interface NativePreferences {
-  setLogin: (enabled: boolean) => void;
+  setLogin: (enabled: boolean, approved?: boolean) => void;
   getLogin: () => boolean;
+  getLoginState: () => NativeLoginState;
+}
+
+export interface NativeLoginState {
+  registered: boolean;
+  enabled: boolean;
+  approved: boolean;
 }
 
 interface LoginApplication {
   readonly isPackaged: boolean;
-  setLoginItemSettings: (settings: { path: string; args: string[]; openAtLogin: boolean }) => void;
-  getLoginItemSettings: (settings: { path: string; args: string[] }) => { openAtLogin: boolean };
+  setLoginItemSettings: (settings: {
+    path: string;
+    args: string[];
+    openAtLogin: boolean;
+    enabled: boolean;
+  }) => void;
+  getLoginItemSettings: (settings: { path: string; args: string[] }) => {
+    openAtLogin: boolean;
+    executableWillLaunchAtLogin: boolean;
+    launchItems: { name: string; scope: string; args: string[]; enabled: boolean }[];
+  };
 }
 
 /** Uninstall removes native registration without changing retained database preferences. */
@@ -45,11 +61,30 @@ export function loginPreferences(
     statSync(path.resolve(directory, '..', 'Update.exe'), { throwIfNoEntry: false })?.isFile() ===
       true;
   const target = installed ? stable : executable;
+  // Electron parses lookup as a command line; its exact Run comparator strips these quotes.
+  const statusOptions = { path: `"${target}"`, args: [] };
 
   return {
-    setLogin: (openAtLogin) => {
-      application.setLoginItemSettings({ openAtLogin, path: target, args: [] });
+    setLogin: (openAtLogin, enabled = true) => {
+      application.setLoginItemSettings({ openAtLogin, enabled, path: target, args: [] });
     },
-    getLogin: () => application.getLoginItemSettings({ path: target, args: [] }).openAtLogin
+    getLogin: () => application.getLoginItemSettings(statusOptions).openAtLogin,
+    getLoginState: () => {
+      const status = application.getLoginItemSettings(statusOptions);
+      const entry = status.launchItems.find(
+        (item) =>
+          item.name === 'com.squirrel.Promptly.Promptly' &&
+          item.scope === 'user' &&
+          item.args.length === 0
+      );
+
+      if (status.openAtLogin && entry === undefined)
+        throw new Error('Login registration could not be verified.');
+      return {
+        registered: status.openAtLogin,
+        enabled: status.executableWillLaunchAtLogin,
+        approved: entry?.enabled ?? false
+      };
+    }
   };
 }

@@ -17,6 +17,9 @@ it('keeps unavailable optional startup preferences intact while permitting unrel
       {
         name: 'launch at login',
         keys: ['launchAtLogin'],
+        initialize: () => {
+          throw new Error('Owned login observation unavailable.');
+        },
         optionalStartup: true,
         apply: () => {
           throw new Error('Controlled native login failure');
