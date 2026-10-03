@@ -62,7 +62,7 @@ A narrow (~440 px), tall panel designed to sit beside a terminal or editor.
 - **Search input** at the top, auto-focused when the window opens. `Esc` clears the search, or hides the window if the search is already empty.
 - **Tag filter chips**: "All", selected tags first, then as many complete tag chips as fit on one row, a **"+N"** overflow picker and a dashed **"+"** new-tag control pinned right. Tags never wrap or scroll sideways; with an empty catalog only the new-tag control remains.
 - **Snippet list** (virtualized, scrollable):
-  - Colored **tag dots** on the left of each row (one per tag).
+  - Colored **tag dots** on the left of each row: every assigned tag, using the same bounded grid in both modes (6px squares, 2px gaps, at most five rows).
   - Snippet text in monospace, clamped to 2 lines.
   - Meta line: tag names · source app; plus a right-aligned Enter icon on the selected row (with an accessible copy hint) or a transient "✓ Copied" confirmation. Rows have no visible "Copy" label.
 - **Footer**: result count ("4 of 128") and pin status.
