@@ -74,7 +74,42 @@ it('reads the running app version and opens only its fixed project links through
     'https://github.com/zeyadomran/promptly/wiki',
     'https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md'
   ]);
+  expect(
+    await dispatchOperation(services, false, 'openWikiPageEditor', { page: 'Home' })
+  ).toMatchObject({ ok: false, error: { code: 'UNAUTHORIZED' } });
+  for (const input of [{ page: '../private' }, { page: 'Home', url: 'file:///private' }]) {
+    expect(await dispatchOperation(services, true, 'openWikiPageEditor', input)).toMatchObject({
+      ok: false,
+      error: { code: 'INVALID_REQUEST' }
+    });
+  }
+
+  expect(
+    await dispatchOperation(services, true, 'openWikiResource', {
+      resource: 'https://evil.example'
+    })
+  ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+  expect(
+    await dispatchOperation(services, true, 'openWikiPageEditor', { page: 'Capturing-Text' })
+  ).toEqual({ ok: true, value: {} });
+  expect(
+    await dispatchOperation(services, true, 'openWikiResource', { resource: 'security' })
+  ).toEqual({ ok: true, value: {} });
+  expect(opened.slice(-2)).toEqual([
+    'https://github.com/zeyadomran/promptly/wiki/Capturing-Text/_edit',
+    'https://github.com/zeyadomran/promptly/blob/main/SECURITY.md'
+  ]);
   rejectBrowser = true;
+  expect(await dispatchOperation(services, true, 'openWikiPageEditor', { page: 'Home' })).toEqual({
+    ok: false,
+    error: { code: 'UNAVAILABLE', message: 'Unable to open the wiki editor. Try again.' }
+  });
+  expect(
+    await dispatchOperation(services, true, 'openWikiResource', { resource: 'releases' })
+  ).toEqual({
+    ok: false,
+    error: { code: 'UNAVAILABLE', message: 'Unable to open the project documentation. Try again.' }
+  });
   expect(await dispatchOperation(services, true, 'openRepository', {})).toEqual({
     ok: false,
     error: { code: 'UNAVAILABLE', message: 'Unable to open the GitHub repository. Try again.' }
