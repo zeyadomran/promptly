@@ -3,6 +3,7 @@ import { HighlightedText } from '../../components/shared/HighlightedText';
 import type { HighlightRange } from '../../lib/highlight';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
+import { libraryDisplay } from './library-display';
 import { LibraryMetadata } from './LibraryMetadata';
 import { LibraryTagRail } from './LibraryTagRail';
 
@@ -21,7 +22,8 @@ export function LibraryRow({
 }) {
   const { state, model } = useLibrary();
   const commands = useLibraryCommands();
-  const selected = state.selectedId === snippet.id;
+  const display = libraryDisplay(state);
+  const selected = display.selectedId === snippet.id;
   const copied = commands?.copiedId === snippet.id;
 
   const select = () => {
@@ -33,13 +35,14 @@ export function LibraryRow({
       id={`snippet-${snippet.id}`}
       role="option"
       aria-selected={selected}
+      aria-disabled={state.retained !== undefined}
       aria-description={
         snippet.tags.length === 0
           ? 'Untagged'
           : 'Tags: ' + snippet.tags.map((tag) => tag.name).join(', ')
       }
       aria-posinset={index + 1}
-      aria-setsize={state.total}
+      aria-setsize={display.total}
       data-snippet-id={snippet.id}
       data-compact={!regular || undefined}
       data-active={selected}

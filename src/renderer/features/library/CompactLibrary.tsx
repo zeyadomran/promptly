@@ -1,6 +1,7 @@
 import { Button } from '../../components/ui/button';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
+import { libraryDisplay } from './library-display';
 import { LibraryEmpty } from './LibraryEmpty';
 import { LibraryFooter } from './LibraryFooter';
 import { LibraryList } from './LibraryList';
@@ -10,6 +11,7 @@ import { LibraryTags } from './LibraryTags';
 
 export function CompactLibrary() {
   const { state, model } = useLibrary();
+  const display = libraryDisplay(state);
   const commands = useLibraryCommands();
 
   return (
@@ -34,11 +36,11 @@ export function CompactLibrary() {
       )}
       <LibraryListHeader />
       <div className="library-results" aria-busy={state.loading}>
-        {state.loading && state.total === 0 ? (
+        {state.loading && display.total === 0 ? (
           <p className="library-empty" role="status">
             Loading snippets…
           </p>
-        ) : state.total === 0 ? (
+        ) : display.total === 0 ? (
           <LibraryEmpty />
         ) : (
           <LibraryList />

@@ -1,25 +1,10 @@
 import { expect, it, vi } from 'vitest';
 
-import type { Snippet } from '../../../shared/contracts/domain';
 import { SnippetSession } from './snippet-session';
+import { first, second, snippetSessionRecords } from './snippet-session-test-fixture';
 
 it('preserves a dirty draft through selection changes and retires stale asynchronous results', async () => {
-  const first: Snippet = {
-    id: '00000000-0000-4000-8000-000000000001',
-    text: 'Original 雪🙂',
-    createdAt: '2026-10-02T00:00:00Z',
-    updatedAt: '2026-10-02T00:00:00Z',
-    sourceApp: null,
-    sourceAppId: null,
-    tags: [],
-    lastCopiedAt: null,
-    copyCount: 0
-  };
-  const second = { ...first, id: '00000000-0000-4000-8000-000000000002', text: 'Other snippet' };
-  const records = new Map([
-    [first.id, first],
-    [second.id, second]
-  ]);
+  const records = snippetSessionRecords();
   let release: (() => void) | undefined;
   let hold = false;
   let missing = false;
@@ -64,6 +49,20 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
   });
 
   try {
+    session.select(first.id);
+    await vi.waitFor(() => {
+      expect(session.snapshot().snippet?.id).toBe(first.id);
+    });
+    hold = true;
+    session.select(second.id);
+    expect(session.snapshot()).toMatchObject({ loading: true, snippet: { id: first.id } });
+    session.edit();
+    expect(session.snapshot().editing).toBe(false);
+    hold = false;
+    release?.();
+    await vi.waitFor(() => {
+      expect(session.snapshot().snippet?.id).toBe(second.id);
+    });
     session.select(first.id);
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.id).toBe(first.id);

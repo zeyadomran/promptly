@@ -160,8 +160,8 @@ export class SnippetSession {
   }
   private async load(id: string | null): Promise<void> {
     const generation = ++this.generation;
-    // Keep the same preview's live controls/anchors mounted during committed-data refresh.
-    const snippet = this.state.snippet?.id === id ? this.state.snippet : null;
+    // Keep the previous preview visible while its replacement loads; loading gates commands.
+    const snippet = id === null ? null : this.state.snippet;
     const cleared = { snippet: null, draft: '', loading: false };
 
     this.publish({

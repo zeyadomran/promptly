@@ -1,5 +1,6 @@
 import type { SearchRequest, TagSummary } from '../../../shared/contracts/domain';
 import type { DesktopError } from '../../../shared/contracts/result';
+import type { LibraryDisplay } from './library-display';
 import { initialQuery, PageCache } from './page-cache';
 
 export interface LibraryState {
@@ -13,6 +14,7 @@ export interface LibraryState {
   loading: boolean;
   error: DesktopError | undefined;
   cache: PageCache;
+  retained: LibraryDisplay | undefined;
   version: number;
 }
 
@@ -28,6 +30,7 @@ export function initialLibraryState(): LibraryState {
     loading: true,
     error: undefined,
     cache: new PageCache(),
+    retained: undefined,
     version: 0
   };
 }

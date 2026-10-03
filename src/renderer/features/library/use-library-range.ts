@@ -1,6 +1,7 @@
 import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { useLibrary } from './library-context';
+import { libraryDisplay } from './library-display';
 import { VirtualRangeStore } from './virtual-range-store';
 
 export function useLibraryRange(
@@ -11,7 +12,7 @@ export function useLibraryRange(
 ) {
   const { scroll, state } = useLibrary();
   const mode = regular ? 'regular' : 'compact';
-  const query = JSON.stringify(state.request);
+  const query = JSON.stringify(libraryDisplay(state).request);
   const [store] = useState(() => new VirtualRangeStore());
   const scroller = useRef<HTMLDivElement>(null);
   const previous = useRef<{ index: number; reveal: number; query: string } | undefined>(undefined);
