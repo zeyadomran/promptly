@@ -122,6 +122,7 @@ Responsive layout: **side navigation** at ≥640 px wide; below that, the naviga
 Sections:
 - **General**: launch at login; show in system tray; default size mode. Copy keeps the window open.
 - **Shortcuts**:
+  - Reset shortcuts restores all global and in-app bindings plus double-tap modifier/timing in one operation. Unrelated settings and library data are retained. Rejected OS registration keeps prior bindings and displays the failure; success is shown only after the authoritative settings transaction commits.
   - Save selection: double-tap modifier (choose the modifier) **or** a recorded key combination. The recorder shows a "Press a key…" focus state, validates the combination, and warns about conflicts with system or known app shortcuts.
   - Open Promptly (show/hide window): recordable combo.
   - Toggle always on top: optional recordable combo.
