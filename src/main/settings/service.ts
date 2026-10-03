@@ -1,6 +1,7 @@
 import type { DesktopOperations } from '../../shared/contracts/operations';
 import { type DesktopResult, failure } from '../../shared/contracts/result';
 import {
+  type Settings,
   type SettingsPatch,
   settingsPatchSchema,
   settingsSchema,
@@ -18,6 +19,18 @@ export class SettingsService {
   private closing = false;
   private effectsFailed = false;
   private snapshot: SettingsSnapshot | undefined;
+  private readonly disabledControllers = new Set<SettingsController>();
+
+  isUnavailable(key: keyof Settings): boolean {
+    return (
+      this.controllers.unavailable.includes(key) ||
+      [...this.disabledControllers].some((controller) => controller.keys.includes(key))
+    );
+  }
+
+  get startupUnavailable(): readonly (keyof Settings)[] {
+    return [...this.disabledControllers].flatMap((controller) => [...controller.keys]);
+  }
 
   constructor(
     private readonly storage: SettingsStorage,
@@ -93,10 +106,14 @@ export class SettingsService {
 
     if (conflict !== undefined) return failure('CONFLICT', conflict);
 
-    if (this.controllers.unavailable.some(changed))
+    if (
+      Object.keys(parsed.data).some(
+        (key) => this.isUnavailable(key as keyof Settings) && changed(key as keyof Settings)
+      )
+    )
       return failure(
         'UNAVAILABLE',
-        'The required tray or shortcut controller is not available yet. Your preferences were not changed.'
+        'This native preference is unavailable. Restart Promptly before changing it. Your preferences were not changed.'
       );
     const applied: SettingsController[] = [];
     let failed: DesktopResult<SettingsSnapshot>;
@@ -139,6 +156,7 @@ export class SettingsService {
     applied: SettingsController[] = []
   ): Promise<void> {
     for (const controller of this.controllers.available) {
+      if (this.disabledControllers.has(controller)) continue;
       if (
         previous !== undefined &&
         !controller.keys.some(
@@ -150,6 +168,12 @@ export class SettingsService {
       try {
         await controller.apply(next.settings);
       } catch (error) {
+        if (previous === undefined && controller.optionalStartup === true) {
+          this.disabledControllers.add(controller);
+          controller.quarantine?.();
+          continue;
+        }
+
         throw new Error(
           `Unable to apply ${controller.name}. ${error instanceof Error ? error.message : 'Native registration failed.'} Your previous preference remains active.`,
           { cause: error }

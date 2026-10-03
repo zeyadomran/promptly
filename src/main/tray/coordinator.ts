@@ -35,6 +35,7 @@ export class TrayCoordinator {
 
   readonly controller: SettingsController = {
     name: 'system tray',
+    optionalStartup: true,
     keys: ['showInTray'],
     apply: (settings) => this.setVisible(settings.showInTray),
     quarantine: () => {

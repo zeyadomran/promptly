@@ -5,7 +5,7 @@ import {
   type SettingsSnapshot
 } from '../../shared/contracts/settings';
 import type { StorageContext } from '../storage/context';
-import { StorageError } from '../storage/context';
+import { StorageStartupError } from '../storage/startup-failure';
 
 /** Only the worker owns SQL. Missing keys migrate to defaults; corrupt keys fail closed. */
 export class SettingsRepository {
@@ -25,10 +25,7 @@ export class SettingsRepository {
         if (typeof row['value'] !== 'string') throw new Error('Invalid JSON');
         values[key] = JSON.parse(row['value']) as unknown;
       } catch {
-        throw new StorageError(
-          'INTERNAL',
-          `Stored preference ${key} is corrupt. Restore the database from backup.`
-        );
+        throw new StorageStartupError('preferences');
       }
     }
 
@@ -37,11 +34,7 @@ export class SettingsRepository {
       values['hideAfterCopy'] = values['hideAfterCopy'] ? 'always' : 'never';
     const parsed = settingsSchema.safeParse({ ...defaults, ...values });
 
-    if (!parsed.success)
-      throw new StorageError(
-        'INTERNAL',
-        'Stored preferences are invalid. Restore the database from backup.'
-      );
+    if (!parsed.success) throw new StorageStartupError('preferences');
     return { revision: this.context.revision(), settings: parsed.data };
   }
 
