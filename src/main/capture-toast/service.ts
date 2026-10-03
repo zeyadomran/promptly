@@ -77,6 +77,23 @@ export class CaptureToastService {
     return this.closed;
   }
 
+  async activate(version: number): Promise<boolean> {
+    if (
+      !this.latest(version) ||
+      this.current?.toast.phase !== 'visible' ||
+      this.window?.alive() !== true ||
+      !this.window.visible()
+    )
+      return false;
+    try {
+      await this.effects.openPromptly();
+      return true;
+    } catch {
+      this.effects.failed();
+      return false;
+    }
+  }
+
   private leave(version: number): void {
     if (this.closed || this.current?.toast.version !== version) return;
     this.cancelTimer?.();
@@ -101,7 +118,9 @@ export class CaptureToastService {
     if (this.window?.alive() === true) return Promise.resolve(this.window);
     if (this.opening !== undefined) return this.opening;
     const opening = this.effects
-      .create(this.abort.signal)
+      .create(this.abort.signal, (version) => {
+        void this.activate(version);
+      })
       .then((window) => {
         this.window = window;
         return window;

@@ -130,7 +130,7 @@ if (primaryInstance)
         windowsSelection,
         () => lifecycle
       );
-      confirmation = desktopConfirmation(library.capture.service, settings);
+      confirmation = desktopConfirmation(library.capture.service, settings, () => lifecycle);
       onboarding = desktopOnboarding(
         library.capture.service,
         settings,

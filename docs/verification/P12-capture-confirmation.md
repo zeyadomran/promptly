@@ -1,10 +1,18 @@
 # P12 capture confirmation implementation
 
-The Windows confirmation uses its own transparent, nonfocusable, taskbar-excluded BrowserWindow. It has no parent or desktop IPC registration, denies navigation/window/webview/permission requests, uses a sandboxed isolated preload, and shows only through `showInactive()`. Library pin/background/chrome changes exclude this overlay. Ordinary-window closure forwards the existing app event when only overlays remain, preserving the app's recovery-aware quit policy.
+The Windows confirmation uses its own transparent, taskbar-excluded BrowserWindow. It is focusable for deliberate interaction and shows only through `showInactive()`, which Electron documents as displaying without focus ([BrowserWindow API](https://www.electronjs.org/docs/latest/api/browser-window#winshowinactive)). It has no parent or desktop IPC registration, denies navigation/window/webview/permission requests and uses a sandboxed isolated preload. Library pin/background/chrome changes exclude this overlay. Ordinary-window closure forwards the existing app event when only overlays remain, preserving the app's recovery-aware quit policy.
 
 CaptureService publishes the committed immutable preview directly to the main-only subscriber. The renderer receives only saved/duplicate status, a bounded exact first-line prefix (at most 512 UTF-16 units without splitting a surrogate pair), theme, presentation phase and a numeric version. No snippet identity, native capability/token, HWND, source metadata or display coordinates cross this preload. Failed, empty, disabled or unplaceable confirmations show nothing. No content is logged or reread from a mutable snippet.
 
 The service keeps one latest confirmation, one owned window/load and one active timer. Replacement captures reset the deadline. Main requests the 200 ms exit at 2300 ms and hides at 2500 ms, even when the renderer never focuses. Theme/display updates retain this deadline. Shutdown cancels the timer, aborts pending Electron initialization, unsubscribes capture/display observers and destroys the owned overlay. Loading failure releases the window for a later fresh attempt.
+
+## Notification activation
+
+The saved/duplicate card is a native semantic button with an Open Promptly accessible action, status label, preview description and keyboard focus outline. Activating it opens/restores and focuses Promptly through the existing `WindowLifecycle.show()` path, including when Promptly is already visible. Passive presentation and the existing deadline remain unchanged; activation does not toggle or select a captured snippet.
+
+The preload exposes only a version-scoped activation command alongside its subscription. A listener on the owned overlay WebContents accepts exactly one positive integer only from its trusted top-level frame at the expected URL while that version is visible. The service separately rejects replaced, future, hidden, fading, destroyed, pending-load or shutdown activations. The listener and abort/display/capture ownership are released when the overlay retires; no global activation IPC handler or desktop authority is granted.
+
+The existing canonical service flow was extended red (`service.activate is not a function`), then green. It observes that passive confirmations do not open Promptly, deliberate saved/duplicate activation requests visible/focused Promptly even when already visible, and obsolete or unavailable confirmations cannot activate it. External window and opening effects are controlled at the service boundary. Actual Windows mouse/keyboard focus and NVDA operation still require manual qualification; no user app, clipboard, native settings or profiles were used for this change.
 
 ## Rendering and security
 

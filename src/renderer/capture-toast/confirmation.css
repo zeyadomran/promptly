@@ -15,17 +15,34 @@ body {
   font-family: 'Space Grotesk', sans-serif;
 }
 .confirmation {
-  display: flex;
-  gap: 10px;
   width: 290px;
   max-width: 100%;
-  padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 8px;
   background: var(--background);
   color: var(--foreground);
   box-shadow: var(--toast-shadow);
   animation: confirmation-enter 200ms ease-out;
+}
+.confirmation-open {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.confirmation-open:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -3px;
+}
+.confirmation-open:disabled {
+  cursor: default;
 }
 .confirmation-logo {
   flex-shrink: 0;
@@ -56,7 +73,8 @@ body {
     monospace;
   color: var(--muted-foreground);
 }
-.confirmation p {
+.confirmation-preview {
+  display: block;
   margin: 3px 0 0;
   font-size: 12px;
   line-height: 17px;
