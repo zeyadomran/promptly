@@ -91,11 +91,21 @@ physical double taps and capture suppression still require manual qualification.
 The dedicated keyboard helper never shares UIA selection transport. It uses a
 Windows low-level hook and its own message loop. Callbacks return without suppressing typing and enqueue at most 64 sanitized
 records. A writer performs stdout I/O outside the queue lock. Overflow clears the
-queue and emits reset; main invalidates recognition for that session. Ordinary
+queue and emits reset; main invalidates the pending sequence and capture admission,
+while retaining that live helper's installation state. Subsequent complete taps
+can be recognized without relaunching the app. Ordinary
 keys produce cancellation without key codes or text. Injected Windows keys also
 cancel recognition. Frames are strictly validated and bounded to 1 KiB; startup,
 backward timestamps, excessive transport lag, pipe failure and termination reset
-timing. Helpers retire with bounded cleanup.
+timing. Helpers retire with bounded cleanup. Unexpected helper exit, invalid output,
+failed installation and the 1.5-second readiness deadline retire the old process
+before recovery. Recovery retries after 250, 500, 1000, 2000 and 4000 ms, then
+remains unavailable until a new start/sleep-resume session. A helper that survives
+30 seconds resets this failure budget. Sleep and close cancel pending retries and
+readiness timers; recovery never releases recording ownership or capture pause.
+The existing public shortcut status exposes unavailable/recovered installation.
+No process heartbeat proves Windows still delivers physical input or detects its
+silent removal of a low-level hook.
 
 Eight bits distinguish the physical left/right Shift, Control, Alt and Meta keys.
 Initial held-key
