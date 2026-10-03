@@ -39,7 +39,9 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
 
       while (
         context.db.prepare('SELECT id FROM tags WHERE id = ?').get(target) !== undefined ||
-        stage.db.prepare('SELECT id FROM tags WHERE target = ?').get(target) !== undefined
+        stage.db.prepare('SELECT id FROM tags WHERE target = ?').get(target) !== undefined ||
+        stage.db.prepare('SELECT id FROM tags WHERE id = ? AND id <> ?').get(target, tag.id) !==
+          undefined
       )
         target = conflictId(tag.id, JSON.stringify(tag), attempt++);
       if (target !== tag.id) remappedTagIds++;
@@ -64,7 +66,10 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
 
     while (
       (existing !== undefined && existing !== identity) ||
-      stage.db.prepare('SELECT id FROM snippets WHERE target = ?').get(target) !== undefined
+      stage.db.prepare('SELECT id FROM snippets WHERE target = ?').get(target) !== undefined ||
+      stage.db
+        .prepare('SELECT id FROM snippets WHERE id = ? AND id <> ?')
+        .get(target, snippet.id) !== undefined
     ) {
       target = conflictId(snippet.id, identity, attempt++);
       existing = storedIdentity(context, target);

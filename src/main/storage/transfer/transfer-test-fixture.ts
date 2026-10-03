@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { closeSync, openSync, writeFileSync } from 'node:fs';
+import { closeSync, fsyncSync, openSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import type { PortableBackup } from '../../../shared/contracts/backup/format';
@@ -16,7 +16,15 @@ export function transferStore(now?: () => Date) {
       `${randomUUID()}.${format === 'json' ? 'jsonl' : 'md'}`
     );
 
-    store.invoke('exportLibraryData', { format, filename });
+    const descriptor = openSync(filename, 'wx', 0o600);
+
+    try {
+      store.invoke('exportLibraryData', { format, descriptor });
+      fsyncSync(descriptor);
+    } finally {
+      closeSync(descriptor);
+    }
+
     return filename;
   };
 

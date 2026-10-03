@@ -1,12 +1,14 @@
 import { readFileSync, statSync } from 'node:fs';
 
+import { build } from 'vite';
 import { expect, it } from 'vitest';
 
 import { allSnippets } from './storage-test-fixture';
 import { transferStore } from './transfer/transfer-test-fixture';
+import { workerExportFile } from './transfer/worker-transfer-test-fixture';
 
 // Hosted flow took 8.269s; this is an aggregate real-disk runner budget, not app latency.
-it('round-trips an edited tagged library through duplicate, undo, backup and database reopen', () => {
+it('round-trips an edited tagged library through duplicate, undo, backup and database reopen', async () => {
   const store = transferStore();
   const text = 'Full text\0雪🙂\r\n' + 'unchopped '.repeat(30);
 
@@ -117,7 +119,22 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
       { length: 17 },
       () => store.invoke('createSnippet', { text: largeText }).snippet.id
     );
-    const completeBackup = store.exportFile();
+    const completeBackup = await workerExportFile(store.filename, async (directory) => {
+      await build({
+        configFile: false,
+        logLevel: 'silent',
+        build: {
+          outDir: directory,
+          emptyOutDir: false,
+          lib: {
+            entry: 'src/main/storage/storage-worker.ts',
+            formats: ['cjs'],
+            fileName: () => 'export-worker.cjs'
+          },
+          rollupOptions: { external: [/^node:/] }
+        }
+      });
+    });
 
     expect(statSync(completeBackup).size).toBeGreaterThan(64 * 1024 * 1024);
     store.invoke('clearLibrary', {});
@@ -132,6 +149,7 @@ it('round-trips an edited tagged library through duplicate, undo, backup and dat
     store.reopen();
     for (const id of largeIds)
       expect(store.invoke('getSnippet', { id }).snippet.text).toBe(largeText);
+    expect(statSync(store.exportFile('markdown')).size).toBeGreaterThan(17_000_000);
   } finally {
     store.dispose();
   }

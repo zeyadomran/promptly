@@ -15,17 +15,31 @@ type Record = ReturnType<typeof streamRecordSchema.parse>;
 /** An owned disk database holds validated records and the reviewed conflict decisions. */
 export class ImportStage {
   readonly directory = mkdtempSync(path.join(tmpdir(), 'promptly-import-'));
-  readonly db = new DatabaseSync(path.join(this.directory, 'stage.sqlite'));
+  readonly db: DatabaseSync;
   private closed = false;
 
   constructor() {
-    this.db.exec(`PRAGMA cache_size = -2048; PRAGMA foreign_keys = ON;
+    let database: DatabaseSync | undefined;
+
+    try {
+      database = new DatabaseSync(path.join(this.directory, 'stage.sqlite'));
+      database.exec(`PRAGMA cache_size = -2048; PRAGMA foreign_keys = ON;
       CREATE TABLE tags (id TEXT PRIMARY KEY, json TEXT NOT NULL, name TEXT COLLATE NOCASE, target TEXT, fresh INTEGER DEFAULT 0);
       CREATE TABLE snippets (id TEXT PRIMARY KEY, json TEXT NOT NULL, target TEXT UNIQUE, skip INTEGER DEFAULT 0);
       CREATE TABLE memberships (snippetId TEXT REFERENCES snippets(id), tagId TEXT REFERENCES tags(id), PRIMARY KEY(snippetId, tagId));
       CREATE INDEX memberships_by_tag ON memberships(tagId);
       CREATE INDEX tags_by_name ON tags(name COLLATE NOCASE);
       CREATE INDEX tags_by_target ON tags(target);`);
+      this.db = database;
+    } catch (error) {
+      try {
+        database?.close();
+      } finally {
+        rmSync(this.directory, { recursive: true, force: true });
+      }
+
+      throw error;
+    }
   }
 
   add(record: Record) {

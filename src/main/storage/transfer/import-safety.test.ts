@@ -114,7 +114,24 @@ it('rejects invalid imports and atomically coalesces colliding tag memberships',
     expect(again.skippedSnippets).toBe(2);
     store.invoke('commitLibraryImport', { token: again.token, revision: again.revision });
     expect(store.export()).toEqual(preserved);
-    const changed = store.prepare(preserved);
+    const tagId = imported.memberships[0]?.tagId;
+
+    if (preservedVersion === undefined || tagId === undefined)
+      throw new Error('Expected preserved version and tag');
+    store.invoke('deleteSnippet', { id: preservedVersion.id });
+    // A remap candidate can also be another record's deliberate original ID.
+    const collision = store.prepare({
+      ...conflictBackup,
+      snippets: [...conflictBackup.snippets, { ...preservedVersion, text: 'separate original ID' }],
+      memberships: [...conflictBackup.memberships, { snippetId: preservedVersion.id, tagId }]
+    });
+
+    store.invoke('commitLibraryImport', { token: collision.token, revision: collision.revision });
+    expect(store.invoke('getSnippet', { id: preservedVersion.id }).snippet.text).toBe(
+      'separate original ID'
+    );
+    expect(store.export().snippets).toHaveLength(4);
+    const changed = store.prepare(store.export());
 
     store.invoke('updateSnippet', { id: first, text: 'edited after review' });
     const afterEdit = store.export();

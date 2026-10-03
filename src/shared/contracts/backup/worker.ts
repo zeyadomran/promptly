@@ -7,4 +7,7 @@ export const exportDataSchema = z.strictObject({
   revision: revisionSchema
 });
 export const importFileSchema = z.strictObject({ filename: z.string().min(1).max(4096) });
-export const exportFileSchema = importFileSchema.extend({ format: z.enum(['json', 'markdown']) });
+export const exportFileSchema = z.strictObject({
+  descriptor: z.number().int().nonnegative(),
+  format: z.enum(['json', 'markdown'])
+});

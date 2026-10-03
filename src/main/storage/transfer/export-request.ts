@@ -17,8 +17,8 @@ export async function exportLibraryFile(
   try {
     await atomicExport(
       filename,
-      async (temporary) => {
-        const result = await storage.call('exportLibraryData', { format, filename: temporary });
+      async (descriptor) => {
+        const result = await storage.call('exportLibraryData', { format, descriptor });
 
         if (!result.ok) {
           rejected = result;

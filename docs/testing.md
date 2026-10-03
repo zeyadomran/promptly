@@ -22,9 +22,9 @@ For new behavior, agree on its public seam and work one red-to-green vertical sl
 | `main/capture-toast/service.test.ts` | Committed confirmation replacement, validated open/focus activation, preferences/display placement, main-owned fade/deadline and retirement during asynchronous window creation |
 | `renderer/features/library/library-command-service.test.ts` | Partial-success copied feedback and read-only refresh without IPC replay |
 | `renderer/features/library/library-keyboard.test.ts` | Configured local commands/cancel, scoped navigation/copy, native typing/activation, editor/IME/overlay ownership and clear-then-hide |
-| `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo, JSON and Markdown export, clear/import/reopen, tag rename/collision/atomic membership merge and tag-only deletion |
+| `storage/library-flow.test.ts` | Real database create/tag/edit/duplicate/delete/undo through deleted/merged tags, complete JSON Lines and Markdown export, >64 MiB/17-million-unit restore/reopen, tag rename/collision/atomic membership merge and tag-only deletion |
 | `main/snippets/tag-picker.test.ts` | Shared picker all-tag choices, assigned-first and catalog ordering, creation/reuse, atomic membership changes, revisions and captured-target lifetime through real SQLite |
-| `storage/transfer/import-safety.test.ts` | Invalid import rejection and atomic collision/membership handling under an external SQLite write failure |
+| `storage/transfer/import-safety.test.ts` | Invalid/missing/incomplete import rejection, atomic collision/membership handling, idempotent versions and deliberate duplicates, immutable previews, unrelated revision tolerance and content/tag conflict rejection |
 | `settings/service.test.ts` | Legacy defaults, durable local/global preference changes and conflict rejection, rejected native-effect rollback and uninstall login cleanup without changing retained preferences |
 | `settings/startup-effects.test.ts` | Optional native startup failure retains requested preferences, exposes unavailable controls and permits unrelated durable changes |
 | `storage/startup-failure.test.ts` | Real worker rejects damaged, corrupt-preference and newer databases with safe visible causes while retaining owned file bytes |

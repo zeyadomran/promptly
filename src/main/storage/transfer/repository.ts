@@ -20,7 +20,7 @@ export class TransferRepository {
   export(input: StorageRequest<'exportLibraryData'>) {
     const { context } = this.writes.reader;
 
-    writeExport(context, input.filename, input.format);
+    writeExport(context, input.descriptor, input.format);
     return { revision: context.revision() };
   }
 

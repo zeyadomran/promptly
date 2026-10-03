@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { closeSync, fsyncSync, openSync, writeSync } from 'node:fs';
+import { writeSync } from 'node:fs';
 
 import { streamHeader } from '../../../shared/contracts/backup/stream';
 import { type StorageContext, StorageError } from '../context';
@@ -8,20 +8,15 @@ import { portableMemberships, portableSnippets, portableTags } from './snapshot-
 
 export function writeExport(
   context: StorageContext,
-  filename: string,
+  descriptor: number,
   format: 'json' | 'markdown'
 ) {
-  let descriptor: number | undefined;
-
   try {
-    const output = openSync(filename, 'wx', 0o600);
-
-    descriptor = output;
     const write = (text: string, encoding: BufferEncoding = 'utf8') => {
       const bytes = Buffer.from(text, encoding);
       let offset = 0;
 
-      while (offset < bytes.length) offset += writeSync(output, bytes, offset);
+      while (offset < bytes.length) offset += writeSync(descriptor, bytes, offset);
     };
 
     if (format === 'json') {
@@ -86,14 +81,10 @@ export function writeExport(
         );
       }
     }
-
-    fsyncSync(descriptor);
   } catch {
     throw new StorageError(
       'UNAVAILABLE',
       'Unable to write the export. Check the destination and disk space.'
     );
-  } finally {
-    if (descriptor !== undefined) closeSync(descriptor);
   }
 }
