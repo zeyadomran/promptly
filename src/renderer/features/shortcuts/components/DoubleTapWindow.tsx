@@ -1,7 +1,6 @@
 import { useState } from 'react';
 
 import { Slider } from '../../../components/ui/slider';
-import { SettingsRow } from '../../settings/components/SettingsRow';
 
 export function DoubleTapWindow({
   value,
@@ -15,15 +14,14 @@ export function DoubleTapWindow({
   const [draft, setDraft] = useState<number>();
 
   return (
-    <SettingsRow
-      label="Double-tap window"
-      description={`${String(draft ?? value)} ms · 150–600 ms between taps`}
-      disabled={disabled}
-    >
+    <div className="shortcut-timing-row">
+      <span className="shortcut-control-label">Window</span>
       <Slider
+        aria-label="Double-tap window"
         min={150}
         max={600}
         step={10}
+        disabled={disabled}
         value={[draft ?? value]}
         onValueChange={([next]) => {
           if (next !== undefined) setDraft(next);
@@ -37,6 +35,9 @@ export function DoubleTapWindow({
               });
         }}
       />
-    </SettingsRow>
+      <output aria-live="polite">
+        {draft ?? value} ms<span> window</span>
+      </output>
+    </div>
   );
 }

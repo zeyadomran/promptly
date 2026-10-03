@@ -2,13 +2,15 @@ import type { Settings } from '../contracts/settings';
 import { acceleratorKey, reservedShortcut, type ShortcutPlatform } from './accelerator';
 import { globalBindingAllowed } from './global-binding';
 import { localShortcutIdentities } from './local';
+import type { ShortcutTarget } from './shortcut-edit';
 
-interface Conflict {
+export interface ShortcutConflictDetails {
   identity: string;
   message: string;
+  actions: readonly ShortcutTarget[];
 }
 interface Candidate {
-  action: string;
+  action: ShortcutTarget;
   label: string;
   identities: string[];
 }
@@ -17,8 +19,8 @@ function conflicts(
   settings: Settings,
   platform: ShortcutPlatform,
   scope: 'all' | 'global'
-): Conflict[] {
-  const globals: [string, string, string | null][] = [
+): ShortcutConflictDetails[] {
+  const globals: [ShortcutTarget, string, string | null][] = [
     [
       'save',
       'Save selection',
@@ -46,7 +48,7 @@ function conflicts(
     }
   }
 
-  const found: Conflict[] = [];
+  const found: ShortcutConflictDetails[] = [];
   const used = new Map<string, Candidate[]>();
 
   for (const candidate of candidates) {
@@ -54,12 +56,17 @@ function conflicts(
       const reservation = reservedShortcut(identity.replace(/^\+/, ''), platform);
 
       if (reservation !== undefined)
-        found.push({ identity: `reserved:${candidate.action}:${identity}`, message: reservation });
+        found.push({
+          identity: `reserved:${candidate.action}:${identity}`,
+          message: reservation,
+          actions: [candidate.action]
+        });
       for (const previous of used.get(identity) ?? []) {
         if (candidate.action === 'cancelEdit' && previous.action === 'dismiss') continue;
         found.push({
           identity: `${identity}:${previous.action}:${candidate.action}`,
-          message: `${candidate.label} already uses the same shortcut as ${previous.label}.`
+          message: `${candidate.label} already uses the same shortcut as ${previous.label}.`,
+          actions: [previous.action, candidate.action]
         });
       }
 
@@ -84,12 +91,19 @@ export function shortcutChangeConflict(
   candidate: Settings,
   platform: ShortcutPlatform
 ): string | undefined {
+  return shortcutChangeConflictDetails(previous, candidate, platform)?.message;
+}
+
+export function shortcutChangeConflictDetails(
+  previous: Settings,
+  candidate: Settings,
+  platform: ShortcutPlatform
+): ShortcutConflictDetails | undefined {
   const retained = new Set(
     conflicts(previous, platform, 'all').map((conflict) => conflict.identity)
   );
 
-  return conflicts(candidate, platform, 'all').find((conflict) => !retained.has(conflict.identity))
-    ?.message;
+  return conflicts(candidate, platform, 'all').find((conflict) => !retained.has(conflict.identity));
 }
 
 export const localShortcutLabels = {

@@ -6,11 +6,13 @@ export function SettingsSection({
   value,
   title,
   description,
+  grouped = true,
   children
 }: {
   value: SettingsSectionId;
   title: string;
   description: string;
+  grouped?: boolean;
   children: ReactNode;
 }) {
   return (
@@ -20,13 +22,15 @@ export function SettingsSection({
       className="settings-section"
       aria-labelledby={`settings-${value}-heading`}
     >
-      <div className="settings-section-heading">
-        <h1 id={`settings-${value}-heading`} tabIndex={-1}>
-          {title}
-        </h1>
-        <p>{description}</p>
-      </div>
-      <div className="settings-card">{children}</div>
+      {grouped && (
+        <div className="settings-section-heading">
+          <h1 id={`settings-${value}-heading`} tabIndex={-1}>
+            {title}
+          </h1>
+          <p>{description}</p>
+        </div>
+      )}
+      {grouped ? <div className="settings-card">{children}</div> : children}
     </section>
   );
 }

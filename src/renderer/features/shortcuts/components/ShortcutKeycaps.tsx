@@ -13,7 +13,9 @@ export function ShortcutKeycaps({
   return (
     <span className="shortcut-keycaps">
       {keys.map((key, index) => (
-        <ShortcutKey key={`${String(index)}-${key}`}>{key}</ShortcutKey>
+        <ShortcutKey key={`${String(index)}-${key}`}>
+          {key === 'DELETE' ? 'Del' : key === 'BACKSPACE' ? 'Backspace' : key}
+        </ShortcutKey>
       ))}
     </span>
   );
