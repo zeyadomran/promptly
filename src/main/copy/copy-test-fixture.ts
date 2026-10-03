@@ -2,6 +2,7 @@ import type { DesktopResult } from '../../shared/contracts/result';
 import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { testStorage } from '../storage/storage-test-fixture';
+import type { TransferOwner } from '../storage/transfer/requests';
 import { CopyService } from './service';
 
 export function copyFixture(writeText: (text: string) => Promise<void>, text = 'stored text') {
@@ -12,6 +13,29 @@ export function copyFixture(writeText: (text: string) => Promise<void>, text = '
   let alive = true;
   let visible = true;
   let retire: () => void = () => undefined;
+  // Retain the old window boundary to expose any regression that resumes hiding.
+  const effects = {
+    platform: 'win32',
+    owner: (senderId: number): TransferOwner | undefined =>
+      senderId !== 1
+        ? undefined
+        : {
+            id: 1,
+            isAlive: () => alive,
+            onClose: (listener) => {
+              retire = listener;
+              return () => {
+                retire = () => undefined;
+              };
+            }
+          },
+    settings: () => settings,
+    writeText,
+    hide: () => {
+      visible = false;
+      return Promise.resolve(true);
+    }
+  };
   const service = new CopyService(
     {
       call: <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
@@ -20,28 +44,7 @@ export function copyFixture(writeText: (text: string) => Promise<void>, text = '
         )
     },
     mutations,
-    {
-      platform: 'win32',
-      owner: (senderId) =>
-        senderId !== 1
-          ? undefined
-          : {
-              id: 1,
-              isAlive: () => alive,
-              onClose: (listener) => {
-                retire = listener;
-                return () => {
-                  retire = () => undefined;
-                };
-              }
-            },
-      settings: () => settings,
-      writeText,
-      hide: () => {
-        visible = false;
-        return Promise.resolve(true);
-      }
-    }
+    effects
   );
 
   return {

@@ -34,7 +34,9 @@ export function LibrarySort() {
             </Button>
           </DropdownMenuTrigger>
         </TooltipTrigger>
-        <TooltipContent>Sort snippets</TooltipContent>
+        <TooltipContent side="bottom" sideOffset={6}>
+          Sort snippets
+        </TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="end">
         <DropdownMenuRadioGroup

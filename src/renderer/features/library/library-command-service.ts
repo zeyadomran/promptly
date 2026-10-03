@@ -18,6 +18,7 @@ export class LibraryCommandService {
     private bridge: CommandBridge,
     private effects: {
       selectedId: () => string | null;
+      copied: () => void;
       refresh: () => void;
       deleted: (undo: () => Promise<void>) => void;
     }
@@ -63,12 +64,13 @@ export class LibraryCommandService {
         copiedId: id,
         error:
           result.value.warnings.length > 0
-            ? `Copied. ${result.value.warnings.includes('STATISTICS_UNCONFIRMED') ? 'Copy statistics could not be confirmed. ' : ''}${result.value.warnings.includes('WINDOW_NOT_HIDDEN') ? 'The window could not be hidden.' : ''}`.trim()
+            ? 'Copied. Copy statistics could not be confirmed.'
             : undefined
       });
       this.timer = setTimeout(() => {
         this.publish({ copiedId: null });
       }, 1500);
+      this.effects.copied();
       if (result.value.warnings.includes('STATISTICS_UNCONFIRMED')) this.effects.refresh();
     } catch {
       this.report('Copy could not be confirmed. Check the clipboard before trying again.');

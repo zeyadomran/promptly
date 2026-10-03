@@ -12,7 +12,7 @@ export const copyOutcomeSchema = z.strictObject({
       lastCopiedAt: timestampSchema
     })
     .optional(),
-  warnings: z.array(z.enum(['STATISTICS_UNCONFIRMED', 'WINDOW_NOT_HIDDEN'])).max(2)
+  warnings: z.array(z.literal('STATISTICS_UNCONFIRMED')).max(1)
 });
 
 export type CopyOutcome = z.infer<typeof copyOutcomeSchema>;

@@ -9,7 +9,6 @@ import { storageDesktopServices } from './storage/desktop-services';
 import type { LibraryMutations } from './storage/library-mutations';
 import type { TransferDialogs } from './storage/transfer/native-dialogs';
 import { StorageTransfer } from './storage/transfer/service';
-import type { WindowLifecycle } from './windows/window-lifecycle';
 
 /** One mutation owner across capture, copy, CRUD, import and clear. */
 export function createLibraryServices(
@@ -18,14 +17,13 @@ export function createLibraryServices(
   dialogs: TransferDialogs,
   settings: SettingsService,
   keyboard: ReturnType<typeof createDesktopShortcuts>,
-  native: CaptureNative | undefined,
-  lifecycle: () => WindowLifecycle | undefined
+  native: CaptureNative | undefined
 ) {
   const capture = createDesktopCapture(storage, mutations, settings, keyboard, native);
   const transfer = new StorageTransfer(storage, mutations, dialogs, () => {
     capture.sources.clear();
   });
-  const copy = createDesktopCopy(storage, mutations, dialogs, settings, lifecycle);
+  const copy = createDesktopCopy(storage, mutations, dialogs);
 
   return {
     capture,

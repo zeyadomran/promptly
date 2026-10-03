@@ -57,11 +57,11 @@ export function trayFixture() {
     windows.push('shortcut pin');
   };
 
-  const copy = new CopyService(fixture.storage, mutations, {
+  const copyEffects = {
     platform: 'win32',
     owner: () => undefined,
     settings: () => fixture.service.current.settings,
-    writeText: (text) => {
+    writeText: (text: string) => {
       clipboard.push(text);
       return Promise.resolve();
     },
@@ -69,7 +69,8 @@ export function trayFixture() {
       windows.push('unexpected hide');
       return Promise.resolve(true);
     }
-  });
+  };
+  const copy = new CopyService(fixture.storage, mutations, copyEffects);
   const tray = new TrayCoordinator(
     transport,
     keyboard.shortcuts,

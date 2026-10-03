@@ -3,7 +3,7 @@ import { expect, it } from 'vitest';
 import { copyFixture } from './copy-test-fixture';
 import { MainCopyOwner } from './main-owner';
 
-it('copies authoritative full text and Markdown with durable statistics and current hide policy', async () => {
+it('copies authoritative full text and Markdown with durable statistics while keeping legacy profiles open', async () => {
   const clipboard: string[] = [];
   const fixture = copyFixture((copied) => {
     clipboard.push(copied);
@@ -13,7 +13,11 @@ it('copies authoritative full text and Markdown with durable statistics and curr
 
   try {
     fixture.store.invoke('updateSnippet', { id: fixture.id, text });
-    fixture.settings.alwaysOnTop = true;
+    fixture.settings.alwaysOnTop = false;
+    fixture.settings.hideAfterCopy = 'automatic';
+    fixture.store.invoke('updateSettings', { hideAfterCopy: 'automatic', alwaysOnTop: false });
+    fixture.store.reopen();
+    expect(fixture.store.invoke('getSettings', {}).settings.hideAfterCopy).toBe('automatic');
     expect(await fixture.copy()).toMatchObject({
       ok: true,
       value: { statistics: { copyCount: 1 }, warnings: [] }
@@ -23,6 +27,7 @@ it('copies authoritative full text and Markdown with durable statistics and curr
     const main = new MainCopyOwner();
 
     fixture.settings.hideAfterCopy = 'always';
+    fixture.store.invoke('updateSettings', { hideAfterCopy: 'always' });
     expect(
       await fixture.service.copyFromMain({ id: fixture.id, format: 'text' }, main)
     ).toMatchObject({
@@ -49,8 +54,9 @@ it('copies authoritative full text and Markdown with durable statistics and curr
       value: { statistics: { copyCount: 3 } }
     });
     expect(clipboard).toEqual([text, text, `\`\`\`\`\`\`\n${text}\n\`\`\`\`\`\``]);
-    expect(fixture.visible()).toBe(false);
+    expect(fixture.visible()).toBe(true);
     fixture.store.reopen();
+    expect(fixture.store.invoke('getSettings', {}).settings.hideAfterCopy).toBe('always');
     expect(fixture.store.invoke('getSnippet', { id: fixture.id }).snippet).toMatchObject({
       text,
       copyCount: 3,
@@ -136,7 +142,7 @@ it('drains renderer and main-owned writes after retirement without replay or unr
     release();
     expect(await copying).toMatchObject({
       ok: true,
-      value: { statistics: { copyCount: 1 }, warnings: ['WINDOW_NOT_HIDDEN'] }
+      value: { statistics: { copyCount: 1 }, warnings: [] }
     });
     await mainReady;
     main.close();
