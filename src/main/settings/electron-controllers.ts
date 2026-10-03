@@ -1,7 +1,7 @@
 import { app, BrowserWindow, nativeTheme } from 'electron';
 
 import type { Settings } from '../../shared/contracts/settings';
-import { updateNativeChrome } from '../windows/native-chrome';
+import { nativeChromeColors, updateNativeChrome } from '../windows/native-chrome';
 import { isOverlayWindow } from '../windows/overlay-windows';
 import type { SettingsController, SettingsControllers } from './controllers';
 import { loginController } from './login-controller';
@@ -13,7 +13,7 @@ export type { NativePreferences } from './login-preferences';
 export function updateWindowBackgrounds(): void {
   for (const window of BrowserWindow.getAllWindows()) {
     if (isOverlayWindow(window)) continue;
-    window.setBackgroundColor(nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff');
+    window.setBackgroundColor(nativeChromeColors().color);
     updateNativeChrome(window);
   }
 }
