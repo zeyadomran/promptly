@@ -1,0 +1,83 @@
+import { expect, it, vi } from 'vitest';
+
+import { WindowRegistry } from '../ipc/window-registry';
+import { testSettings } from '../settings/settings-test-fixture';
+import { WindowLifecycle } from './window-lifecycle';
+import { answerDialog, ControlledWindow, notices } from './window-test-fixture';
+
+vi.mock('electron', async () => (await import('./window-test-fixture')).desktopBoundary);
+vi.stubGlobal('MAIN_WINDOW_VITE_DEV_SERVER_URL', 'https://promptly.invalid/');
+vi.stubGlobal('MAIN_WINDOW_VITE_NAME', 'main_window');
+
+it('keeps an unresponsive renderer until a deliberate decision and reopens saved data after a crash', async () => {
+  const preferences = testSettings();
+
+  preferences.store.invoke('updateSettings', { onboardingComplete: true });
+  preferences.store.invoke('createSnippet', { text: 'Retained owned library text' });
+  await preferences.service.initialize();
+  const lifecycle = new WindowLifecycle(
+    new WindowRegistry(),
+    preferences.service,
+    {
+      trayAvailable: () => true,
+      shortcutAvailable: () => false
+    },
+    () => undefined
+  );
+  let window = await lifecycle.show();
+
+  try {
+    window.emit('unresponsive');
+    expect(notices.at(-1)?.message).toBe('This Promptly window is not responding.');
+    expect(notices.at(-1)?.detail).toContain('Reloading will discard unsaved edits.');
+    const waiting = lifecycle.show();
+
+    answerDialog(0);
+    expect(await waiting).toBe(window);
+    expect(window.isDestroyed()).toBe(false);
+    window.emit('unresponsive');
+    const responsive = lifecycle.show();
+
+    window.emit('responsive');
+    expect(await responsive).toBe(window);
+    window.webContents.emit('render-process-gone', {}, { reason: 'crashed' });
+    expect(notices.at(-1)?.message).toBe('This Promptly window stopped.');
+    const reopening = lifecycle.show();
+
+    answerDialog(0);
+    const old = window;
+
+    window = await reopening;
+    expect(window).not.toBe(old);
+    expect(old.isDestroyed()).toBe(true);
+    expect(window.isVisible()).toBe(true);
+    expect(window.isFocused()).toBe(true);
+    window.emit('unresponsive');
+    const lateDecision = lifecycle.show();
+
+    lifecycle.stopCommands();
+    answerDialog(1);
+    await expect(lateDecision).rejects.toThrow('Promptly is shutting down.');
+    expect(window.isDestroyed()).toBe(false);
+    await lifecycle.close();
+    preferences.store.reopen();
+    expect(
+      preferences.store
+        .invoke('searchSnippets', {
+          query: '',
+          tagIds: [],
+          untagged: false,
+          sort: 'newest',
+          offset: 0,
+          limit: 10
+        })
+        .items.map((item) => item.text)
+    ).toEqual(['Retained owned library text']);
+  } finally {
+    answerDialog(1);
+    await lifecycle.close();
+    await preferences.service.close();
+    preferences.store.dispose();
+    for (const owned of ControlledWindow.instances) if (!owned.isDestroyed()) owned.destroy();
+  }
+});

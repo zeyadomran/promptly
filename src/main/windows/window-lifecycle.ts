@@ -7,7 +7,8 @@ import type { WindowRegistry } from '../ipc/window-registry';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
 import { reconcileWindows } from './reconcile-windows';
-import { concealWindow, type WindowRecovery } from './visibility';
+import { recoverWindowRenderer, retireWindowRenderer } from './renderer-recovery';
+import { canRecover, concealWindow, type WindowRecovery } from './visibility';
 import { watchWindowLifecycle } from './watch-window-lifecycle';
 import { WindowBounds } from './window-bounds';
 import { createWindowOperations } from './window-operations';
@@ -53,15 +54,17 @@ export class WindowLifecycle {
       if (pending === undefined) {
         pending = createMainWindow(this.registry, this.settings.current, kind, (created) => {
           this.windows.set(kind, created);
-          if (kind === 'main')
-            this.bounds = new WindowBounds(
-              created,
-              this.settings,
-              this.settings.current.settings.defaultSizeMode,
-              this.onError
-            );
+          if (kind === 'main') this.bounds = new WindowBounds(created, this.settings, this.onError);
           watchWindowLifecycle(created, kind, {
             closing: () => this.closing,
+            ready: () => this.ready.has(created),
+            error: this.onError,
+            reload: async () => {
+              this.ready.delete(created);
+              if (kind === 'main') await this.bounds?.close().catch(this.onError);
+              created.destroy();
+              return this.show(kind);
+            },
             recovery: this.recovery,
             hide: () => {
               this.hide();
@@ -86,7 +89,9 @@ export class WindowLifecycle {
       }
     }
 
+    window = await recoverWindowRenderer(window);
     if (this.isClosing()) throw new Error('Promptly is shutting down.');
+    if (window.isDestroyed()) throw new Error('Window closed during renderer recovery.');
     this.ready.add(window);
     if (window.isMinimized()) window.restore();
     window.show();
@@ -104,7 +109,7 @@ export class WindowLifecycle {
   async toggle(): Promise<void> {
     const window = this.windows.get(this.rootKind());
 
-    if (window?.isVisible() === true && !window.isMinimized()) this.hide();
+    if (window?.isVisible() === true && !window.isMinimized() && window.isFocused()) this.hide();
     else await this.show();
   }
 
@@ -116,6 +121,13 @@ export class WindowLifecycle {
     if (window.isMinimized()) window.restore();
     window.show();
     if (!window.isVisible()) throw new Error('Promptly could not restore its window.');
+  }
+
+  recoverIfUnreachable(): void {
+    const window = this.windows.get(this.rootKind());
+
+    if (window?.isVisible() === true || window?.isMinimized() === true) return;
+    if (!canRecover(this.recovery)) this.recoverVisibility();
   }
 
   private rootKind(): WindowKind {
@@ -172,11 +184,16 @@ export class WindowLifecycle {
   });
 
   async close(): Promise<void> {
-    this.closing = true;
+    this.stopCommands();
     screen.removeListener('display-removed', this.reconcile);
     screen.removeListener('display-metrics-changed', this.reconcile);
     await this.commandTail;
     await Promise.allSettled(this.opening.values());
     await this.bounds?.close();
+  }
+
+  stopCommands(): void {
+    this.closing = true;
+    for (const window of this.windows.values()) retireWindowRenderer(window);
   }
 }

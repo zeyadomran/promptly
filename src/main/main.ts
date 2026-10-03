@@ -77,6 +77,7 @@ const primaryInstance = ownApplication();
 const recovery = desktopRecovery(() => {
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
+  lifecycle?.stopCommands();
   desktop?.dispose();
 }, shutdown.fatal);
 const openWindow = installWindowOpenCommands(() => lifecycle, recovery);
@@ -172,7 +173,7 @@ if (primaryInstance)
           shortcutAvailable: () => keyboard?.shortcuts.recoveryAvailable === true
         },
         (error) => {
-          console.error('Unable to save window geometry:', error);
+          console.error('Unable to update Promptly window:', error);
         }
       );
       await tray.refresh();
@@ -188,6 +189,7 @@ app.on('before-quit', (event) => {
   recovery.close();
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
+  lifecycle?.stopCommands();
   shutdown.beforeQuit(event);
 });
 

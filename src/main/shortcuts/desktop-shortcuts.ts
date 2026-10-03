@@ -54,7 +54,7 @@ export function createDesktopShortcuts(
     },
     process.platform,
     () => {
-      lifecycle()?.recoverVisibility();
+      lifecycle()?.recoverIfUnreachable();
     }
   );
 
@@ -80,7 +80,7 @@ export function createDesktopShortcuts(
   const resume = () => {
     void shortcuts.resume().catch(() => {
       console.warn('Unable to resume shortcut listener.');
-      lifecycle()?.recoverVisibility();
+      lifecycle()?.recoverIfUnreachable();
     });
   };
 
