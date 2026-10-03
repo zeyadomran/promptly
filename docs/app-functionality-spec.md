@@ -64,14 +64,14 @@ A narrow (~440 px), tall panel designed to sit beside a terminal or editor.
 - **Snippet list** (virtualized, scrollable):
   - Colored **tag dots** on the left of each row: every assigned tag, using the same bounded grid in both modes (6px squares, 2px gaps, at most five rows).
   - Snippet text in monospace, clamped to 2 lines.
-  - Meta line: tag names · source app; plus a right-aligned Enter icon on the selected row (with an accessible copy hint) or a transient "✓ Copied" confirmation. Rows have no visible "Copy" label.
+  - Meta line: source app, relative time and a transient "✓ Copied" confirmation after a confirmed copy. Rows have no idle copy arrow or visible "Copy" label.
 - **Footer**: result count ("4 of 128") and pin status.
-- Clickable rows and controls use a pointer cursor. Rows have subtle hover feedback, distinct selected styling, and a list focus outline that stays visible above the first row; hover respects reduced motion.
+- Clickable rows and controls use a pointer cursor. Every Compact row uses the filled card appearance, with no persistent item selection or selected accessibility state. The command cursor has a focus outline while the list or search has keyboard focus. Both modes use the same 78 px rows with an 8 px gap, shared content/dots and subtle hover feedback; hover respects reduced motion.
 
 ### 3b. Regular mode
 A larger window (~1000 px) with a split view:
 - Top: search input (supports filter syntax, see §4), then **tag filter chips** that toggle on and off, followed by a dashed **"New tag"** chip.
-- Left: dense **snippet list** (single-line truncated text, tag dots, tags · source, relative time). The selected row is highlighted.
+- Left: the shared **snippet list** (two-line clamped text, tag dots, source and relative time) with an 8 px gap. The actual selected row is highlighted and supplies the preview.
 - Right: **preview pane** for the selected snippet:
   - A fixed-height header with its tags as single-row badges, a **"+N"** overflow picker and right-aligned **source · relative time** metadata that receives space first. If source/time plus the mandatory add/overflow control cannot fit after hiding every badge, preserve the timestamp and truncate only the source label, with full accessible text and a focusable full-name tooltip. This bounded-width fallback is the stated working assumption pending an optional user preference. An empty snippet shows **"+ Add tag"**; when all badges fit a small dashed **"+"** adds more.
   - Full text in monospace with search matches highlighted.
@@ -81,8 +81,8 @@ A larger window (~1000 px) with a split view:
 
 ### Copy behavior (both modes)
 - **Clicking a snippet row copies its full text** to the clipboard immediately. In Regular mode, a single click also selects it for preview.
-- `Enter` copies the selected snippet.
-- Successful copy leaves the window open, keeps the copied row selected and highlighted, and shows that snippet in the Regular preview. Compact stays Compact and carries its selection into Regular. Refresh/reorder preserves the selected snippet by ID; a later deliberate selection wins over an earlier copy completion.
+- `Enter` copies the snippet at the command cursor.
+- Successful copy leaves the window open. Regular keeps the copied row selected and shows it in the preview. Compact stays Compact and tracks a command cursor for keyboard operations without persistent selection styling or selected accessibility state; switching to Regular uses that current cursor for preview selection. Refresh/reorder preserves the command target by ID; a later deliberate target wins over an earlier copy completion.
 - After a confirmed write, update `lastCopiedAt` and `copyCount` once and show an accessible in-app Sonner notification titled "Copied" plus inline row feedback for ~1.5 s. Its Open Promptly action uses the show command. Failed or uncertain writes never show success; partial statistics failures report a warning and refresh reads without replaying the write.
 - This keep-open behavior supersedes old automatic/always hide preferences in existing profiles. The legacy setting remains readable for data compatibility but has no effect and is absent from Settings. Tray copy preserves existing visibility and focus.
 
@@ -98,7 +98,7 @@ A larger window (~1000 px) with a split view:
 - **Tag filters**: selecting one or more tag chips narrows results to snippets that have **all** selected tags (AND). "All" clears the tag filters. "Untagged" remains available in the shared filter picker.
 - **Inline filter syntax** in the search box: `tag:review`, `from:terminal`, combinable with free text (e.g. `tag:testing from:cursor flaky`).
 - Text search and tag filters combine (intersection).
-- Sort: Newest (default), Oldest, Most copied, Recently copied.
+- Sort: Newest (default), Oldest, Most copied, Recently copied. The sort popover contains only sort choices; Quit remains in the existing tray menu.
 - Empty states: no snippets yet (explain the shortcut), and no results for this search or filter (offer to clear filters).
 
 ---

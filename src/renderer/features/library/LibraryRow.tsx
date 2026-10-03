@@ -10,11 +10,13 @@ export function LibraryRow({
   snippet,
   ranges,
   index,
+  regular,
   positionClass
 }: {
   snippet: Snippet;
   ranges: readonly HighlightRange[];
   index: number;
+  regular: boolean;
   positionClass: string;
 }) {
   const { state, model } = useLibrary();
@@ -30,7 +32,7 @@ export function LibraryRow({
     <div
       id={`snippet-${snippet.id}`}
       role="option"
-      aria-selected={selected}
+      aria-selected={regular ? selected : undefined}
       aria-description={
         snippet.tags.length === 0
           ? 'Untagged'
@@ -39,6 +41,8 @@ export function LibraryRow({
       aria-posinset={index + 1}
       aria-setsize={state.total}
       data-snippet-id={snippet.id}
+      data-compact={!regular || undefined}
+      data-active={selected}
       className={`library-row ${positionClass}`}
       onClick={select}
     >
