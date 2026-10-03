@@ -37,7 +37,7 @@ Use Conventional Commit titles, such as `fix: preserve snippet tags` or
 performed, and material limitations. Run the required checks and relevant packaging
 steps in [DEVELOPMENT.md](DEVELOPMENT.md); applicable CI must pass at the current PR head.
 Separate functional evidence from manual native qualification. Follow the merge and
-review conventions in [repository maintenance](.github/README.md).
+review conventions in [repository maintenance](.github/MAINTENANCE.md).
 
 Keep third-party license texts and provenance intact. First-party contributions are
 covered by the repository's [MIT License](LICENSE); dependencies retain their own terms.

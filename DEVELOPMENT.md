@@ -38,7 +38,7 @@ npm run stage:unsigned # Verify maker hashes and stage artifacts with the releas
 `npm run check:static` runs TypeScript, zero-warning ESLint, the architecture gate,
 and formatting. `npm test` runs the canonical functional service suite. CI runs these
 checks and constructs the unsigned installer on Windows x64. Workflow validation and
-CodeQL run separately; see [repository maintenance](.github/README.md).
+CodeQL run separately; see [repository maintenance](.github/MAINTENANCE.md).
 
 No automated GUI or native E2E suite is maintained. Functional tests exercise services
 and real owned SQLite storage with controlled external boundaries. They do not qualify
