@@ -187,4 +187,11 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
 
   expect(boundary).toMatchObject({ total: 1, items: [{ id: c.id, text: ' '.repeat(1_023) }] });
   expect(await call('getSnippet', { id: c.id })).toMatchObject({ snippet: { text: whitespace } });
+  await call('updateSnippet', { id: c.id, text: 'İ😀𐐀 gap needle' });
+  const unicode = await call('searchSnippets', { ...request, query: 'i 😀 𐐨 needle', tagIds: [] });
+
+  expect(unicode.matches?.[c.id]).toEqual([
+    { start: 0, end: 5 },
+    { start: 10, end: 16 }
+  ]);
 });

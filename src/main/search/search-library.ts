@@ -1,4 +1,9 @@
-import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/domain';
+import type {
+  SearchPage,
+  SearchRequest,
+  Snippet,
+  SnippetPreview
+} from '../../shared/contracts/domain';
 import { previewLimits } from '../../shared/contracts/preview-limits';
 import { matchRanges } from '../../shared/search/match-text';
 import type { StorageContext } from '../storage/context';
@@ -42,7 +47,7 @@ export class SearchLibrary {
     }
 
     const filter = compileSearchFilter(request);
-    const items: Snippet[] = [];
+    const items: SnippetPreview[] = [];
     let total = 0;
 
     for (const entry of entries) {

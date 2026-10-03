@@ -23,7 +23,9 @@ export class LibraryModel {
   private connect(): void {
     this.client = createSearchClient(
       this.bridge,
-      (result, request) => this.receive(result, request),
+      (result, request) => {
+        this.receive(result, request);
+      },
       (event) => {
         if (this.state.cache.retainCopy(event, this.state.request.sort)) {
           this.publish();

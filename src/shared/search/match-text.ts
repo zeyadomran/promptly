@@ -31,42 +31,31 @@ export function matchRanges(
   const ascii = !/[^\p{ASCII}]/u.test(text);
   const folded = foldText(text);
 
+  const pending = [...new Set(terms)]
+    .filter((term) => term !== '')
+    .map((term) => ({ term, start: folded.indexOf(term) }))
+    .filter((item) => item.start >= 0);
   const ranges: MatchRange[] = [];
 
-  for (const term of new Set(terms)) {
-    if (term === '') continue;
-    let start = folded.indexOf(term);
-    let previous: MatchRange | undefined;
-    let count = 0;
+  // Merge in text order, retaining only term cursors and the capped range union.
+  for (;;) {
+    let next: (typeof pending)[number] | undefined;
 
-    while (start !== -1) {
-      // Bound intermediate occurrences per term, then union the earliest visible ranges.
-      if (previous !== undefined && start <= previous.end)
-        previous.end = Math.max(previous.end, start + term.length);
-      else {
-        if (count === limit) break;
-        previous = { start, end: start + term.length };
-        ranges.push(previous);
-        count += 1;
-      }
+    for (const item of pending) if (next === undefined || item.start < next.start) next = item;
+    if (next === undefined) break;
+    const previous = ranges.at(-1);
+    const end = next.start + next.term.length;
 
-      start = folded.indexOf(term, start + 1);
+    if (previous !== undefined && next.start <= previous.end)
+      previous.end = Math.max(previous.end, end);
+    else {
+      if (ranges.length === limit) break;
+      ranges.push({ start: next.start, end });
     }
+
+    next.start = folded.indexOf(next.term, next.start + 1);
+    if (next.start === -1) pending.splice(pending.indexOf(next), 1);
   }
 
-  const merged: MatchRange[] = [];
-
-  for (const range of ranges.sort(
-    (left, right) => left.start - right.start || left.end - right.end
-  )) {
-    const previous = merged.at(-1);
-
-    if (previous !== undefined && range.start <= previous.end)
-      previous.end = Math.max(previous.end, range.end);
-    else merged.push(range);
-  }
-
-  const bounded = merged.slice(0, limit);
-
-  return ascii ? bounded : originalRanges(text, bounded);
+  return ascii ? ranges : originalRanges(text, ranges);
 }

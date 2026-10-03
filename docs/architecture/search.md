@@ -48,8 +48,9 @@ to the count, without inventing a highlight inside the visible prefix.
 `SearchPage.matches` maps each returned UUID to original UTF-16 start/end ranges,
 including lowercase expansions and surrogate pairs. Only free-text terms produce
 snippet-text highlights. Row and full-preview highlights retain at most 64 merged
-ranges. Intermediate occurrences are capped per term before merging; later text
-remains selectable and copyable without a highlight. Unicode offsets use a
+ranges. Matches merge in text order using one cursor per query term, without
+collecting every occurrence; later text remains selectable and copyable without
+a highlight. Unicode offsets use a
 forward-only cursor instead of allocating an offset array for every text unit.
 `HighlightedText` safely renders these ranges and React escapes every segment.
 When CSS Custom Highlight and StaticRange are available, `HighlightedText`

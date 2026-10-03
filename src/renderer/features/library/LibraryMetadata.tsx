@@ -1,7 +1,7 @@
-import type { Snippet } from '../../../shared/contracts/domain';
+import type { SnippetPreview } from '../../../shared/contracts/domain';
 import { LibraryCopyStatus } from './LibraryCopyStatus';
 
-export function LibraryMetadata({ snippet, copied }: { snippet: Snippet; copied: boolean }) {
+export function LibraryMetadata({ snippet, copied }: { snippet: SnippetPreview; copied: boolean }) {
   const metadata = [snippet.tags.map((tag) => tag.name).join(', '), snippet.sourceApp]
     .filter((part) => part !== null && part !== '')
     .join(' · ');
