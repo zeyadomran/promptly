@@ -5,10 +5,12 @@ import { libraryFixture } from './library-test-fixture';
 export function delayedLibraryFixture(count = 1_000) {
   const fixture = libraryFixture(count);
   const search = fixture.bridge.searchSnippets;
+  const requests: SearchRequest[] = [];
   let heldOffset: number | undefined;
   let release: (() => void) | undefined;
 
   fixture.bridge.searchSnippets = (request: SearchRequest) => {
+    requests.push(request);
     const response = search(request);
 
     if (request.offset !== heldOffset || request.limit !== 200) return response;
@@ -22,6 +24,7 @@ export function delayedLibraryFixture(count = 1_000) {
 
   return {
     ...fixture,
+    requests,
     holdNext: (offset: number) => {
       heldOffset = offset;
     },
