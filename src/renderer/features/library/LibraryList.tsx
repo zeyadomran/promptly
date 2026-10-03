@@ -26,7 +26,7 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
   }, [first, last, state.version, state.cache, model]);
   return (
     <div
-      className={regular ? 'library-scroller regular-scroller' : 'library-scroller'}
+      className="library-scroller"
       ref={scroller}
       role="listbox"
       aria-label="Snippets"
@@ -56,7 +56,6 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
           ) : (
             <LibraryRow
               key={item.snippet.id}
-              regular={regular}
               snippet={item.snippet}
               ranges={item.ranges}
               index={row.index}

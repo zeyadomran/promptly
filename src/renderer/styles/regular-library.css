@@ -47,32 +47,6 @@
   min-height: 0;
   padding: 6px 0;
 }
-.regular-row {
-  height: 58px;
-  padding: 9px 12px;
-  border-radius: 6px;
-}
-.regular-row .library-row-content {
-  position: relative;
-  padding-right: 54px;
-}
-.regular-row .library-row-text {
-  height: 20px;
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.regular-row .library-row-meta {
-  margin-top: 3px;
-}
-.regular-row-time {
-  position: absolute;
-  top: 2px;
-  right: 0;
-  font-size: 11px;
-  color: var(--muted-foreground);
-}
 .snippet-preview {
   display: flex;
   flex-direction: column;

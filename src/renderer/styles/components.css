@@ -16,11 +16,20 @@
   opacity: 0.45;
 }
 
-[data-slot='button']:not(:disabled),
-[data-slot='toggle']:not(:disabled),
-[data-slot='toggle-group-item']:not(:disabled),
-[data-slot='switch']:not(:disabled),
-[data-slot='slider-thumb']:not([data-disabled]) {
+/* Match interactive semantics even when an asChild trigger supplies its own slot. */
+:is(
+    button,
+    a[href],
+    [role='button'],
+    [role='radio'],
+    [role='checkbox'],
+    [role='switch'],
+    [role='slider'],
+    [role='tab'],
+    [role='menuitem'],
+    [role='menuitemcheckbox'],
+    [role='menuitemradio']
+  ):not(:disabled):not([aria-disabled='true']):not([data-disabled='true']):not([data-disabled='']) {
   cursor: pointer;
 }
 
@@ -49,7 +58,8 @@
   color: var(--muted-foreground);
 }
 
-[data-slot='toggle-group-item'][data-state='on'] {
+[data-slot='toggle-group-item'][data-state='on'],
+[data-slot='toggle-group-item'][aria-checked='true'] {
   background: var(--segment-on);
   color: var(--foreground);
   box-shadow: 0 1px 2px rgb(0 0 0 / 12%);
