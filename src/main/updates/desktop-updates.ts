@@ -13,7 +13,8 @@ import { applySquirrelUpdate } from './squirrel-updater';
 
 export function createDesktopUpdates(
   getWindows: () => WindowRegistry | undefined,
-  getLifecycle: () => WindowLifecycle | undefined
+  getLifecycle: () => WindowLifecycle | undefined,
+  changed: () => void
 ) {
   let notification: Notification | undefined;
   let startup: ReturnType<typeof setTimeout> | undefined;
@@ -30,7 +31,10 @@ export function createDesktopUpdates(
     restart: () => {
       autoUpdater.quitAndInstall();
     },
-    publish: (state) => getWindows()?.broadcast(updateChannel, state, false),
+    publish: (state) => {
+      getWindows()?.broadcast(updateChannel, state, false);
+      changed();
+    },
     openSettings: async () => {
       await getLifecycle()?.show('settings');
     },
@@ -67,6 +71,10 @@ export function createDesktopUpdates(
   autoUpdater.on('error', updaterError);
   return {
     services,
+    ready: () => service.state.status === 'ready',
+    restart: () => {
+      service.restart();
+    },
     start: () => {
       // Squirrel holds an installation lock briefly on --squirrel-firstrun.
       startup = setTimeout(

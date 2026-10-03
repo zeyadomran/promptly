@@ -13,7 +13,7 @@
 }
 
 [data-slot='button']:disabled {
-  opacity: 0.45;
+  opacity: var(--disabled-opacity);
 }
 
 /* Match interactive semantics even when an asChild trigger supplies its own slot. */
