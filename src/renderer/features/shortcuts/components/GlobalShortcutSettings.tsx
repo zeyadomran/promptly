@@ -34,7 +34,11 @@ export function GlobalShortcutSettings({
           <div className="shortcut-global-reset">
             <ResetShortcutsButton disabled={inactive} apply={apply} />
           </div>
-          <ShortcutConflictStatus status={status} error={undefined} />
+          <ShortcutConflictStatus
+            status={status}
+            error={undefined}
+            captureKind={settings.saveShortcut.kind}
+          />
         </>
       }
     >

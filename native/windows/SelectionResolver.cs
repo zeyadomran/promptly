@@ -4,6 +4,9 @@ using System.Windows.Automation;
 
 internal static class SelectionResolver
 {
+    // Chromium editors can have deeply nested accessible groups. Keep ownership discovery bounded.
+    private const int MaximumAncestorDepth = 64;
+
     internal static TextPattern Resolve(SourceIdentity identity, out AutomationElement focused, out string status)
     {
         focused = AutomationElement.FocusedElement;
@@ -14,7 +17,7 @@ internal static class SelectionResolver
         var node = focused;
         bool owned = false;
         // Only the focus-to-window chain, never children, siblings, desktop or document text.
-        for (int depth = 0; node != null && depth < 16; depth++)
+        for (int depth = 0; node != null && depth < MaximumAncestorDepth; depth++)
         {
             var current = node.Current;
             if (current.ProcessId != identity.Pid) { status = "foregroundChanged"; return null; }

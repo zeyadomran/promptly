@@ -2,7 +2,8 @@ import type { ShortcutStatus } from '../../../shared/contracts/shortcuts';
 
 export function shortcutRegistration(
   status: ShortcutStatus | undefined,
-  action: 'capture' | 'open' | 'pin'
+  action: 'capture' | 'open' | 'pin',
+  captureKind: 'double-tap' | 'combination' = 'double-tap'
 ) {
   if (status === undefined)
     return {
@@ -40,16 +41,20 @@ export function shortcutRegistration(
     return {
       state: 'unavailable',
       label:
-        action === 'capture' && status.hook === 'unavailable'
+        action === 'capture' && captureKind === 'double-tap'
           ? 'Listener unavailable'
           : 'Windows didn’t accept this',
       detail:
-        'Registration or the modifier listener is unavailable. Choose another shortcut or retry after freeing the current binding.'
+        action === 'capture' && captureKind === 'double-tap'
+          ? 'The modifier listener is unavailable. Retry shortcuts or restart Promptly.'
+          : 'The operating system did not register this shortcut. Another app may be using it. Choose another combination or free it and retry.'
     } as const;
   return {
     state: 'registered',
     label: 'Registered',
     detail:
-      'The listener or OS registration is available. Registration alone does not verify delivery in another app.'
+      action === 'capture'
+        ? 'The capture shortcut is available. Saving still requires a supported native selection in the source app.'
+        : 'The operating system registered this shortcut. Registration alone does not verify delivery in another app.'
   } as const;
 }
