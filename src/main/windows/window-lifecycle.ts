@@ -19,6 +19,7 @@ export class WindowLifecycle {
   private readonly ready = new Set<BrowserWindow>();
   private bounds: WindowBounds | undefined;
   private closing = false;
+  private readonly isClosing = () => this.closing;
   private commandTail: Promise<unknown> = Promise.resolve();
 
   constructor(
@@ -43,7 +44,6 @@ export class WindowLifecycle {
     if (kind === 'onboarding' && !app.isAccessibilitySupportEnabled())
       app.setAccessibilitySupportEnabled(true);
     let window = this.windows.get(kind);
-
     const loading = this.opening.get(kind);
 
     if (loading !== undefined) window = await loading;
@@ -62,8 +62,12 @@ export class WindowLifecycle {
             reload: async () => {
               this.ready.delete(created);
               if (kind === 'main') await this.bounds?.close().catch(this.onError);
-              created.destroy();
-              return this.show(kind);
+              this.windows.delete(kind);
+              try {
+                return await this.show(kind);
+              } finally {
+                created.destroy();
+              }
             },
             recovery: this.recovery,
             hide: () => {
@@ -143,10 +147,6 @@ export class WindowLifecycle {
       mode: this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode,
       visible: window?.isVisible() === true && !window.isMinimized()
     };
-  }
-
-  private isClosing(): boolean {
-    return this.closing;
   }
 
   private enqueue(action: () => Promise<WindowState>) {

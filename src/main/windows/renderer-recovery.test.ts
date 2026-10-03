@@ -2,8 +2,9 @@ import { expect, it, vi } from 'vitest';
 
 import { WindowRegistry } from '../ipc/window-registry';
 import { testSettings } from '../settings/settings-test-fixture';
+import { installLastWindowPolicy } from './last-window-policy';
 import { WindowLifecycle } from './window-lifecycle';
-import { answerDialog, ControlledWindow, notices } from './window-test-fixture';
+import { answerDialog, ControlledWindow, desktopBoundary, notices } from './window-test-fixture';
 
 vi.mock('electron', async () => (await import('./window-test-fixture')).desktopBoundary);
 vi.stubGlobal('MAIN_WINDOW_VITE_DEV_SERVER_URL', 'https://promptly.invalid/');
@@ -19,12 +20,18 @@ it('keeps an unresponsive renderer until a deliberate decision and reopens saved
     new WindowRegistry(),
     preferences.service,
     {
-      trayAvailable: () => true,
+      trayAvailable: () => false,
       shortcutAvailable: () => false
     },
     () => undefined
   );
   let window = await lifecycle.show();
+  const removePolicy = installLastWindowPolicy(() => false);
+  const retire = () => {
+    lifecycle.stopCommands();
+  };
+
+  desktopBoundary.app.on('before-quit', retire);
 
   try {
     window.emit('unresponsive');
@@ -48,6 +55,7 @@ it('keeps an unresponsive renderer until a deliberate decision and reopens saved
     const old = window;
 
     window = await reopening;
+    expect(desktopBoundary.app.quitting).toBe(false);
     expect(window).not.toBe(old);
     expect(old.isDestroyed()).toBe(true);
     expect(window.isVisible()).toBe(true);
@@ -55,7 +63,8 @@ it('keeps an unresponsive renderer until a deliberate decision and reopens saved
     window.emit('unresponsive');
     const lateDecision = lifecycle.show();
 
-    lifecycle.stopCommands();
+    await lifecycle.services.quitApplication({});
+    expect(desktopBoundary.app.quitting).toBe(true);
     answerDialog(1);
     await expect(lateDecision).rejects.toThrow('Promptly is shutting down.');
     expect(window.isDestroyed()).toBe(false);
@@ -74,6 +83,8 @@ it('keeps an unresponsive renderer until a deliberate decision and reopens saved
         .items.map((item) => item.text)
     ).toEqual(['Retained owned library text']);
   } finally {
+    removePolicy();
+    desktopBoundary.app.removeListener('before-quit', retire);
     answerDialog(1);
     await lifecycle.close();
     await preferences.service.close();

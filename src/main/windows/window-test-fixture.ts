@@ -85,6 +85,8 @@ export class ControlledWindow extends EventEmitter {
     this.webContents.destroyed = true;
     this.webContents.emit('destroyed');
     this.emit('closed');
+    if (ControlledWindow.instances.every((window) => window.isDestroyed()))
+      desktopBoundary.app.emit('window-all-closed');
   };
   loadURL = (url: string) => {
     this.webContents.mainFrame.url = url;
@@ -112,7 +114,14 @@ export function answerDialog(response: number): void {
 
 export const desktopBoundary = {
   BrowserWindow: ControlledWindow,
-  app: { quit: () => undefined, isAccessibilitySupportEnabled: () => true },
+  app: Object.assign(new EventEmitter(), {
+    quitting: false,
+    quit: () => {
+      desktopBoundary.app.quitting = true;
+      desktopBoundary.app.emit('before-quit');
+    },
+    isAccessibilitySupportEnabled: () => true
+  }),
   screen,
   nativeTheme: { shouldUseDarkColors: false, themeSource: 'system' },
   session: { fromPartition: () => session },

@@ -41,6 +41,13 @@ fresh visible/focused window, command retirement rejects a late reload decision
 and saved library text survives database reopen. It does not assert private maps,
 helper implementation or incidental callback counts.
 
+The review regression extends that same flow with no tray or Open shortcut and
+Electron's synchronous `window-all-closed` event through the production quit
+policy. Reload initially failed with `Promptly is shutting down.` because the old
+window was destroyed before constructing its replacement. Reload now creates a
+ready replacement before retiring the old native window; explicit Quit still
+retires a pending recovery decision and prevents its late reload response.
+
 `npm run check` passed with 25 functional files / 29 tests, strict type checks,
 lint, architecture and formatting. Current lockfile installation reported zero
 audit vulnerabilities. Installer construction and independent review are tracked

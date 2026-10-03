@@ -33,6 +33,7 @@ import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
 import type { TrayCoordinator } from './tray/coordinator';
 import { createDesktopTray } from './tray/desktop-tray';
 import { installDesktopMenu } from './windows/desktop-menu';
+import { installLastWindowPolicy } from './windows/last-window-policy';
 import { lifecycleServices } from './windows/lifecycle-services';
 import { observeOrdinaryWindowClosure } from './windows/overlay-windows';
 import { WindowLifecycle } from './windows/window-lifecycle';
@@ -193,6 +194,6 @@ app.on('before-quit', (event) => {
   shutdown.beforeQuit(event);
 });
 
-app.on('window-all-closed', () => {
-  if (tray?.available !== true && keyboard?.shortcuts.recoveryAvailable !== true) app.quit();
-});
+installLastWindowPolicy(
+  () => tray?.available === true || keyboard?.shortcuts.recoveryAvailable === true
+);
