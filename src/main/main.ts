@@ -1,5 +1,3 @@
-import path from 'node:path';
-
 import { app, ipcMain } from 'electron';
 
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
@@ -21,7 +19,7 @@ import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
 import type { StorageClient } from './storage/client';
 import { desktopStorage } from './storage/desktop-storage';
 import { LibraryMutations } from './storage/library-mutations';
-import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
+import { desktopTransferDialogs } from './storage/transfer/native-dialogs';
 import type { TrayCoordinator } from './tray/coordinator';
 import { createDesktopTray } from './tray/desktop-tray';
 import { trayUpdateAccess } from './tray/update-access';
@@ -117,10 +115,7 @@ if (primaryInstance)
       await settings.initialize();
       await warnStartupPreferences(settings, recovery);
       if (recovery.isActive()) return;
-      const dialogs = nativeTransferDialogs(
-        app.getPath('userData'),
-        path.join(app.getPath('userData'), 'promptly.sqlite')
-      );
+      const dialogs = desktopTransferDialogs();
 
       library = createLibraryServices(
         storage,
@@ -135,7 +130,8 @@ if (primaryInstance)
         library.capture.service,
         settings,
         dialogs.owner,
-        () => lifecycle
+        () => lifecycle,
+        keyboard.shortcuts
       );
       const recorders = recorderServices(keyboard.shortcuts);
 

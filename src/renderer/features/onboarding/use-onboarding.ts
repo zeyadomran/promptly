@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type { OnboardingState, OnboardingStep } from '../../../shared/contracts/onboarding';
+import type {
+  OnboardingDestination,
+  OnboardingState,
+  OnboardingStep
+} from '../../../shared/contracts/onboarding';
+import type { DesktopResult } from '../../../shared/contracts/result';
 
 export function useOnboarding() {
   const [state, setState] = useState<OnboardingState>();
@@ -19,36 +24,52 @@ export function useOnboarding() {
     live.current = true;
     const stop = window.promptlyOnboarding.subscribe(receive);
 
-    void window.promptly.getOnboardingState({}).then((result) => {
-      if (!live.current) return;
-      if (result.ok) receive(result.value);
-      else setError(result.error.message);
-    });
+    void window.promptly
+      .getOnboardingState({})
+      .then((result) => {
+        if (!live.current) return;
+        if (result.ok) receive(result.value);
+        else setError(result.error.message);
+      })
+      .catch(() => {
+        if (live.current) setError('Unable to read setup status. Reopen Promptly to try again.');
+      });
     return () => {
       live.current = false;
       stop();
     };
   }, [receive]);
 
-  const act = async (step: OnboardingStep | boolean) => {
-    if (busy.current) return;
-    busy.current = true;
-    setPending(true);
-    setError(undefined);
-    try {
-      const result =
-        typeof step === 'boolean'
-          ? await window.promptly.finishOnboarding({ skip: step })
-          : await window.promptly.setOnboardingStep({ step });
+  const perform = useCallback(
+    async (request: () => Promise<DesktopResult<OnboardingState>>) => {
+      if (busy.current) return;
+      busy.current = true;
+      setPending(true);
+      setError(undefined);
+      try {
+        const result = await request();
 
-      if (!live.current) return;
-      if (result.ok) receive(result.value);
-      else setError(result.error.message);
-    } finally {
-      busy.current = false;
-      if (live.current) setPending(false);
-    }
-  };
+        if (!live.current) return;
+        if (result.ok) receive(result.value);
+        else setError(result.error.message);
+      } catch {
+        if (live.current) setError('Unable to change setup. Try again.');
+      } finally {
+        busy.current = false;
+        if (live.current) setPending(false);
+      }
+    },
+    [receive]
+  );
+  const act = useCallback(
+    (step: OnboardingStep) => perform(() => window.promptly.setOnboardingStep({ step })),
+    [perform]
+  );
+  const finish = useCallback(
+    (skip: boolean, destination: OnboardingDestination = 'library') =>
+      perform(() => window.promptly.finishOnboarding({ skip, destination })),
+    [perform]
+  );
 
-  return { state, pending, error: error ?? state?.error, act };
+  return { state, pending, error: error ?? state?.error, act, finish };
 }

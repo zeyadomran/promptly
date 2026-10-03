@@ -1,4 +1,6 @@
-import { BrowserWindow, dialog, shell, webContents } from 'electron';
+import path from 'node:path';
+
+import { app, BrowserWindow, dialog, shell, webContents } from 'electron';
 
 import type { TransferOwner } from './requests';
 
@@ -18,6 +20,12 @@ function parent(owner: TransferOwner) {
 
   if (window === null || window.isDestroyed()) throw new Error('Originating window closed.');
   return window;
+}
+
+export function desktopTransferDialogs(): TransferDialogs {
+  const directory = app.getPath('userData');
+
+  return nativeTransferDialogs(directory, path.join(directory, 'promptly.sqlite'));
 }
 
 export function nativeTransferDialogs(directory: string, databaseFile: string): TransferDialogs {

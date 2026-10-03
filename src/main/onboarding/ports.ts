@@ -1,4 +1,5 @@
-import type { OnboardingState } from '../../shared/contracts/onboarding';
+import type { OnboardingDestination, OnboardingState } from '../../shared/contracts/onboarding';
+import type { ShortcutTestState } from '../../shared/contracts/shortcut-test';
 
 export interface OnboardingOwner {
   id: number;
@@ -9,5 +10,7 @@ export interface OnboardingOwner {
 }
 export interface OnboardingEffects {
   now: () => number;
-  openCompact: (ownerId: number) => Promise<void>;
+  complete: (ownerId: number, destination: OnboardingDestination) => Promise<void>;
+  startTest: (ownerId: number, publish: (state: ShortcutTestState) => void) => void;
+  stopTest: (ownerId: number) => void;
 }
