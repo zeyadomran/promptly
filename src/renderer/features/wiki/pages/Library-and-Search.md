@@ -27,9 +27,5 @@ discards the draft. If you move away with unsaved edits, respond to the draft ch
 continuing. The **More snippet actions** menu offers **Copy as Markdown**, **Duplicate**,
 and **Delete snippet**. Deleting a snippet offers temporary **Undo** feedback.
 
-**Open source application** is available only while Promptly can still verify the captured
-source. It may become unavailable after that source or helper closes; it does not promise
-to reopen a document or restore the original selection.
-
 See [Tags](https://github.com/zeyadomran/promptly/wiki/Tags) and
 [Keyboard Shortcuts](https://github.com/zeyadomran/promptly/wiki/Keyboard-Shortcuts).
