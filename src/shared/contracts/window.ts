@@ -19,5 +19,5 @@ export const windowRecoverySchema = z.strictObject({
 export type WindowRecoveryState = z.infer<typeof windowRecoverySchema>;
 export const focusSearchChannel = 'promptly:focus-search';
 export const shellNavigationChannel = 'promptly:shell-navigation';
-export const shellNavigationSchema = z.enum(['library', 'settings']);
+export const shellNavigationSchema = z.enum(['library', 'settings', 'wiki']);
 export type NativeShellView = z.infer<typeof shellNavigationSchema>;

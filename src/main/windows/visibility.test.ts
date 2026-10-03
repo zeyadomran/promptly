@@ -15,7 +15,6 @@ vi.stubGlobal('MAIN_WINDOW_VITE_NAME', 'main_window');
 it('keeps recording focus and a reachable window when its external recovery route disappears', async () => {
   const preferences = testSettings();
 
-  preferences.store.invoke('updateSettings', { onboardingComplete: true });
   await preferences.service.initialize();
   const fixture = shortcutFixture(
     (callback) => callback,
@@ -38,6 +37,9 @@ it('keeps recording focus and a reachable window when its external recovery rout
   );
 
   await lifecycle.show();
+  const tutorial = ControlledWindow.instances.at(-1);
+
+  await lifecycle.showWiki();
   const window = ControlledWindow.instances.at(-1);
 
   if (window === undefined) throw new Error('Expected owned window.');
@@ -49,6 +51,12 @@ it('keeps recording focus and a reachable window when its external recovery rout
   };
 
   try {
+    expect(window).not.toBe(tutorial);
+    expect(window.webContents.sent.at(-1)).toEqual({
+      channel: 'promptly:shell-navigation',
+      payload: 'wiki'
+    });
+    expect(tutorial?.isDestroyed()).toBe(false);
     const settings = await lifecycle.show('settings');
 
     expect(settings).toBe(window);
@@ -153,5 +161,6 @@ it('keeps recording focus and a reachable window when its external recovery rout
     await preferences.service.close();
     preferences.store.dispose();
     window.destroy();
+    tutorial?.destroy();
   }
 });

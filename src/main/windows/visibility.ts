@@ -18,3 +18,11 @@ export function concealWindow(
   if (canRecover(recovery)) window.hide();
   else window.minimize();
 }
+
+export function restoreWindow(window: BrowserWindow | undefined): void {
+  if (window === undefined || window.isDestroyed())
+    throw new Error('Promptly cannot restore its window.');
+  if (window.isMinimized()) window.restore();
+  window.show();
+  if (!window.isVisible()) throw new Error('Promptly could not restore its window.');
+}
