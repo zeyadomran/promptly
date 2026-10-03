@@ -5,7 +5,8 @@ import { useApplicationInfo } from '../hooks/use-application-info';
 import { StorageRow } from '../storage/StorageRow';
 
 export function ApplicationSettings() {
-  const { version, versionError, linkError, opening, openRepository } = useApplicationInfo();
+  const { version, versionError, linkError, opening, openRepository, openWiki } =
+    useApplicationInfo();
 
   return (
     <section className="application-settings" aria-label="Version and updates">
@@ -33,6 +34,21 @@ export function ApplicationSettings() {
             }}
           >
             Open repository
+            <ExternalLink aria-hidden="true" />
+          </a>
+        </Button>
+      </StorageRow>
+      <StorageRow label="Wiki" description="Read the Promptly user guide.">
+        <Button variant="outline" asChild>
+          <a
+            href="https://github.com/zeyadomran/promptly/wiki"
+            aria-disabled={opening}
+            onClick={(event) => {
+              event.preventDefault();
+              void openWiki();
+            }}
+          >
+            Open wiki
             <ExternalLink aria-hidden="true" />
           </a>
         </Button>
