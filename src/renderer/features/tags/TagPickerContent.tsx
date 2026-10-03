@@ -102,7 +102,6 @@ export function TagPickerContent({
               <TagPickerItem
                 key={tag.id}
                 tag={tag}
-                filter={state.targetId === null}
                 selected={selectedIds.includes(tag.id)}
                 disabled={disabled || (!selectedIds.includes(tag.id) && selectedIds.length >= 100)}
                 toggle={() => {

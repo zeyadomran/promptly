@@ -140,17 +140,6 @@
   outline-offset: -1.5px;
   box-shadow: var(--focus-shadow);
 }
-.tag-picker-remove {
-  color: var(--muted-foreground);
-}
-.tag-picker-add {
-  color: var(--muted-foreground);
-  opacity: 0;
-}
-.tag-command-item:hover .tag-picker-add,
-.tag-command-item[data-selected='true'] .tag-picker-add {
-  opacity: 1;
-}
 .tag-picker .tag-command-search {
   margin: 6px;
   padding: 0 6px;
