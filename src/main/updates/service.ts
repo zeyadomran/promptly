@@ -27,7 +27,7 @@ export class UpdateService {
       revision: 0,
       status: ports.available ? 'idle' : 'unavailable',
       message: ports.available
-        ? 'Checks on startup. Updates are always your choice.'
+        ? 'Checks whenever Promptly opens. Updates are always your choice.'
         : 'Updates are available in the installed Windows app.',
       focusRequest: 0
     };
@@ -50,7 +50,10 @@ export class UpdateService {
     if (
       this.closed ||
       !this.ports.available ||
-      ['checking', 'updating', 'ready'].includes(this.current.status)
+      ['checking', 'updating', 'ready'].includes(this.current.status) ||
+      // Automatic window-open checks must preserve an explicit retry action.
+      (notify &&
+        (this.current.retryOperation === 'install' || this.current.retryOperation === 'restart'))
     )
       return this.state;
     this.set({

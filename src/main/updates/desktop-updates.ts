@@ -18,6 +18,7 @@ export function createDesktopUpdates(
 ) {
   let notification: Notification | undefined;
   let startup: ReturnType<typeof setTimeout> | undefined;
+  let firstOpen = true;
   const updaterError = () => {
     console.warn('Unable to complete the Windows update.');
   };
@@ -75,14 +76,17 @@ export function createDesktopUpdates(
     restart: () => {
       service.restart();
     },
-    start: () => {
+    windowOpened: () => {
+      if (startup !== undefined) return;
       // Squirrel holds an installation lock briefly on --squirrel-firstrun.
       startup = setTimeout(
         () => {
+          startup = undefined;
           void service.check(true);
         },
-        process.argv.includes('--squirrel-firstrun') ? 10_000 : 0
+        firstOpen && process.argv.includes('--squirrel-firstrun') ? 10_000 : 0
       );
+      firstOpen = false;
     },
     close: () => {
       clearTimeout(startup);

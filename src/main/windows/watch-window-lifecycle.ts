@@ -9,6 +9,7 @@ export function watchWindowLifecycle(
   window: BrowserWindow,
   kind: WindowKind,
   owner: {
+    opened: () => void;
     closing: () => boolean;
     recovery: WindowRecovery;
     hide: () => void;
@@ -18,6 +19,12 @@ export function watchWindowLifecycle(
     error: (error: unknown) => void;
   }
 ) {
+  const opened = () => {
+    if (!owner.closing()) owner.opened();
+  };
+
+  window.on('show', opened);
+  window.on('restore', opened);
   window.on('close', (event) => {
     if (owner.closing() || kind !== 'main') return;
     event.preventDefault();

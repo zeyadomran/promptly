@@ -42,7 +42,7 @@ Add functional coverage when its behavior is implemented; absent features have n
 
 The onboarding keyboard flow in `renderer/features/onboarding/onboarding-keyboard.test.ts` covers Enter/Back navigation and theme choices while preserving editor, control, overlay, recorder and IME ownership. The shortcut and onboarding service flows also cover owned non-saving detection, real tap intervals, timer expiry, retirement, captured previews and durable completion destinations without changing the selected window size.
 
-The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, retry, concurrent requests and shutdown. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
+The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, preservation of pending retry actions during automatic checks, concurrent requests and shutdown. The window visibility flow verifies that opening or restoring the window refreshes update availability without checking again for navigation inside an already visible window. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
 
 The renderer update-stream flow in `renderer/features/settings/hooks/updates-store.test.ts` covers shared stream ownership, stale initial reads, shutdown and routing retries to the failed IPC operation. The service flow also validates optional provider progress; the Windows Squirrel adapter has no progress event and stays indeterminate.
 
