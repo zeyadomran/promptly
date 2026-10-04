@@ -2,6 +2,8 @@
 
 CI uses functional service tests, strict static checks and actual unsigned Windows x64 installer construction. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Functional tests run once on Windows CI, alongside static checks and packaging.
 
+CI gives each functional test 15 seconds for real filesystem and SQLite work on shared Windows runners; local runs retain Vitest's five-second timeout. This is a test-runner timeout, not an application performance requirement or a change to production deadlines.
+
 Keep application modules real and observe public service outcomes. Use a real owned SQLite database for persistence and reopen it to verify durable state. Inject external OS, time or database failure boundaries when necessary; avoid private-method, call-count and own-module mock assertions. Keep temporary files isolated and close owned providers/databases before deletion.
 
 ## TDD
