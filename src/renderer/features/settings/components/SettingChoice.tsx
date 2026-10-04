@@ -1,5 +1,6 @@
 import type { SettingsPatch } from '../../../../shared/contracts/settings';
-import { ToggleGroup, ToggleGroupItem } from '../../../components/ui/toggle-group';
+import { SegmentedControl } from '../../../components/shared/SegmentedControl';
+import { ToggleGroupItem } from '../../../components/ui/toggle-group';
 import { usePreferenceMutation } from '../hooks/use-preference-mutation';
 import { SettingsRow } from './SettingsRow';
 
@@ -24,9 +25,9 @@ export function SettingChoice({
       description={description}
       {...(mutation.error === undefined ? {} : { error: mutation.error })}
     >
-      <ToggleGroup
-        type="single"
+      <SegmentedControl
         value={value}
+        aria-label={label}
         aria-busy={mutation.pending}
         aria-disabled={mutation.pending}
         className="settings-choice"
@@ -42,7 +43,7 @@ export function SettingChoice({
             {choice.label}
           </ToggleGroupItem>
         ))}
-      </ToggleGroup>
+      </SegmentedControl>
     </SettingsRow>
   );
 }
