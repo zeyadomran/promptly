@@ -75,7 +75,6 @@ export class StorageEngine {
       setTagMembership: (input) => tags.membership(input),
       updateTag: (input) => tags.update(input),
       deleteTag: (input) => tags.delete(input),
-      mergeTags: (input) => tags.merge(input),
       setSnippetTags: (input) => tags.set(input)
     };
   }
@@ -147,7 +146,6 @@ export class StorageEngine {
       'setTagMembership',
       'ensureTag',
       'deleteTag',
-      'mergeTags',
       'clearLibrary',
       'commitLibraryImport'
     ];

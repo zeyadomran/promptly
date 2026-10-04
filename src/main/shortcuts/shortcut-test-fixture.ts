@@ -6,7 +6,8 @@ import { Shortcuts } from './service';
 export function shortcutFixture(
   spy: <T extends (...arguments_: never[]) => unknown>(callback: T) => T,
   platform: NodeJS.Platform = 'win32',
-  onRecovery: () => void = () => undefined
+  onRecovery: () => void = () => undefined,
+  scheduleTest?: (callback: () => void, delay: number) => () => void
 ) {
   const registered = new Map<string, () => void>();
   const failures = new Set<string>();
@@ -37,7 +38,7 @@ export function shortcutFixture(
     stop: spy(() => Promise.resolve())
   };
   const recover = spy(onRecovery);
-  const shortcuts = new Shortcuts(api, commands, platform, recover);
+  const shortcuts = new Shortcuts(api, commands, platform, recover, scheduleTest);
 
   shortcuts.attachHook(hook);
   const settings = {

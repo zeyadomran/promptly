@@ -55,7 +55,7 @@ export function RetryShortcuts({
           void retry();
         }}
       >
-        {pending ? 'Retrying…' : 'Retry unavailable shortcuts'}
+        {pending ? 'Retrying' : 'Retry unavailable shortcuts'}
       </Button>
       <p role="status">
         {message ??

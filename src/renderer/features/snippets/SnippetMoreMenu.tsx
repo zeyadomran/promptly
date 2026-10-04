@@ -1,7 +1,8 @@
-import { MoreHorizontal } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { CopyPlus, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 
 import type { Snippet } from '../../../shared/contracts/domain';
+import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { Button } from '../../components/ui/button';
 import {
   DropdownMenu,
@@ -13,43 +14,21 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
+import { usePreferences } from '../settings/settings-context';
+import { useShellNavigation } from '../window-chrome/shell-navigation';
 
 export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
+  const { view } = useShellNavigation();
+  const [open, setOpen] = useState(false);
   const commands = useLibraryCommands();
   const { model } = useLibrary();
-  const [source, setSource] = useState({
-    snippet,
-    available: false,
-    explanation: 'Checking source availability…'
-  });
-  // A new committed snapshot retires availability before the refresh effect runs.
-  const sourceReady = source.snippet === snippet;
+  const { settings } = usePreferences();
+  const deleteShortcut = shortcutLabel(settings.localShortcuts.delete, window.promptly.platform)
+    .replace('DELETE', 'Del')
+    .replace('BACKSPACE', 'Backspace')
+    .replace('TAB', 'Tab');
   const [pending, setPending] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-
-    void window.promptly
-      .getSnippetSource({ id: snippet.id })
-      .then((result) => {
-        if (active)
-          setSource({
-            snippet,
-            ...(result.ok ? result.value : { available: false, explanation: result.error.message })
-          });
-      })
-      .catch(() => {
-        if (active)
-          setSource({
-            snippet,
-            available: false,
-            explanation: 'Unable to verify the source application.'
-          });
-      });
-    return () => {
-      active = false;
-    };
-  }, [snippet]);
   const duplicate = async () => {
     if (!eligible || pending) return;
     setPending(true);
@@ -66,7 +45,7 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={view === 'library' && open} onOpenChange={setOpen}>
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger asChild>
@@ -82,54 +61,46 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
         </TooltipTrigger>
         <TooltipContent>More snippet actions</TooltipContent>
       </Tooltip>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          disabled={!eligible}
-          onSelect={() => {
-            void commands?.copy(snippet.id, 'markdown');
+      {view === 'library' && (
+        <DropdownMenuContent
+          align="end"
+          onCloseAutoFocus={(event) => {
+            if (document.querySelector('[data-shell-library][hidden]') !== null)
+              event.preventDefault();
           }}
         >
-          Copy as Markdown
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={!eligible || pending}
-          onSelect={() => {
-            void duplicate();
-          }}
-        >
-          Duplicate
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          disabled={!eligible || !sourceReady || !source.available}
-          onSelect={() => {
-            void window.promptly
-              .openSnippetSource({ id: snippet.id })
-              .then((result) => {
-                if (!result.ok) commands?.report(result.error.message);
-              })
-              .catch(() => {
-                commands?.report('Unable to open the source application.');
-              });
-          }}
-        >
-          Open source application
-        </DropdownMenuItem>
-        {(!sourceReady || !source.available) && (
-          <p className="snippet-source-explanation">
-            {sourceReady ? source.explanation : 'Checking source availability…'}
-          </p>
-        )}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          variant="destructive"
-          disabled={!eligible}
-          onSelect={() => {
-            void commands?.deleteSelected();
-          }}
-        >
-          Delete snippet
-        </DropdownMenuItem>
-      </DropdownMenuContent>
+          <DropdownMenuItem
+            disabled={!eligible}
+            onSelect={() => {
+              void commands?.copy(snippet.id, 'markdown');
+            }}
+          >
+            <FileCode aria-hidden="true" />
+            Copy as Markdown
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!eligible || pending}
+            onSelect={() => {
+              void duplicate();
+            }}
+          >
+            <CopyPlus aria-hidden="true" />
+            Duplicate
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            variant="destructive"
+            disabled={!eligible}
+            onSelect={() => {
+              void commands?.deleteSelected();
+            }}
+          >
+            <Trash2 aria-hidden="true" />
+            Delete snippet
+            <span className="menu-shortcut">{deleteShortcut}</span>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      )}
     </DropdownMenu>
   );
 }

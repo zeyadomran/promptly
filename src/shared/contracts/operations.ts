@@ -16,12 +16,17 @@ import {
   tagSummarySchema
 } from './domain';
 import { loginStatusSchema } from './login-status';
-import { onboardingStateSchema, onboardingStepSchema } from './onboarding';
+import {
+  onboardingDestinationSchema,
+  onboardingStateSchema,
+  onboardingStepSchema
+} from './onboarding';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
 import { snippetSourceSchema } from './snippet-source';
 import { updateOperations } from './updates';
+import { wikiPageIdSchema, wikiResourceSchema } from './wiki';
 import {
   sizeModeSchema,
   windowKindSchema,
@@ -43,6 +48,14 @@ export const operations = {
   },
   openRepository: { request: emptySchema, response: emptySchema },
   openWiki: { request: emptySchema, response: emptySchema },
+  openWikiPageEditor: {
+    request: z.strictObject({ page: wikiPageIdSchema }),
+    response: emptySchema
+  },
+  openWikiResource: {
+    request: z.strictObject({ resource: wikiResourceSchema }),
+    response: emptySchema
+  },
   openPrivacyPolicy: { request: emptySchema, response: emptySchema },
   getOnboardingState: { request: emptySchema, response: onboardingStateSchema },
   setOnboardingStep: {
@@ -50,7 +63,10 @@ export const operations = {
     response: onboardingStateSchema
   },
   finishOnboarding: {
-    request: z.strictObject({ skip: z.boolean() }),
+    request: z.strictObject({
+      skip: z.boolean(),
+      destination: onboardingDestinationSchema.optional()
+    }),
     response: onboardingStateSchema
   },
   getWindowState: { request: emptySchema, response: windowStateSchema },
@@ -119,12 +135,6 @@ export const operations = {
     response: tagSnapshotSchema
   },
   deleteTag: { request: idRequestSchema, response: revisionResponseSchema },
-  mergeTags: {
-    request: z
-      .strictObject({ sourceId: idSchema, targetId: idSchema })
-      .refine((request) => request.sourceId !== request.targetId),
-    response: revisionResponseSchema
-  },
   getSettings: { request: emptySchema, response: settingsSnapshotSchema },
   getLoginStatus: { request: emptySchema, response: loginStatusSchema },
   updateSettings: { request: settingsPatchSchema, response: settingsSnapshotSchema },

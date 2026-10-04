@@ -1,18 +1,23 @@
-import { ExternalLink } from 'lucide-react';
+import { BookOpen, ExternalLink } from 'lucide-react';
 
 import { Button } from '../../../components/ui/button';
+import { useShellNavigation } from '../../window-chrome/shell-navigation';
 import { useApplicationInfo } from '../hooks/use-application-info';
 import { StorageRow } from '../storage/StorageRow';
 import { UpdateSettings } from './UpdateSettings';
 
 export function ApplicationSettings() {
-  const { version, versionError, linkError, opening, openRepository, openWiki, openPrivacyPolicy } =
+  const { version, versionError, linkError, opening, openRepository, openPrivacyPolicy } =
     useApplicationInfo();
+
+  const { showWiki } = useShellNavigation();
 
   return (
     <section className="application-settings" aria-label="Version and updates">
       <StorageRow label="Version" description="The version of Promptly running on your computer.">
-        <span>{version ?? (versionError === undefined ? 'Reading version' : 'Unavailable')}</span>
+        <span className="application-version">
+          {version ?? (versionError === undefined ? 'Reading version' : 'Unavailable')}
+        </span>
       </StorageRow>
       {versionError !== undefined && (
         <p className="settings-row-error" role="alert">
@@ -20,6 +25,12 @@ export function ApplicationSettings() {
         </p>
       )}
       <UpdateSettings />
+      <StorageRow label="Wiki" description="Read the Promptly user guide.">
+        <Button variant="outline" onClick={showWiki}>
+          <BookOpen aria-hidden="true" />
+          Open wiki
+        </Button>
+      </StorageRow>
       <StorageRow label="GitHub" description="View the source code and report issues.">
         <Button variant="outline" asChild>
           <a
@@ -31,21 +42,6 @@ export function ApplicationSettings() {
             }}
           >
             Open repository
-            <ExternalLink aria-hidden="true" />
-          </a>
-        </Button>
-      </StorageRow>
-      <StorageRow label="Wiki" description="Read the Promptly user guide.">
-        <Button variant="outline" asChild>
-          <a
-            href="https://github.com/zeyadomran/promptly/wiki"
-            aria-disabled={opening}
-            onClick={(event) => {
-              event.preventDefault();
-              void openWiki();
-            }}
-          >
-            Open wiki
             <ExternalLink aria-hidden="true" />
           </a>
         </Button>

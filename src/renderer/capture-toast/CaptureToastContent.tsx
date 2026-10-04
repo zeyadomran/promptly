@@ -1,3 +1,5 @@
+import { Info, TriangleAlert } from 'lucide-react';
+
 import type { CaptureToast } from '../../shared/contracts/capture-toast';
 import logo from '../assets/brand/logo.svg';
 import darkLogo from '../assets/brand/logo-on-dark.svg';
@@ -30,8 +32,32 @@ export function CaptureToastContent({ confirmation }: { confirmation: CaptureToa
           window.promptlyConfirmation.activate(confirmation.version);
         }}
       >
-        <img className="confirmation-logo logo-light" src={logo} alt="" width="20" height="20" />
-        <img className="confirmation-logo logo-dark" src={darkLogo} alt="" width="20" height="20" />
+        {confirmation.status === 'saved' ? (
+          <>
+            <img
+              className="confirmation-logo logo-light"
+              src={logo}
+              alt=""
+              width="20"
+              height="20"
+            />
+            <img
+              className="confirmation-logo logo-dark"
+              src={darkLogo}
+              alt=""
+              width="20"
+              height="20"
+            />
+          </>
+        ) : confirmation.status === 'failed' ? (
+          <TriangleAlert
+            className="confirmation-status confirmation-failed"
+            aria-hidden="true"
+            size={16}
+          />
+        ) : (
+          <Info className="confirmation-status" aria-hidden="true" size={16} />
+        )}
         <span className="confirmation-content">
           <span className="confirmation-heading">
             <strong>{title}</strong>
@@ -41,7 +67,9 @@ export function CaptureToastContent({ confirmation }: { confirmation: CaptureToa
             className="confirmation-preview"
             id={`capture-preview-${String(confirmation.version)}`}
           >
-            {confirmation.preview}
+            {confirmation.status === 'duplicate'
+              ? 'This exact text is in your library.'
+              : confirmation.preview}
           </span>
         </span>
       </button>

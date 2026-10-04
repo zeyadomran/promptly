@@ -3,6 +3,9 @@
   gap: 16px;
   min-width: 0;
 }
+.settings-card > .tag-management {
+  padding: 12px 16px;
+}
 .tag-management p {
   margin: 0;
   color: var(--muted-foreground);
@@ -73,53 +76,16 @@
 .tag-management-field {
   font-size: 13px;
 }
-.tag-management-colors {
-  flex-wrap: wrap;
-  justify-content: flex-start;
-}
-.tag-management-swatch {
-  display: block;
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-}
-.tag-management-custom-color {
-  display: grid;
-  grid-template-columns: 80px minmax(0, 1fr);
-  gap: 12px;
-  align-items: start;
-}
-.tag-management-color-input {
-  width: 100%;
-  height: 36px;
-  padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--background);
-  cursor: pointer;
-}
-.tag-management-color-input:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
-.tag-management-color-input:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-.tag-management-select {
-  width: 100%;
-  min-width: 0;
-  padding: 9px 12px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--background);
-  color: var(--foreground);
-}
-.tag-management-select:focus-visible {
-  outline: 2px solid var(--ring);
-  outline-offset: 2px;
-}
 @media (width < 640px) {
+  .settings-window .tag-management-toolbar > p {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
   .tag-management-toolbar {
     align-items: flex-start;
   }
@@ -134,4 +100,24 @@
     padding-top: 12px;
     padding-bottom: 12px;
   }
+}
+
+[data-slot='popover-content'].tag-custom-color-popover {
+  width: 220px;
+  max-width: calc(100vw - 16px);
+  max-height: var(--radix-popover-content-available-height);
+  overflow: auto;
+  padding: 12px;
+}
+.tag-custom-color-editor {
+  display: grid;
+  gap: 8px;
+}
+.tag-custom-color-editor p {
+  margin: 0;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+.tag-custom-color-editor input {
+  font-family: 'Geist Mono', monospace;
 }

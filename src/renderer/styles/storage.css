@@ -2,6 +2,14 @@
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.storage-row .settings-field-control {
+  display: flex;
+  justify-content: flex-end;
+  width: auto;
+  max-width: 100%;
+  margin-left: auto;
 }
 .storage-row [data-slot='field-description'] {
   overflow-wrap: anywhere;

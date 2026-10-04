@@ -84,18 +84,6 @@ export class TagRepository {
     return { revision: this.reader.context.revision() };
   }
 
-  merge(input: StorageRequest<'mergeTags'>) {
-    this.get(input.sourceId);
-    this.get(input.targetId);
-    this.reader.context.db
-      .prepare(
-        `INSERT OR IGNORE INTO snippet_tags (snippetId, tagId)
-      SELECT snippetId, ? FROM snippet_tags WHERE tagId = ?`
-      )
-      .run(input.targetId, input.sourceId);
-    return this.delete({ id: input.sourceId });
-  }
-
   set(input: StorageRequest<'setSnippetTags'>) {
     this.reader.get(input.id);
     const ids = [...new Set(input.tagIds)];

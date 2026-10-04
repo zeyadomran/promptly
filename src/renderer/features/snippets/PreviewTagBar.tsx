@@ -5,6 +5,7 @@ import { Badge } from '../../components/ui/badge';
 import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryTagActions } from '../library/library-commands';
+import { useLibrary } from '../library/library-context';
 import { TagBadge } from '../tags/TagBadge';
 import { TagOverflowRow } from '../tags/TagOverflowRow';
 import { PreviewMetadata } from './PreviewMetadata';
@@ -13,7 +14,12 @@ import { useSnippetSession } from './snippet-context';
 export function PreviewTagBar({ snippet }: { snippet: Snippet }) {
   const tags = useLibraryTagActions();
   const { state } = useSnippetSession();
-  const disabled = tags === undefined || state.loading || (tags.busy ?? false);
+  const { state: library } = useLibrary();
+  const disabled =
+    tags === undefined ||
+    state.loading ||
+    library.selectedId !== snippet.id ||
+    (tags.busy ?? false);
   const open = (element: HTMLElement) => {
     tags?.editSelectedTags(snippet.id, element);
   };

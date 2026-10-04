@@ -32,7 +32,6 @@ export const storageOperations = {
   createTag: operations.createTag,
   updateTag: operations.updateTag,
   deleteTag: operations.deleteTag,
-  mergeTags: operations.mergeTags,
   captureSnippet: { request: captureInputSchema, response: captureResultSchema },
   recordSuccessfulCopy: { request: operations.getSnippet.request, response: snippetSnapshotSchema },
   clearLibrary: { request: operations.listTags.request, response: revisionSnapshotSchema },

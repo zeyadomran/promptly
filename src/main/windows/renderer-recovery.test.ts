@@ -34,37 +34,12 @@ it('keeps an unresponsive renderer until a deliberate decision and reopens saved
   desktopBoundary.app.on('before-quit', retire);
 
   try {
-    const settings = await lifecycle.show('settings');
-
-    window.minimize();
-    expect(() => {
-      settings.close();
-    }).not.toThrow();
-    expect(settings.isDestroyed()).toBe(true);
-    await Promise.resolve();
-    expect(window.isMinimized()).toBe(false);
-    expect(window.isVisible()).toBe(true);
-    expect(window.isFocused()).toBe(true);
-    const stalledSettings = await lifecycle.show('settings');
-
-    stalledSettings.emit('unresponsive');
-    const settingsDecision = notices.at(-1);
-    const recoveringSettings = lifecycle.show('settings');
-
-    expect(() => {
-      stalledSettings.close();
-    }).not.toThrow();
-    expect(settingsDecision?.signal?.aborted).toBe(true);
-    answerDialog(1);
-    await expect(recoveringSettings).rejects.toThrow('Window closed during renderer recovery.');
-    expect(await lifecycle.show()).toBe(window);
-    const returningSettings = await lifecycle.show('settings');
-
+    expect(await lifecycle.show('settings')).toBe(window);
     expect(await lifecycle.services.returnToMainWindow({})).toMatchObject({
       ok: true,
       value: { kind: 'main', visible: true }
     });
-    expect(returningSettings.isDestroyed()).toBe(true);
+    expect(window.isDestroyed()).toBe(false);
     expect(desktopBoundary.app.quitting).toBe(false);
     window.emit('unresponsive');
     expect(notices.at(-1)?.message).toBe('This Promptly window is not responding.');

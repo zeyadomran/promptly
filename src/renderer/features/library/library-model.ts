@@ -3,7 +3,9 @@ import type { SearchPage, SearchRequest } from '../../../shared/contracts/domain
 import type { DesktopError, DesktopResult } from '../../../shared/contracts/result';
 import { createSearchClient } from '../../lib/desktop-client';
 import { LibraryCursor } from './library-cursor';
+import { failLibraryDisplay, retainLibraryDisplay } from './library-display';
 import { initialLibraryState } from './library-state';
+import { applyLibrarySummary } from './library-summary';
 import { initialQuery, PAGE_SIZE, sameQuery } from './page-cache';
 
 type LibraryBridge = Pick<DesktopBridge, 'searchSnippets' | 'subscribeChanges' | 'listTags'>;
@@ -61,6 +63,7 @@ export class LibraryModel {
     this.connect();
     this.cursor.invalidate(this.state);
     this.state.cache.clear();
+    this.state.retained = undefined;
     this.state.loading = true;
     this.publish();
     void this.refreshSummary();
@@ -75,27 +78,15 @@ export class LibraryModel {
     ]);
 
     if (this.closed || version !== this.summaryVersion) return;
-    if (total.ok) this.state.unfilteredTotal = total.value.total;
-    else this.state.error = total.error;
-    if (tags.ok) {
-      this.state.tags = tags.value.tags;
-      const available = new Set(tags.value.tags.map((tag) => tag.id));
-      const tagIds = this.state.request.tagIds.filter((id) => available.has(id));
-
-      if (tagIds.length !== this.state.request.tagIds.length) {
-        // Retain the cursor's desired snippet while removing filters deleted by another writer.
-        this.state.request = { ...this.state.request, tagIds };
-        this.invalidate();
-      }
-    } else this.state.error = tags.error;
+    if (applyLibrarySummary(this.state, total, tags)) this.invalidate();
     this.publish();
   }
 
-  /** Typed input retires rows immediately and queries after a short idle interval. */
+  /** Retire commands immediately; retain the display until the idle query settles. */
   query(request: SearchRequest, debounce = false): void {
     this.cancelSearchTimer();
+    retainLibraryDisplay(this.state);
     this.state.request = { ...request, offset: 0, limit: PAGE_SIZE };
-    this.state.cache.clear();
     this.state.selectedId = null;
     this.state.selectedIndex = -1;
     this.state.total = 0;
@@ -105,12 +96,12 @@ export class LibraryModel {
     if (debounce && request.query.length > 0) {
       this.searchTimer = setTimeout(() => {
         this.searchTimer = undefined;
-        this.ensure(0);
+        void this.fetch(0);
       }, 200);
     }
 
     this.publish();
-    if (this.searchTimer === undefined) this.ensure(0);
+    if (this.searchTimer === undefined) void this.fetch(0);
   }
 
   private cancelSearchTimer(): void {
@@ -119,15 +110,20 @@ export class LibraryModel {
   }
 
   private invalidate(): void {
+    retainLibraryDisplay(this.state);
     this.cursor.invalidate(this.state);
-    this.state.cache.clear();
     this.state.loading = true;
     this.publish();
     void this.fetch(0);
   }
 
   ensure(index: number): void {
-    if (this.closed || this.state.cache.at(index) !== undefined) return;
+    if (
+      this.closed ||
+      this.state.retained !== undefined ||
+      this.state.cache.at(index) !== undefined
+    )
+      return;
     if (this.cursor.desiredId !== null) return;
     void this.fetch(index);
   }
@@ -142,7 +138,11 @@ export class LibraryModel {
   select(id: string, index: number): boolean {
     const accepted = this.cursor.select(this.state, id, index);
 
-    if (accepted) this.publish();
+    if (accepted) {
+      this.state.retained = undefined;
+      this.publish();
+    }
+
     return accepted;
   }
 
@@ -153,7 +153,7 @@ export class LibraryModel {
   }
 
   moveSelection(delta: number): Promise<void> {
-    if (this.state.total === 0) return Promise.resolve();
+    if (this.state.retained !== undefined || this.state.total === 0) return Promise.resolve();
     this.state.revealVersion += 1;
 
     const missing = this.cursor.move(this.state, delta);
@@ -167,9 +167,7 @@ export class LibraryModel {
       return;
     this.state.loading = false;
     if (!result.ok) {
-      this.state.error = result.error;
-      this.state.selectedId = null;
-      this.state.selectedIndex = -1;
+      failLibraryDisplay(this.state, result.error);
       this.publish();
       return;
     }
@@ -181,6 +179,8 @@ export class LibraryModel {
     this.state.error = undefined;
     const next = this.cursor.settle(this.state, page, changed);
 
+    if (next === undefined) this.state.retained = undefined;
+    else this.state.loading = this.state.retained !== undefined;
     if (next !== undefined) void this.fetch(next);
     this.publish();
   }

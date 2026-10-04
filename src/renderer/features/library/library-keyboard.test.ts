@@ -28,8 +28,8 @@ it('routes library navigation and copy while preserving text, IME, and overlay o
   expect(
     libraryKeyCommand({ ...input, active: false, focus: 'library', key: 'Delete' })
   ).toBeUndefined();
-  expect(libraryKeyCommand({ ...input, active: false, ctrl: true, key: ',' })).toBe('settings');
-  expect(libraryKeyCommand({ ...input, active: false, key: 'Escape' })).toBe('hide');
+  expect(libraryKeyCommand({ ...input, active: false, ctrl: true, key: ',' })).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, active: false, key: 'Escape' })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, repeat: true, key: 'ArrowDown' })).toBe('next');
   expect(libraryKeyCommand({ ...input, key: 'ArrowDown' })).toBe('next');
   expect(libraryKeyCommand({ ...input, key: 'Delete' })).toBeUndefined();

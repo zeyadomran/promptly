@@ -3,8 +3,10 @@ import { useRef } from 'react';
 
 import type { TagSummary } from '../../../shared/contracts/domain';
 import { tagInputNameSchema } from '../../../shared/contracts/domain';
+import { ShortcutKey } from '../../components/shared/ShortcutKey';
 import { Button } from '../../components/ui/button';
-import { Command, CommandEmpty, CommandGroup, CommandList } from '../../components/ui/command';
+import { Checkbox } from '../../components/ui/checkbox';
+import { Command, CommandGroup, CommandList } from '../../components/ui/command';
 import { CommandInput } from '../../components/ui/command-input';
 import { CommandItem } from '../../components/ui/command-item';
 import { PopoverContent } from '../../components/ui/popover-content';
@@ -37,6 +39,7 @@ export function TagPickerContent({
   const name = tagInputNameSchema.safeParse(state.query);
   const create = name.success && !tags.some((tag) => tag.name === name.data);
   const disabled = state.loading || state.busy;
+  const matches = picker.matches(tags);
 
   return (
     <PopoverContent
@@ -94,11 +97,11 @@ export function TagPickerContent({
           }}
         />
         <CommandList aria-busy={disabled}>
-          <CommandEmpty>No matching tags.</CommandEmpty>
-          <CommandGroup
-            heading={state.targetId === null ? 'Filter tags (match all)' : 'Snippet tags'}
-          >
-            {picker.matches(tags).map((tag) => (
+          {!state.loading && matches.length === 0 && (
+            <p className="tag-picker-empty">No matching tags.</p>
+          )}
+          <CommandGroup heading={state.targetId === null ? 'Match all of' : 'Snippet tags'}>
+            {matches.map((tag) => (
               <TagPickerItem
                 key={tag.id}
                 tag={tag}
@@ -114,15 +117,31 @@ export function TagPickerContent({
           {state.targetId === null &&
             (state.query.trim() === '' ||
               'untagged'.includes(state.query.trim().toLowerCase())) && (
-              <CommandGroup heading="Other filters">
+              <CommandGroup className="tag-picker-other">
                 <CommandItem value="untagged" onSelect={chooseUntagged} disabled={disabled}>
+                  <Checkbox
+                    checked={untagged}
+                    tabIndex={-1}
+                    disabled={disabled}
+                    aria-label="Filter untagged snippets"
+                    onCheckedChange={chooseUntagged}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+                    }}
+                    onKeyUp={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') event.stopPropagation();
+                    }}
+                  />
+                  <span className="tag-picker-untagged-dot" aria-hidden="true" />
                   <span className="tag-picker-name">Untagged</span>
-                  {untagged && <span>Selected</span>}
                 </CommandItem>
               </CommandGroup>
             )}
           {create && (
-            <CommandGroup heading="Create tag">
+            <CommandGroup>
               <CommandItem
                 value="create-tag"
                 disabled={disabled}
@@ -131,7 +150,8 @@ export function TagPickerContent({
                 }}
               >
                 <Plus aria-hidden="true" size={14} />
-                <span className="tag-picker-name">Create tag '{name.data}'</span>
+                <span className="tag-picker-name">Create tag “{name.data}”</span>
+                <span className="menu-shortcut">Enter</span>
               </CommandItem>
             </CommandGroup>
           )}
@@ -142,8 +162,8 @@ export function TagPickerContent({
           {disabled
             ? 'Updating tags…'
             : state.targetId === null
-              ? String(selectedIds.length) + ' selected'
-              : 'Changes save immediately.'}
+              ? String(selectedIds.length + Number(untagged)) + ' selected'
+              : 'Changes save immediately'}
         </span>
         {state.targetId === null && (
           <Button
@@ -154,6 +174,11 @@ export function TagPickerContent({
           >
             Clear
           </Button>
+        )}
+        {state.targetId !== null && (
+          <span>
+            <ShortcutKey>esc</ShortcutKey> close
+          </span>
         )}
       </div>
       {state.query.trim() !== '' && !name.success && (

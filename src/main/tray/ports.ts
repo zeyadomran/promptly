@@ -1,8 +1,10 @@
 export interface TrayItem {
+  command?: 'open';
   label?: string;
   type?: 'separator' | 'checkbox';
   checked?: boolean;
   enabled?: boolean;
+  shortcut?: string;
   run?: () => Promise<void>;
 }
 

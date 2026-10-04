@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { BrowserWindow, nativeTheme, screen, session } from 'electron';
+import { BrowserWindow, screen, session } from 'electron';
 
 import {
   defaultSettings,
@@ -16,7 +16,7 @@ import type { WindowRegistry } from '../ipc/window-registry';
 import { initialBounds, windowGeometry } from './geometry';
 import { installRendererAssets } from './install-renderer-assets';
 import { loadWindowRenderer } from './load-window-renderer';
-import { registerNativeChrome } from './native-chrome';
+import { nativeChromeColors, registerNativeChrome } from './native-chrome';
 
 export async function createMainWindow(
   windows: WindowRegistry,
@@ -24,6 +24,7 @@ export async function createMainWindow(
   kind: WindowKind = 'main',
   created?: (window: BrowserWindow) => void
 ): Promise<BrowserWindow> {
+  if (kind === 'settings') kind = 'main';
   const snapshot = settingsSnapshotSchema.parse(
     initial ?? { revision: 0, settings: defaultSettings() }
   );
@@ -49,8 +50,7 @@ export async function createMainWindow(
   isolatedSession.setPermissionCheckHandler(() => false);
 
   const window = new BrowserWindow({
-    title:
-      kind === 'settings' ? 'Settings' : kind === 'onboarding' ? 'Set up Promptly' : 'Promptly',
+    title: kind === 'onboarding' ? 'Set up Promptly' : 'Promptly',
     ...bounds,
     minWidth: Math.min(geometry.minWidth, bounds.width),
     minHeight: Math.min(geometry.minHeight, bounds.height),
@@ -61,13 +61,12 @@ export async function createMainWindow(
     autoHideMenuBar: true,
     titleBarOverlay: {
       // Leave the renderer's bottom border below the native caption buttons.
-      height: kind === 'main' ? 39 : 37,
-      color: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
-      symbolColor: nativeTheme.shouldUseDarkColors ? '#fafafa' : '#18181b'
+      height: kind === 'onboarding' ? 37 : preferences.defaultSizeMode === 'regular' ? 43 : 39,
+      ...nativeChromeColors()
     },
     show: false,
     alwaysOnTop: preferences.alwaysOnTop,
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#09090b' : '#ffffff',
+    backgroundColor: nativeChromeColors().color,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       session: isolatedSession,

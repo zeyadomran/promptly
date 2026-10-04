@@ -14,11 +14,13 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
+import { navigationSubscription } from './navigation-subscription';
 import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
+  listenNavigation?: (listener: (value: unknown) => void) => () => void;
   listenFocus?: (listener: () => void) => () => void;
   listenUpdates?: (listener: (value: unknown) => void) => () => void;
 }
@@ -84,6 +86,8 @@ export function createDesktopBridge(
     getApplicationInfo: (request) => call('getApplicationInfo', request),
     openRepository: (request) => call('openRepository', request),
     openWiki: (request) => call('openWiki', request),
+    openWikiPageEditor: (request) => call('openWikiPageEditor', request),
+    openWikiResource: (request) => call('openWikiResource', request),
     openPrivacyPolicy: (request) => call('openPrivacyPolicy', request),
     getOnboardingState: (request) => call('getOnboardingState', request),
     setOnboardingStep: (request) => call('setOnboardingStep', request),
@@ -119,7 +123,6 @@ export function createDesktopBridge(
     createTag: (request) => call('createTag', request),
     updateTag: (request) => call('updateTag', request),
     deleteTag: (request) => call('deleteTag', request),
-    mergeTags: (request) => call('mergeTags', request),
     getSettings: (request) => call('getSettings', request),
     getLoginStatus: (request) => call('getLoginStatus', request),
     updateSettings: (request) => call('updateSettings', request),
@@ -128,6 +131,11 @@ export function createDesktopBridge(
     setCapturePaused: (request) => call('setCapturePaused', request),
     setShortcutRecording: (request) => call('setShortcutRecording', request),
     captureSelection: (request) => call('captureSelection', request),
+    subscribeShellNavigation: navigationSubscription(
+      transport.listenNavigation,
+      focusStops,
+      () => disposed
+    ),
     subscribeWindowFocus(listener) {
       if (disposed || transport.listenFocus === undefined) return () => undefined;
       const stopFocus = transport.listenFocus(listener);

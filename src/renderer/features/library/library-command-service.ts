@@ -18,7 +18,7 @@ export class LibraryCommandService {
     private bridge: CommandBridge,
     private effects: {
       selectedId: () => string | null;
-      copied: () => void;
+      copied: (id: string) => void;
       refresh: () => void;
       deleted: (undo: () => Promise<void>) => void;
     }
@@ -71,7 +71,7 @@ export class LibraryCommandService {
       this.timer = setTimeout(() => {
         this.publish({ copiedId: null });
       }, 1500);
-      this.effects.copied();
+      this.effects.copied(id);
       if (result.value.warnings.includes('STATISTICS_UNCONFIRMED')) this.effects.refresh();
     } catch {
       this.report('Copy could not be confirmed. Check the clipboard before trying again.');

@@ -111,6 +111,7 @@ export class WindowBounds {
 
     await restoreNormalWindow(this.window);
     this.mode = mode;
+    this.window.setTitleBarOverlay({ height: mode === 'regular' ? 43 : 39 });
     this.setLimits(target, false);
     this.finish(target);
   }

@@ -1,6 +1,4 @@
-import path from 'node:path';
-
-import { app, ipcMain, shell } from 'electron';
+import { app, ipcMain } from 'electron';
 
 import { desktopConfirmation } from './capture-toast/desktop-confirmation';
 import { installDesktopIpc } from './ipc/install-desktop-ipc';
@@ -13,7 +11,7 @@ import { installWindowOpenCommands } from './lifecycle/open-library-window';
 import { warnStartupPreferences } from './lifecycle/preference-warning';
 import { desktopOnboarding } from './onboarding/desktop-onboarding';
 import { startWindowsSelection } from './platform/windows/desktop-selection';
-import { applicationServices } from './settings/application-services';
+import { desktopApplicationServices } from './settings/desktop-application-services';
 import { electronSettingsControllers } from './settings/electron-controllers';
 import { SettingsService } from './settings/service';
 import { createDesktopShortcuts } from './shortcuts/desktop-shortcuts';
@@ -21,9 +19,10 @@ import { recorderServices, shortcutServices } from './shortcuts/ipc-services';
 import type { StorageClient } from './storage/client';
 import { desktopStorage } from './storage/desktop-storage';
 import { LibraryMutations } from './storage/library-mutations';
-import { nativeTransferDialogs } from './storage/transfer/native-dialogs';
+import { desktopTransferDialogs } from './storage/transfer/native-dialogs';
 import type { TrayCoordinator } from './tray/coordinator';
 import { createDesktopTray } from './tray/desktop-tray';
+import { trayUpdateAccess } from './tray/update-access';
 import { createDesktopUpdates } from './updates/desktop-updates';
 import { installDesktopAppearance } from './windows/desktop-appearance';
 import { installLastWindowPolicy } from './windows/last-window-policy';
@@ -106,7 +105,8 @@ if (primaryInstance)
         storage,
         keyboard.shortcuts,
         () => library?.copy,
-        () => lifecycle
+        () => lifecycle,
+        trayUpdateAccess(() => updates)
       );
       settings = new SettingsService(
         storage,
@@ -115,10 +115,7 @@ if (primaryInstance)
       await settings.initialize();
       await warnStartupPreferences(settings, recovery);
       if (recovery.isActive()) return;
-      const dialogs = nativeTransferDialogs(
-        app.getPath('userData'),
-        path.join(app.getPath('userData'), 'promptly.sqlite')
-      );
+      const dialogs = desktopTransferDialogs();
 
       library = createLibraryServices(
         storage,
@@ -133,13 +130,15 @@ if (primaryInstance)
         library.capture.service,
         settings,
         dialogs.owner,
-        () => lifecycle
+        () => lifecycle,
+        keyboard.shortcuts
       );
       const recorders = recorderServices(keyboard.shortcuts);
 
       updates = createDesktopUpdates(
         () => desktop?.windows,
-        () => lifecycle
+        () => lifecycle,
+        () => tray?.changed()
       );
       desktop = installDesktopIpc(
         ipcMain,
@@ -147,10 +146,7 @@ if (primaryInstance)
           ...library.services,
           ...updates.services,
           ...settings.services,
-          ...applicationServices(
-            () => app.getVersion(),
-            (url) => shell.openExternal(url)
-          ),
+          ...desktopApplicationServices(() => lifecycle),
           ...shortcutServices(keyboard.shortcuts, () => {
             tray?.changed();
           }),

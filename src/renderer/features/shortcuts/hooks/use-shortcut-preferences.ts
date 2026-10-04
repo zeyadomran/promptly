@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 
 import { type SettingsPatch, settingsSchema } from '../../../../shared/contracts/settings';
 import { shortcutChangeConflict, shortcutConflict } from '../../../../shared/shortcuts/conflicts';
+import { planShortcutEdit, type ShortcutTarget } from '../../../../shared/shortcuts/shortcut-edit';
 import { usePreferences } from '../../settings/settings-context';
 
 export function useShortcutPreferences() {
@@ -44,6 +45,32 @@ export function useShortcutPreferences() {
     ...preferences,
     pending,
     error: error ?? shortcutConflict(preferences.settings, window.promptly.platform),
-    apply
+    apply,
+    inspect: (target: ShortcutTarget, binding: string | null) =>
+      planShortcutEdit(preferences.settings, target, binding),
+    bind: async (target: ShortcutTarget, binding: string | null) => {
+      const edit = planShortcutEdit(preferences.settings, target, binding);
+
+      if (edit.kind !== 'ready') {
+        const message =
+          edit.kind === 'invalid' ? edit.message : 'Already used by ' + edit.collision.label;
+
+        setError(message);
+        throw new Error(message);
+      }
+
+      await apply(edit.patch);
+    },
+    swap: async (target: ShortcutTarget, binding: string, other: ShortcutTarget) => {
+      const edit = planShortcutEdit(preferences.settings, target, binding);
+
+      if (
+        edit.kind !== 'conflict' ||
+        edit.collision.action !== other ||
+        edit.swapPatch === undefined
+      )
+        throw new Error('The bindings changed or cannot be exchanged. Record another shortcut.');
+      await apply(edit.swapPatch);
+    }
   };
 }

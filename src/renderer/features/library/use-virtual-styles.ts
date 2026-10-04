@@ -1,4 +1,4 @@
-import { useId, useLayoutEffect } from 'react';
+import { useId, useLayoutEffect, useRef } from 'react';
 
 /** CSP-authorized CSS supplies numeric virtual positions without inline style attributes. */
 export function useVirtualStyles(
@@ -6,6 +6,7 @@ export function useVirtualStyles(
   rows: readonly { index: number; start: number }[]
 ) {
   const scope = `virtual-${useId().replaceAll(/[^a-zA-Z0-9_-]/g, '')}`;
+  const sheet = useRef<HTMLStyleElement | null>(null);
   const rules =
     `.${scope}{height:${String(height)}px}` +
     rows
@@ -20,11 +21,15 @@ export function useVirtualStyles(
 
     if (window.promptlyStyleNonce !== undefined) style.nonce = window.promptlyStyleNonce;
     style.dataset.libraryVirtualStyle = scope;
-    style.textContent = rules;
     document.head.append(style);
+    sheet.current = style;
     return () => {
+      sheet.current = null;
       style.remove();
     };
-  }, [scope, rules]);
+  }, [scope]);
+  useLayoutEffect(() => {
+    if (sheet.current !== null) sheet.current.textContent = rules;
+  }, [rules]);
   return scope;
 }

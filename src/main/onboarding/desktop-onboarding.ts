@@ -5,6 +5,7 @@ import type { DesktopOperations } from '../../shared/contracts/operations';
 import { failure } from '../../shared/contracts/result';
 import type { CaptureService } from '../capture/service';
 import type { SettingsService } from '../settings/service';
+import type { Shortcuts } from '../shortcuts/service';
 import type { TransferOwner } from '../storage/transfer/requests';
 import type { WindowLifecycle } from '../windows/window-lifecycle';
 import { OnboardingCoordinator } from './coordinator';
@@ -15,15 +16,23 @@ export function desktopOnboarding(
   capture: CaptureService,
   settings: SettingsService,
   ownerFor: (id: number) => TransferOwner | undefined,
-  lifecycle: () => WindowLifecycle | undefined
+  lifecycle: () => WindowLifecycle | undefined,
+  shortcuts: Shortcuts
 ) {
   const coordinator = new OnboardingCoordinator(settings, {
     now: () => performance.now(),
-    openCompact: async (id) => {
+    startTest: (id, publish) => {
+      shortcuts.startTest(id, publish);
+    },
+    stopTest: (id) => {
+      shortcuts.stopTest(id);
+    },
+    complete: async (id, destination) => {
       const manager = lifecycle();
 
       if (manager === undefined) throw new Error('Window lifecycle unavailable.');
-      await manager.show();
+      if (destination === 'wiki') await manager.showWiki();
+      else await manager.show();
       const contents = webContents.fromId(id);
 
       if (contents?.getURL().endsWith('#onboarding') === true)
@@ -63,8 +72,10 @@ export function desktopOnboarding(
           Promise.resolve(current === undefined ? unavailable() : coordinator.state(current)),
         setOnboardingStep: ({ step }) =>
           Promise.resolve(current === undefined ? unavailable() : coordinator.step(current, step)),
-        finishOnboarding: ({ skip }) =>
-          current === undefined ? Promise.resolve(unavailable()) : coordinator.finish(current, skip)
+        finishOnboarding: ({ skip, destination }) =>
+          current === undefined
+            ? Promise.resolve(unavailable())
+            : coordinator.finish(current, skip, destination)
       };
     },
     close: async () => {

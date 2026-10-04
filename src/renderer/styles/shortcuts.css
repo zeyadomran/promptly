@@ -1,3 +1,124 @@
+.shortcut-settings-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 4px 24px;
+}
+.shortcut-settings-heading h1 {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.shortcut-settings-heading p {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--muted-foreground);
+  line-height: 1.5;
+}
+.shortcut-group + .shortcut-group {
+  margin-top: 24px;
+}
+.shortcut-group-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 10px;
+  min-height: 22px;
+}
+.shortcut-group-heading h2 {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.shortcut-group-heading > span {
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+.shortcut-group-status {
+  margin-left: auto;
+}
+.shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.shortcut-row:last-child {
+  border-bottom: 0;
+}
+.shortcut-row-label {
+  min-width: 0;
+  font-size: 13px;
+}
+.shortcut-row-description {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.shortcut-row-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.shortcut-row[data-dense='true'] {
+  min-height: 42px;
+  padding-block: 3px;
+}
+.shortcut-row[data-dense='true'] .shortcut-row-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.shortcut-row-info {
+  opacity: 0;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+.shortcut-row-info svg {
+  width: 13px;
+  height: 13px;
+}
+.shortcut-row:hover .shortcut-row-info,
+.shortcut-row:focus-within .shortcut-row-info {
+  opacity: 1;
+}
+.shortcut-row-info:focus-visible {
+  outline: 1.5px solid var(--foreground);
+  border-radius: 3px;
+}
+.shortcut-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+}
+.shortcut-status-dot {
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--muted-foreground);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.shortcut-status[data-status='registered'] .shortcut-status-dot {
+  border-color: var(--tag-green);
+  background: var(--tag-green);
+}
+.shortcut-status[data-status='unavailable'] .shortcut-status-dot {
+  border-color: var(--destructive);
+  background: var(--destructive);
+}
+.shortcut-status[data-status='unavailable'] {
+  color: var(--destructive);
+}
+.shortcut-status:focus-visible {
+  outline: 1.5px solid var(--foreground);
+  border-radius: 3px;
+}
 .shortcut-keycaps,
 .shortcut-recorder-controls {
   display: flex;
@@ -6,102 +127,428 @@
   gap: 5px;
 }
 .shortcut-recorder-controls {
-  justify-content: flex-start;
+  justify-content: flex-end;
   flex-wrap: wrap;
 }
+.shortcut-recorder-group {
+  min-width: 0;
+}
 .shortcut-recorder {
+  position: relative;
   height: 36px;
   min-width: 170px;
+  border-style: solid;
   flex: 1;
+  gap: 5px;
+}
+.shortcut-recorder[data-empty='true'] {
   border-style: dashed;
+  color: var(--muted-foreground);
 }
 .shortcut-recorder[data-recording='true'] {
   border: 1.5px solid var(--foreground);
   box-shadow: var(--focus-shadow);
 }
-.shortcut-recorder-group {
-  min-width: 0;
+.shortcut-recorder[data-conflict='true'] {
+  border: 1.5px solid var(--destructive);
 }
-.shortcut-hint {
-  font-size: 12px;
-  line-height: 1.5;
+.shortcut-change-label {
+  display: none;
+  color: var(--muted-foreground);
+  font-size: 10.5px;
+}
+.shortcut-recorder:hover .shortcut-change-label,
+.shortcut-recorder:focus-visible .shortcut-change-label {
+  display: inline;
+}
+.shortcut-recording-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.shortcut-recording-prompt > span {
+  width: 7px;
+  height: 7px;
+  background: var(--destructive);
+  border-radius: 50%;
+  animation: shortcut-recording-pulse 1s ease-in-out infinite;
+}
+.shortcut-recording-hint {
+  flex-basis: 100%;
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  text-align: right;
+}
+.shortcut-candidate-placeholder {
+  border-style: dashed;
   color: var(--muted-foreground);
 }
-.shortcut-recorder-group > .shortcut-hint {
+.shortcut-row[data-dense='true'] .shortcut-recorder {
+  min-width: 0;
+  width: auto;
+  flex: none;
+  height: 34px;
+  border-color: transparent;
+  box-shadow: none;
+  padding-inline: 6px;
+}
+.shortcut-row[data-dense='true'] .shortcut-recorder[data-recording='true'],
+.shortcut-row[data-dense='true'] .shortcut-recorder[data-conflict='true'],
+.shortcut-row[data-dense='true'] .shortcut-recorder[data-empty='true'] {
+  border-color: var(--border);
+}
+.shortcut-row[data-dense='true'] .shortcut-recorder[data-recording='true'] {
+  border-color: var(--foreground);
+  box-shadow: var(--focus-shadow);
+}
+.shortcut-row[data-dense='true'] .shortcut-recorder[data-conflict='true'] {
+  border-color: var(--destructive);
+}
+.shortcut-alternative {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+.shortcut-swap-choice {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--destructive);
+}
+.shortcut-swap-choice > svg {
+  width: 13px;
+  height: 13px;
+}
+.shortcut-swap-choice p {
+  width: 100%;
+  font-size: 11px;
+}
+.shortcut-swap-choice [data-slot='button'] {
+  height: 26px;
+  font-size: 11px;
+}
+.shortcut-capture-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.shortcut-capture-row > .shortcut-status {
   margin-top: 6px;
 }
 .capture-shortcut-mode {
-  min-width: 0;
-  padding-bottom: 14px;
-  border-bottom: 1px solid var(--border-soft);
-}
-.capture-shortcut-mode legend,
-.shortcut-mode-title,
-.shortcut-group-heading {
-  font-size: 13.5px;
-  font-weight: 500;
-}
-.shortcut-modes {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 12px;
-}
-.shortcut-mode {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  flex: 1;
+  gap: 16px;
+  min-width: 0;
 }
-.shortcut-mode[data-selected='true'] {
-  border: 1.5px solid var(--foreground);
+.capture-shortcut-mode legend {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
-.shortcut-mode > [data-slot='button'] {
-  justify-content: flex-start;
-  padding-inline: 0;
-  height: auto;
-  white-space: normal;
-  text-align: left;
+.shortcut-capture-label {
+  flex: 1;
+  min-width: 0;
+  padding-top: 6px;
+  font-size: 13px;
 }
-.shortcut-mode label {
-  font-size: 12.5px;
+.shortcut-capture-label p {
+  margin-top: 4px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+.shortcut-capture-controls {
+  width: 260px;
+  max-width: 100%;
+}
+.shortcut-mode-toggle {
+  width: 100%;
 }
 .shortcut-modifier {
-  height: 36px;
   width: 100%;
-  border: 1px solid var(--border);
+  padding: 3px;
+  background: var(--muted);
+  border: 1px solid var(--border-soft);
   border-radius: 6px;
-  padding-inline: 8px;
-  color: var(--foreground);
+  gap: 2px;
+}
+.shortcut-modifier [data-slot='toggle-group-item'] {
+  min-width: 0;
+  flex: 1;
+  height: 26px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  padding-inline: 7px;
+}
+.shortcut-modifier [data-state='on'] {
   background: var(--background);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 8%);
 }
-.shortcut-modifier:focus-visible {
-  outline: 1.5px solid var(--foreground);
-  box-shadow: var(--focus-shadow);
+.shortcut-modifier-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
 }
-.shortcut-conflict-status,
+.shortcut-control-label {
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+}
+.shortcut-modifier {
+  flex: 1;
+  width: auto;
+}
+.shortcut-tap-keycaps {
+  display: flex;
+  gap: 4px;
+}
+.shortcut-timing-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+.shortcut-timing-row [data-slot='slider'] {
+  flex: 1;
+}
+.shortcut-timing-row output {
+  font-size: 10.5px;
+  color: var(--muted-foreground);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.shortcut-capture-controls > .shortcut-recorder-group {
+  margin-top: 10px;
+}
+.shortcut-alt-space-advisory {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin: 0 12px 10px;
+  background: var(--muted);
+  border: 1px solid var(--border-soft);
+  border-radius: 6px;
+  font-size: 11.5px;
+  color: var(--muted-foreground);
+}
+.shortcut-alt-space-advisory > svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+.shortcut-alt-space-advisory p {
+  flex: 1;
+}
+.shortcut-alt-space-advisory [data-slot='button'] {
+  height: 26px;
+  font-size: 10.5px;
+  padding-inline: 8px;
+}
 .shortcut-system-warning {
   padding: 12px;
   margin-block: 14px;
-  border-radius: 8px;
   background: var(--muted);
+  border-radius: 8px;
   font-size: 12.5px;
   line-height: 1.5;
 }
-.shortcut-conflict-status p + p,
-.shortcut-system-warning p + p {
-  margin-top: 6px;
+.shortcut-hint {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.5;
 }
-.shortcut-system-warning [data-slot='button'] {
-  margin-block: 8px;
+@keyframes shortcut-recording-pulse {
+  50% {
+    opacity: 0.35;
+  }
 }
-.shortcut-group-heading {
-  margin-top: 24px;
+@media (prefers-reduced-motion: reduce) {
+  .shortcut-recording-prompt > span {
+    animation: none;
+  }
 }
-@media (width < 760px) {
-  .shortcut-modes {
-    grid-template-columns: minmax(0, 1fr);
+@media (width < 640px) {
+  .shortcut-settings-heading {
+    margin-bottom: 18px;
+    align-items: center;
+  }
+  .shortcut-settings-heading p {
+    display: none;
+  }
+  .shortcut-group-heading > span {
+    display: none;
+  }
+  .shortcut-row {
+    gap: 8px;
+    padding: 10px 12px;
+  }
+  .shortcut-row-description {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .shortcut-row-label {
+    font-size: 12px;
+  }
+  .shortcut-row[data-dense='true'] {
+    min-height: 40px;
+    padding-block: 2px;
+  }
+  .shortcut-row-controls {
+    gap: 4px;
+  }
+  .shortcut-row-controls .shortcut-status {
+    font-size: 0;
+    gap: 0;
+  }
+  .shortcut-recorder {
+    min-width: 158px;
+    font-size: 12px;
+  }
+  .shortcut-recorder-controls {
+    gap: 3px;
+  }
+  .shortcut-row-info {
+    display: none;
+  }
+  .shortcut-capture-row {
+    position: relative;
+    padding: 12px;
+  }
+  .shortcut-capture-row > .shortcut-status {
+    position: absolute;
+    right: 12px;
+    top: 8px;
+  }
+  .capture-shortcut-mode {
+    flex-direction: column;
+    gap: 12px;
+  }
+  .shortcut-capture-controls {
+    width: 100%;
+  }
+  .shortcut-capture-label p {
+    display: none;
+  }
+  .shortcut-capture-label {
+    padding-top: 0;
+  }
+  .shortcut-alt-space-advisory {
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-inline: 8px;
+  }
+  .shortcut-row[data-dense='true']:has(.shortcut-recording-hint),
+  .shortcut-row[data-dense='true']:has(.shortcut-swap-choice) {
+    flex-wrap: wrap;
+  }
+  .shortcut-row[data-dense='true']:has(.shortcut-recording-hint) .shortcut-row-controls,
+  .shortcut-row[data-dense='true']:has(.shortcut-swap-choice) .shortcut-row-controls {
+    margin-left: auto;
+    max-width: 100%;
+  }
+}
+
+.shortcut-swap-message {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.shortcut-swap-message svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+.shortcut-swap-reason {
+  flex-basis: 100%;
+}
+.shortcut-settings-heading h1 {
+  font-size: 18px;
+}
+@media (width < 640px) {
+  .shortcut-settings-heading h1 {
+    font-size: 13.5px;
+  }
+  .shortcut-row[aria-label='Open Promptly'] {
+    position: relative;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+  .shortcut-row[aria-label='Open Promptly'] .shortcut-row-controls {
+    width: 100%;
+  }
+  .shortcut-row[aria-label='Open Promptly'] .shortcut-recorder-group {
+    width: 100%;
+  }
+  .shortcut-row[aria-label='Open Promptly'] .shortcut-status {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 10.5px;
+    gap: 5px;
+  }
+  .shortcut-row-info {
+    display: inline-flex;
+  }
+  .shortcut-add-label {
+    font-size: 0;
+  }
+  .shortcut-add-label::after {
+    content: 'Add';
+    font-size: 12px;
+  }
+}
+
+.shortcut-global-reset {
+  display: none;
+}
+.shortcut-group-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+@media (width < 640px) {
+  .shortcut-settings-heading {
+    margin: 0;
+    height: 0;
+  }
+  .shortcut-settings-heading > div:first-child {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .shortcut-settings-heading > .shortcut-reset {
+    display: none;
+  }
+  .shortcut-global-reset {
+    display: block;
+  }
+  .shortcut-global-reset [data-slot='button'] {
+    height: 26px;
+    font-size: 11px;
+    padding-inline: 7px;
+  }
+  .shortcut-row[aria-label='Toggle always on top'] .shortcut-recorder[data-empty='true'] {
+    min-width: 72px;
+    width: auto;
+    flex: none;
+    padding-inline: 10px;
   }
 }
