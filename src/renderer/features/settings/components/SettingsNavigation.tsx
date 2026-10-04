@@ -26,6 +26,9 @@ export function SettingsNavigation({
             value={section}
             aria-current={active === section ? 'location' : undefined}
             aria-controls={`settings-${section}`}
+            onClick={() => {
+              if (active === section) navigate(section);
+            }}
           >
             {section[0]?.toUpperCase()}
             {section.slice(1)}
