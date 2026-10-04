@@ -5,6 +5,7 @@ import { expect, it, vi } from 'vitest';
 import { WindowRegistry } from '../ipc/window-registry';
 import { testSettings } from '../settings/settings-test-fixture';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
+import { UpdateService } from '../updates/service';
 import { WindowLifecycle } from './window-lifecycle';
 import { ControlledWindow } from './window-test-fixture';
 
@@ -28,12 +29,25 @@ it('keeps recording focus and a reachable window when its external recovery rout
     trayAvailable: () => tray,
     shortcutAvailable: () => fixture.shortcuts.recoveryAvailable
   };
+  let release = '1.1.0';
+  const updates = new UpdateService({
+    available: true,
+    findRelease: () => Promise.resolve(release),
+    apply: () => Promise.resolve(),
+    restart: () => undefined,
+    notify: () => undefined,
+    openSettings: () => Promise.resolve(),
+    publish: () => undefined
+  });
 
   const lifecycle = new WindowLifecycle(
     new WindowRegistry(),
     preferences.service,
     recovery,
-    () => undefined
+    () => undefined,
+    () => {
+      void updates.check(true);
+    }
   );
 
   await lifecycle.show();
@@ -52,6 +66,9 @@ it('keeps recording focus and a reachable window when its external recovery rout
 
   try {
     expect(window).not.toBe(tutorial);
+    expect(updates.state).toMatchObject({ status: 'available', version: '1.1.0' });
+    const checked = updates.state;
+
     expect(window.webContents.sent.at(-1)).toEqual({
       channel: 'promptly:shell-navigation',
       payload: 'wiki'
@@ -69,12 +86,15 @@ it('keeps recording focus and a reachable window when its external recovery rout
       value: { kind: 'main', visible: true }
     });
     expect(window.isDestroyed()).toBe(false);
+    expect(updates.state).toEqual(checked);
     lifecycle.hide();
     expect(window.isMinimized()).toBe(true);
     await fixture.shortcuts.controller.apply(fixture.settings);
     const open = fixture.registered.get(fixture.settings.openShortcut);
 
+    release = '1.2.0';
     await lifecycle.show();
+    expect(updates.state).toMatchObject({ status: 'available', version: '1.2.0' });
     lifecycle.hide();
     expect(window.isVisible()).toBe(false);
     fixture.shortcuts.record(11, true);
@@ -89,9 +109,11 @@ it('keeps recording focus and a reachable window when its external recovery rout
     expect(fixture.shortcuts.status.recording).toBe(false);
     expect(fixture.shortcuts.recoveryAvailable).toBe(true);
     expect(window.isVisible()).toBe(false);
+    release = '1.3.0';
     open?.();
     await opened;
     expect(window.isVisible()).toBe(true);
+    expect(updates.state).toMatchObject({ status: 'available', version: '1.3.0' });
     window.focused = false;
     open?.();
     await opened;
@@ -156,6 +178,7 @@ it('keeps recording focus and a reachable window when its external recovery rout
       database.close();
     }
   } finally {
+    updates.close();
     await lifecycle.close().catch(() => undefined);
     await fixture.shortcuts.close();
     await preferences.service.close();

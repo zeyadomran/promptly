@@ -59,7 +59,10 @@ export class ControlledWindow extends EventEmitter {
     this.bounds = bounds;
   };
   show = () => {
+    const wasVisible = this.visible;
+
     this.visible = true;
+    if (!wasVisible) this.emit('show');
   };
   focus = () => {
     this.focused = true;
@@ -73,7 +76,10 @@ export class ControlledWindow extends EventEmitter {
     this.focused = false;
   };
   restore = () => {
+    const wasMinimized = this.minimized;
+
     this.minimized = false;
+    if (wasMinimized) this.emit('restore');
   };
   close = () => {
     let prevented = false;

@@ -21,10 +21,15 @@ export function desktopRootKind(onboardingComplete: boolean, mainCreated: boolea
 }
 
 export function describeWindow(
-  window: BrowserWindow | undefined,
+  windows: ReadonlyMap<WindowKind, BrowserWindow>,
   kind: WindowKind,
-  mode: SizeMode
+  mode: SizeMode,
+  rootKind: WindowKind
 ): WindowState {
+  if (kind === 'settings') kind = 'main';
+  if (kind === 'main' && !windows.has('main')) kind = rootKind;
+  const window = windows.get(kind);
+
   return { kind, mode, visible: window?.isVisible() === true && !window.isMinimized() };
 }
 

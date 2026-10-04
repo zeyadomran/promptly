@@ -32,7 +32,8 @@ export class WindowLifecycle {
     private readonly registry: WindowRegistry,
     private readonly settings: SettingsService,
     private readonly recovery: WindowRecovery,
-    private readonly onError: (error: unknown) => void
+    private readonly onError: (error: unknown) => void,
+    private readonly onOpened: () => void = () => undefined
   ) {
     screen.on('display-removed', this.reconcile);
     screen.on('display-metrics-changed', this.reconcile);
@@ -65,6 +66,7 @@ export class WindowLifecycle {
           this.windows.set(kind, created);
           if (kind === 'main') this.bounds = new WindowBounds(created, this.settings, this.onError);
           watchWindowLifecycle(created, kind, {
+            opened: this.onOpened,
             closing: () => this.closing,
             ready: () => this.ready.has(created),
             error: this.onError,
@@ -148,12 +150,11 @@ export class WindowLifecycle {
   }
 
   private state(kind: WindowKind = this.rootKind()): WindowState {
-    if (kind === 'settings') kind = 'main';
-    if (kind === 'main' && !this.windows.has('main')) kind = this.rootKind();
     return describeWindow(
-      this.windows.get(kind),
+      this.windows,
       kind,
-      this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode
+      this.bounds?.mode ?? this.settings.current.settings.defaultSizeMode,
+      this.rootKind()
     );
   }
 

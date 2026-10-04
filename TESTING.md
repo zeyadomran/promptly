@@ -2,6 +2,8 @@
 
 CI uses functional service tests, strict static checks and actual unsigned Windows x64 installer construction. There is no automated GUI or native E2E suite. Each base flow has one canonical functional definition; extend that flow when behavior changes. Add a separate case only for distinct logic that the flow cannot exercise. Functional tests run once on Windows CI, alongside static checks and packaging.
 
+CI gives each functional test 15 seconds for real filesystem and SQLite work on shared Windows runners; local runs retain Vitest's five-second default. The large-backup round-trip flow has a 60-second CI allowance and retains its existing 15-second local allowance. These are test-runner timeouts, not application performance requirements or changes to production deadlines.
+
 Keep application modules real and observe public service outcomes. Use a real owned SQLite database for persistence and reopen it to verify durable state. Inject external OS, time or database failure boundaries when necessary; avoid private-method, call-count and own-module mock assertions. Keep temporary files isolated and close owned providers/databases before deletion.
 
 ## TDD
@@ -42,7 +44,7 @@ Add functional coverage when its behavior is implemented; absent features have n
 
 The onboarding keyboard flow in `renderer/features/onboarding/onboarding-keyboard.test.ts` covers Enter/Back navigation and theme choices while preserving editor, control, overlay, recorder and IME ownership. The shortcut and onboarding service flows also cover owned non-saving detection, real tap intervals, timer expiry, retirement, captured previews and durable completion destinations without changing the selected window size.
 
-The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, retry, concurrent requests and shutdown. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
+The update flow in `main/updates/service.test.ts` covers metadata checking, optional notifications and Settings navigation, explicit update/restart, preservation of pending retry actions during automatic checks, concurrent requests and shutdown. The window visibility flow verifies that opening or restoring the window refreshes update availability without checking again for navigation inside an already visible window. `scripts/release-artifacts.test.mjs` runs with `npm test` and covers signed/unsigned staging and rejection of changed package artifacts.
 
 The renderer update-stream flow in `renderer/features/settings/hooks/updates-store.test.ts` covers shared stream ownership, stale initial reads, shutdown and routing retries to the failed IPC operation. The service flow also validates optional provider progress; the Windows Squirrel adapter has no progress event and stays indeterminate.
 

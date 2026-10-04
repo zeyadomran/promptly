@@ -34,7 +34,7 @@ supported application, capture it, and copy the complete snippet whenever you ne
   recent snippets, capture pause, and quick access to the library.
 - **Keep your data local:** SQLite storage, JSON backup and restore, and Markdown export.
   The app works offline with bundled assets; no telemetry or cloud sync is configured.
-- **Update on your terms:** installed builds check at startup and in Settings. An
+- **Update on your terms:** installed builds check whenever the window opens or is restored, and on request in Settings. An
   available update is suggested; downloading, applying and restarting require your choice.
 
 ## Getting started

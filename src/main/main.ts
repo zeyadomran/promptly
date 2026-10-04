@@ -170,12 +170,14 @@ if (primaryInstance)
         },
         (error) => {
           console.error('Unable to update Promptly window:', error);
+        },
+        () => {
+          updates?.windowOpened();
         }
       );
       await tray.refresh();
       installDesktopAppearance(openWindow, () => lifecycle);
       openWindow();
-      updates.start();
     })
     .catch((error: unknown) => {
       void recovery.startup(error);

@@ -78,6 +78,11 @@ it('checks without applying an update until the user chooses it', async () => {
   await service.install();
   expect(service.state).toMatchObject({ status: 'error', retryOperation: 'install' });
   expect(service.state.message).toContain('Unable to update');
+  expect(await service.check(true)).toMatchObject({
+    status: 'error',
+    retryOperation: 'install',
+    version: '0.10.0'
+  });
   failApply = false;
   await service.install();
   expect(applied).toEqual(['0.10.0']);
@@ -85,6 +90,11 @@ it('checks without applying an update until the user chooses it', async () => {
   expect(restarted).toBe(false);
   service.restart();
   expect(service.state).toMatchObject({ status: 'error', retryOperation: 'restart' });
+  expect(await service.check(true)).toMatchObject({
+    status: 'error',
+    retryOperation: 'restart',
+    version: '0.10.0'
+  });
   expect(restarted).toBe(false);
   failRestart = false;
   service.restart();
