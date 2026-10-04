@@ -10,6 +10,17 @@ Capture, organize, and reuse text snippets with a shortcut. A local-first Window
 Keep useful prompts, replies, notes, and code in one searchable library. Select text in a
 supported application, capture it, and copy the complete snippet whenever you need it.
 
+**[Download Promptly for Windows x64](https://github.com/zeyadomran/promptly/releases/latest/download/Promptly-x64-Setup.exe)**
+· [Release notes and other versions](https://github.com/zeyadomran/promptly/releases)
+
+## Install and first launch
+
+1. Run the downloaded `Promptly-x64-Setup.exe` installer.
+2. Open Promptly from the Windows Start menu.
+3. Follow the first-launch walkthrough to choose your capture shortcut and try it on
+   the practice prompt. Then capture selected text from a supported app and open
+   Promptly to find and copy your snippets.
+
 ## Features
 
 - **Capture selected text:** save a selection through native Windows UI Automation,
@@ -48,7 +59,7 @@ Explicit Copy actions write the clipboard. See
 
 ## Contributing and reporting issues
 
-Read the [Privacy Policy](PRIVACY.md) for local storage, capture, updates, and information you choose to share. It is also available from General Settings in the app.
+Read the [Privacy Policy](PRIVACY.md) for local storage, capture, updates, and information you choose to share. It is also available from Settings > About in the app.
 
 See [CONTRIBUTORS.md](CONTRIBUTORS.md) for contributions and ordinary bug reports,
 [DEVELOPMENT.md](DEVELOPMENT.md) for running and building the app, and
