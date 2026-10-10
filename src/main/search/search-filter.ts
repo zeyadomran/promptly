@@ -3,7 +3,7 @@ import { foldText } from '../../shared/search/match-text';
 import { parseQuery } from '../../shared/search/parse-query';
 import type { SearchEntry } from './search-snapshot';
 
-export function compileSearchFilter(request: SearchRequest) {
+export function compileSearchFilter(request: Pick<SearchRequest, 'query' | 'tagIds' | 'untagged'>) {
   const parsed = parseQuery(request.query);
   const text = parsed.text.map(foldText);
   const requirements: ((entry: SearchEntry) => boolean)[] = [];

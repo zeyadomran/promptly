@@ -1,4 +1,9 @@
 import type {
+  BundleSelectionRequest,
+  BundleSelectionResponse
+} from '../../shared/contracts/bundle-selection';
+import { bundleSelectionRequestSchema } from '../../shared/contracts/bundle-selection';
+import type {
   SearchPage,
   SearchRequest,
   Snippet,
@@ -68,6 +73,22 @@ export class SearchLibrary {
       offset: request.offset,
       hasMore: request.offset + items.length < total,
       matches
+    };
+  }
+
+  matchSelected(input: BundleSelectionRequest): BundleSelectionResponse {
+    const request = bundleSelectionRequestSchema.parse(input);
+
+    if (this.snapshot.refresh()) this.sorted.clear();
+    const filter = compileSearchFilter(request);
+
+    return {
+      revision: this.context.revision(),
+      ids: request.ids.filter((id) => {
+        const entry = this.snapshot.entries.get(id);
+
+        return entry !== undefined && filter.matches(entry);
+      })
     };
   }
 }

@@ -1,3 +1,4 @@
+import type { BundleSelectionRequest } from '../../shared/contracts/bundle-selection';
 import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/domain';
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { SearchLibrary } from '../search/search-library';
@@ -41,5 +42,9 @@ export class SnippetReader {
 
   query(request: SearchRequest): SearchPage {
     return this.search.query(request);
+  }
+
+  matchSelected(request: BundleSelectionRequest) {
+    return this.search.matchSelected(request);
   }
 }
