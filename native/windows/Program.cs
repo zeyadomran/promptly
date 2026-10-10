@@ -33,6 +33,7 @@ internal static class Program
                     foreach (var key in request.Keys)
                         if (key != "v" && key != "id" && key != "command" &&
                             !(command == "capture" && (key == "expectedPid" || key == "includeText" || key == "identity")) &&
+                            !(command == "foreground" && key == "excludePid") &&
                             !((command == "activate" || command == "validate") && key == "identity")) throw new ArgumentException();
                     if (command == "capabilities")
                         result = new Dictionary<string, object> { { "status", "ok" }, { "platform", "win32" },
