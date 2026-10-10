@@ -1,14 +1,14 @@
 # Capturing Text
 
 1. Select the text you want to save in a supported application.
-2. Keep that application in the foreground and use your configured **Save selection** shortcut.
+2. Keep that application in the foreground and use your configured **Capture selection** shortcut.
 3. Look for the saved or duplicate confirmation, then open Promptly to find the snippet.
 
-The default capture shortcut is two completed `Shift` taps. Change it under [Settings → Shortcuts](promptly:settings/shortcuts).
+The default capture shortcut is two completed `Shift` taps. Change it under **Settings → Shortcuts**.
 Two taps mean press and release twice; holding the key or combining it with typing does not
 count as a completed double tap.
 
-Under **When saving**, **Show confirmation toast** controls saved feedback.
+In **Settings → Shortcuts → When saving**, **Show confirmation toast** controls saved feedback.
 **Trim whitespace and terminal prompts** controls normalization before saving. Turn normalization
 off when you need captured whitespace preserved. Repeating an exact existing capture reports
 the existing snippet rather than creating another copy.

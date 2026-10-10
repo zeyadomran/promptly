@@ -5,10 +5,14 @@
   <img src="src/renderer/assets/brand/logo.svg" alt="Promptly logo" width="128" height="128">
 </picture>
 
-Capture, organize, and reuse text snippets with a shortcut. A local-first Windows app.
+Compose, capture, organize and reuse text with managed attachments. A local-first Windows app.
 
-Keep useful prompts, replies, notes, and code in one searchable library. Select text in a
-supported application, capture it, and copy the complete snippet whenever you need it.
+Keep reusable prompts, replies, notes and code in a searchable Library, and work through a
+separate prompt Queue. Create text directly or capture a selection from a supported app.
+Add files, annotate images, fill reusable variables and copy ordered context bundles.
+
+The features below describe the **1.1.0 source**. The download link points to the latest
+published installer; check its release notes for availability.
 
 **[Download Promptly for Windows x64](https://github.com/zeyadomran/promptly/releases/latest/download/Promptly-x64-Setup.exe)**
 · [Release notes and other versions](https://github.com/zeyadomran/promptly/releases)
@@ -26,13 +30,24 @@ supported application, capture it, and copy the complete snippet whenever you ne
 - **Capture selected text:** save a selection through native Windows UI Automation,
   with confirmation and first-launch practice capture.
 - **Manage your library:** capture, edit, duplicate, delete, and reuse snippets.
+- **Compose directly:** create Library snippets or queued prompts with exact typed text,
+  tags and attachments; optional global quick compose opens a draft from another app.
+- **Work through Queue:** keep Open and Done prompts, reorder manually, complete explicitly,
+  Undo completion or deletion, and save reusable copies to Library.
+- **Copy and return:** explicitly copy text or save a draft before returning to the previous
+  app. Promptly never pastes automatically; a failed return does not undo a confirmed copy/save.
+- **Attach and draw:** manage original files and images locally, draw or annotate on a locked
+  original background, and copy/export the current unsaved canvas as PNG.
+- **Reuse variables and context:** fill case-sensitive `{{name}}` values for one copy, or
+  review an ordered selection of 2–20 snippets as a temporary text-only bundle.
 - **Find what you need:** full-text search, tag filters, sorting, and paged browsing.
 - **Organize with tags:** assign tags, rename them, and customize their colors.
 - **Choose your workspace:** Compact and Regular views, light and dark themes,
   saved window geometry, and pinning.
 - **Keep commands close:** customizable keyboard shortcuts and a tray menu with
   recent snippets, capture pause, and quick access to the library.
-- **Keep your data local:** SQLite storage, JSON backup and restore, and Markdown export.
+- **Keep your data local:** SQLite storage, complete v3 JSON Lines backup and restore
+  (including Queue, original files and editable drawings), and text-only Markdown export.
   The app works offline with bundled assets; no telemetry or cloud sync is configured.
 - **Update on your terms:** installed builds check whenever the window opens or is restored, and on request in Settings. An
   available update is suggested; downloading, applying and restarting require your choice.
@@ -43,6 +58,9 @@ Read the [Getting Started guide](https://github.com/zeyadomran/promptly/wiki/Get
 and explore the [Promptly wiki](https://github.com/zeyadomran/promptly/wiki) for
 [capture](https://github.com/zeyadomran/promptly/wiki/Capturing-Text),
 [library and search](https://github.com/zeyadomran/promptly/wiki/Library-and-Search),
+[compose and queue](https://github.com/zeyadomran/promptly/wiki/Compose-and-Queue),
+[attachments and drawing](https://github.com/zeyadomran/promptly/wiki/Attachments-and-Drawing),
+[variables and bundles](https://github.com/zeyadomran/promptly/wiki/Variables-and-Bundles),
 [keyboard shortcuts](https://github.com/zeyadomran/promptly/wiki/Keyboard-Shortcuts), and
 [backup and restore](https://github.com/zeyadomran/promptly/wiki/Backup-and-Restore).
 
@@ -54,8 +72,15 @@ macOS, Linux, x86, and ARM64 are unsupported.
 Capture depends on the source application's accessibility provider. Unsupported,
 empty, protected, or failed selections save nothing. Native capture never simulates
 Ctrl+C or reads or writes the clipboard; clipboard capture fallback is deferred.
-Explicit Copy actions write the clipboard. See
+Explicit Paste attachment reads clipboard images/files; clipboard text is ignored by that
+command. Explicit text/image Copy actions write the clipboard. See
 [Troubleshooting](https://github.com/zeyadomran/promptly/wiki/Troubleshooting) for limitations.
+
+An entry allows eight attachments, 10 MiB per file and a 512 MiB managed-asset budget. PNG,
+JPEG, GIF, WebP and BMP have bounded previews; originals remain managed even if preview is
+unavailable. Save a complete JSON backup before upgrading. Schema migrations are additive,
+but an older build can reject a newer database; reinstalling an old binary does not roll the
+database schema back. Legacy v1/v2 backups still import into 1.1.0; v3 is not an old-release format.
 
 ## Contributing and reporting issues
 

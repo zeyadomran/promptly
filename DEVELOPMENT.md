@@ -63,6 +63,24 @@ services publish committed state through validated contracts. The Windows select
 and physical keyboard helpers are maintained under `native/windows/` and
 `native/keyboard/windows/`; packaging builds and ships them outside ASAR.
 
+Queue and managed originals/scenes share the worker's SQLite ownership. Main-owned attachment
+draft capabilities are tied to the originating window; successful saves consume them atomically,
+while rejected writes keep them available. Additive migrations retain existing Library text and
+legacy v1/v2 import; v3 JSON Lines backups include saved Queue, assets and editable drawing
+backgrounds. Markdown is text-only. Older builds can reject newer schemas, so binary downgrade
+alone does not restore an older database format.
+
+Image previews use one bounded private sandboxed Chromium decoder for PNG, JPEG, GIF, WebP and
+BMP. It has no preload, product IPC or network access and drains owned decoding work on close.
+Product renderers receive bounded safe PNG rasters and metadata, never original file bytes or
+native intake paths. Drawing copy/export validates an ephemeral current-canvas PNG in main;
+it does not implicitly save the editable scene.
+
+Prepared text copies, variable answers and ordered bundle selections are transient. Main rereads
+saved source content before committing a clipboard write. Shared LibraryMutations serializes
+the write and per-source statistics, then explicit return is attempted. Confirmed copy/save
+success survives a later statistics, return or presentation failure; no return path pastes text.
+
 `npm run check:architecture` parses application TypeScript, including imports,
 re-exports, dynamic imports, and shared modules. It rejects layer escapes, computed
 imports, Node globals, runtime code generation, unscanned JavaScript imports, and
@@ -83,7 +101,9 @@ The production capture deadline remains 100 ms; a hung provider is retired and s
 replies cannot become saved snippets. Provider compatibility is limited to what that
 application exposes through UI Automation. Clipboard capture fallback is deferred and
 is not a v1 release gate. Explicit snippet, Markdown, and tray Copy actions intentionally
-write the clipboard. macOS runtime code and build targets have been removed.
+write the clipboard. Explicit Paste attachment reads clipboard images/files independently of
+native capture. Copy/save and return attempt prior-app activation after a confirmed effect and
+never simulate paste. macOS runtime code and build targets have been removed.
 
 Use fresh, owned profiles and public fixture text for manual qualification. Keep private
 selection text, database exports, profile data, and raw native replies out of logs,
