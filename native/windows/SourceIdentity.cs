@@ -46,7 +46,8 @@ internal sealed class SourceIdentity
         // Explorer folder windows stay eligible; taskbar/desktop/switcher surfaces are not apps.
         return kind != "Shell_TrayWnd" && kind != "Shell_SecondaryTrayWnd" &&
             kind != "Progman" && kind != "WorkerW" && kind != "XamlExplorerHostIslandWindow" &&
-            kind != "MultitaskingViewFrame" && kind != "ForegroundStaging";
+            kind != "MultitaskingViewFrame" && kind != "ForegroundStaging" &&
+            kind != "TopLevelWindowForOverflowXamlIsland" && kind != "XamlExplorerHostIslandWindow_WASDK";
     }
 
     private static SourceIdentity RecordProcess(IntPtr window, uint pid, bool foreground)
