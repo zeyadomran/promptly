@@ -29,6 +29,37 @@ it('keeps an ordered queue independent from reusable snippets through completion
     const deletion = store.invoke('deleteQueueItem', { id: second.id });
 
     store.invoke('undoDeleteQueueItem', { undoToken: deletion.undoToken });
+    const whitespace =
+      '\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff';
+
+    store.invoke('updateQueueItem', { id: added.id, text: whitespace.repeat(60) + 'tail' });
+    expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)).toMatchObject({
+      hasText: true
+    });
+    store.invoke('updateQueueItem', { id: added.id, text: '\0' });
+    expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.hasText).toBe(
+      true
+    );
+    const draft = store.invoke('beginAssetDraft', {});
+
+    store.invoke('storeDraftAttachment', {
+      draftToken: draft.token,
+      name: 'data.bin',
+      kind: 'file',
+      mimeType: 'application/octet-stream',
+      bytes: new Uint8Array([1]),
+      width: null,
+      height: null
+    });
+    const attachmentOnly = store.invoke('createQueueItem', {
+      text: whitespace,
+      draftToken: draft.token
+    }).item;
+
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === attachmentOnly.id)?.hasText
+    ).toBe(false);
+    store.invoke('deleteQueueItem', { id: attachmentOnly.id });
     const longText = 'x'.repeat(1023) + String.fromCodePoint(0x1f642) + 'tail'.repeat(300);
 
     store.invoke('updateQueueItem', { id: added.id, text: longText });

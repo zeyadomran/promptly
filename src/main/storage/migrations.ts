@@ -1,5 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 
+import { queueTextPresenceMigration } from '../queue/text-presence-migration';
 import { StorageStartupError } from './startup-failure';
 
 export interface Migration {
@@ -91,7 +92,8 @@ export const migrations: readonly Migration[] = [
     CREATE TABLE asset_undo(token TEXT NOT NULL,assetId TEXT REFERENCES assets(id),expires INTEGER NOT NULL,PRIMARY KEY(token,assetId));
     CREATE TABLE queue_undo(token TEXT PRIMARY KEY,kind TEXT NOT NULL,json TEXT NOT NULL,expires INTEGER NOT NULL);
   `
-  }
+  },
+  { version: 5, sql: queueTextPresenceMigration }
 ];
 
 export function migrate(db: DatabaseSync, versions: readonly Migration[] = migrations): void {

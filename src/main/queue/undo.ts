@@ -18,7 +18,9 @@ export function restoreQueue(queue: QueueRepository, token: string, kind: 'delet
     if (count >= 2000)
       throw new StorageError('UNAVAILABLE', 'Queue limit of 2,000 prompts reached.');
     queue.context.db
-      .prepare('INSERT INTO queue_items VALUES(?,?,?,?,?,?,?,?,?)')
+      .prepare(
+        'INSERT INTO queue_items(id,text,textUtf16,createdAt,updatedAt,completedAt,position,copyCount,lastCopiedAt) VALUES(?,?,?,?,?,?,?,?,?)'
+      )
       .run(
         item.id,
         item.text,

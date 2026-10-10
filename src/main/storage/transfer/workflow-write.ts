@@ -70,7 +70,9 @@ export function writeWorkflowQueue(writes: SnippetWrites, stage: ImportStage): v
       id = String(row['target']);
 
     context.db
-      .prepare('INSERT INTO queue_items VALUES(?,?,?,?,?,?,?,?,?)')
+      .prepare(
+        'INSERT INTO queue_items(id,text,textUtf16,createdAt,updatedAt,completedAt,position,copyCount,lastCopiedAt) VALUES(?,?,?,?,?,?,?,?,?)'
+      )
       .run(
         id,
         value.text,

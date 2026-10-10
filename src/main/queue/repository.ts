@@ -38,7 +38,7 @@ export class QueueRepository {
       )
       .all(id)
       .map((tag) => tagSchema.parse({ ...tag, name: decodeSqlText(tag['name']) }));
-    const { textUtf16, ...record } = row;
+    const { textUtf16, hasText: _hasText, ...record } = row;
 
     return queueItemSchema.parse({
       ...record,
@@ -53,13 +53,13 @@ export class QueueRepository {
   list() {
     const items = this.context.db
       .prepare(
-        'SELECT id FROM queue_items ORDER BY completedAt IS NOT NULL,CASE WHEN completedAt IS NULL THEN position END,completedAt DESC,id'
+        'SELECT id,hasText FROM queue_items ORDER BY completedAt IS NOT NULL,CASE WHEN completedAt IS NULL THEN position END,completedAt DESC,id'
       )
       .all()
       .map((row) => {
         const item = this.read(String(row['id']), true);
 
-        return { ...item, text: rowPreview(item.text, 'row') };
+        return { ...item, text: rowPreview(item.text, 'row'), hasText: row['hasText'] === 1 };
       });
 
     return {
@@ -84,7 +84,9 @@ export class QueueRepository {
     );
 
     this.context.db
-      .prepare('INSERT INTO queue_items VALUES(?,?,?,?,?,?,?,?,?)')
+      .prepare(
+        'INSERT INTO queue_items(id,text,textUtf16,createdAt,updatedAt,completedAt,position,copyCount,lastCopiedAt) VALUES(?,?,?,?,?,?,?,?,?)'
+      )
       .run(id, input.text, Buffer.from(input.text, 'utf16le'), now, now, null, position, 0, null);
     writeQueueContent(this, id, input);
     return this.snapshot(id);
