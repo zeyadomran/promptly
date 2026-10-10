@@ -28,9 +28,14 @@ export const assetOwnerSchema = z.strictObject({
   id: assetIdSchema
 });
 export const draftRequestSchema = z.strictObject({ draftToken: assetIdSchema });
+export const attachmentRejectionSchema = z.strictObject({
+  name: z.string().min(1).max(255),
+  reason: z.string().min(1).max(256)
+});
 export const draftSnapshotSchema = z.strictObject({
   token: assetIdSchema,
-  attachments: attachmentsSchema
+  attachments: attachmentsSchema,
+  rejected: z.array(attachmentRejectionSchema).max(assetLimits.count).optional()
 });
 export const attachmentRequestSchema = z.strictObject({
   id: assetIdSchema,
@@ -77,4 +82,5 @@ export const attachmentOperations = {
   }
 } as const;
 export type Attachment = z.infer<typeof attachmentSchema>;
+export type AttachmentRejection = z.infer<typeof attachmentRejectionSchema>;
 export type AssetOwner = z.infer<typeof assetOwnerSchema>;

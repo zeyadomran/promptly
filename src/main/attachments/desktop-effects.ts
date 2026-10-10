@@ -16,7 +16,7 @@ import { atomicExport } from '../storage/transfer/atomic-export';
 import { validateExportDestination } from '../storage/transfer/export-destination';
 import type { TransferDialogs } from '../storage/transfer/native-dialogs';
 import type { TransferOwner } from '../storage/transfer/requests';
-import { attachmentName, readAttachmentFile } from './file-intake';
+import { attachmentName, readAttachmentFiles } from './file-intake';
 import { imageHeader, previewable } from './image-header';
 import type { AssetEffects } from './ports';
 import { RasterDecoder } from './raster-decoder';
@@ -55,26 +55,12 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
       if (result.canceled) return [];
       if (result.filePaths.length > assetLimits.count)
         throw new Error('Select up to eight attachments.');
-      const files = [];
-
-      for (const file of result.filePaths) {
-        if (!owner.isAlive()) throw new Error('The draft window closed.');
-        files.push(await readAttachmentFile(file));
-      }
-
-      return files;
-    },
-    dropped: async (paths) => {
-      const files = [];
-
-      for (const file of paths) {
+      return readAttachmentFiles(result.filePaths, () => {
         alive();
-        if (!path.isAbsolute(file)) throw new Error('Not an absolute native path.');
-        files.push(await readAttachmentFile(file));
-      }
-
-      return files;
+        if (!owner.isAlive()) throw new Error('The draft window closed.');
+      });
     },
+    dropped: (paths) => readAttachmentFiles(paths, alive),
     paste: async () => {
       alive();
       const items = await clipboard.read();
@@ -86,11 +72,12 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
           const blob = await item.getType('image/png');
 
           if (blob.size < 1 || blob.size > assetLimits.bytes)
-            throw new Error('Clipboard image exceeds 10 MiB.');
+            return {
+              files: [],
+              rejected: [{ name: 'Pasted image.png', reason: 'Choose an image up to 10 MiB.' }]
+            };
           const bytes = new Uint8Array(await blob.arrayBuffer());
 
-          if (!previewable(imageHeader(bytes)))
-            throw new Error('Clipboard image exceeds safe dimensions.');
           return [{ name: 'Pasted image.png', mimeType: 'image/png', bytes }];
         }
 
@@ -107,10 +94,7 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
             .map((url) => fileURLToPath(url));
 
           if (paths.length > assetLimits.count) throw new Error('Paste up to eight attachments.');
-          const files = [];
-
-          for (const file of paths) files.push(await readAttachmentFile(file));
-          return files;
+          return readAttachmentFiles(paths, alive);
         }
 
       return [];

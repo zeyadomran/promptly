@@ -6,7 +6,7 @@ import type { StorageRequest } from '../storage/protocol';
 import type { TransferOwner } from '../storage/transfer/requests';
 import { AttachmentActions } from './actions';
 import { classifyIntake } from './classify-intake';
-import type { AssetEffects, AssetIntake } from './ports';
+import type { AssetEffects, AssetIntakeResult } from './ports';
 import { attachmentServices } from './services';
 
 export class AttachmentService {
@@ -111,7 +111,9 @@ export class AttachmentService {
     if (result.ok && input.draftToken !== undefined) this.forget(input.draftToken);
     return result;
   }
-  async intake(token: string, files: AssetIntake[], context?: { senderId: number }) {
+  async intake(token: string, intake: AssetIntakeResult, context?: { senderId: number }) {
+    const { files, rejected } = Array.isArray(intake) ? { files: intake, rejected: [] } : intake;
+
     if (!this.owns(token, context))
       return failure('UNAUTHORIZED', 'This attachment draft is unavailable.');
     const draft = await this.storage.call('getAssetDraft', { draftToken: token });
@@ -122,11 +124,24 @@ export class AttachmentService {
     const inputs = await classifyIntake(this.effects, files);
 
     if (!this.owns(token, context)) return failure('UNAUTHORIZED', 'The draft window closed.');
-    return this.mutations.run(() =>
-      this.owns(token, context)
-        ? this.storage.call('storeDraftAttachments', { draftToken: token, files: inputs })
-        : Promise.resolve(failure('UNAUTHORIZED', 'The draft window closed.'))
-    );
+    const result =
+      inputs.length === 0
+        ? draft
+        : await this.mutations.run(() =>
+            this.owns(token, context)
+              ? this.storage.call('storeDraftAttachments', { draftToken: token, files: inputs })
+              : Promise.resolve(failure('UNAUTHORIZED', 'The draft window closed.'))
+          );
+
+    if (!result.ok && ['INTERNAL', 'UNAVAILABLE'].includes(result.error.code))
+      return failure(
+        result.error.code,
+        `Could not store ${files[0]?.name.slice(0, 128) ?? 'attachments'}. Nothing was attached and your draft is kept.`
+      );
+
+    return result.ok && rejected.length > 0
+      ? { ok: true as const, value: { ...result.value, rejected } }
+      : result;
   }
   readonly services = attachmentServices(this, new AttachmentActions(this));
   retireDrafts(): void {

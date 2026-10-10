@@ -1,13 +1,15 @@
-import { readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { renameSync, truncateSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 
 import { expect, it } from 'vitest';
 
 import type { DesktopResult } from '../../shared/contracts/result';
+import { failure } from '../../shared/contracts/result';
 import type { StorageClient } from '../storage/client';
 import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { testStorage } from '../storage/storage-test-fixture';
+import { readAttachmentFiles } from './file-intake';
 import { png } from './png-test-fixture';
 import { retirePendingDraft } from './retirement-flow';
 import { AttachmentService } from './service';
@@ -15,18 +17,26 @@ import { AttachmentService } from './service';
 it('owns managed originals, sender drafts, shared assets and drawing backgrounds through save, undo and durable reopen', async () => {
   const store = testStorage();
   const file = path.join(path.dirname(store.filename), 'fixture.png');
+  const oversize = path.join(path.dirname(store.filename), 'too-large.bin');
+  const missing = path.join(path.dirname(store.filename), 'missing.txt');
 
   writeFileSync(file, png);
+  writeFileSync(oversize, '');
+  truncateSync(oversize, 11 * 1024 * 1024);
+  let rejectStorage = false;
   const storage: Pick<StorageClient, 'call'> = {
     call: <K extends StorageOperation>(name: K, input: StorageRequest<K>) =>
-      Promise.resolve(store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>)
+      Promise.resolve(
+        rejectStorage && name === 'storeDraftAttachments'
+          ? failure('INTERNAL', 'Owned fixture storage refusal.')
+          : (store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>)
+      )
   };
   const context = { senderId: 7 };
   const edges: number[] = [];
   const effects = {
     owner: (id: number) => ({ id, isAlive: () => true, onClose: () => () => undefined }),
-    choose: () =>
-      Promise.resolve([{ name: 'fixture.png', mimeType: 'image/png', bytes: readFileSync(file) }]),
+    choose: () => readAttachmentFiles([oversize, file, missing]),
     paste: () => Promise.resolve([]),
     raster: (_bytes: Uint8Array, edge: number) => {
       edges.push(edge);
@@ -42,6 +52,25 @@ it('owns managed originals, sender drafts, shared assets and drawing backgrounds
 
     expect(draft.ok).toBe(true);
     if (!draft.ok) throw new Error('Draft failed');
+    expect(
+      await service.services.pasteAttachment?.({ draftToken: draft.value.token }, context)
+    ).toMatchObject({
+      ok: false,
+      error: { code: 'UNAVAILABLE', message: 'The clipboard has no image or file to attach.' }
+    });
+    rejectStorage = true;
+    expect(
+      await service.services.chooseAttachments?.({ draftToken: draft.value.token }, context)
+    ).toMatchObject({
+      ok: false,
+      error: {
+        message: 'Could not store fixture.png. Nothing was attached and your draft is kept.'
+      }
+    });
+    expect(store.invoke('getAssetDraft', { draftToken: draft.value.token }).attachments).toEqual(
+      []
+    );
+    rejectStorage = false;
     const intake = await service.services.chooseAttachments?.(
       { draftToken: draft.value.token },
       context
@@ -49,6 +78,11 @@ it('owns managed originals, sender drafts, shared assets and drawing backgrounds
 
     expect(intake?.ok).toBe(true);
     if (intake?.ok !== true) throw new Error('Intake failed');
+    expect(intake.value.rejected).toEqual([
+      { name: 'too-large.bin', reason: '11 MiB exceeds the 10 MiB attachment limit.' },
+      { name: 'missing.txt', reason: 'Could not read this file.' }
+    ]);
+    expect(intake.value.attachments).toHaveLength(1);
     const original = intake.value.attachments[0];
 
     if (original === undefined) throw new Error('Missing image');

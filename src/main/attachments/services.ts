@@ -50,7 +50,15 @@ export function attachmentServices(
       if (!service.owns(input.draftToken, context))
         return failure('UNAUTHORIZED', 'This draft is unavailable.');
       try {
-        return await service.intake(input.draftToken, await service.effects.paste(), context);
+        const intake = await service.effects.paste();
+        const empty = Array.isArray(intake)
+          ? intake.length === 0
+          : intake.files.length + intake.rejected.length === 0;
+
+        if (!service.owns(input.draftToken, context))
+          return failure('UNAUTHORIZED', 'This draft is unavailable.');
+        if (empty) return failure('UNAVAILABLE', 'The clipboard has no image or file to attach.');
+        return await service.intake(input.draftToken, intake, context);
       } catch {
         return failure('UNAVAILABLE', 'Unable to paste an attachment.');
       }
