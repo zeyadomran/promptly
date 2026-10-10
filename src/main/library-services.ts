@@ -1,3 +1,5 @@
+import { desktopAssetEffects } from './attachments/desktop-effects';
+import { AttachmentService } from './attachments/service';
 import { createDesktopCapture } from './capture/desktop-capture';
 import type { CaptureNative } from './capture/ports';
 import { createDesktopCopy } from './copy/desktop-copy';
@@ -26,11 +28,13 @@ export function createLibraryServices(
   const transfer = new StorageTransfer(storage, mutations, dialogs, () => {
     capture.sources.clear();
   });
+  const attachments = new AttachmentService(storage, mutations, desktopAssetEffects(dialogs));
   const previousApp = desktopPreviousApp(native, settings, dialogs, lifecycle);
   const copy = createDesktopCopy(storage, mutations, dialogs, settings, previousApp.previous);
 
   return {
     capture,
+    attachments,
     copy,
     previousApp: previousApp.previous,
     transfer,
@@ -42,7 +46,8 @@ export function createLibraryServices(
       ...capture.service.services,
       ...copy.services,
       ...previousApp.services,
-      ...transfer.services
+      ...transfer.services,
+      ...attachments.services
     }
   };
 }

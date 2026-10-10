@@ -13,6 +13,7 @@ export function libraryFixture(count = 1_000) {
     sourceApp: null,
     sourceAppId: null,
     tags: [],
+    attachments: [],
     lastCopiedAt: null,
     copyCount: 0
   }));

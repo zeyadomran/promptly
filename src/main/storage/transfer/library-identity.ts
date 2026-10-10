@@ -9,9 +9,16 @@ type PortableSnippet = ReturnType<typeof portableSnippetSchema.parse>;
 
 export function snippetIdentity(
   snippet: Pick<PortableSnippet, 'text' | 'createdAt' | 'updatedAt'>,
-  tags: string[]
+  tags: string[],
+  assets: string[] = []
 ) {
-  return JSON.stringify([snippet.text, snippet.createdAt, snippet.updatedAt, [...tags].sort()]);
+  return JSON.stringify([
+    snippet.text,
+    snippet.createdAt,
+    snippet.updatedAt,
+    [...tags].sort(),
+    assets
+  ]);
 }
 
 export function storedIdentity(context: StorageContext, id: string): string | undefined {
@@ -33,7 +40,13 @@ export function storedIdentity(context: StorageContext, id: string): string | un
       createdAt: String(row['createdAt']),
       updatedAt: String(row['updatedAt'])
     },
-    tags
+    tags,
+    context.db
+      .prepare(
+        "SELECT assetId FROM content_assets WHERE ownerKind='snippet' AND ownerId=? ORDER BY position"
+      )
+      .all(id)
+      .map((asset) => String(asset['assetId']))
   );
 }
 
@@ -42,7 +55,7 @@ export function libraryIdentity(context: StorageContext): string {
   const hash = createHash('sha256');
 
   for (const tag of portableTags(context)) hash.update(`${JSON.stringify(['tag', tag])}\n`);
-  for (const snippet of portableSnippets(context))
+  for (const snippet of portableSnippets(context, true))
     hash.update(
       `${JSON.stringify(['snippet', snippet.id, snippet.text, snippet.createdAt, snippet.updatedAt])}\n`
     );
@@ -50,6 +63,24 @@ export function libraryIdentity(context: StorageContext): string {
     .prepare('SELECT snippetId,tagId FROM snippet_tags ORDER BY snippetId,tagId')
     .iterate())
     hash.update(`${JSON.stringify(['membership', row])}\n`);
+  for (const row of context.db
+    .prepare(
+      'SELECT ownerKind,ownerId,position,assetId FROM content_assets ORDER BY ownerKind,ownerId,position'
+    )
+    .iterate())
+    hash.update(JSON.stringify(row));
+  for (const row of context.db.prepare('SELECT id,json,scene FROM assets ORDER BY id').iterate())
+    hash.update(JSON.stringify(row));
+  for (const row of context.db
+    .prepare(
+      'SELECT id,CAST(text AS BLOB) AS text,textUtf16,createdAt,updatedAt,completedAt,position FROM queue_items ORDER BY id'
+    )
+    .iterate())
+    hash.update(JSON.stringify({ ...row, text: decodeSnippetText(row['textUtf16'], row['text']) }));
+  for (const row of context.db
+    .prepare('SELECT itemId,tagId FROM queue_tags ORDER BY itemId,tagId')
+    .iterate())
+    hash.update(JSON.stringify(row));
   return hash.digest('hex');
 }
 

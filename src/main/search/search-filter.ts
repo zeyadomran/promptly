@@ -19,6 +19,8 @@ export function compileSearchFilter(request: Pick<SearchRequest, 'query' | 'tagI
   return {
     text,
     matches(entry: SearchEntry): boolean {
+      if (entry.snippet.text.trim() === '' && (parsed.text.length > 0 || parsed.sources.length > 0))
+        return false;
       for (const requirement of requirements) if (!requirement(entry)) return false;
       return true;
     }

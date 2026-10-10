@@ -14,13 +14,14 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
-import { desktopOperationMethods } from './desktop-operation-methods';
 import { focusSubscription } from './focus-subscription';
 import { navigationSubscription } from './navigation-subscription';
 import { shellCommandSubscription } from './shell-command-subscription';
+import { operationMethods } from './operation-methods';
 import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {
+  resolveDroppedFiles?: (files: File[]) => string[];
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
   listenNavigation?: (listener: (value: unknown) => void) => () => void;
@@ -82,7 +83,20 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
-    ...desktopOperationMethods(call),
+    ...operationMethods(call),
+    addDroppedAttachments: (request) => {
+      if (transport.resolveDroppedFiles === undefined)
+        return Promise.resolve(failure('UNAVAILABLE', 'File dropping is unavailable.'));
+      try {
+        return call('addDroppedAttachments', {
+          draftToken: request.draftToken,
+          paths: transport.resolveDroppedFiles(request.files)
+        });
+      } catch {
+        return Promise.resolve(failure('INVALID_REQUEST', 'Drop actual local files.'));
+      }
+    },
+
     subscribeUpdates: updateSubscription(transport.listenUpdates, focusStops, () => disposed),
     subscribeShellNavigation: navigationSubscription(
       transport.listenNavigation,
@@ -117,7 +131,7 @@ export function createDesktopBridge(
             if (result.success && result.data.ok)
               emit({
                 revision: result.data.value.revision,
-                domains: ['snippets', 'tags', 'settings']
+                domains: ['snippets', 'tags', 'settings', 'queue', 'attachments']
               });
           })
           .catch(() => undefined);

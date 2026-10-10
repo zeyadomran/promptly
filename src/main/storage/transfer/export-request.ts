@@ -9,9 +9,10 @@ export async function exportLibraryFile(
   format: 'json' | 'markdown',
   signal: AbortSignal,
   protectedFiles: readonly string[]
-): Promise<DesktopResult<{ revision: number }>> {
+): Promise<DesktopResult<{ revision: number; attachmentsOmitted?: number }>> {
   await validateExportDestination(filename, protectedFiles);
   let revision = 0;
+  let attachmentsOmitted = 0;
   let rejected: Extract<DesktopResult<unknown>, { ok: false }> | undefined;
 
   try {
@@ -26,6 +27,7 @@ export async function exportLibraryFile(
         }
 
         revision = result.value.revision;
+        attachmentsOmitted = result.value.attachmentsOmitted ?? 0;
       },
       signal,
       () => validateExportDestination(filename, protectedFiles)
@@ -36,5 +38,5 @@ export async function exportLibraryFile(
     throw error;
   }
 
-  return { ok: true, value: { revision } };
+  return { ok: true, value: { revision, attachmentsOmitted } };
 }

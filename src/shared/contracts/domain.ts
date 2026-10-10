@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { attachmentsSchema } from './attachments';
 import { previewLimits } from './preview-limits';
 import { tagPresetColors } from './tag-colors';
 
@@ -36,7 +37,8 @@ export const tagSchema = z.strictObject({
 export const tagSummarySchema = tagSchema.extend({ snippetCount: z.number().int().nonnegative() });
 export const snippetSchema = z.strictObject({
   id: idSchema,
-  text: snippetTextSchema,
+  text: z.string().max(1_000_000),
+  attachments: attachmentsSchema.default([]),
   createdAt: timestampSchema,
   updatedAt: timestampSchema,
   sourceApp: z.string().min(1).max(256).nullable(),
@@ -101,9 +103,9 @@ export const copyStatisticsSchema = snippetSchema.pick({
 export const changeEventSchema = z.strictObject({
   revision: revisionSchema,
   domains: z
-    .array(z.enum(['snippets', 'tags', 'settings']))
+    .array(z.enum(['snippets', 'tags', 'settings', 'queue', 'attachments']))
     .min(1)
-    .max(3),
+    .max(5),
   copyStatistics: copyStatisticsSchema.optional()
 });
 export const captureResultSchema = z.discriminatedUnion('status', [

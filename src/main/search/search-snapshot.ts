@@ -3,6 +3,7 @@ import type { SQLOutputValue } from 'node:sqlite';
 import type { Snippet, Tag } from '../../shared/contracts/domain';
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { foldText } from '../../shared/search/match-text';
+import { AssetRepository } from '../attachments/repository';
 import type { StorageContext } from '../storage/context';
 import { decodeSnippetText, decodeSqlText, snippetColumns, tagColumns } from '../storage/sql-text';
 import { installSearchChangeLog } from './change-log';
@@ -87,7 +88,11 @@ export class SearchSnapshot {
       ...record,
       text: decodeSnippetText(row['textUtf16'], row['text']),
       sourceApp: decodeSqlText(row['sourceApp']),
-      tags
+      tags,
+      attachments: new AssetRepository(this.context).list({
+        kind: 'snippet',
+        id: String(record['id'])
+      })
     });
 
     this.entries.set(snippet.id, {

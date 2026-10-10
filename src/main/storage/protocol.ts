@@ -1,3 +1,4 @@
+import { assetWorkerOperations } from '../../shared/contracts/assets-worker';
 import { importPreviewSchema } from '../../shared/contracts/backup/operations';
 import {
   exportDataSchema,
@@ -11,11 +12,15 @@ import {
   snippetSnapshotSchema
 } from '../../shared/contracts/domain';
 import { operations } from '../../shared/contracts/operations';
+import { queueOperations, queueSnapshotSchema } from '../../shared/contracts/queue';
 import type { DesktopResult } from '../../shared/contracts/result';
 import { captureInputSchema } from '../../shared/contracts/storage';
 import type { StorageStartupCause } from './startup-failure';
 
 export const storageOperations = {
+  ...queueOperations,
+  ...assetWorkerOperations,
+  recordQueueCopy: { request: operations.getQueueItem.request, response: queueSnapshotSchema },
   getSettings: operations.getSettings,
   updateSettings: operations.updateSettings,
   searchSnippets: operations.searchSnippets,

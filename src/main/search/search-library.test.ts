@@ -153,7 +153,8 @@ it('searches literal text with AND filters, sorted pages and committed invalidat
   expect(await call('getSnippet', { id: c.id })).toMatchObject({
     snippet: { text: 'Committed despite subscriber failure' }
   });
-  expect(published.at(-1)).toMatchObject({ revision: 14, domains: ['snippets'] });
+  expect(published.at(-1)?.revision).toBe(14);
+  expect(published.at(-1)?.domains).toEqual(['snippets', 'tags', 'attachments']);
   await client?.close();
   if (directory === undefined) throw new Error('Expected owned worker directory.');
   client = new StorageClient(

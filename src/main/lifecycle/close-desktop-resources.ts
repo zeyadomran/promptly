@@ -46,6 +46,7 @@ export function closeDesktopResources(resources: DesktopResources): Promise<void
   return closeLibraryResources(
     [
       library?.capture,
+      library?.attachments,
       library?.copy,
       library?.transfer,
       onboarding,

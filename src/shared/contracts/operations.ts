@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { attachmentOperations } from './attachments';
 import { transferOperations } from './backup/operations';
 import { bundleSelectionOperations } from './bundle-selection';
 import { copyOutcomeSchema } from './copy';
@@ -10,12 +11,12 @@ import {
   searchPageSchema,
   searchRequestSchema,
   snippetSnapshotSchema,
-  snippetTextSchema,
   tagColorSchema,
   tagInputNameSchema,
   tagSchema,
   tagSummarySchema
 } from './domain';
+import { drawingOperations } from './drawing';
 import { loginStatusSchema } from './login-status';
 import {
   onboardingDestinationSchema,
@@ -23,6 +24,7 @@ import {
   onboardingStepSchema
 } from './onboarding';
 import { previousAppOperations } from './previous-app';
+import { contentWriteSchema, queueOperations } from './queue';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
@@ -44,6 +46,9 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 
 export const operations = {
   ...transferOperations,
+  ...queueOperations,
+  ...attachmentOperations,
+  ...drawingOperations,
   ...updateOperations,
   ...previousAppOperations,
   ...workflowCopyOperations,
@@ -96,11 +101,11 @@ export const operations = {
   getSnippetSource: { request: idRequestSchema, response: snippetSourceSchema },
   openSnippetSource: { request: idRequestSchema, response: emptySchema },
   createSnippet: {
-    request: z.strictObject({ text: snippetTextSchema }),
+    request: contentWriteSchema,
     response: snippetSnapshotSchema
   },
   updateSnippet: {
-    request: z.strictObject({ id: idSchema, text: snippetTextSchema }),
+    request: contentWriteSchema.extend({ id: idSchema }),
     response: snippetSnapshotSchema
   },
   deleteSnippet: {

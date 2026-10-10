@@ -67,7 +67,8 @@ export class StorageTransfer {
           value: {
             status: 'exported',
             revision: snapshot.value.revision,
-            filename: path.basename(filename)
+            filename: path.basename(filename),
+            attachmentsOmitted: snapshot.value.attachmentsOmitted
           }
         };
       }),

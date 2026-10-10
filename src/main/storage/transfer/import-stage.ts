@@ -3,12 +3,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 
-import {
-  membershipSchema,
-  portableSnippetSchema,
-  portableTagSchema
-} from '../../../shared/contracts/backup/format';
+import { membershipSchema, portableTagSchema } from '../../../shared/contracts/backup/format';
 import type { streamRecordSchema } from '../../../shared/contracts/backup/stream';
+import { workflowSnippetSchema } from '../../../shared/contracts/backup/workflow';
 
 type Record = ReturnType<typeof streamRecordSchema.parse>;
 
@@ -29,7 +26,12 @@ export class ImportStage {
       CREATE TABLE memberships (snippetId TEXT REFERENCES snippets(id), tagId TEXT REFERENCES tags(id), PRIMARY KEY(snippetId, tagId));
       CREATE INDEX memberships_by_tag ON memberships(tagId);
       CREATE INDEX tags_by_name ON tags(name COLLATE NOCASE);
-      CREATE INDEX tags_by_target ON tags(target);`);
+      CREATE INDEX tags_by_target ON tags(target);
+      CREATE TABLE workflow_queue(id TEXT PRIMARY KEY,json TEXT NOT NULL,target TEXT UNIQUE,skip INTEGER DEFAULT 0);
+      CREATE TABLE workflow_queue_tags(itemId TEXT REFERENCES workflow_queue(id),tagId TEXT REFERENCES tags(id),PRIMARY KEY(itemId,tagId));
+      CREATE TABLE workflow_assets(id TEXT PRIMARY KEY,json TEXT NOT NULL,data BLOB,target TEXT UNIQUE,fresh INTEGER DEFAULT 0);
+      CREATE TABLE workflow_chunks(id TEXT REFERENCES workflow_assets(id),sequence INTEGER NOT NULL,data BLOB NOT NULL,PRIMARY KEY(id,sequence));
+      CREATE TABLE workflow_attachments(kind TEXT NOT NULL,ownerId TEXT NOT NULL,position INTEGER NOT NULL,assetId TEXT REFERENCES workflow_assets(id),PRIMARY KEY(kind,ownerId,position),UNIQUE(kind,ownerId,assetId));`);
       this.db = database;
     } catch (error) {
       try {
@@ -64,7 +66,7 @@ export class ImportStage {
 
   *snippets() {
     for (const row of this.db.prepare('SELECT json FROM snippets ORDER BY rowid').iterate())
-      yield portableSnippetSchema.parse(JSON.parse(String(row['json'])));
+      yield workflowSnippetSchema.parse(JSON.parse(String(row['json'])));
   }
 
   *memberships() {

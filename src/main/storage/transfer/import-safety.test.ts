@@ -5,6 +5,7 @@ import { expect, it, vi } from 'vitest';
 
 import { denyImportCleanup } from './cleanup-failure-test-fixture';
 import { collidingTagBackup, transferStore } from './transfer-test-fixture';
+import { assertWorkflowSafety } from './workflow-safety-flow';
 
 it('rejects invalid imports and atomically coalesces colliding tag memberships', () => {
   vi.useFakeTimers();
@@ -52,7 +53,7 @@ it('rejects invalid imports and atomically coalesces colliding tag memberships',
     try {
       expect(store.engine.run(1, 'commitLibraryImport', confirmation)).toMatchObject({
         result: { ok: true },
-        change: { domains: ['snippets', 'tags'] }
+        change: { domains: ['snippets', 'tags', 'queue', 'attachments'] }
       });
       expect(store.engine.run(1, 'commitLibraryImport', confirmation).result).toMatchObject({
         ok: false,
@@ -174,6 +175,7 @@ it('rejects invalid imports and atomically coalesces colliding tag memberships',
     expect(
       store.engine.run(1, 'prepareLibraryImport', { filename: truncated }).result
     ).toMatchObject({ ok: false, error: { code: 'INVALID_REQUEST' } });
+    assertWorkflowSafety(store);
   } finally {
     store.dispose();
     vi.useRealTimers();

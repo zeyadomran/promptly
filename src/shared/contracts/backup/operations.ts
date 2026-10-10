@@ -11,7 +11,13 @@ export const importPreviewSchema = z.strictObject({
   remappedSnippetIds: z.number().int().nonnegative(),
   remappedTagIds: z.number().int().nonnegative(),
   coalescedTags: z.number().int().nonnegative(),
-  skippedSnippets: z.number().int().nonnegative()
+  skippedSnippets: z.number().int().nonnegative(),
+  queueItems: z.int().nonnegative().optional(),
+  assets: z.int().nonnegative().optional(),
+  remappedQueueIds: z.int().nonnegative().optional(),
+  remappedAssetIds: z.int().nonnegative().optional(),
+  skippedQueueItems: z.int().nonnegative().optional(),
+  skippedAssets: z.int().nonnegative().optional()
 });
 export type ImportPreview = z.infer<typeof importPreviewSchema>;
 const empty = z.strictObject({});
@@ -30,7 +36,8 @@ export const transferOperations = {
       z.strictObject({
         status: z.literal('exported'),
         revision: revisionSchema,
-        filename: z.string().min(1).max(4096)
+        filename: z.string().min(1).max(4096),
+        attachmentsOmitted: z.int().nonnegative().optional()
       })
     ])
   },

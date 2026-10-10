@@ -1,6 +1,7 @@
 import { DatabaseSync } from 'node:sqlite';
 
 import type { DesktopError } from '../../shared/contracts/result';
+import { collectAssets } from '../attachments/collection';
 import { migrate } from './migrations';
 import { UndoCache } from './undo-cache';
 
@@ -28,6 +29,8 @@ export class StorageContext {
       this.db.exec('PRAGMA foreign_keys = ON; PRAGMA busy_timeout = 5000;');
       migrate(this.db);
       this.db.exec('PRAGMA journal_mode = WAL; PRAGMA synchronous = FULL;');
+      this.db.exec('DELETE FROM drafts; DELETE FROM asset_undo; DELETE FROM queue_undo;');
+      collectAssets(this.db, this.now().getTime());
     } catch (error) {
       this.db.close();
       throw error;
@@ -55,7 +58,9 @@ export class StorageContext {
       if (!Number.isSafeInteger(revision) || revision >= Number.MAX_SAFE_INTEGER)
         throw new StorageError('INTERNAL', 'Storage revision limit reached.');
       this.db.prepare('UPDATE metadata SET revision = revision + 1 WHERE id = 1').run();
+      collectAssets(this.db, this.now().getTime());
       value = action();
+      collectAssets(this.db, this.now().getTime());
       this.db.exec('COMMIT');
     } catch (error) {
       this.db.exec('ROLLBACK');

@@ -6,14 +6,39 @@ import type {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 
-export type OperationCaller = <K extends OperationName>(
+type OperationCall = <K extends OperationName>(
   name: K,
-  input: OperationRequest<K>
+  request: OperationRequest<K>
 ) => Promise<DesktopResult<OperationResponse<K>>>;
 
-/** Explicit frozen bridge methods retain the validated operation allowlist. */
-export function desktopOperationMethods(call: OperationCaller): DesktopOperations {
+export function operationMethods(
+  call: OperationCall
+): Omit<DesktopOperations, 'addDroppedAttachments'> {
   return {
+    listQueue: (request) => call('listQueue', request),
+    getQueueItem: (request) => call('getQueueItem', request),
+    createQueueItem: (request) => call('createQueueItem', request),
+    updateQueueItem: (request) => call('updateQueueItem', request),
+    reorderQueueItems: (request) => call('reorderQueueItems', request),
+    setQueueItemCompleted: (request) => call('setQueueItemCompleted', request),
+    undoQueueCompletion: (request) => call('undoQueueCompletion', request),
+    deleteQueueItem: (request) => call('deleteQueueItem', request),
+    undoDeleteQueueItem: (request) => call('undoDeleteQueueItem', request),
+    saveQueueItemToLibrary: (request) => call('saveQueueItemToLibrary', request),
+    addSnippetToQueue: (request) => call('addSnippetToQueue', request),
+    beginDraft: (request) => call('beginDraft', request),
+    discardDraft: (request) => call('discardDraft', request),
+    removeDraftAttachment: (request) => call('removeDraftAttachment', request),
+    chooseAttachments: (request) => call('chooseAttachments', request),
+    pasteAttachment: (request) => call('pasteAttachment', request),
+    getAttachmentThumbnail: (request) => call('getAttachmentThumbnail', request),
+    getAttachmentImage: (request) => call('getAttachmentImage', request),
+    copyAttachmentImage: (request) => call('copyAttachmentImage', request),
+    saveAttachmentCopy: (request) => call('saveAttachmentCopy', request),
+    saveDrawing: (request) => call('saveDrawing', request),
+    getDrawingScene: (request) => call('getDrawingScene', request),
+    copyDrawingPng: (request) => call('copyDrawingPng', request),
+    exportDrawingPng: (request) => call('exportDrawingPng', request),
     getUpdateState: (request) => call('getUpdateState', request),
     checkForUpdates: (request) => call('checkForUpdates', request),
     installUpdate: (request) => call('installUpdate', request),
@@ -54,6 +79,10 @@ export function desktopOperationMethods(call: OperationCaller): DesktopOperation
     copySnippet: (request) => call('copySnippet', request),
     getPreviousApp: (request) => call('getPreviousApp', request),
     returnToPreviousApp: (request) => call('returnToPreviousApp', request),
+    prepareCopy: (request) => call('prepareCopy', request),
+    commitCopy: (request) => call('commitCopy', request),
+    cancelPreparedCopy: (request) => call('cancelPreparedCopy', request),
+    invalidateCopyDraft: (request) => call('invalidateCopyDraft', request),
     setSnippetTags: (request) => call('setSnippetTags', request),
     setTagMembership: (request) => call('setTagMembership', request),
     ensureTag: (request) => call('ensureTag', request),
@@ -68,10 +97,6 @@ export function desktopOperationMethods(call: OperationCaller): DesktopOperation
     retryShortcuts: (request) => call('retryShortcuts', request),
     setCapturePaused: (request) => call('setCapturePaused', request),
     setShortcutRecording: (request) => call('setShortcutRecording', request),
-    captureSelection: (request) => call('captureSelection', request),
-    prepareCopy: (request) => call('prepareCopy', request),
-    commitCopy: (request) => call('commitCopy', request),
-    cancelPreparedCopy: (request) => call('cancelPreparedCopy', request),
-    invalidateCopyDraft: (request) => call('invalidateCopyDraft', request)
+    captureSelection: (request) => call('captureSelection', request)
   };
 }

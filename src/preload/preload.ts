@@ -1,4 +1,4 @@
-import { contextBridge, ipcRenderer } from 'electron';
+import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 import { changeChannel } from '../shared/contracts/operations';
 import { resultSchema } from '../shared/contracts/result';
@@ -33,6 +33,15 @@ ipcRenderer.on(shellNavigationChannel, (_event, value: unknown) => {
 const platform = process.platform;
 const { bridge, dispose } = createDesktopBridge(
   {
+    resolveDroppedFiles: (files) => {
+      if (files.length > 8) throw new Error('Too many files.');
+      return files.map((file) => {
+        const filename = webUtils.getPathForFile(file);
+
+        if (filename === '') throw new Error('Not a local file.');
+        return filename;
+      });
+    },
     invoke: (channel, request) => ipcRenderer.invoke(channel, request),
     listenUpdates(listener) {
       const onUpdate = (_event: unknown, value: unknown) => {

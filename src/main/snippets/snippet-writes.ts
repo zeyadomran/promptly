@@ -1,6 +1,8 @@
 import { createHash, randomUUID } from 'node:crypto';
 
 import type { Snippet } from '../../shared/contracts/domain';
+import { AssetRepository } from '../attachments/repository';
+import { StorageError } from '../storage/context';
 import type { StorageRequest } from '../storage/protocol';
 import type { SnippetReader } from './snippet-reader';
 
@@ -30,6 +32,10 @@ export class SnippetWrites {
         snippet.copyCount,
         Buffer.from(snippet.text, 'utf16le')
       );
+    new AssetRepository(this.reader.context).replace(
+      { kind: 'snippet', id: snippet.id },
+      snippet.attachments
+    );
     for (const tag of snippet.tags)
       this.reader.context.db
         .prepare('INSERT INTO snippet_tags VALUES (?, ?)')
@@ -52,10 +58,36 @@ export class SnippetWrites {
       createdAt: now,
       updatedAt: now,
       tags: [],
+      attachments:
+        input.draftToken === undefined
+          ? []
+          : new AssetRepository(this.reader.context).draft(input.draftToken).attachments,
       lastCopiedAt: null,
       copyCount: 0
     });
+    this.content(id, input);
     return this.reader.snapshot(id);
+  }
+
+  private content(id: string, input: StorageRequest<'createSnippet'>): void {
+    const { context } = this.reader;
+
+    if (input.tagIds !== undefined) {
+      context.db.prepare('DELETE FROM snippet_tags WHERE snippetId=?').run(id);
+      [...new Set(input.tagIds)].forEach((tag) =>
+        context.db.prepare('INSERT INTO snippet_tags VALUES(?,?)').run(id, tag)
+      );
+    }
+
+    const assets = new AssetRepository(context);
+
+    if (input.draftToken !== undefined) {
+      assets.replace({ kind: 'snippet', id }, assets.draft(input.draftToken).attachments);
+      assets.discard(input.draftToken);
+    }
+
+    if (input.text.trim() === '' && assets.list({ kind: 'snippet', id }).length === 0)
+      throw new StorageError('INVALID_REQUEST', 'Add text or an attachment before saving.');
   }
 
   capture(input: StorageRequest<'captureSnippet'>) {
@@ -99,6 +131,7 @@ export class SnippetWrites {
         Buffer.from(input.text, 'utf16le'),
         input.id
       );
+    this.content(input.id, input);
     return this.reader.snapshot(input.id);
   }
 
