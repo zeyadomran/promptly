@@ -2,6 +2,8 @@
 
 The build copies Promptly's first-party MIT license as `PROMPTLY-LICENSE.txt`, plus license/notice files from the locked, installed production npm graph and both bundled Fontsource font packages. Electron's `LICENSE` and `LICENSES.chromium.html` remain in the installation root; the latter is explicitly added to the Squirrel payload because its default NuGet template omits HTML files.
 
+The main-process foreground grant uses exact `koffi@3.3.3` and its optional Windows x64 prebuild. Vite leaves Koffi external; the packaging filter includes only bundled output and those two complete runtime package trees, with `.node` files unpacked from ASAR. Other dependencies remain bundled. `licenses/@koromix_koffi-win32-x64-3.3.3-LICENSE.txt` is the verbatim MIT license from the [published Koffi 3.3.3 root package](https://registry.npmjs.org/koffi/-/koffi-3.3.3.tgz), retained because the matching Windows prebuild declares MIT but omits its license file.
+
 The checked-in `Promptly.nuspectemplate` is derived from electron-winstaller 5.4.4's MIT-licensed default template, omitting only `iconUrl`; its notice is retained in `licenses/electron-winstaller-5.4.4-LICENSE.txt`.
 
 Checked-in supplemental texts:

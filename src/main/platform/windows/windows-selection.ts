@@ -14,6 +14,8 @@ import {
 } from '../../../shared/contracts/native-selection';
 import type { NativeProcessOptions, TransportFailure } from '../native/native-process';
 import { NativeProcess, NativeTransportError } from '../native/native-process';
+import { ActivationAdmissionError, admitActivation } from './activation-admission';
+import { createForegroundGrant } from './foreground-grant';
 import { SourceCapabilities } from './source-capabilities';
 
 export interface WindowsIdentity {
@@ -34,6 +36,9 @@ export interface WindowsSelectionOptions {
   packaged: boolean;
   applicationPath: string;
 }
+export interface WindowsSelectionEffects extends NativeProcessOptions {
+  allowForeground?: (pid: number) => boolean;
+}
 
 /** Paths originate in Electron main only. No renderer channel exposes this adapter. */
 export function windowsHelperPath(options: WindowsSelectionOptions): string {
@@ -47,7 +52,7 @@ export class WindowsSelection {
   private readiness: Promise<ReturnType<typeof nativeReadySchema.parse>> | undefined;
   private readonly identities: SourceCapabilities;
 
-  constructor(options: NativeProcessOptions) {
+  constructor(private readonly options: WindowsSelectionEffects) {
     this.transport = new NativeProcess(options);
     this.identities = new SourceCapabilities(this.transport);
   }
@@ -129,15 +134,23 @@ export class WindowsSelection {
     if (!this.identities.known(identity)) return 'foregroundChanged';
     try {
       await this.ready();
+      if (!this.identities.known(identity)) return 'foregroundChanged';
       const result = await this.transport.request(
         'activate',
         { identity: identity.token },
         (value) => nativeActivationSchema.parse(value),
-        100
+        100,
+        admitActivation(
+          this.identities,
+          identity,
+          this.transport.generation,
+          this.options.allowForeground
+        )
       );
 
       return result.status;
     } catch (error) {
+      if (error instanceof ActivationAdmissionError) return error.status;
       this.readiness = undefined;
       return error instanceof NativeTransportError ? error.status : 'helperUnavailable';
     }
@@ -156,6 +169,7 @@ export function createWindowsSelection(options: WindowsSelectionOptions): Window
   const executable = windowsHelperPath(options);
 
   return new WindowsSelection({
+    allowForeground: createForegroundGrant(),
     launch: () => spawn(executable, [], { windowsHide: true, stdio: 'pipe' })
   });
 }

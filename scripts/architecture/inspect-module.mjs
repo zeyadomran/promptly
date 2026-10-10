@@ -76,6 +76,8 @@ export function inspectModule(filename, source, root) {
     }
 
     if (layer === 'main') {
+      if (relative === 'src/main/platform/windows/foreground-grant.ts' && specifier === 'koffi')
+        return;
       if (
         relative === 'src/main/lifecycle/application-startup.ts' &&
         specifier === 'electron-squirrel-startup'

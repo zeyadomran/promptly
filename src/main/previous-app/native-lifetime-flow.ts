@@ -11,7 +11,13 @@ export async function assertPreviousAppNativeLifetime(): Promise<void> {
   const children: ReturnType<typeof spawn>[] = [];
   const exits: Promise<unknown>[] = [];
   let visible = true;
+  let grant: 'denied' | 'error' | 'allowed' = 'denied';
   const native = new WindowsSelection({
+    allowForeground: (pid: number) => {
+      assert.equal(pid, children.at(-1)?.pid);
+      if (grant === 'error') throw new Error('Owned foreground grant failure');
+      return grant === 'allowed';
+    },
     launch: () => {
       const child = spawn(
         process.execPath,
@@ -40,6 +46,27 @@ export async function assertPreviousAppNativeLifetime(): Promise<void> {
       state: 'available',
       label: 'Owned provider'
     });
+    assert.deepEqual(await previous.returnToPreviousApp(), {
+      returned: 'denied',
+      label: 'Owned provider'
+    });
+    assert.equal(visible, true);
+    grant = 'error';
+    assert.deepEqual(await previous.returnToPreviousApp(), {
+      returned: 'denied',
+      label: 'Owned provider'
+    });
+    assert.deepEqual(await previous.getPreviousApp(), {
+      state: 'available',
+      label: 'Owned provider'
+    });
+    grant = 'allowed';
+    assert.deepEqual(await previous.returnToPreviousApp(), {
+      returned: 'returned',
+      label: 'Owned provider'
+    });
+    assert.equal(visible, false);
+    visible = true;
     // Exactly fill the helper's bounded cache to retire the earlier issued target.
     for (let index = 0; index < 32; index++) assert.ok(await native.foregroundIdentity());
     assert.deepEqual(await previous.returnToPreviousApp(), {

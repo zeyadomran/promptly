@@ -8,6 +8,7 @@ import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import type { ForgeConfig } from '@electron-forge/shared-types';
 
+import { ignoreRuntimeFile } from './packaging/runtime-files';
 import { releaseSigning, signedRelease } from './windows-sign.config';
 
 const windowsSign = releaseSigning();
@@ -15,7 +16,10 @@ const windowsSign = releaseSigning();
 const config: ForgeConfig = {
   packagerConfig: {
     ...(windowsSign === undefined ? {} : { windowsSign }),
-    asar: true,
+    asar: { unpack: '**/*.node' },
+    ignore: ignoreRuntimeFile,
+    // The explicit filter admits only bundled output and the two native runtime packages.
+    prune: false,
     executableName: 'Promptly',
     icon: path.resolve('out/brand-assets/promptly.ico'),
     extraResource: [

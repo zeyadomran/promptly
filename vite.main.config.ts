@@ -7,6 +7,6 @@ export default defineConfig({
       formats: ['cjs'],
       fileName: (_format, entryName) => `${entryName}.cjs`
     },
-    rollupOptions: { external: ['electron', /^node:/] }
+    rollupOptions: { external: ['electron', 'koffi', /^node:/] }
   }
 });
