@@ -10,10 +10,12 @@ import {
   DialogTitle
 } from '../../components/ui/dialog';
 import { useCompose } from './compose-context';
+import { focusComposeElement, restoreComposeFocus } from './compose-focus';
 
 export function ComposeDraftChoiceDialog() {
   const { model, state, save } = useCompose();
   const keep = useRef<HTMLButtonElement>(null);
+  const opener = useRef<HTMLElement | null>(null);
   const busy = state.pending || state.assetPending;
 
   return (
@@ -26,6 +28,8 @@ export function ComposeDraftChoiceDialog() {
       <DialogContent
         onOpenAutoFocus={(event) => {
           event.preventDefault();
+          opener.current =
+            document.activeElement instanceof HTMLElement ? document.activeElement : null;
           keep.current?.focus();
         }}
         onEscapeKeyDown={(event) => {
@@ -33,7 +37,13 @@ export function ComposeDraftChoiceDialog() {
         }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
-          document.querySelector<HTMLElement>('[data-compose-text]')?.focus();
+          requestAnimationFrame(() => {
+            const current = model.snapshot();
+
+            if (current.draft === undefined) restoreComposeFocus(current.saved);
+            else if (!focusComposeElement(opener.current))
+              focusComposeElement(document.querySelector<HTMLElement>('[data-compose-text]'));
+          });
         }}
       >
         <DialogHeader>
