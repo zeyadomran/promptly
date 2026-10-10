@@ -1,17 +1,20 @@
 import type { ContextSeparator } from '../contracts/workflow-copy';
 import { workflowLimits } from '../contracts/workflow-copy';
 
+export function trimTrailingNewlines(text: string): string {
+  let end = text.length;
+
+  while (end > 0 && (text.charCodeAt(end - 1) === 10 || text.charCodeAt(end - 1) === 13)) end -= 1;
+  return text.slice(0, end);
+}
+
 export function formatContext(texts: readonly string[], separator: ContextSeparator): string {
   const blocks: string[] = [];
   let length = 0;
   const join = separator === 'divider' ? '\n\n---\n\n' : '\n\n';
 
   for (const [index, text] of texts.entries()) {
-    let end = text.length;
-
-    while (end > 0 && (text.charCodeAt(end - 1) === 10 || text.charCodeAt(end - 1) === 13))
-      end -= 1;
-    const trimmed = text.slice(0, end);
+    const trimmed = trimTrailingNewlines(text);
     const block =
       separator === 'tagged'
         ? `<snippet index="${String(index + 1)}">\n${trimmed}\n</snippet>`

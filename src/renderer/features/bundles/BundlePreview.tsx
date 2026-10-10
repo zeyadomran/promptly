@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import type { PreparedCopy, VariableAnswers } from '../../../shared/contracts/workflow-copy';
+import { trimTrailingNewlines } from '../../../shared/workflows/context-text';
 import { ToggleGroup, ToggleGroupItem } from '../../components/ui/toggle-group';
 import { ResolvedPreview } from '../variables/ResolvedPreview';
 import { VariableText } from '../variables/VariableText';
@@ -57,11 +58,11 @@ export function BundlePreview({
                   <pre>
                     {prepared.variables.length > 0 ? (
                       <VariableText
-                        text={segment.text.replace(/[\r\n]+$/u, '')}
+                        text={trimTrailingNewlines(segment.text)}
                         values={previewValid ? values : undefined}
                       />
                     ) : (
-                      segment.text.replace(/[\r\n]+$/u, '')
+                      trimTrailingNewlines(segment.text)
                     )}
                   </pre>
                 </div>
