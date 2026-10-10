@@ -48,6 +48,8 @@ export function closeDesktopResources(resources: DesktopResources): Promise<void
       library?.capture,
       library?.attachments,
       library?.copy,
+      library?.workflow,
+      library?.workflowSave,
       library?.transfer,
       onboarding,
       { close: () => confirmationClosing ?? Promise.resolve() }

@@ -102,6 +102,7 @@ export const copyStatisticsSchema = snippetSchema.pick({
 });
 export const changeEventSchema = z.strictObject({
   revision: revisionSchema,
+  cause: z.enum(['clear', 'import']).optional(),
   domains: z
     .array(z.enum(['snippets', 'tags', 'settings', 'queue', 'attachments']))
     .min(1)

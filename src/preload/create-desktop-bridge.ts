@@ -16,8 +16,8 @@ import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
 import { focusSubscription } from './focus-subscription';
 import { navigationSubscription } from './navigation-subscription';
-import { shellCommandSubscription } from './shell-command-subscription';
 import { operationMethods } from './operation-methods';
+import { shellCommandSubscription } from './shell-command-subscription';
 import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {

@@ -3,7 +3,7 @@ import type { StorageClient } from './client';
 import { LibraryMutations } from './library-mutations';
 
 export function storageDesktopServices(
-  storage: StorageClient,
+  storage: Pick<StorageClient, 'call'>,
   mutations = new LibraryMutations(),
   onDeleted: (id: string) => void = () => undefined
 ): Partial<DesktopOperations> {

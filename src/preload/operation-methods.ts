@@ -83,6 +83,7 @@ export function operationMethods(
     commitCopy: (request) => call('commitCopy', request),
     cancelPreparedCopy: (request) => call('cancelPreparedCopy', request),
     invalidateCopyDraft: (request) => call('invalidateCopyDraft', request),
+    saveWorkflowDraft: (request) => call('saveWorkflowDraft', request),
     setSnippetTags: (request) => call('setSnippetTags', request),
     setTagMembership: (request) => call('setTagMembership', request),
     ensureTag: (request) => call('ensureTag', request),

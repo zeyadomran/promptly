@@ -38,6 +38,7 @@ import {
   windowStateSchema
 } from './window';
 import { workflowCopyOperations } from './workflow-copy';
+import { workflowSaveOperations } from './workflow-save';
 
 const emptySchema = z.strictObject({});
 const idRequestSchema = z.strictObject({ id: idSchema });
@@ -52,6 +53,7 @@ export const operations = {
   ...updateOperations,
   ...previousAppOperations,
   ...workflowCopyOperations,
+  ...workflowSaveOperations,
   ...bundleSelectionOperations,
   getApplicationInfo: {
     request: emptySchema,

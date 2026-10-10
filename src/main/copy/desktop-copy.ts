@@ -6,6 +6,7 @@ import type { StorageClient } from '../storage/client';
 import type { LibraryMutations } from '../storage/library-mutations';
 import type { TransferDialogs } from '../storage/transfer/native-dialogs';
 import { CopyService } from './service';
+import { storageCopyStatistics } from './storage-statistics';
 
 export function createDesktopCopy(
   storage: StorageClient,
@@ -19,6 +20,7 @@ export function createDesktopCopy(
     owner: dialogs.owner,
     writeText: (text) => clipboard.writeText(text),
     variablesEnabled: () => settings.current.settings.promptVariables,
+    recordCopy: storageCopyStatistics(storage),
     returnToPreviousApp: () => previousApp.returnToPreviousApp()
   });
 }

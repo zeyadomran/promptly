@@ -70,6 +70,8 @@ export class CopyService {
       const snapshot = await this.storage.call('getSnippet', { id: input.id });
 
       if (!snapshot.ok) return snapshot;
+      if (snapshot.value.snippet.text.trim() === '')
+        return failure('UNAVAILABLE', 'No text to copy. Attachments are copied separately.');
       if (this.effects.variablesEnabled?.() !== false && hasVariables(snapshot.value.snippet.text))
         return failure(
           'TEMPLATE_REQUIRES_PREPARATION',
@@ -81,7 +83,7 @@ export class CopyService {
           sourceIds: [{ kind: 'snippet', id: input.id }],
           format: input.format,
           return: false,
-          attachmentCount: 0
+          attachmentCount: snapshot.value.snippet.attachments.length
         },
         signal,
         owner,
@@ -90,7 +92,12 @@ export class CopyService {
       );
 
       if (!copied.ok) return copied;
-      const outcome: CopyOutcome = { status: 'copied', id: input.id, warnings: [] };
+      const outcome: CopyOutcome = {
+        status: 'copied',
+        id: input.id,
+        attachmentCount: copied.value.attachmentCount,
+        warnings: []
+      };
       const statistics = copied.value.statistics?.[0];
 
       if (copied.value.warnings.includes('STATISTICS_UNCONFIRMED'))

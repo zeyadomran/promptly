@@ -13,6 +13,7 @@ import type { LibraryMutations } from './storage/library-mutations';
 import type { TransferDialogs } from './storage/transfer/native-dialogs';
 import { StorageTransfer } from './storage/transfer/service';
 import type { WindowLifecycle } from './windows/window-lifecycle';
+import { createDesktopWorkflows } from './workflows/desktop-workflows';
 
 /** One mutation owner across capture, copy, CRUD, import and clear. */
 export function createLibraryServices(
@@ -31,11 +32,21 @@ export function createLibraryServices(
   const attachments = new AttachmentService(storage, mutations, desktopAssetEffects(dialogs));
   const previousApp = desktopPreviousApp(native, settings, dialogs, lifecycle);
   const copy = createDesktopCopy(storage, mutations, dialogs, settings, previousApp.previous);
+  const workflows = createDesktopWorkflows(
+    storage,
+    dialogs.owner,
+    settings,
+    copy,
+    attachments,
+    previousApp.previous
+  );
 
   return {
     capture,
     attachments,
     copy,
+    workflow: workflows.workflow,
+    workflowSave: workflows.saves,
     previousApp: previousApp.previous,
     transfer,
     services: {
@@ -47,6 +58,7 @@ export function createLibraryServices(
       ...copy.services,
       ...previousApp.services,
       ...transfer.services,
+      ...workflows.services,
       ...attachments.services
     }
   };

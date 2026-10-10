@@ -12,6 +12,7 @@ export function storageChange(context: StorageContext, operation: StorageOperati
   if (operation === 'clearLibrary' || operation === 'commitLibraryImport')
     return {
       revision: context.revision(),
+      cause: operation === 'clearLibrary' ? 'clear' : 'import',
       domains: ['snippets', 'tags', 'queue', 'attachments']
     };
   if (operation === 'saveQueueItemToLibrary')
