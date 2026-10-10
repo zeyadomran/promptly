@@ -27,6 +27,9 @@ export const settingsSchema = z.strictObject({
   saveShortcut: shortcutSchema,
   openShortcut: acceleratorSchema,
   pinShortcut: acceleratorSchema.nullable(),
+  composeShortcut: acceleratorSchema.nullable(),
+  composeDestination: z.enum(['queue', 'library']),
+  promptVariables: z.boolean(),
   localShortcuts: localShortcutsSchema,
   doubleTapWindowMs: z.number().int().min(150).max(600),
   showConfirmationToast: z.boolean(),
@@ -50,6 +53,7 @@ export const settingsPatchSchema = settingsSchema
       [
         patch.openShortcut,
         patch.pinShortcut,
+        patch.composeShortcut,
         patch.saveShortcut?.kind === 'combination' ? patch.saveShortcut.accelerator : undefined
       ].every((accelerator) => accelerator == null || globalBindingAllowed(accelerator)),
     'Global text shortcuts need Ctrl, Alt or Win in addition to Shift.'
@@ -72,6 +76,9 @@ export function defaultSettings(): Settings {
     saveShortcut: { kind: 'double-tap', modifier: 'shift' },
     openShortcut: 'Alt+Space',
     pinShortcut: null,
+    composeShortcut: 'Alt+Shift+N',
+    composeDestination: 'queue',
+    promptVariables: true,
     localShortcuts: defaultLocalShortcuts(),
     doubleTapWindowMs: 300,
     showConfirmationToast: true,

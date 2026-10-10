@@ -4,6 +4,7 @@ import {
   settingsSchema,
   type SettingsSnapshot
 } from '../../shared/contracts/settings';
+import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageContext } from '../storage/context';
 import { StorageStartupError } from '../storage/startup-failure';
 
@@ -39,6 +40,12 @@ export class SettingsRepository {
     const parsed = settingsSchema.safeParse({ ...defaults, ...values });
 
     if (!parsed.success) throw new StorageStartupError('preferences');
+    if (
+      values['composeShortcut'] === undefined &&
+      shortcutChangeConflict({ ...parsed.data, composeShortcut: null }, parsed.data, 'win32') !==
+        undefined
+    )
+      parsed.data.composeShortcut = null;
     return { revision: this.context.revision(), settings: parsed.data };
   }
 

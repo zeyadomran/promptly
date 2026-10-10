@@ -14,13 +14,16 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
+import { focusSubscription } from './focus-subscription';
 import { navigationSubscription } from './navigation-subscription';
+import { shellCommandSubscription } from './shell-command-subscription';
 import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
   listenNavigation?: (listener: (value: unknown) => void) => () => void;
+  listenCommands?: (listener: (value: unknown) => void) => () => void;
   listenFocus?: (listener: () => void) => () => void;
   listenUpdates?: (listener: (value: unknown) => void) => () => void;
 }
@@ -116,6 +119,8 @@ export function createDesktopBridge(
     undoDeleteSnippet: (request) => call('undoDeleteSnippet', request),
     duplicateSnippet: (request) => call('duplicateSnippet', request),
     copySnippet: (request) => call('copySnippet', request),
+    getPreviousApp: (request) => call('getPreviousApp', request),
+    returnToPreviousApp: (request) => call('returnToPreviousApp', request),
     setSnippetTags: (request) => call('setSnippetTags', request),
     setTagMembership: (request) => call('setTagMembership', request),
     ensureTag: (request) => call('ensureTag', request),
@@ -136,17 +141,12 @@ export function createDesktopBridge(
       focusStops,
       () => disposed
     ),
-    subscribeWindowFocus(listener) {
-      if (disposed || transport.listenFocus === undefined) return () => undefined;
-      const stopFocus = transport.listenFocus(listener);
-      const unsubscribe = () => {
-        stopFocus();
-        focusStops.delete(unsubscribe);
-      };
-
-      focusStops.add(unsubscribe);
-      return unsubscribe;
-    },
+    subscribeShellCommands: shellCommandSubscription(
+      transport.listenCommands,
+      focusStops,
+      () => disposed
+    ),
+    subscribeWindowFocus: focusSubscription(transport.listenFocus, focusStops, () => disposed),
     subscribeChanges(listener) {
       if (disposed) return () => undefined;
       // Ownership belongs to this registration, even when callbacks are identical.

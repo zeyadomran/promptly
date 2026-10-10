@@ -40,6 +40,7 @@ export function closeDesktopResources(resources: DesktopResources): Promise<void
 
   keyboard?.shortcuts.stopCommands();
   tray?.stopCommands();
+  library?.previousApp.close();
   const confirmationClosing = confirmation?.close();
 
   return closeLibraryResources(

@@ -28,6 +28,7 @@ export const shortcutStatusSchema = z.strictObject({
   capture: z.enum(['registered', 'unavailable']),
   open: z.enum(['registered', 'unavailable']),
   pin: z.enum(['registered', 'unavailable', 'disabled']),
+  compose: z.enum(['registered', 'unavailable', 'disabled']),
   hook: z.enum(['installed', 'unavailable', 'suspended']),
   capturePaused: z.boolean(),
   recording: z.boolean(),
@@ -36,7 +37,8 @@ export const shortcutStatusSchema = z.strictObject({
   labels: z.strictObject({
     capture: z.string().max(128),
     open: z.string().max(128),
-    pin: z.string().max(128).nullable()
+    pin: z.string().max(128).nullable(),
+    compose: z.string().max(128).nullable()
   })
 });
 export type ShortcutStatus = z.infer<typeof shortcutStatusSchema>;

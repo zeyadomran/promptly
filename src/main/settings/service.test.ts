@@ -3,6 +3,7 @@ import path from 'node:path';
 import { expect, it } from 'vitest';
 
 import { defaultSettings } from '../../shared/contracts/settings';
+import { assertComposeMigration } from './compose-migration-test-flow';
 import { loginController } from './login-controller';
 import { loginPreferences } from './login-preferences';
 import { loginTestFixture } from './login-test-fixture';
@@ -164,6 +165,7 @@ it('persists settings across reopen and rolls back rejected native effects', asy
     expect(fixture.store.invoke('getSettings', {})).toMatchObject({
       settings: { launchAtLogin: true, theme: 'light' }
     });
+    await assertComposeMigration();
   } finally {
     await fixture.service.close();
     fixture.store.dispose();

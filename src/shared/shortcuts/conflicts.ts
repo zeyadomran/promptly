@@ -27,6 +27,7 @@ function conflicts(
       settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null
     ],
     ['open', 'Open Promptly', settings.openShortcut],
+    ['compose', 'Quick compose', settings.composeShortcut],
     ['pin', 'Toggle always on top', settings.pinShortcut]
   ];
   const candidates: Candidate[] = globals.flatMap(([action, label, accelerator]) =>
@@ -110,6 +111,14 @@ export const localShortcutLabels = {
   next: 'Next snippet',
   previous: 'Previous snippet',
   copy: 'Copy snippet',
+  newSnippet: 'New snippet or prompt',
+  showLibrary: 'Show Library',
+  showQueue: 'Show Queue',
+  copyAndReturn: 'Copy and return',
+  queueComplete: 'Complete or reopen prompt',
+  moveUp: 'Move up',
+  moveDown: 'Move down',
+  bundle: 'Select context bundle',
   delete: 'Delete snippet',
   deleteAlternate: 'Delete snippet (alternative)',
   focusSearch: 'Focus search',

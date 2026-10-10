@@ -3,6 +3,8 @@ import type { BrowserWindow } from 'electron';
 import {
   focusSearchChannel,
   type NativeShellView,
+  type ShellCommand,
+  shellCommandChannel,
   shellNavigationChannel,
   type SizeMode,
   type WindowKind,
@@ -14,6 +16,10 @@ import type { WindowRecovery } from './visibility';
 export function publishShellNavigation(window: BrowserWindow, view: NativeShellView) {
   window.webContents.send(shellNavigationChannel, view);
   if (view === 'library') window.webContents.send(focusSearchChannel);
+}
+
+export function publishShellCommand(window: BrowserWindow, command: ShellCommand) {
+  window.webContents.send(shellCommandChannel, command);
 }
 
 export function desktopRootKind(onboardingComplete: boolean, mainCreated: boolean) {

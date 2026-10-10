@@ -12,7 +12,7 @@ export async function exerciseShortcutRecovery(
   const services = shortcutServices(fixture.shortcuts);
   const retained = await storage.service.services.getSettings({});
 
-  assert.deepEqual([...fixture.registered.keys()], []);
+  assert.deepEqual([...fixture.registered.keys()], ['Alt+Shift+N']);
   assert.partialDeepStrictEqual(fixture.shortcuts.status, {
     capture: 'unavailable',
     open: 'unavailable',
@@ -28,7 +28,7 @@ export async function exerciseShortcutRecovery(
     ok: false,
     error: { code: 'UNAVAILABLE' }
   });
-  assert.deepEqual([...fixture.registered.keys()], []);
+  assert.deepEqual([...fixture.registered.keys()], ['Alt+Shift+N']);
   fixture.shortcuts.release(7);
   fixture.registered.delete('Control+F');
   await fixture.shortcuts.sleep();
@@ -44,7 +44,7 @@ export async function exerciseShortcutRecovery(
     ok: true,
     value: { open: 'registered', capturePaused: true }
   });
-  assert.deepEqual([...fixture.registered.keys()], ['Control+F']);
+  assert.deepEqual([...fixture.registered.keys()].sort(), ['Alt+Shift+N', 'Control+F']);
   fixture.shortcuts.setPaused(false);
   assert.deepEqual(await storage.service.services.getSettings({}), retained);
   for (const accelerator of ['Shift+A', 'Shift+1', 'Shift+Space', 'Shift+Plus', 'Shift+Num1']) {

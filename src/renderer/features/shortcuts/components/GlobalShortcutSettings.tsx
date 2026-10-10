@@ -71,6 +71,20 @@ export function GlobalShortcutSettings({
       </ShortcutRow>
       <AltSpaceAdvisory preferences={preferences} disabled={inactive} />
       <ShortcutRow
+        label="Quick compose"
+        description="Open a draft from another app. Optional."
+        status={<ShortcutStatusIndicator {...shortcutRegistration(status, 'compose')} />}
+      >
+        <ShortcutBindingControl
+          target="compose"
+          label="Quick compose"
+          optional
+          preferences={preferences}
+          recording={recording}
+          disabled={disabled}
+        />
+      </ShortcutRow>
+      <ShortcutRow
         label="Toggle always on top"
         description="Pin or unpin Promptly. Optional."
         status={<ShortcutStatusIndicator {...shortcutRegistration(status, 'pin')} />}

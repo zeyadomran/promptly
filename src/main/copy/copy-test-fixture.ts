@@ -3,9 +3,13 @@ import { LibraryMutations } from '../storage/library-mutations';
 import type { StorageOperation, StorageRequest, StorageResponse } from '../storage/protocol';
 import { testStorage } from '../storage/storage-test-fixture';
 import type { TransferOwner } from '../storage/transfer/requests';
-import { CopyService } from './service';
+import { type CopyEffects, CopyService } from './service';
 
-export function copyFixture(writeText: (text: string) => Promise<void>, text = 'stored text') {
+export function copyFixture(
+  writeText: (text: string) => Promise<void>,
+  text = 'stored text',
+  extra: Partial<Pick<CopyEffects, 'returnToPreviousApp'>> = {}
+) {
   const store = testStorage(() => new Date('2026-10-02T10:00:00.000Z'));
   const id = store.invoke('createSnippet', { text }).snippet.id;
   const settings = store.invoke('getSettings', {}).settings;
@@ -31,6 +35,8 @@ export function copyFixture(writeText: (text: string) => Promise<void>, text = '
           },
     settings: () => settings,
     writeText,
+    variablesEnabled: () => settings.promptVariables,
+    ...extra,
     hide: () => {
       visible = false;
       return Promise.resolve(true);

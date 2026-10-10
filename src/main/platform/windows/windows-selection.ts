@@ -79,12 +79,12 @@ export class WindowsSelection {
     return result.status === 'ok' ? result.identity : null;
   }
 
-  async foregroundIdentityResult(): Promise<WindowsForegroundResult> {
+  async foregroundIdentityResult(excludePid?: number): Promise<WindowsForegroundResult> {
     try {
       await this.ready();
       const result = await this.transport.request(
         'foreground',
-        {},
+        excludePid === undefined ? {} : { excludePid },
         (value) => nativeForegroundSchema.parse(value),
         100
       );

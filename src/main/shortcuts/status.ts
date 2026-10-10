@@ -34,6 +34,12 @@ export function shortcutStatus(
         : accelerators.registered('pin')
           ? 'registered'
           : 'unavailable',
+    compose:
+      settings?.composeShortcut === null
+        ? 'disabled'
+        : accelerators.registered('compose')
+          ? 'registered'
+          : 'unavailable',
     hook: flags.sleeping ? 'suspended' : health?.installed === true ? 'installed' : 'unavailable',
     capturePaused: flags.paused,
     recording: flags.recording,
@@ -49,7 +55,15 @@ export function shortcutStatus(
       pin:
         settings?.pinShortcut === null || settings === undefined
           ? null
-          : shortcutLabel(settings.pinShortcut, platform)
+          : shortcutLabel(settings.pinShortcut, platform),
+      compose:
+        settings?.composeShortcut === undefined ||
+        settings.composeShortcut === null ||
+        !accelerators.registered('compose') ||
+        flags.recording ||
+        flags.sleeping
+          ? null
+          : shortcutLabel(settings.composeShortcut, platform)
     }
   };
 }

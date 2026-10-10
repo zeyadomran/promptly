@@ -42,7 +42,14 @@ internal static class Program
                     else if (command == "capture") result = SelectionReader.Read(CaptureOptions.Parse(request));
                     else if (command == "foreground")
                     {
-                        var identity = SourceIdentity.Record();
+                        object excluded;
+                        uint excludedPid = 0;
+                        if (request.TryGetValue("excludePid", out excluded))
+                        {
+                            if (!(excluded is int) || (int)excluded < 1) throw new ArgumentException();
+                            excludedPid = (uint)(int)excluded;
+                        }
+                        var identity = SourceIdentity.Record(excludedPid);
                         result = identity == null ? Protocol.Result("foregroundChanged") : identity.Result("ok");
                         if (identity != null) result["bounds"] = identity.Bounds();
                         if (identity != null) result["windowHandle"] = identity.Window.ToInt64().ToString("x16");

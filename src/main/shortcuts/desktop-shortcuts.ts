@@ -50,6 +50,21 @@ export function createDesktopShortcuts(
           },
           () => undefined
         );
+      },
+      compose: () => {
+        commands.run(
+          'compose',
+          async () => {
+            const manager = lifecycle();
+            const preferences = settings();
+
+            if (manager !== undefined && preferences !== undefined)
+              await manager.compose(preferences.current.settings.composeDestination);
+          },
+          () => {
+            lifecycle()?.recoverVisibility();
+          }
+        );
       }
     },
     process.platform,

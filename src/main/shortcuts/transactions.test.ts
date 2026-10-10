@@ -4,6 +4,7 @@ import { expect, it, vi } from 'vitest';
 import { defaultShortcutSettings } from '../../shared/shortcuts/defaults';
 import { planShortcutEdit } from '../../shared/shortcuts/shortcut-edit';
 import { testSettings } from '../settings/settings-test-fixture';
+import { assertComposeShortcutFlow } from './compose-shortcut-test-flow';
 import { exerciseShortcutRecovery } from './recovery-test-flow';
 import { shortcutFixture } from './shortcut-test-fixture';
 
@@ -64,6 +65,7 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
     storage.store.reopen();
     expect(await storage.service.services.getSettings({})).toEqual(initial);
     expect([...fixture.registered.keys()].sort()).toEqual([
+      'Alt+Shift+N',
       'Control+Alt+F7',
       'Control+F',
       'Super+P'
@@ -77,6 +79,8 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
         settings: {
           saveShortcut: { kind: 'double-tap', modifier: 'shift' },
           openShortcut: 'Alt+Space',
+          composeShortcut: 'Alt+Shift+N',
+          composeDestination: 'queue',
           pinShortcut: null,
           doubleTapWindowMs: 300,
           localShortcuts: {
@@ -98,10 +102,11 @@ it('replaces and resets shortcuts atomically while preserving rejected bindings 
         }
       }
     });
-    expect([...fixture.registered.keys()]).toEqual(['Alt+Space']);
+    expect([...fixture.registered.keys()].sort()).toEqual(['Alt+Shift+N', 'Alt+Space']);
     storage.store.reopen();
     expect(await storage.service.services.getSettings({})).toEqual(reset);
     expect(storage.store.invoke('getSnippet', { id: owned.id }).snippet).toEqual(owned);
+    await assertComposeShortcutFlow(fixture, storage);
     const current = storage.service.current;
     const edit = planShortcutEdit(current.settings, 'tag', 'Control+F');
 

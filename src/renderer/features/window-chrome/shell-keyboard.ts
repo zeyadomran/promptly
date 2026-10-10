@@ -24,6 +24,11 @@ export function shellKeyView(
 
   if (wikiKey && globalBindings.some((binding) => localShortcutMatches(binding, input)))
     return undefined;
+  if ((input.view === 'library' || input.view === 'queue') && editableShortcutAllowed(input)) {
+    if (localShortcutMatches(shortcuts.showLibrary, input)) return 'library';
+    if (localShortcutMatches(shortcuts.showQueue, input)) return 'queue';
+  }
+
   if (
     input.view !== 'library' &&
     editableShortcutAllowed(input) &&
@@ -32,7 +37,7 @@ export function shellKeyView(
     return input.view === 'settings' ? 'library' : 'settings';
   if (wikiKey && wikiShortcutAvailable(shortcuts, globalBindings))
     return input.view === 'wiki' ? 'library' : 'wiki';
-  if (input.view === 'library') return undefined;
+  if (input.view === 'library' || input.view === 'queue') return undefined;
   if (input.key === 'Escape' && plain) return 'library';
   return undefined;
 }
@@ -59,11 +64,28 @@ export function wikiShortcutAvailable(
 }
 
 export function shellGlobalBindings(
-  settings: Pick<Settings, 'openShortcut' | 'pinShortcut' | 'saveShortcut'>
+  settings: Pick<Settings, 'openShortcut' | 'pinShortcut' | 'saveShortcut' | 'composeShortcut'>
 ) {
   return [
     settings.openShortcut,
     settings.pinShortcut,
+    settings.composeShortcut,
     settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null
   ];
+}
+
+export function shellKeyCompose(
+  input: ShortcutKeyEvent & { view: ShellView; prevented: boolean; overlay: boolean },
+  shortcuts: LocalShortcuts
+) {
+  return (
+    (input.view === 'library' || input.view === 'queue') &&
+    !input.prevented &&
+    !input.overlay &&
+    !input.repeat &&
+    !input.isComposing &&
+    input.key !== 'Process' &&
+    editableShortcutAllowed(input) &&
+    localShortcutMatches(shortcuts.newSnippet, input)
+  );
 }

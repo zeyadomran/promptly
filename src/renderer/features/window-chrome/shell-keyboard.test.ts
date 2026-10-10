@@ -1,7 +1,7 @@
 import { expect, it } from 'vitest';
 
 import { defaultLocalShortcuts } from '../../../shared/contracts/local-shortcuts';
-import { shellKeyView, wikiShortcutAvailable } from './shell-keyboard';
+import { shellKeyCompose, shellKeyView, wikiShortcutAvailable } from './shell-keyboard';
 
 it('routes wiki and view dismissal while leaving overlays, recording, composition and library commands to their owners', () => {
   const shortcuts = defaultLocalShortcuts();
@@ -56,4 +56,28 @@ it('routes wiki and view dismissal while leaving overlays, recording, compositio
   expect(wikiShortcutAvailable(shortcuts, ['F1'])).toBe(false);
   expect(wikiShortcutAvailable(shortcuts, ['Control+F1', null])).toBe(true);
   expect(wikiShortcutAvailable({ ...shortcuts, copy: 'Control+F1' })).toBe(true);
+  expect(shellKeyView({ ...input, key: '2', code: 'Digit2', ctrlKey: true }, shortcuts)).toBe(
+    'queue'
+  );
+  expect(
+    shellKeyView({ ...input, view: 'queue', key: '1', code: 'Digit1', ctrlKey: true }, shortcuts)
+  ).toBe('library');
+  expect(shellKeyCompose({ ...input, key: 'n', code: 'KeyN', ctrlKey: true }, shortcuts)).toBe(
+    true
+  );
+  expect(
+    shellKeyCompose({ ...input, key: 'n', code: 'KeyN', ctrlKey: true, overlay: true }, shortcuts)
+  ).toBe(false);
+  expect(
+    shellKeyCompose(
+      { ...input, key: 'n', code: 'KeyN', ctrlKey: true, view: 'settings' },
+      shortcuts
+    )
+  ).toBe(false);
+  expect(
+    shellKeyCompose(
+      { ...input, key: 'n', code: 'KeyN', ctrlKey: true, isComposing: true },
+      shortcuts
+    )
+  ).toBe(false);
 });

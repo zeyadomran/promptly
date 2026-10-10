@@ -2,7 +2,7 @@ import type { ShortcutStatus } from '../../../shared/contracts/shortcuts';
 
 export function shortcutRegistration(
   status: ShortcutStatus | undefined,
-  action: 'capture' | 'open' | 'pin',
+  action: 'capture' | 'open' | 'pin' | 'compose',
   captureKind: 'double-tap' | 'combination' = 'double-tap'
 ) {
   if (status === undefined)

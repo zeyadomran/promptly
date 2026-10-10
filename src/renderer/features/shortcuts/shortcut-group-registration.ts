@@ -7,8 +7,8 @@ export function shortcutGroupRegistration(
 ) {
   if (status === undefined || status.quarantined || status.recording || status.hook === 'suspended')
     return shortcutRegistration(status, 'capture', captureKind);
-  const names = { capture: 'Capture', open: 'Open', pin: 'Pin' };
-  const registrations = (['capture', 'open', 'pin'] as const).map((action) => ({
+  const names = { capture: 'Capture', open: 'Open', pin: 'Pin', compose: 'Compose' };
+  const registrations = (['capture', 'open', 'pin', 'compose'] as const).map((action) => ({
     ...shortcutRegistration(status, action, captureKind),
     action: names[action]
   }));

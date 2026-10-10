@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Text;
 
 internal sealed class SourceIdentity
 {
@@ -14,12 +15,13 @@ internal sealed class SourceIdentity
     private static readonly Dictionary<string, SourceIdentity> Identities = new Dictionary<string, SourceIdentity>();
     private static readonly Queue<string> Order = new Queue<string>();
 
-    internal static SourceIdentity Record()
+    internal static SourceIdentity Record(uint excludedPid = 0)
     {
         var window = NativeMethods.GetForegroundWindow();
         uint pid;
         NativeMethods.GetWindowThreadProcessId(window, out pid);
         if (window == IntPtr.Zero || pid == 0 || pid > Int32.MaxValue) return null;
+        if (excludedPid != 0 && (pid == excludedPid || !EligibleExternalWindow(window))) return null;
         try { return RecordProcess(window, pid); }
         catch (ArgumentException) { return null; }
         catch (InvalidOperationException) { return null; }
@@ -28,6 +30,17 @@ internal sealed class SourceIdentity
             if (error.NativeErrorCode == 5) throw new UnauthorizedAccessException();
             return null;
         }
+    }
+
+    private static bool EligibleExternalWindow(IntPtr window)
+    {
+        if (!NativeMethods.IsWindowVisible(window)) return false;
+        var name = new StringBuilder(256);
+        if (NativeMethods.GetClassName(window, name, name.Capacity) == 0) return false;
+        string kind = name.ToString();
+        // Explorer folder windows stay eligible; taskbar/desktop surfaces never become return targets.
+        return kind != "Shell_TrayWnd" && kind != "Shell_SecondaryTrayWnd" &&
+            kind != "Progman" && kind != "WorkerW";
     }
 
     private static SourceIdentity RecordProcess(IntPtr window, uint pid)

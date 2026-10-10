@@ -1,13 +1,17 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import type { ShellCommand } from '../../../shared/contracts/window';
 import { keyboardFocus, windowFocusMaySearch } from '../library/keyboard-focus';
 import { useUpdates } from '../settings/hooks/use-updates';
 import { usePreferences } from '../settings/settings-context';
-import { shellGlobalBindings, shellKeyView } from './shell-keyboard';
+import { shellGlobalBindings, shellKeyCompose, shellKeyView } from './shell-keyboard';
 import { type SettingsSectionId, ShellNavigationContext, type ShellView } from './shell-navigation';
 
 export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<ShellView>('library');
+  const [composeCommand, setComposeCommand] = useState<
+    (ShellCommand & { request: number }) | undefined
+  >();
   const [settingsTarget, setSettingsTarget] = useState({
     section: 'general' as SettingsSectionId,
     request: 0
@@ -22,6 +26,16 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   }, []);
   const showLibrary = useCallback(() => {
     setView('library');
+  }, []);
+  const showQueue = useCallback(() => {
+    setView('queue');
+  }, []);
+  const compose = useCallback((destination: 'library' | 'queue') => {
+    setComposeCommand((current) => ({
+      command: 'compose',
+      destination,
+      request: (current?.request ?? 0) + 1
+    }));
   }, []);
   const showSettings = useCallback(
     (section?: SettingsSectionId) => {
@@ -46,9 +60,20 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
       window.promptly.subscribeShellNavigation((next) => {
         if (next === 'settings') showSettings();
         else if (next === 'wiki') showWiki();
+        else if (next === 'queue') showQueue();
         else showLibrary();
       }),
-    [showLibrary, showSettings, showWiki]
+    [showLibrary, showQueue, showSettings, showWiki]
+  );
+  useEffect(
+    () =>
+      window.promptly.subscribeShellCommands((command) => {
+        setView((current) =>
+          current === 'settings' || current === 'wiki' ? command.destination : current
+        );
+        compose(command.destination);
+      }),
+    [compose]
   );
   useEffect(() => {
     if (view !== 'library') return;
@@ -70,28 +95,33 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   }, [view]);
   useEffect(() => {
     const keydown = (event: KeyboardEvent) => {
-      const next = shellKeyView(
-        {
-          view,
-          key: event.key,
-          code: event.code,
-          ctrlKey: event.ctrlKey,
-          metaKey: event.metaKey,
-          altKey: event.altKey,
-          shiftKey: event.shiftKey,
-          altGraph: event.getModifierState('AltGraph'),
-          repeat: event.repeat,
-          isComposing: event.isComposing,
-          prevented: event.defaultPrevented,
-          overlay: keyboardFocus(event) === 'overlay'
-        },
-        settings.localShortcuts,
-        shellGlobalBindings(settings)
-      );
+      const input = {
+        view,
+        key: event.key,
+        code: event.code,
+        ctrlKey: event.ctrlKey,
+        metaKey: event.metaKey,
+        altKey: event.altKey,
+        shiftKey: event.shiftKey,
+        altGraph: event.getModifierState('AltGraph'),
+        repeat: event.repeat,
+        isComposing: event.isComposing,
+        prevented: event.defaultPrevented,
+        overlay: keyboardFocus(event) === 'overlay'
+      };
+
+      if (shellKeyCompose(input, settings.localShortcuts)) {
+        event.preventDefault();
+        compose(view === 'queue' ? 'queue' : 'library');
+        return;
+      }
+
+      const next = shellKeyView(input, settings.localShortcuts, shellGlobalBindings(settings));
 
       if (next === undefined) return;
       event.preventDefault();
       if (next === 'library') showLibrary();
+      else if (next === 'queue') showQueue();
       else if (next === 'settings') showSettings();
       else showWiki();
     };
@@ -100,13 +130,16 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('keydown', keydown);
     };
-  }, [view, settings, showLibrary, showSettings, showWiki]);
+  }, [view, settings, showLibrary, showQueue, showSettings, showWiki, compose]);
   const navigation = useMemo(
     () => ({
       view,
       settingsSection: settingsTarget.section,
       settingsRequest: settingsTarget.request,
       showLibrary,
+      showQueue,
+      compose,
+      composeCommand,
       showSettings,
       showWiki,
       toggleView: (next: 'settings' | 'wiki') => {
@@ -115,7 +148,7 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
         else showWiki();
       }
     }),
-    [view, settingsTarget, showLibrary, showSettings, showWiki]
+    [view, settingsTarget, showLibrary, showQueue, showSettings, showWiki, compose, composeCommand]
   );
 
   return <ShellNavigationContext value={navigation}>{children}</ShellNavigationContext>;

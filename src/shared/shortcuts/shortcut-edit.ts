@@ -7,7 +7,7 @@ import {
 } from '../contracts/settings';
 import { localShortcutLabels, shortcutChangeConflictDetails } from './conflicts';
 
-export type ShortcutTarget = 'save' | 'open' | 'pin' | keyof LocalShortcuts;
+export type ShortcutTarget = 'save' | 'open' | 'pin' | 'compose' | keyof LocalShortcuts;
 export interface ShortcutCollision {
   action: ShortcutTarget;
   label: string;
@@ -24,6 +24,7 @@ export function shortcutBinding(settings: Settings, target: ShortcutTarget): str
     return settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null;
   if (target === 'open') return settings.openShortcut;
   if (target === 'pin') return settings.pinShortcut;
+  if (target === 'compose') return settings.composeShortcut;
   return settings.localShortcuts[target];
 }
 
@@ -36,6 +37,7 @@ export function shortcutPatch(
     return { saveShortcut: { kind: 'combination', accelerator: binding ?? '' } };
   if (target === 'open') return { openShortcut: binding ?? '' };
   if (target === 'pin') return { pinShortcut: binding };
+  if (target === 'compose') return { composeShortcut: binding };
   return { localShortcuts: { ...settings.localShortcuts, [target]: binding } };
 }
 
@@ -63,7 +65,9 @@ export function planShortcutEdit(
         ? 'Open Promptly'
         : other === 'pin'
           ? 'Toggle always on top'
-          : localShortcutLabels[other];
+          : other === 'compose'
+            ? 'Quick compose'
+            : localShortcutLabels[other];
   const previous = shortcutBinding(settings, target);
   const exchange = { ...patch, ...shortcutPatch(next, other, previous) };
   const swap = settingsPatchSchema.safeParse(exchange);

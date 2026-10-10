@@ -1,5 +1,7 @@
 import { createContext, useContext } from 'react';
 
+import type { ShellCommand } from '../../../shared/contracts/window';
+
 export const settingsSectionIds = [
   'general',
   'shortcuts',
@@ -9,12 +11,15 @@ export const settingsSectionIds = [
   'about'
 ] as const;
 export type SettingsSectionId = (typeof settingsSectionIds)[number];
-export type ShellView = 'library' | 'settings' | 'wiki';
+export type ShellView = 'library' | 'queue' | 'settings' | 'wiki';
 export interface ShellNavigation {
   view: ShellView;
   settingsSection: SettingsSectionId;
   settingsRequest: number;
   showLibrary: () => void;
+  showQueue: () => void;
+  compose: (destination: 'library' | 'queue') => void;
+  composeCommand: (ShellCommand & { request: number }) | undefined;
   showSettings: (section?: SettingsSectionId) => void;
   showWiki: () => void;
   toggleView: (view: 'settings' | 'wiki') => void;

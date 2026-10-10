@@ -5,7 +5,7 @@ import { globalBindingAllowed } from '../../shared/shortcuts/global-binding';
 
 export { acceleratorKey, shortcutLabel } from '../../shared/shortcuts/accelerator';
 
-export type ShortcutAction = 'capture' | 'open' | 'pin';
+export type ShortcutAction = 'capture' | 'open' | 'pin' | 'compose';
 export interface Binding {
   accelerator: string;
   key: string;
@@ -21,6 +21,7 @@ export function bindings(settings: Settings, platform: NodeJS.Platform): Binding
       settings.saveShortcut.kind === 'combination' ? settings.saveShortcut.accelerator : null
     ],
     ['open', settings.openShortcut],
+    ['compose', settings.composeShortcut],
     ['pin', settings.pinShortcut]
   ];
   const entries = candidates.flatMap(([action, accelerator]) =>

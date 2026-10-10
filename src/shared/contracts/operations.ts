@@ -21,6 +21,7 @@ import {
   onboardingStateSchema,
   onboardingStepSchema
 } from './onboarding';
+import { previousAppOperations } from './previous-app';
 import type { DesktopResult } from './result';
 import { settingsPatchSchema, settingsSnapshotSchema } from './settings';
 import { shortcutStatusSchema } from './shortcuts';
@@ -42,6 +43,7 @@ const tagSnapshotSchema = z.strictObject({ revision: revisionSchema, tag: tagSch
 export const operations = {
   ...transferOperations,
   ...updateOperations,
+  ...previousAppOperations,
   getApplicationInfo: {
     request: emptySchema,
     response: z.strictObject({ version: z.string().min(1).max(128) })
