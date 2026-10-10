@@ -2,6 +2,7 @@ import { Button } from '../../components/ui/button';
 import { useLibraryCommands } from './library-commands';
 import { useLibrary } from './library-context';
 import { libraryDisplay } from './library-display';
+import { LibraryBundleBar } from './LibraryBundleBar';
 import { LibraryEmpty } from './LibraryEmpty';
 import { LibraryFooter } from './LibraryFooter';
 import { LibraryList } from './LibraryList';
@@ -46,6 +47,7 @@ export function CompactLibrary() {
           <LibraryList />
         )}
       </div>
+      <LibraryBundleBar />
       <LibraryFooter />
     </section>
   );

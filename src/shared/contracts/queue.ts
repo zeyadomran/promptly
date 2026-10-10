@@ -23,6 +23,7 @@ export const queueItemSchema = z.strictObject({
   lastCopiedAt: timestampSchema.nullable()
 });
 export const queuePreviewSchema = queueItemSchema.extend({
+  variableCount: z.int().min(0).max(33).optional(),
   hasText: z.boolean().optional(),
   text: z.string().max(previewLimits.textUnits)
 });

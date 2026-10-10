@@ -2,6 +2,7 @@ import { Button } from '../../components/ui/button';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
 import { libraryDisplay } from '../library/library-display';
+import { LibraryBundleBar } from '../library/LibraryBundleBar';
 import { LibraryEmpty } from '../library/LibraryEmpty';
 import { LibraryList } from '../library/LibraryList';
 import { LibraryListHeader } from '../library/LibraryListHeader';
@@ -54,6 +55,7 @@ export function RegularLibrary() {
         </div>
         <SnippetPreview />
       </div>
+      <LibraryBundleBar />
       <RegularFooter />
     </section>
   );

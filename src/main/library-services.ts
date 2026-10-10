@@ -36,6 +36,7 @@ export function createLibraryServices(
     },
     () => {
       attachments.retireDrafts();
+      workflows.workflow.retirePreparations();
     }
   );
   const previousApp = desktopPreviousApp(native, settings, dialogs, lifecycle);
