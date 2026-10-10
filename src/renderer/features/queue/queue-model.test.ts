@@ -21,6 +21,18 @@ it('retains queue order on rejected writes, discards stale detail and owns confi
     fixture.release();
     await Promise.resolve();
     expect(model.snapshot().detail?.id).toBe(fixture.second.id);
+    model.select(fixture.first.id);
+    await settle(() => model.snapshot().detail?.id, fixture.first.id);
+    fixture.holdRead(fixture.second.id);
+    fixture.emit();
+    const revealing = model.reveal(fixture.second.id);
+
+    fixture.emit(); // The held full read is now older than the observed change as well.
+    await settle(() => model.snapshot().loading, false);
+    fixture.release();
+    await revealing;
+    expect(model.snapshot().selectedId).toBe(fixture.second.id);
+    expect(model.snapshot().detail?.id).toBe(fixture.second.id);
     fixture.rejectWrites = true;
     await model.complete(fixture.second.id);
     expect(model.snapshot().selectedId).toBe(fixture.second.id);

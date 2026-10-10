@@ -18,9 +18,11 @@ export const allSnippets: SearchRequest = {
   limit: 200
 };
 
-export function testStorage(now?: () => Date) {
+export function testStorage(now?: () => Date, initialize?: (filename: string) => void) {
   const directory = mkdtempSync(path.join(tmpdir(), 'promptly-storage-'));
   const filename = path.join(directory, 'data.sqlite');
+
+  initialize?.(filename);
   let engine = new StorageEngine(filename, now);
 
   return {

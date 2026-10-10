@@ -1,0 +1,13 @@
+.variable-count {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 3px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.variable-count svg {
+  width: 12px;
+  height: 12px;
+}

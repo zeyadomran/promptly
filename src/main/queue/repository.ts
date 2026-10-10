@@ -38,7 +38,7 @@ export class QueueRepository {
       )
       .all(id)
       .map((tag) => tagSchema.parse({ ...tag, name: decodeSqlText(tag['name']) }));
-    const { textUtf16, hasText: _hasText, ...record } = row;
+    const { textUtf16, hasText: _hasText, variableCount: _variableCount, ...record } = row;
 
     return queueItemSchema.parse({
       ...record,
@@ -53,13 +53,18 @@ export class QueueRepository {
   list() {
     const items = this.context.db
       .prepare(
-        'SELECT id,hasText FROM queue_items ORDER BY completedAt IS NOT NULL,CASE WHEN completedAt IS NULL THEN position END,completedAt DESC,id'
+        'SELECT id,hasText,variableCount FROM queue_items ORDER BY completedAt IS NOT NULL,CASE WHEN completedAt IS NULL THEN position END,completedAt DESC,id'
       )
       .all()
       .map((row) => {
         const item = this.read(String(row['id']), true);
 
-        return { ...item, text: rowPreview(item.text, 'row'), hasText: row['hasText'] === 1 };
+        return {
+          ...item,
+          text: rowPreview(item.text, 'row'),
+          hasText: row['hasText'] === 1,
+          variableCount: Number(row['variableCount'])
+        };
       });
 
     return {

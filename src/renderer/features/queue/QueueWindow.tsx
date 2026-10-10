@@ -33,6 +33,7 @@ export function QueueWindow({
   const copy = (id: string, returnToApp = false) => {
     if (!active || state.pending || state.loading) return;
     model.select(id);
+    if (state.items.find((item) => item.id === id)?.hasText === false) return;
     void workflow.requestCopy(
       { kind: 'queue', id },
       {

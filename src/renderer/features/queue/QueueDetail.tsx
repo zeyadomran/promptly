@@ -1,21 +1,14 @@
 import type { QueueItem } from '../../../shared/contracts/queue';
-import { parseTemplate } from '../../../shared/workflows/template';
+import { countTemplateNames } from '../../../shared/workflows/variable-count';
 import { Button } from '../../components/ui/button';
 import { AttachmentStrip } from '../attachments/AttachmentStrip';
 import { LibraryRowTags } from '../library/LibraryRowTags';
 import { usePreferences } from '../settings/settings-context';
 import { relativeTime } from '../snippets/relative-time';
+import { VariableCount } from '../variables/VariableCount';
 import { VariableText } from '../variables/VariableText';
 import { useQueue } from './queue-context';
 import { QueueMoreMenu } from './QueueMoreMenu';
-
-function variableCount(text: string): number {
-  try {
-    return parseTemplate(text).length;
-  } catch {
-    return 33;
-  }
-}
 
 export function QueueDetail({
   copy,
@@ -42,7 +35,7 @@ export function QueueDetail({
     );
   const disabled = state.loading || state.pending || state.detailLoading;
   const hasText = item.text.trim().length > 0;
-  const count = settings.promptVariables ? variableCount(item.text) : 0;
+  const count = countTemplateNames(item.text);
   const edit = () => {
     void onEdit(item.id).catch(() => {
       model.report('Unable to open this prompt for editing.');
@@ -67,12 +60,11 @@ export function QueueDetail({
       <div className="queue-detail-body">
         <div className="queue-detail-meta">
           <time dateTime={item.createdAt}>{relativeTime(item.createdAt)}</time>
-          {count > 0 && (
-            <span>
-              {count > 32 ? '32+' : count} {count === 1 ? 'value' : 'values'}
-            </span>
-          )}
+          <VariableCount count={count} />
           {item.tags.length > 0 && <LibraryRowTags tags={item.tags} />}
+          {item.tags.length > 0 && (
+            <span className="sr-only">Tags: {item.tags.map((tag) => tag.name).join(', ')}</span>
+          )}
         </div>
         <pre className="queue-full-text">
           {hasText ? (

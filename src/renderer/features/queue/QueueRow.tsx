@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/button';
 import { Checkbox } from '../../components/ui/checkbox';
 import { LibraryRowTags } from '../library/LibraryRowTags';
 import { relativeTime } from '../snippets/relative-time';
+import { VariableCount } from '../variables/VariableCount';
 import { useQueue } from './queue-context';
 import { QueueMoreMenu } from './QueueMoreMenu';
 
@@ -43,6 +44,10 @@ export function QueueRow({
       data-queue-id={item.id}
       data-dragging={drag.active || undefined}
       role="option"
+      aria-label={
+        `${hasText ? item.text : 'Attachment only'}. Position ${String(index + 1)} of ${String(total)}.` +
+        (item.tags.length > 0 ? ` Tags: ${item.tags.map((tag) => tag.name).join(', ')}.` : '')
+      }
       aria-selected={state.selectedId === item.id}
       aria-posinset={index + 1}
       aria-setsize={total}
@@ -96,6 +101,7 @@ export function QueueRow({
             {index + 1} of {total}
           </span>
           <time dateTime={item.createdAt}>{relativeTime(item.createdAt)}</time>
+          <VariableCount count={item.variableCount} />
           {item.attachments.length > 0 && (
             <span
               className="queue-attachment-count"

@@ -61,7 +61,8 @@ export class SearchLibrary {
         items.push({
           ...entry.snippet,
           text: rowPreview(entry.snippet.text, request.preview),
-          hasText: entry.snippet.text.trim().length > 0
+          hasText: entry.snippet.text.trim().length > 0,
+          variableCount: entry.variableCount
         });
       total += 1;
     }

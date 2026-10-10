@@ -6,6 +6,8 @@ import type { QueueStore } from './queue-store';
 export class QueueReader {
   private listVersion = 0;
   private detailVersion = 0;
+  private revealVersion = 0;
+  private revealTarget: string | undefined;
   private unsubscribe: (() => void) | undefined;
   constructor(
     private readonly bridge: QueueBridge,
@@ -18,6 +20,7 @@ export class QueueReader {
       this.store.publish({ revision: Math.max(this.store.snapshot().revision, event.revision) });
       if (event.cause === 'clear') {
         this.detailVersion += 1;
+        this.cancelReveal();
         this.store.dismiss();
         this.store.publish({ detail: null, selectedId: null });
       }
@@ -53,13 +56,14 @@ export class QueueReader {
       const latest = this.store.snapshot();
       const visible = queueItems({ ...latest, items: result.value.items });
       const id =
+        visible.find((item) => item.id === this.revealTarget)?.id ??
         visible.find((item) => item.id === latest.selectedId)?.id ??
         visible[Math.min(index, visible.length - 1)]?.id ??
         null;
 
       this.store.publish({ ...result.value, selectedId: id, loading: false, error: undefined });
       if (id === null) this.store.publish({ detail: null, detailLoading: false });
-      else await this.readDetail(id);
+      else if (this.revealTarget === undefined) await this.readDetail(id);
     } catch {
       if (this.store.active && version === this.listVersion)
         this.store.publish({ loading: false, error: 'Unable to refresh queue.' });
@@ -67,11 +71,13 @@ export class QueueReader {
   }
   select(id: string): void {
     if (!queueItems(this.store.snapshot()).some((item) => item.id === id)) return;
+    this.cancelReveal();
     this.store.publish({ selectedId: id, detail: null });
     void this.readDetail(id);
   }
   tab(tab: 'open' | 'done'): void {
     if (this.store.snapshot().pending) return;
+    this.cancelReveal();
     this.detailVersion += 1;
     this.store.publish({ tab, detail: null, selectedId: null });
     const first = queueItems(this.store.snapshot())[0];
@@ -118,18 +124,33 @@ export class QueueReader {
         });
     }
   }
-  async reveal(id: string): Promise<void> {
-    const version = ++this.detailVersion;
+  async reveal(id: string, retry = true): Promise<void> {
+    const version = ++this.revealVersion;
+
+    this.revealTarget = id;
+    this.detailVersion += 1;
 
     try {
       const result = await this.bridge.getQueueItem({ id });
 
-      if (!this.store.active || version !== this.detailVersion) return;
+      if (!this.store.active || version !== this.revealVersion) return;
       if (!result.ok) {
+        this.revealTarget = undefined;
         this.store.publish({ error: result.error.message });
         return;
       }
 
+      if (result.value.revision < this.store.snapshot().revision) {
+        if (retry) await this.reveal(id, false);
+        else {
+          this.revealTarget = undefined;
+          this.store.publish({ error: 'Prompt changed. Refresh queue before showing it.' });
+        }
+
+        return;
+      }
+
+      this.revealTarget = undefined;
       this.store.publish({
         tab: result.value.item.completedAt === null ? 'open' : 'done',
         selectedId: id,
@@ -138,11 +159,18 @@ export class QueueReader {
       });
       await this.load();
     } catch {
-      if (this.store.active && version === this.detailVersion)
+      if (this.store.active && version === this.revealVersion) {
+        this.revealTarget = undefined;
         this.store.publish({ error: 'Unable to reveal this prompt. Refresh queue.' });
+      }
     }
   }
+  private cancelReveal(): void {
+    this.revealVersion += 1;
+    this.revealTarget = undefined;
+  }
   close(): void {
+    this.cancelReveal();
     this.listVersion += 1;
     this.detailVersion += 1;
     this.unsubscribe?.();

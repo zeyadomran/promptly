@@ -27,7 +27,7 @@ export function queueModelFixture() {
   let items = [first, second];
   let before = items;
   let revision = 1;
-  let hold = false;
+  let hold: string | undefined;
   let release: () => void = () => undefined;
   const listeners = new Set<(event: ChangeEvent) => void>();
   const fixture = {
@@ -36,7 +36,10 @@ export function queueModelFixture() {
     snippetId,
     rejectWrites: false,
     holdFirstRead: () => {
-      hold = true;
+      hold = first.id;
+    },
+    holdRead: (id: string) => {
+      hold = id;
     },
     release: () => {
       release();
@@ -77,8 +80,8 @@ export function queueModelFixture() {
     getQueueItem: ({ id }) => {
       const result = snapshot(id);
 
-      if (hold && id === first.id) {
-        hold = false;
+      if (hold === id) {
+        hold = undefined;
         return new Promise((resolve) => {
           release = () => {
             resolve(result);

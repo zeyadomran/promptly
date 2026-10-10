@@ -1,11 +1,14 @@
 import { expect, it } from 'vitest';
 
 import { allSnippets, testStorage } from '../storage/storage-test-fixture';
+import { seedLegacyQueue } from './legacy-test-fixture';
 
 it('keeps an ordered queue independent from reusable snippets through completion undo, delete undo and reopen', () => {
-  const store = testStorage();
+  const store = testStorage(undefined, seedLegacyQueue);
 
   try {
+    expect(store.invoke('listQueue', {}).items.map((item) => item.variableCount)).toEqual([2, 33]);
+    store.invoke('clearLibrary', {});
     const first = store.invoke('createQueueItem', { text: 'First' }).item;
     const second = store.invoke('createQueueItem', { text: 'Second' }).item;
     const third = store.invoke('createQueueItem', { text: 'Third' }).item;
@@ -83,15 +86,30 @@ it('keeps an ordered queue independent from reusable snippets through completion
       store.invoke('listQueue', {}).items.find((item) => item.id === attachmentOnly.id)?.hasText
     ).toBe(false);
     store.invoke('deleteQueueItem', { id: attachmentOnly.id });
-    const longText = 'x'.repeat(1023) + String.fromCodePoint(0x1f642) + 'tail'.repeat(300);
+    const longText =
+      'x'.repeat(1023) +
+      String.fromCodePoint(0x1f642) +
+      '\0{{constructor}} {{constructor}} {{toString}} {{9invalid}} {{two words}}';
 
     store.invoke('updateQueueItem', { id: added.id, text: longText });
     expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.text).toBe(
       'x'.repeat(1023)
     );
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
+    const variableDeletion = store.invoke('deleteQueueItem', { id: added.id });
+
+    store.invoke('undoDeleteQueueItem', { undoToken: variableDeletion.undoToken });
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
     store.reopen();
     expect(store.invoke('getSnippet', { id: snippet.id }).snippet.text).toBe('First');
     expect(store.invoke('getQueueItem', { id: added.id }).item.text).toBe(longText);
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
     expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
       third.id,
       first.id,

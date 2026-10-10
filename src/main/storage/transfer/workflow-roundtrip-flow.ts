@@ -64,10 +64,16 @@ export function workflowRoundtrip(store: ReturnType<typeof transferStore>): void
     draftToken: draft.token
   }).item;
   const snippet = store.invoke('saveQueueItemToLibrary', { id: item.id }).snippet;
+  const templateText = ' '.repeat(1_024) + '\0{{name}} {{name}} {{Résumé}}\ud800';
+
+  store.invoke('updateQueueItem', { id: item.id, text: templateText });
   const complete = store.exportFile();
 
   assert.ok(readFileSync(complete, 'utf8').includes('"version":3'));
-  assert.ok(readFileSync(store.exportFile('markdown'), 'utf8').includes('Attachments omitted'));
+  const markdown = readFileSync(store.exportFile('markdown'), 'utf16le');
+
+  assert.ok(markdown.includes('Attachments omitted'));
+  assert.ok(markdown.includes(templateText));
   store.invoke('clearLibrary', {});
   const preview = store.prepareFile(complete);
 
@@ -75,10 +81,11 @@ export function workflowRoundtrip(store: ReturnType<typeof transferStore>): void
   assert.partialDeepStrictEqual(preview, { queueItems: 1, assets: 3 });
   store.reopen();
   assert.partialDeepStrictEqual(store.invoke('getQueueItem', { id: item.id }).item, {
-    text: '',
+    text: templateText,
     tags: [{ name: 'workflow' }],
     attachments: [{ id: attachment.id }, { id: drawing.id }]
   });
+  assert.equal(store.invoke('listQueue', {}).items[0]?.variableCount, 2);
   assert.equal(
     store.invoke('getSnippet', { id: snippet.id }).snippet.attachments[0]?.id,
     attachment.id

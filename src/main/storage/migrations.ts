@@ -1,6 +1,10 @@
 import type { DatabaseSync } from 'node:sqlite';
 
 import { queueTextPresenceMigration } from '../queue/text-presence-migration';
+import {
+  installQueueVariableCount,
+  queueVariableCountMigration
+} from '../queue/variable-count-migration';
 import { StorageStartupError } from './startup-failure';
 
 export interface Migration {
@@ -93,10 +97,12 @@ export const migrations: readonly Migration[] = [
     CREATE TABLE queue_undo(token TEXT PRIMARY KEY,kind TEXT NOT NULL,json TEXT NOT NULL,expires INTEGER NOT NULL);
   `
   },
-  { version: 5, sql: queueTextPresenceMigration }
+  { version: 5, sql: queueTextPresenceMigration },
+  { version: 6, sql: queueVariableCountMigration }
 ];
 
 export function migrate(db: DatabaseSync, versions: readonly Migration[] = migrations): void {
+  installQueueVariableCount(db);
   const row = db.prepare('PRAGMA user_version').get();
   const current = Number(row?.['user_version']);
   const latest = versions.at(-1)?.version ?? 0;

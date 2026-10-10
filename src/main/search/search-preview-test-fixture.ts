@@ -26,4 +26,18 @@ export async function searchPreviewFlow(call: SearchCall, id: string, request: S
     { start: 0, end: 5 },
     { start: 10, end: 16 }
   ]);
+  await call('updateSnippet', {
+    id,
+    text: ' '.repeat(1_024) + '{{constructor}} {{constructor}} {{toString}} {{9bad}}'
+  });
+  const variables = await call('searchSnippets', { ...request, query: 'constructor', tagIds: [] });
+
+  assert.equal(variables.items.find((item) => item.id === id)?.variableCount, 2);
+  await call('updateSnippet', {
+    id,
+    text: 'marker ' + Array.from({ length: 33 }, (_, index) => `{{v${String(index)}}}`).join(' ')
+  });
+  const capped = await call('searchSnippets', { ...request, query: 'marker', tagIds: [] });
+
+  assert.equal(capped.items[0]?.variableCount, 33);
 }
