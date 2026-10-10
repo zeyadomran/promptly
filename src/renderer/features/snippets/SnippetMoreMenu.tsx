@@ -42,18 +42,23 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
       const result = await window.promptly.addSnippetToQueue({ id: snippet.id });
 
       if (!result.ok) commands?.report(result.error.message);
-      else
-        toast.success('Added to Queue.', {
-          action: {
-            label: 'View queue',
-            onClick: () => {
-              showQueue();
-              void queueModel.reveal(result.value.item.id).catch(() => {
-                commands?.report('Added to Queue. Unable to show this prompt.');
-              });
+      else {
+        try {
+          toast.success('Added to Queue.', {
+            action: {
+              label: 'View queue',
+              onClick: () => {
+                showQueue();
+                void queueModel.reveal(result.value.item.id).catch(() => {
+                  commands?.report('Added to Queue. Unable to show this prompt.');
+                });
+              }
             }
-          }
-        });
+          });
+        } catch {
+          commands?.report('Added to Queue. Feedback is unavailable.');
+        }
+      }
     } catch {
       commands?.report('Unable to add this snippet to Queue.');
     } finally {

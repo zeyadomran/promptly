@@ -6,9 +6,17 @@ export function VariableStatus({ text }: { text: string }) {
 
   if (!settings.promptVariables) return null;
   let count: number;
+  let names = '';
 
   try {
-    count = parseTemplate(text).length;
+    const variables = parseTemplate(text);
+
+    count = variables.length;
+    names =
+      variables
+        .slice(0, 3)
+        .map(({ name }) => name)
+        .join(', ') + (count > 3 ? ` and ${String(count - 3)} more` : '');
   } catch {
     count = 33;
   }
@@ -21,7 +29,7 @@ export function VariableStatus({ text }: { text: string }) {
       {count > 32
         ? '32+ variables. Copy as written or reduce to 32 names.'
         : count > 0
-          ? `${String(count)} ${count === 1 ? 'variable' : 'variables'} · You’ll fill these when copying.`
+          ? `Variables: ${names}. You’ll fill these when copying.`
           : ''}
       {literal > 0 ? `${count > 0 ? ' ' : ''}Unrecognized braces are kept as written.` : ''}
     </p>
