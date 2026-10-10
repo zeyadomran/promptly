@@ -63,6 +63,7 @@ export function LibraryRow({
       data-compact={!regular || undefined}
       data-active={selected}
       data-bundle={bundleMode || undefined}
+      data-cursor={(bundleMode && display.selectedId === snippet.id) || undefined}
       className={`library-row ${positionClass}`}
       onClick={select}
     >

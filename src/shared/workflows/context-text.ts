@@ -7,7 +7,11 @@ export function formatContext(texts: readonly string[], separator: ContextSepara
   const join = separator === 'divider' ? '\n\n---\n\n' : '\n\n';
 
   for (const [index, text] of texts.entries()) {
-    const trimmed = text.replace(/[\r\n]+$/u, '');
+    let end = text.length;
+
+    while (end > 0 && (text.charCodeAt(end - 1) === 10 || text.charCodeAt(end - 1) === 13))
+      end -= 1;
+    const trimmed = text.slice(0, end);
     const block =
       separator === 'tagged'
         ? `<snippet index="${String(index + 1)}">\n${trimmed}\n</snippet>`

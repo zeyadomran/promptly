@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 
 import { workflowBoundsFlow } from './workflow-bounds-flow';
 import { draftCopyFlow } from './workflow-draft-flow';
+import { assertContextNewlines } from './workflow-newlines-flow';
 import { workflowFixture } from './workflow-test-fixture';
 
 it('prepares authoritative bundle text with shared transient answers and copies its exact preview', async () => {
@@ -83,6 +84,7 @@ it('prepares authoritative bundle text with shared transient answers and copies 
       )
     ).toMatchObject({ ok: true });
     expect(fixture.clipboard.at(-1)).toBe('Hello {{ name }}\n{{constructor}}\n');
+    await assertContextNewlines(fixture, one, two);
   } finally {
     await fixture.dispose();
   }

@@ -126,6 +126,10 @@
   background: var(--row-selected);
   box-shadow: inset 0 0 0 1px var(--foreground);
 }
+.library-row[data-bundle='true'][data-cursor='true'] {
+  outline: 2px dashed var(--ring);
+  outline-offset: -4px;
+}
 .library-row:not([aria-selected='true']):hover {
   background: var(--row-hover, color-mix(in srgb, var(--foreground) 3%, var(--background)));
 }

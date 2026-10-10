@@ -37,7 +37,7 @@ export function VariableField({
         maxLength={workflowLimits.value}
         readOnly={pending}
         aria-describedby={`${id}-hint`}
-        aria-invalid={!blank && value === ''}
+        aria-invalid={answer !== undefined && !blank && value === ''}
         onChange={(event) => {
           change(event.target.value);
         }}
