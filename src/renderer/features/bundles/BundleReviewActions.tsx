@@ -21,7 +21,7 @@ export function BundleReviewActions({
     filling.pending || filling.loading || selectionPending || !canCopy || filling.prepared === null;
 
   return (
-    <DialogFooter>
+    <DialogFooter className="workflow-actions">
       <Button variant="outline" disabled={filling.pending} onClick={back}>
         Back
       </Button>

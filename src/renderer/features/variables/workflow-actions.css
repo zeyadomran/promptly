@@ -1,0 +1,19 @@
+.workflow-dialog > .workflow-actions {
+  min-width: 0;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+.workflow-dialog > .workflow-actions > button {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 36px;
+  height: auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.workflow-dialog[data-compact='true'] > .workflow-fill-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}

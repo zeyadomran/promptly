@@ -17,7 +17,7 @@ export function FillValuesActions({
   const disabled = state.pending || state.loading || state.prepared === null;
 
   return (
-    <DialogFooter>
+    <DialogFooter className="workflow-actions workflow-fill-actions">
       <Button
         variant="ghost"
         disabled={state.pending || state.loading || state.source === null}

@@ -1,3 +1,5 @@
+@import './workflow-actions.css';
+
 .workflow-dialog {
   max-height: calc(100dvh - 2rem);
   display: flex;
