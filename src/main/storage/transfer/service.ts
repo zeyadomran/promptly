@@ -17,7 +17,8 @@ export class StorageTransfer {
     private readonly storage: Pick<StorageClient, 'call'>,
     private readonly mutations: LibraryMutations,
     private readonly dialogs: TransferDialogs,
-    private readonly onReplaced: () => void = () => undefined
+    private readonly onReplaced: () => void = () => undefined,
+    private readonly afterCleared: () => void = () => undefined
   ) {
     this.requests = new TransferRequests(dialogs.owner);
     this.previews = new OwnedPreviews((token) =>
@@ -120,7 +121,16 @@ export class StorageTransfer {
           scope.signal.throwIfAborted();
           const committed = await this.storage.call('clearLibrary', {});
 
-          if (committed.ok) this.onReplaced();
+          if (committed.ok) {
+            // Cleanup cannot make a confirmed destructive transaction retryable.
+            try {
+              this.onReplaced();
+              this.afterCleared();
+            } catch {
+              console.warn('Unable to retire cleared content state.');
+            }
+          }
+
           return committed;
         });
 

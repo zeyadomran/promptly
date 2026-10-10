@@ -49,7 +49,7 @@ export function assemblyFixture() {
     owner,
     choose: () => Promise.resolve([{ name: 'Owned image.png', mimeType: 'image/png', bytes: png }]),
     paste: () => Promise.resolve([]),
-    raster: () => ({ png, width: 1, height: 1 }),
+    raster: () => Promise.resolve({ png, width: 1, height: 1 }),
     copyPng: () => Promise.resolve(),
     save: () => Promise.resolve({ status: 'cancelled' })
   });

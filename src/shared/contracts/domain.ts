@@ -63,6 +63,7 @@ export const searchRequestSchema = z.strictObject({
 });
 // A valid full snippet can start with whitespace, and tray normalization can be empty.
 export const snippetPreviewSchema = snippetSchema.extend({
+  hasText: z.boolean().optional(),
   text: z.string().max(previewLimits.textUnits)
 });
 export const searchPageSchema = z.strictObject({

@@ -26,10 +26,18 @@ export function createLibraryServices(
   lifecycle: () => WindowLifecycle | undefined = () => undefined
 ) {
   const capture = createDesktopCapture(storage, mutations, settings, keyboard, native);
-  const transfer = new StorageTransfer(storage, mutations, dialogs, () => {
-    capture.sources.clear();
-  });
   const attachments = new AttachmentService(storage, mutations, desktopAssetEffects(dialogs));
+  const transfer = new StorageTransfer(
+    storage,
+    mutations,
+    dialogs,
+    () => {
+      capture.sources.clear();
+    },
+    () => {
+      attachments.retireDrafts();
+    }
+  );
   const previousApp = desktopPreviousApp(native, settings, dialogs, lifecycle);
   const copy = createDesktopCopy(storage, mutations, dialogs, settings, previousApp.previous);
   const workflows = createDesktopWorkflows(
