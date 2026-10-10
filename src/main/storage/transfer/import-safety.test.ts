@@ -1,10 +1,11 @@
 import { randomUUID } from 'node:crypto';
 import { statSync, truncateSync, writeFileSync } from 'node:fs';
+import path from 'node:path';
 
 import { expect, it, vi } from 'vitest';
 
 import { denyImportCleanup } from './cleanup-failure-test-fixture';
-import { collidingTagBackup, transferStore } from './transfer-test-fixture';
+import { collidingTagBackup, largeLegacyBackup, transferStore } from './transfer-test-fixture';
 import { assertWorkflowSafety } from './workflow-safety-flow';
 
 it('rejects invalid imports and atomically coalesces colliding tag memberships', () => {
@@ -13,6 +14,14 @@ it('rejects invalid imports and atomically coalesces colliding tag memberships',
 
   try {
     const baseline = store.export();
+    const legacy = store.prepare(largeLegacyBackup());
+
+    expect(statSync(store.file).size).toBeGreaterThan(6_004_096);
+    expect(legacy.snippets).toBe(7);
+    store.invoke('discardLibraryImport', { token: legacy.token });
+    expect(
+      store.engine.run(1, 'prepareLibraryImport', { filename: path.dirname(store.file) }).result
+    ).toMatchObject({ ok: false, error: { code: 'UNAVAILABLE' } });
 
     expect(
       store.engine.run(1, 'prepareLibraryImport', { filename: `${store.file}.missing` }).result

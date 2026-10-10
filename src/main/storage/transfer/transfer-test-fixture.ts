@@ -7,6 +7,25 @@ import { streamRecordSchema } from '../../../shared/contracts/backup/stream';
 import { testStorage } from '../storage-test-fixture';
 import { readLines } from './read-lines';
 
+export function largeLegacyBackup(): PortableBackup {
+  const createdAt = '2026-10-02T00:00:00.000Z';
+
+  return {
+    format: 'promptly-library',
+    version: 1,
+    tags: [],
+    memberships: [],
+    snippets: Array.from({ length: 7 }, () => ({
+      id: randomUUID(),
+      text: 'x'.repeat(1_000_000),
+      createdAt,
+      updatedAt: createdAt,
+      lastCopiedAt: null,
+      copyCount: 0
+    }))
+  };
+}
+
 export function collidingTagBackup(baseline: PortableBackup) {
   const first = randomUUID();
   const second = randomUUID();

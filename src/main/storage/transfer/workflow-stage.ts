@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { closeSync, openSync } from 'node:fs';
+import { closeSync, fstatSync, openSync } from 'node:fs';
 
 import { assetLimits } from '../../../shared/contracts/attachments';
 import {
@@ -18,8 +18,18 @@ export function readWorkflowStage(filename: string): ImportStage | undefined {
   let stage: ImportStage | undefined;
 
   try {
-    const lines = readLines(descriptor),
+    if (!fstatSync(descriptor).isFile())
+      throw new StorageError('UNAVAILABLE', 'Choose a readable, regular backup file.');
+    const lines = readLines(descriptor);
+    let first: IteratorResult<string, void>;
+
+    try {
       first = lines.next();
+    } catch (error) {
+      // Format probing must not impose JSON Lines bounds on legacy whole documents.
+      if (error instanceof StorageError && error.code === 'INVALID_REQUEST') return undefined;
+      throw error;
+    }
 
     if (first.done === true) return undefined;
     let header: unknown;
