@@ -10,6 +10,7 @@ export interface WorkflowCopyOptions {
   format?: 'text' | 'markdown' | undefined;
   return?: boolean;
   asWritten?: boolean;
+  feedback?: boolean;
   onCopied?: (outcome: WorkflowCopyOutcome) => void;
 }
 export type WorkflowCopyBridge = WorkflowCopyOperations &

@@ -149,6 +149,12 @@ it('keeps plain copy immediate, opens authoritative templates and blocks copy du
     await controller.requestCopy(prepared.source, { return: true });
     expect(clipboard.at(-1)).toBe('Copy before return');
     expect(controller.snapshot().feedback).toContain('Return was unavailable');
+    await controller.requestCopy(prepared.source, {
+      feedback: false,
+      onCopied: (outcome) => notifications.push(outcome)
+    });
+    expect(notifications).toHaveLength(3);
+    expect(controller.snapshot().feedback).toBeUndefined();
   } finally {
     controller.close();
   }

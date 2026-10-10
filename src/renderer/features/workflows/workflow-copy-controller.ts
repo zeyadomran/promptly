@@ -22,6 +22,7 @@ export class WorkflowCopyController {
   };
   private input: WorkflowCopyInput | undefined;
   private onCopied: WorkflowCopyOptions['onCopied'];
+  private feedback = true;
   private handled: WorkflowCopyOutcome | null = null;
   private readonly listeners = new Set<() => void>();
   private unsubscribe: (() => void) | undefined;
@@ -115,6 +116,7 @@ export class WorkflowCopyController {
     this.publish({ busy: true, error: undefined });
     this.input = input;
     this.onCopied = options.onCopied;
+    this.feedback = options.feedback !== false;
     try {
       if (!current()) return;
       await routeCopy(this.bridge, this.fill, source, options, {
@@ -145,7 +147,7 @@ export class WorkflowCopyController {
     this.onCopied = undefined;
     this.input = undefined;
     clearTimeout(this.timer);
-    this.publish({ feedback: workflowCopyFeedback(outcome) });
+    this.publish({ feedback: this.feedback ? workflowCopyFeedback(outcome) : undefined });
     this.timer = setTimeout(() => {
       this.publish({ feedback: undefined });
     }, 1500);
