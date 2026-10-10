@@ -115,12 +115,10 @@ it(
       expect(conflict).toMatchObject({ remappedSnippetIds: 1, skippedSnippets: 1 });
       store.invoke('commitLibraryImport', { token: conflict.token, revision: conflict.revision });
       const preserved = store.export();
-      const preservedVersion = preserved.snippets.find(
-        (snippet) => snippet.text === 'another version'
-      );
+      const version = preserved.snippets.find((snippet) => snippet.text === 'another version');
 
       expect(preserved.snippets).toHaveLength(3);
-      expect(preservedVersion?.id).not.toBe(first);
+      expect(version?.id).not.toBe(first);
       expect(preserved.memberships).toHaveLength(3);
       const again = store.prepare(conflictBackup);
 
@@ -129,21 +127,18 @@ it(
       expect(store.export()).toEqual(preserved);
       const tagId = imported.memberships[0]?.tagId;
 
-      if (preservedVersion === undefined || tagId === undefined)
+      if (version === undefined || tagId === undefined)
         throw new Error('Expected preserved version and tag');
-      store.invoke('deleteSnippet', { id: preservedVersion.id });
+      store.invoke('deleteSnippet', { id: version.id });
       // A remap candidate can also be another record's deliberate original ID.
       const collision = store.prepare({
         ...conflictBackup,
-        snippets: [
-          ...conflictBackup.snippets,
-          { ...preservedVersion, text: 'separate original ID' }
-        ],
-        memberships: [...conflictBackup.memberships, { snippetId: preservedVersion.id, tagId }]
+        snippets: [...conflictBackup.snippets, { ...version, text: 'separate original ID' }],
+        memberships: [...conflictBackup.memberships, { snippetId: version.id, tagId }]
       });
 
       store.invoke('commitLibraryImport', { token: collision.token, revision: collision.revision });
-      expect(store.invoke('getSnippet', { id: preservedVersion.id }).snippet.text).toBe(
+      expect(store.invoke('getSnippet', { id: version.id }).snippet.text).toBe(
         'separate original ID'
       );
       expect(store.export().snippets).toHaveLength(4);
