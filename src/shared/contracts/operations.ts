@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 import { transferOperations } from './backup/operations';
+import { bundleSelectionOperations } from './bundle-selection';
 import { copyOutcomeSchema } from './copy';
 import {
   captureResultSchema,
@@ -46,6 +47,7 @@ export const operations = {
   ...updateOperations,
   ...previousAppOperations,
   ...workflowCopyOperations,
+  ...bundleSelectionOperations,
   getApplicationInfo: {
     request: emptySchema,
     response: z.strictObject({ version: z.string().min(1).max(128) })

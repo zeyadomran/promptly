@@ -9,6 +9,7 @@ export function storageDesktopServices(
 ): Partial<DesktopOperations> {
   return {
     searchSnippets: (input) => storage.call('searchSnippets', input),
+    matchBundleSelection: (input) => storage.call('matchBundleSelection', input),
     getSnippet: (input) => storage.call('getSnippet', input),
     createSnippet: (input) => mutations.run(() => storage.call('createSnippet', input)),
     updateSnippet: (input) => mutations.run(() => storage.call('updateSnippet', input)),

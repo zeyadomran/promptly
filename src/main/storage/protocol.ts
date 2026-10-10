@@ -19,6 +19,7 @@ export const storageOperations = {
   getSettings: operations.getSettings,
   updateSettings: operations.updateSettings,
   searchSnippets: operations.searchSnippets,
+  matchBundleSelection: operations.matchBundleSelection,
   getSnippet: operations.getSnippet,
   createSnippet: operations.createSnippet,
   updateSnippet: operations.updateSnippet,

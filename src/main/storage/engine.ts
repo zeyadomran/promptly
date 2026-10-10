@@ -13,6 +13,7 @@ import { TransferRepository } from './transfer/repository';
 const reads = new Set<StorageOperation>([
   'getSnippet',
   'searchSnippets',
+  'matchBundleSelection',
   'listTags',
   'getRevision',
   'getSettings',
@@ -49,6 +50,7 @@ export class StorageEngine {
       updateSettings: (input) => settings.write(input),
       getSnippet: (input) => reader.snapshot(input.id),
       searchSnippets: (input) => reader.query(input),
+      matchBundleSelection: (input) => reader.matchSelected(input),
       createSnippet: (input) => writes.create(input),
       updateSnippet: (input) => writes.update(input),
       duplicateSnippet: (input) => writes.duplicate(input),

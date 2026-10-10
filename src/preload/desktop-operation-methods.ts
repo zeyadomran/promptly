@@ -42,6 +42,7 @@ export function desktopOperationMethods(call: OperationCaller): DesktopOperation
     openDesktopWindow: (request) => call('openDesktopWindow', request),
     quitApplication: (request) => call('quitApplication', request),
     searchSnippets: (request) => call('searchSnippets', request),
+    matchBundleSelection: (request) => call('matchBundleSelection', request),
     getSnippet: (request) => call('getSnippet', request),
     getSnippetSource: (request) => call('getSnippetSource', request),
     openSnippetSource: (request) => call('openSnippetSource', request),
