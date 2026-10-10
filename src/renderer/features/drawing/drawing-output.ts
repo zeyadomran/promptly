@@ -1,4 +1,5 @@
 import type { DrawingScene } from '../../../shared/contracts/drawing';
+import type { DesktopError } from '../../../shared/contracts/result';
 import type { loadDrawing } from './drawing-open';
 import type {
   DrawingBridge,
@@ -6,6 +7,21 @@ import type {
   DrawingOpenOptions,
   DrawingRaster
 } from './drawing-types';
+
+class DrawingOutputRefusal extends Error {
+  constructor(readonly refusal: DesktopError) {
+    super(refusal.message);
+  }
+}
+export function drawingOutputFailure(mode: 'save' | 'copy' | 'export', error: unknown): string {
+  if (error instanceof DrawingOutputRefusal)
+    return mode === 'save' ? `${error.message} Your drawing is kept.` : error.message;
+  return mode === 'save'
+    ? 'Could not save the drawing. Your drawing is kept.'
+    : mode === 'export'
+      ? 'Could not export the PNG.'
+      : 'Unable to copy. The clipboard was not confirmed.';
+}
 
 export async function drawingOutput(
   mode: 'save' | 'copy' | 'export',
@@ -31,14 +47,14 @@ export async function drawingOutput(
         : { replaceAttachmentId: saved.replaceAttachmentId })
     });
 
-    if (!save.ok) throw new Error(save.error.message);
+    if (!save.ok) throw new DrawingOutputRefusal(save.error);
     return { attachments: save.value.attachments, announcement: 'Drawing saved.' };
   }
 
   const result =
     mode === 'copy' ? await bridge.copyDrawingPng({ png }) : await bridge.exportDrawingPng({ png });
 
-  if (!result.ok) throw new Error(result.error.message);
+  if (!result.ok) throw new DrawingOutputRefusal(result.error);
   return {
     attachments: undefined,
     announcement:

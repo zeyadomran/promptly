@@ -21,6 +21,7 @@ export function AttachmentChip({
   pending = false,
   onRemove,
   onAnnotate,
+  annotationDisabledReason,
   onError
 }: {
   attachment: Attachment;
@@ -29,6 +30,7 @@ export function AttachmentChip({
   pending?: boolean;
   onRemove?: () => void;
   onAnnotate?: (id: string) => void;
+  annotationDisabledReason?: string | undefined;
   onError: (message: string) => void;
 }) {
   const [preview, setPreview] = useState(false);
@@ -123,7 +125,8 @@ export function AttachmentChip({
               )}
               {image && onAnnotate !== undefined && (
                 <DropdownMenuItem
-                  disabled={pending}
+                  disabled={pending || annotationDisabledReason !== undefined}
+                  title={annotationDisabledReason}
                   onSelect={() => {
                     onAnnotate(attachment.id);
                   }}

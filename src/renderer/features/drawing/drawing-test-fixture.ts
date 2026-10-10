@@ -1,7 +1,7 @@
 import type { Attachment } from '../../../shared/contracts/attachments';
 import type { DrawingScene } from '../../../shared/contracts/drawing';
 import type { OperationRequest, OperationResponse } from '../../../shared/contracts/operations';
-import type { DesktopResult } from '../../../shared/contracts/result';
+import type { DesktopError, DesktopResult } from '../../../shared/contracts/result';
 import type { DrawingBridge } from './drawing-types';
 
 export const drawingToken = '00000000-0000-4000-8000-000000000007';
@@ -22,6 +22,7 @@ export const encodedFixture = new Uint8Array([1, 2, 3]);
 export function drawingTestFixture() {
   const state: {
     allowSave: boolean;
+    saveFailure?: DesktopError;
     allowCopy: boolean;
     allowExport: boolean;
     clipboard: Uint8Array | undefined;
@@ -56,7 +57,8 @@ export function drawingTestFixture() {
         state.scene === undefined ? unavailable : { ok: true, value: { scene: state.scene } }
       ),
     saveDrawing: (input) => {
-      if (!state.allowSave) return Promise.resolve(unavailable);
+      if (!state.allowSave)
+        return Promise.resolve({ ok: false, error: state.saveFailure ?? unavailable.error });
       state.saved = input;
       state.scene = input.scene;
       const attachment: Attachment = {

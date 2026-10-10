@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import type { Attachment } from '../../../shared/contracts/attachments';
 import type { OperationResponse } from '../../../shared/contracts/operations';
 import type { DesktopResult } from '../../../shared/contracts/result';
+import { assertDrawingCapacity } from './drawing-capacity-test-flow';
 import { DrawingSession } from './drawing-session';
 import {
   drawingTestFixture,
@@ -71,12 +72,16 @@ it('keeps a bounded editable canvas through tools, history, unsaved PNG output, 
   expect(fixture.state.exported).toEqual(encodedFixture);
   expect(staged).toEqual([]);
   expect(session.snapshot()).toMatchObject({ isOpen: true, dirty: true });
+  fixture.state.saveFailure = {
+    code: 'UNAVAILABLE',
+    message: 'Managed attachments exceed 512 MiB. Remove unused content first.'
+  };
   expect(await session.output('save')).toBe(false);
   expect(session.snapshot()).toMatchObject({
     isOpen: true,
     dirty: true,
     pending: undefined,
-    error: 'Could not save the drawing. Your drawing is kept.'
+    error: 'Managed attachments exceed 512 MiB. Remove unused content first. Your drawing is kept.'
   });
   fixture.state.allowSave = true;
   expect(await session.output('save')).toBe(true);
@@ -102,12 +107,8 @@ it('keeps a bounded editable canvas through tools, history, unsaved PNG output, 
   const drawing = fixture.state.attachment;
 
   if (drawing === undefined) throw new Error('Missing drawing');
-  await session.open({
-    draftToken: drawingToken,
-    attachments: staged,
-    attachmentId: drawing.id,
-    onSaved: () => undefined
-  });
+  expect(await assertDrawingCapacity(session, drawing)).toEqual([false, false]);
+  expect(warnings.at(-1)).toContain('An entry can have up to 8 attachments.');
   expect(session.snapshot()).toMatchObject({
     dirty: false,
     scene: { width: 64, height: 32, backgroundAttachmentId: imageAttachment.id }

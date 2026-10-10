@@ -1,7 +1,8 @@
+import { drawingCapacityReason } from './drawing-capacity';
 import { DrawingCommands } from './drawing-commands';
 import { DrawingModel } from './drawing-model';
 import { loadDrawing } from './drawing-open';
-import { drawingOutput } from './drawing-output';
+import { drawingOutput, drawingOutputFailure } from './drawing-output';
 import { type DrawingState, initialDrawingState } from './drawing-state';
 import type { DrawingBridge, DrawingEncoder, DrawingOpenOptions } from './drawing-types';
 
@@ -72,6 +73,13 @@ export class DrawingSession {
   }
   async open(options: DrawingOpenOptions): Promise<void> {
     if (this.closed || this.state.isOpen) return;
+    const refusal = drawingCapacityReason(options.attachments, options.attachmentId);
+
+    if (refusal !== undefined) {
+      this.warn(refusal);
+      return;
+    }
+
     const generation = ++this.generation;
 
     this.options = options;
@@ -161,16 +169,11 @@ export class DrawingSession {
         options,
         active
       );
-    } catch {
+    } catch (error) {
       if (active())
         this.publish({
           pending: undefined,
-          error:
-            mode === 'save'
-              ? 'Could not save the drawing. Your drawing is kept.'
-              : mode === 'export'
-                ? 'Could not export the PNG.'
-                : 'Unable to copy. The clipboard was not confirmed.'
+          error: drawingOutputFailure(mode, error)
         });
       return false;
     }

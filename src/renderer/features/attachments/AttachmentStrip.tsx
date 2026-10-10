@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Attachment } from '../../../shared/contracts/attachments';
 import type { DesktopResult } from '../../../shared/contracts/result';
 import { Button } from '../../components/ui/button';
+import { drawingCapacityReason } from '../drawing/drawing-capacity';
 import { AttachmentChip } from './AttachmentChip';
 
 export interface AttachmentStripProps {
@@ -32,6 +33,7 @@ export function AttachmentStrip({
   const [message, setMessage] = useState<string>();
   const [drag, setDrag] = useState(false);
   const [busy, setBusy] = useState(false);
+  const drawingRefusal = drawingCapacityReason(attachments);
   const report = (error: string) => {
     setMessage(error);
     onError?.(error, draftToken);
@@ -119,6 +121,7 @@ export function AttachmentStrip({
               editable={editable}
               pending={pending || busy}
               {...(onAnnotate === undefined ? {} : { onAnnotate })}
+              annotationDisabledReason={drawingCapacityReason(attachments, attachment.id)}
               onError={report}
               onRemove={() => {
                 if (draftToken !== undefined)
@@ -157,7 +160,8 @@ export function AttachmentStrip({
           <Button
             variant="ghost"
             size="sm"
-            disabled={pending || busy || onDraw === undefined}
+            disabled={pending || busy || onDraw === undefined || drawingRefusal !== undefined}
+            title={drawingRefusal}
             onClick={onDraw}
           >
             <Pencil aria-hidden="true" />
@@ -165,6 +169,11 @@ export function AttachmentStrip({
           </Button>
           <span className="attachment-limit">{String(attachments.length)} of 8 · 10 MB each</span>
         </div>
+      )}
+      {editable && drawingRefusal !== undefined && (
+        <p className="attachment-limit" role="status">
+          {drawingRefusal}
+        </p>
       )}
       {drag && <p className="attachment-drop-notice">Drop to attach</p>}
       {message !== undefined && (
