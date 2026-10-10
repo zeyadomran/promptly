@@ -7,6 +7,7 @@ import {
 import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageContext } from '../storage/context';
 import { StorageStartupError } from '../storage/startup-failure';
+import { migrateShortcutDefaults } from './migrate-shortcut-defaults';
 
 /** Only the worker owns SQL. Missing keys migrate to defaults; corrupt keys fail closed. */
 export class SettingsRepository {
@@ -40,6 +41,7 @@ export class SettingsRepository {
     const parsed = settingsSchema.safeParse({ ...defaults, ...values });
 
     if (!parsed.success) throw new StorageStartupError('preferences');
+    migrateShortcutDefaults(parsed.data, local);
     if (
       values['composeShortcut'] === undefined &&
       shortcutChangeConflict({ ...parsed.data, composeShortcut: null }, parsed.data, 'win32') !==

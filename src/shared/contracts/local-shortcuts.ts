@@ -23,14 +23,14 @@ export const localShortcutsSchema = z.strictObject({
   next: localAcceleratorSchema,
   previous: localAcceleratorSchema,
   copy: localAcceleratorSchema,
-  newSnippet: localAcceleratorSchema,
-  showLibrary: localAcceleratorSchema,
-  showQueue: localAcceleratorSchema,
-  copyAndReturn: localAcceleratorSchema,
-  queueComplete: localAcceleratorSchema,
-  moveUp: localAcceleratorSchema,
-  moveDown: localAcceleratorSchema,
-  bundle: localAcceleratorSchema,
+  newSnippet: localAcceleratorSchema.nullable(),
+  showLibrary: localAcceleratorSchema.nullable(),
+  showQueue: localAcceleratorSchema.nullable(),
+  copyAndReturn: localAcceleratorSchema.nullable(),
+  queueComplete: localAcceleratorSchema.nullable(),
+  moveUp: localAcceleratorSchema.nullable(),
+  moveDown: localAcceleratorSchema.nullable(),
+  bundle: localAcceleratorSchema.nullable(),
   delete: localAcceleratorSchema,
   deleteAlternate: localAcceleratorSchema.nullable(),
   focusSearch: localAcceleratorSchema,
@@ -44,6 +44,16 @@ export const localShortcutsSchema = z.strictObject({
 });
 
 export type LocalShortcuts = z.infer<typeof localShortcutsSchema>;
+export const optionalLocalShortcutActions = [
+  'newSnippet',
+  'showLibrary',
+  'showQueue',
+  'copyAndReturn',
+  'queueComplete',
+  'moveUp',
+  'moveDown',
+  'bundle'
+] as const;
 
 export function defaultLocalShortcuts(): LocalShortcuts {
   return {

@@ -1,4 +1,7 @@
-import type { LocalShortcuts } from '../../../../shared/contracts/local-shortcuts';
+import {
+  type LocalShortcuts,
+  optionalLocalShortcutActions
+} from '../../../../shared/contracts/local-shortcuts';
 import { localShortcutLabels } from '../../../../shared/shortcuts/conflicts';
 import { ShortcutBindingControl } from '../../shortcuts/components/ShortcutBindingControl';
 import { ShortcutGroup } from '../../shortcuts/components/ShortcutGroup';
@@ -63,6 +66,7 @@ export function LocalShortcutSettings({
               target={action}
               label={localShortcutLabels[action]}
               scope="local"
+              optional={optionalLocalShortcutActions.some((key) => key === action)}
               preferences={preferences}
               recording={recording}
               disabled={disabled}
