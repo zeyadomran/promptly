@@ -28,6 +28,8 @@ When you invoke capture, Promptly asks the foreground application's Windows acce
 
 Global shortcut detection processes keyboard events locally to recognize configured shortcuts. It does not save a history of what you type. Temporary process and window identifiers are used to capture from, position feedback near, and return to the source application.
 
+While Promptly runs, it observes foreground window and process identity to maintain a recent external target for return when Promptly is opened or refocused. This foreground tracking keeps that identity in memory. It does not read text from the foreground app or persist a history of apps you use.
+
 Native capture does not read the clipboard or simulate Copy. **Paste attachment** is a separate explicit command that reads clipboard images or files and ignores clipboard text. Chooser/drop intake reads the files you select and stores managed copies locally. Safe image decoding occurs in a private isolated local renderer; it does not fetch remote content.
 
 Explicit text, bundle and image Copy actions write the Windows clipboard, including values you filled for that copy. Other applications and Windows clipboard history or synchronization may then access that content according to your system settings. Capture previews and copy/drawing dialogs can display your content on screen.

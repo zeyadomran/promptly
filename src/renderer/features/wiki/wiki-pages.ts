@@ -18,7 +18,7 @@ export interface WikiPage {
   title: string;
   markdown: string;
 }
-/** Vendored wiki 63084f5a78bdcb4173a2534061141920e3e893a6; Vite embeds Markdown without network I/O. */
+/** Vendored wiki 3088926247d49c7b2f641fa3bd5c9fc9a4dbb9e8; Vite embeds Markdown without network I/O. */
 export const wikiPages: readonly WikiPage[] = [
   { id: 'Home', title: 'Home', markdown: home },
   { id: 'Getting-Started', title: 'Getting Started', markdown: gettingStarted },

@@ -54,9 +54,13 @@ lists, their order and attachments, even when Library is empty. See
 ## Copy or save and return
 
 **Copy** writes text and keeps Promptly open. **Copy and return** writes the clipboard first,
-then attempts to return to the app that was foreground before Promptly opened. **Save and
-return** saves the draft first and then attempts the same return; it does not copy text.
-These actions are unavailable when no previous app is known.
+then attempts to return to the recent external app observed when Promptly opened or regained
+focus. **Save and return** saves the draft first and then attempts the same return; it does
+not copy text.
+
+Promptly observes window and process identity while it runs to refresh the return target when
+refocused. This tracking does not read app text or save an app history. Return availability is
+conservative: these actions are unavailable if Promptly cannot establish or validate a target.
 
 Promptly never pastes automatically. Paste yourself in the target app. If that app closed or
 Windows refuses activation, the copy or save remains successful and Promptly reports why it
