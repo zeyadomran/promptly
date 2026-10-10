@@ -104,6 +104,17 @@ export function ComposePane() {
             <ToggleGroupItem value="library">Library</ToggleGroupItem>
           </SegmentedControl>
         </div>
+        <DraftTags
+          key={token}
+          selectedIds={draft.tagIds}
+          pending={busy}
+          onBusy={(pending) => {
+            model.setAssetPending(token, pending);
+          }}
+          onChange={(ids) => {
+            if (model.snapshot().draft?.draftToken === token) model.changeTags(ids);
+          }}
+        />
         <label className="compose-text-label" htmlFor="compose-text">
           Prompt text
         </label>
@@ -119,17 +130,6 @@ export function ComposePane() {
           aria-invalid={state.error !== undefined}
           onChange={(event) => {
             model.changeText(event.target.value);
-          }}
-        />
-        <DraftTags
-          key={token}
-          selectedIds={draft.tagIds}
-          pending={busy}
-          onBusy={(pending) => {
-            model.setAssetPending(token, pending);
-          }}
-          onChange={(ids) => {
-            if (model.snapshot().draft?.draftToken === token) model.changeTags(ids);
           }}
         />
         <AttachmentStrip

@@ -49,18 +49,6 @@ export function ComposeActions() {
           pending={busy}
         />
         <Button
-          variant={returning ? 'outline' : 'default'}
-          disabled={busy}
-          aria-disabled={empty}
-          aria-describedby={empty ? 'compose-error' : undefined}
-          onClick={() => {
-            confirm();
-          }}
-        >
-          <Save aria-hidden="true" />
-          {state.pending ? 'Saving…' : 'Save'}
-        </Button>
-        <Button
           variant={returning ? 'default' : 'outline'}
           disabled={busy || copy.returnLabel === undefined}
           aria-disabled={empty || copy.returnLabel === undefined}
@@ -74,7 +62,23 @@ export function ComposeActions() {
           }}
         >
           <CornerUpLeft aria-hidden="true" />
-          Save and return
+          {state.pending && returning ? 'Saving' : 'Save and return'}
+        </Button>
+        <Button
+          variant={returning ? 'outline' : 'default'}
+          disabled={busy}
+          aria-disabled={empty}
+          aria-describedby={empty ? 'compose-error' : undefined}
+          onClick={() => {
+            confirm();
+          }}
+        >
+          <Save aria-hidden="true" />
+          {state.pending && !returning
+            ? 'Saving'
+            : draft.source === undefined
+              ? 'Save'
+              : 'Apply changes'}
         </Button>
       </div>
       {copy.returnLabel === undefined && (

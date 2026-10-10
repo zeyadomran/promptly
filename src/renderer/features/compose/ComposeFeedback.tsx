@@ -16,26 +16,33 @@ export function ComposeFeedback({
       </p>
     ) : null;
   return (
-    <div className="workspace-feedback" role="status">
-      <span>
-        Saved to {saved.destination === 'queue' ? 'Queue' : 'Library'}.
-        {saved.returned === 'unavailable' || saved.returned === 'denied'
-          ? ' Unable to return; your prompt is saved.'
-          : saved.returned === 'returned'
-            ? ` Returned to ${saved.returnLabel ?? 'your previous app'}.`
-            : ''}
-      </span>
-      <Button
-        variant="ghost"
-        size="xs"
-        onClick={() => {
-          void show(saved.destination, saved.id).catch(() => {
-            model.report('Saved. Unable to show the entry. Try again.');
-          });
-        }}
-      >
-        Show
-      </Button>
-    </div>
+    <>
+      <div className="workspace-feedback" role="status">
+        <span>
+          Saved to {saved.destination === 'queue' ? 'Queue' : 'Library'}.
+          {saved.returned === 'unavailable' || saved.returned === 'denied'
+            ? ' Unable to return; your prompt is saved.'
+            : saved.returned === 'returned'
+              ? ` Returned to ${saved.returnLabel ?? 'your previous app'}.`
+              : ''}
+        </span>
+        <Button
+          variant="ghost"
+          size="xs"
+          onClick={() => {
+            void show(saved.destination, saved.id).catch(() => {
+              model.report('Saved. Unable to show the entry. Try again.');
+            });
+          }}
+        >
+          Show
+        </Button>
+      </div>
+      {state.error !== undefined && (
+        <p role="alert" className="workspace-feedback workspace-feedback-error">
+          {state.error}
+        </p>
+      )}
+    </>
   );
 }
