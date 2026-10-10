@@ -16,8 +16,10 @@ it(
 
     try {
       const baseline = store.export();
+
       writeFileSync(store.file, singleLineLegacyBackup());
       const legacy = store.prepareFile(store.file);
+
       expect(statSync(store.file).size).toBe(6_004_097);
       expect(legacy.snippets).toBe(1);
       store.invoke('discardLibraryImport', { token: legacy.token });
@@ -48,8 +50,10 @@ it(
       expect(store.export()).toEqual(baseline);
       const { first, backup } = collidingTagBackup(baseline);
       const preview = store.prepare(backup);
+
       expect(preview).toMatchObject({ snippets: 2, tags: 2, coalescedTags: 1 });
       const confirmation = { token: preview.token, revision: preview.revision };
+
       store.engine.context.db.exec(
         "CREATE TRIGGER reject_import BEFORE INSERT ON snippets WHEN (SELECT COUNT(*) FROM snippets) > 0 BEGIN SELECT RAISE(ABORT, 'owned failure'); END;"
       );
