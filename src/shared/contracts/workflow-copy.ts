@@ -120,7 +120,14 @@ export const workflowCopyOperations = {
     }),
     response: workflowCopyOutcomeSchema
   },
-  cancelPreparedCopy: { request: z.strictObject({ token: idSchema }), response: z.strictObject({}) }
+  cancelPreparedCopy: {
+    request: z.strictObject({ token: idSchema }),
+    response: z.strictObject({})
+  },
+  invalidateCopyDraft: {
+    request: z.strictObject({ draftId: idSchema, draftRevision: revisionSchema }),
+    response: z.strictObject({})
+  }
 } as const;
 
 export type ContextSeparator = z.infer<typeof separatorSchema>;
