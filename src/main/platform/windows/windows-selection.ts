@@ -16,6 +16,7 @@ import type { NativeProcessOptions, TransportFailure } from '../native/native-pr
 import { NativeProcess, NativeTransportError } from '../native/native-process';
 import { ActivationAdmissionError, admitActivation } from './activation-admission';
 import { createForegroundGrant } from './foreground-grant';
+import { readActivationTarget } from './read-activation-target';
 import { SourceCapabilities } from './source-capabilities';
 
 export interface WindowsIdentity {
@@ -30,6 +31,7 @@ export type WindowsForegroundResult =
   | {
       status:
         Exclude<ReturnType<typeof nativeForegroundSchema.parse>['status'], 'ok'> | TransportFailure;
+      ownForeground?: true;
     };
 export interface WindowsSelectionOptions {
   resourcesPath: string;
@@ -38,6 +40,7 @@ export interface WindowsSelectionOptions {
 }
 export interface WindowsSelectionEffects extends NativeProcessOptions {
   allowForeground?: (pid: number) => boolean;
+  ownPid?: number;
 }
 
 /** Paths originate in Electron main only. No renderer channel exposes this adapter. */
@@ -62,7 +65,7 @@ export class WindowsSelection {
     this.readiness ??= this.transport
       .request(
         'capabilities',
-        {},
+        this.options.ownPid === undefined ? {} : { excludePid: this.options.ownPid },
         (value) => {
           const result = nativeReadySchema.parse(value);
 
@@ -94,7 +97,11 @@ export class WindowsSelection {
         100
       );
 
-      if (result.status !== 'ok') return { status: result.status };
+      if (result.status !== 'ok')
+        return {
+          status: result.status,
+          ...(result.ownForeground === undefined ? {} : { ownForeground: result.ownForeground })
+        };
       const identity = Object.freeze({
         token: result.identity,
         source: result.source,
@@ -126,6 +133,10 @@ export class WindowsSelection {
       this.readiness = undefined;
       return { status: error instanceof NativeTransportError ? error.status : 'helperUnavailable' };
     }
+  }
+
+  activationTargetIdentity(excludePid: number): Promise<WindowsForegroundResult> {
+    return readActivationTarget(this.ready(), this.transport, this.identities, excludePid);
   }
 
   async activateSource(
@@ -169,6 +180,7 @@ export function createWindowsSelection(options: WindowsSelectionOptions): Window
   const executable = windowsHelperPath(options);
 
   return new WindowsSelection({
+    ownPid: process.pid,
     allowForeground: createForegroundGrant(),
     launch: () => spawn(executable, [], { windowsHide: true, stdio: 'pipe' })
   });

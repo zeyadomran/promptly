@@ -27,6 +27,7 @@ export interface BridgeTransport {
   listenNavigation?: (listener: (value: unknown) => void) => () => void;
   listenCommands?: (listener: (value: unknown) => void) => () => void;
   listenFocus?: (listener: () => void) => () => void;
+  listenPreviousApp?: (listener: () => void) => () => void;
   listenUpdates?: (listener: (value: unknown) => void) => () => void;
 }
 
@@ -109,6 +110,11 @@ export function createDesktopBridge(
       () => disposed
     ),
     subscribeWindowFocus: focusSubscription(transport.listenFocus, focusStops, () => disposed),
+    subscribePreviousApp: focusSubscription(
+      transport.listenPreviousApp,
+      focusStops,
+      () => disposed
+    ),
     subscribeChanges(listener) {
       if (disposed) return () => undefined;
       // Ownership belongs to this registration, even when callbacks are identical.

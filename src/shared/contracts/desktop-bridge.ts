@@ -13,5 +13,6 @@ export interface DesktopBridge extends Omit<DesktopOperations, 'addDroppedAttach
   subscribeShellNavigation(listener: (view: NativeShellView) => void): () => void;
   subscribeShellCommands(listener: (command: ShellCommand) => void): () => void;
   subscribeWindowFocus(listener: () => void): () => void;
+  subscribePreviousApp(listener: () => void): () => void;
   subscribeUpdates(listener: (state: UpdateState) => void): () => void;
 }

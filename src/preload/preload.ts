@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer, webUtils } from 'electron';
 
 import { changeChannel } from '../shared/contracts/operations';
+import { previousAppChangedChannel } from '../shared/contracts/previous-app';
 import { resultSchema } from '../shared/contracts/result';
 import { settingsSnapshotSchema } from '../shared/contracts/settings';
 import { updateChannel } from '../shared/contracts/updates';
@@ -68,6 +69,16 @@ const { bridge, dispose } = createDesktopBridge(
       if (command !== undefined) listener(command);
       return () => {
         commandListeners.delete(listener);
+      };
+    },
+    listenPreviousApp(listener) {
+      const onPreviousApp = () => {
+        listener();
+      };
+
+      ipcRenderer.on(previousAppChangedChannel, onPreviousApp);
+      return () => {
+        ipcRenderer.removeListener(previousAppChangedChannel, onPreviousApp);
       };
     },
     listenFocus(listener) {

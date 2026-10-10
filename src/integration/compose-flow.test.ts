@@ -25,7 +25,7 @@ it('keeps one exact compose draft through entry and lifecycle replay, and retain
     compose.close();
     compose.start();
     expect(compose.snapshot().draft).toMatchObject({
-      id: original?.id,
+      id: original.id,
       destination: 'queue',
       text: '  raw\r\n{{answer}}  '
     });

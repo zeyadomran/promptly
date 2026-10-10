@@ -14,15 +14,20 @@ internal sealed class SourceIdentity
     internal object Source;
     private static readonly Dictionary<string, SourceIdentity> Identities = new Dictionary<string, SourceIdentity>();
     private static readonly Queue<string> Order = new Queue<string>();
+    private static readonly object Cache = new object();
 
     internal static SourceIdentity Record(uint excludedPid = 0)
     {
-        var window = NativeMethods.GetForegroundWindow();
+        return RecordWindow(NativeMethods.GetForegroundWindow(), excludedPid, true);
+    }
+
+    internal static SourceIdentity RecordWindow(IntPtr window, uint excludedPid, bool foreground)
+    {
         uint pid;
         NativeMethods.GetWindowThreadProcessId(window, out pid);
         if (window == IntPtr.Zero || pid == 0 || pid > Int32.MaxValue) return null;
         if (excludedPid != 0 && (pid == excludedPid || !EligibleExternalWindow(window))) return null;
-        try { return RecordProcess(window, pid); }
+        try { return RecordProcess(window, pid, foreground); }
         catch (ArgumentException) { return null; }
         catch (InvalidOperationException) { return null; }
         catch (Win32Exception error)
@@ -43,7 +48,7 @@ internal sealed class SourceIdentity
             kind != "Progman" && kind != "WorkerW";
     }
 
-    private static SourceIdentity RecordProcess(IntPtr window, uint pid)
+    private static SourceIdentity RecordProcess(IntPtr window, uint pid, bool foreground)
     {
         using (var process = Process.GetProcessById((int)pid))
         {
@@ -57,10 +62,13 @@ internal sealed class SourceIdentity
                     identity.Source = new { pid = pid, name = name, id = basename };
             }
             catch (Exception) { identity.Source = null; }
-            if (!identity.Valid(true)) return null;
-            Identities.Add(identity.Token, identity);
-            Order.Enqueue(identity.Token);
-            while (Order.Count > 32) Identities.Remove(Order.Dequeue());
+            if (!identity.Valid(foreground)) return null;
+            lock (Cache)
+            {
+                Identities.Add(identity.Token, identity);
+                Order.Enqueue(identity.Token);
+                while (Order.Count > 32) Identities.Remove(Order.Dequeue());
+            }
             return identity;
         }
     }
@@ -68,7 +76,8 @@ internal sealed class SourceIdentity
     internal static SourceIdentity Resolve(string token)
     {
         SourceIdentity identity;
-        return token != null && Identities.TryGetValue(token, out identity) ? identity : null;
+        lock (Cache)
+            return token != null && Identities.TryGetValue(token, out identity) ? identity : null;
     }
 
     internal bool Valid(bool foreground)

@@ -2,9 +2,9 @@ import { app, type BrowserWindow, screen } from 'electron';
 
 import type { ShellCommand, WindowKind, WindowState } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
-import type { PreviousAppService } from '../previous-app/service';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
+import type { PreviousAppCapture } from './previous-app-focus';
 import { reconcileWindows } from './reconcile-windows';
 import { recoverWindowRenderer, retireWindowRenderer } from './renderer-recovery';
 import {
@@ -36,7 +36,7 @@ export class WindowLifecycle {
     private readonly recovery: WindowRecovery,
     private readonly onError: (error: unknown) => void,
     private readonly onOpened: () => void = () => undefined,
-    private readonly previousApp?: Pick<PreviousAppService, 'captureBeforeShow'>
+    private readonly previousApp?: PreviousAppCapture
   ) {
     this.commands = new WindowCommands(this.isClosing, onError);
     screen.on('display-removed', this.reconcile);
@@ -72,6 +72,7 @@ export class WindowLifecycle {
           this.windows.set(kind, created);
           if (kind === 'main') this.bounds = new WindowBounds(created, this.settings, this.onError);
           watchWindowLifecycle(created, kind, {
+            previousApp: this.previousApp,
             opened: this.onOpened,
             closing: () => this.closing,
             ready: () => this.ready.has(created),

@@ -14,7 +14,7 @@ import {
 import { NativeProcess } from '../native/native-process';
 
 it.skipIf(process.platform !== 'win32')(
-  'admits own-process exclusion through the production Windows helper protocol',
+  'admits own-process exclusion and bounded foreground snapshots through the Windows helper protocol',
   async () => {
     const directory = await mkdtemp(path.join(os.tmpdir(), 'promptly-helper-protocol-'));
     const executable = path.join(directory, 'promptly-windows.exe');
@@ -53,7 +53,12 @@ it.skipIf(process.platform !== 'win32')(
       const protocol = new NativeProcess({ launch: () => child });
 
       transport = protocol;
-      await protocol.request('capabilities', {}, (value) => nativeReadySchema.parse(value), 5000);
+      await protocol.request(
+        'capabilities',
+        { excludePid: process.pid },
+        (value) => nativeReadySchema.parse(value),
+        5000
+      );
       const foreground = (payload: object) =>
         protocol.request(
           'foreground',
@@ -70,6 +75,21 @@ it.skipIf(process.platform !== 'win32')(
         'invalidRequest'
       );
       expect((await foreground({ excludePid: 0 })).status).toBe('invalidRequest');
+      const snapshot = (payload: object) =>
+        protocol.request(
+          'activationTarget',
+          payload,
+          (value) => nativeForegroundSchema.parse(value),
+          5000
+        );
+
+      expect(['ok', 'foregroundChanged']).toContain(
+        (await snapshot({ excludePid: process.pid })).status
+      );
+      expect((await snapshot({ excludePid: process.pid, unexpected: true })).status).toBe(
+        'invalidRequest'
+      );
+      expect((await snapshot({ excludePid: process.pid + 1 })).status).toBe('invalidRequest');
     } finally {
       await transport?.dispose();
       await exited;

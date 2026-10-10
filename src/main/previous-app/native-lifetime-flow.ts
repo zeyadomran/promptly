@@ -42,6 +42,7 @@ export async function assertPreviousAppNativeLifetime(): Promise<void> {
   try {
     await native.ready();
     await previous.captureBeforeShow();
+    await previous.captureAfterFocus();
     assert.deepEqual(await previous.getPreviousApp(), {
       state: 'available',
       label: 'Owned provider'
@@ -84,10 +85,10 @@ export async function assertPreviousAppNativeLifetime(): Promise<void> {
     });
     assert.equal(children.length, 1);
     await native.ready();
+    await previous.captureAfterFocus();
     assert.deepEqual(await previous.getPreviousApp(), { state: 'none' });
     assert.deepEqual(await previous.returnToPreviousApp(), {
-      returned: 'unavailable',
-      label: 'Owned provider'
+      returned: 'unavailable'
     });
     await previous.captureBeforeShow();
     assert.deepEqual(await previous.returnToPreviousApp(), {

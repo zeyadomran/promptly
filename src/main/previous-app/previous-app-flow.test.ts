@@ -10,6 +10,7 @@ it('retains only eligible external targets and hides only after confirmed curren
     source: { pid: 42, name: 'Windows Terminal', id: 'WindowsTerminal.exe' }
   };
   let foreground = terminal;
+  let tracked: WindowsIdentity | undefined = terminal;
   let alive = true;
   let pinned = false;
   let visible = true;
@@ -18,6 +19,12 @@ it('retains only eligible external targets and hides only after confirmed curren
     ownPid: 7,
     native: {
       foregroundIdentityResult: () => Promise.resolve({ status: 'ok', identity: foreground }),
+      activationTargetIdentity: () =>
+        Promise.resolve(
+          tracked === undefined
+            ? { status: 'foregroundChanged' }
+            : { status: 'ok', identity: tracked }
+        ),
       sourceAvailable: () => Promise.resolve(alive),
       activateSource: () => Promise.resolve(activation)
     },
@@ -33,6 +40,21 @@ it('retains only eligible external targets and hides only after confirmed curren
     state: 'available',
     label: 'Windows Terminal'
   });
+  tracked = {
+    token: 'c'.repeat(32),
+    source: { pid: 43, name: 'Owned browser', id: 'Browser.exe' }
+  };
+  const focused = previous.captureAfterFocus();
+
+  expect(await previous.getPreviousApp()).toEqual({ state: 'available', label: 'Owned browser' });
+  await focused;
+  await previous.captureAfterFocus();
+  expect(await previous.getPreviousApp()).toEqual({ state: 'available', label: 'Owned browser' });
+  tracked = undefined;
+  await previous.captureAfterFocus();
+  expect(await previous.getPreviousApp()).toEqual({ state: 'none' });
+  tracked = terminal;
+  await previous.captureAfterFocus();
   foreground = { token: 'b'.repeat(32), source: { pid: 7, name: 'Promptly', id: 'Promptly.exe' } };
   await previous.captureBeforeShow();
   expect(await previous.getPreviousApp()).toEqual({
@@ -75,7 +97,7 @@ it('retains only eligible external targets and hides only after confirmed curren
   await assertPreviousAppNativeLifetime();
 });
 
-it('discards late foreground replies and retains the prior target while a helper warms or is busy', async () => {
+it('discards late foreground replies and clears uncertain activation targets', async () => {
   vi.useFakeTimers();
   const external: WindowsIdentity = {
     token: 'a'.repeat(32),
@@ -87,6 +109,7 @@ it('discards late foreground replies and retains the prior target while a helper
     ownPid: 7,
     native: {
       foregroundIdentityResult: () => reply,
+      activationTargetIdentity: () => reply,
       sourceAvailable: () => Promise.resolve(true),
       activateSource: () => Promise.resolve('ok')
     },
@@ -110,14 +133,25 @@ it('discards late foreground replies and retains the prior target while a helper
       identity: { token: 'b'.repeat(32), source: { pid: 43, name: 'Late target', id: 'Late.exe' } }
     });
     await Promise.resolve();
-    expect(await previous.getPreviousApp()).toEqual({
-      state: 'available',
-      label: 'Owned terminal'
-    });
+    expect(await previous.getPreviousApp()).toEqual({ state: 'none' });
+    reply = Promise.resolve({ status: 'ok', identity: external });
+    await previous.captureBeforeShow();
     expect(await previous.returnToPreviousApp()).toEqual({
       returned: 'returned',
       label: 'Owned terminal'
     });
+    reply = new Promise((resolve) => {
+      release = resolve;
+    });
+    const focused = previous.captureAfterFocus();
+    const status = previous.getPreviousApp();
+
+    await vi.advanceTimersByTimeAsync(100);
+    await focused;
+    expect(await status).toEqual({ state: 'none' });
+    release({ status: 'ok', identity: external });
+    await Promise.resolve();
+    expect(await previous.returnToPreviousApp()).toEqual({ returned: 'unavailable' });
     previous.close();
     expect(await previous.getPreviousApp()).toEqual({ state: 'none' });
     expect(await previous.returnToPreviousApp()).toEqual({ returned: 'unavailable' });

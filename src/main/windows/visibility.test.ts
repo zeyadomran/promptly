@@ -93,6 +93,7 @@ it('keeps recording focus and a reachable window when its external recovery rout
     });
     expect(window.isDestroyed()).toBe(false);
     await assertComposeRouting(lifecycle, window);
+    await previousApp.assertFocused(window);
     expect(updates.state).toEqual(checked);
     lifecycle.hide();
     expect(window.isMinimized()).toBe(true);

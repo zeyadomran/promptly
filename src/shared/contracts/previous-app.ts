@@ -14,3 +14,4 @@ export const previousAppOperations = {
   getPreviousApp: { request: z.strictObject({}), response: previousAppSchema },
   returnToPreviousApp: { request: z.strictObject({}), response: returnOutcomeSchema }
 } as const;
+export const previousAppChangedChannel = 'promptly:previous-app-changed';

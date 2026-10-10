@@ -10,6 +10,14 @@ export function previousAppWindowFixture(hide: () => void) {
   const previous = new PreviousAppService({
     ownPid: 7,
     native: {
+      activationTargetIdentity: () =>
+        Promise.resolve({
+          status: 'ok',
+          identity: {
+            token: 'b'.repeat(32),
+            source: { pid: 43, name: 'Owned browser', id: 'Browser.exe' }
+          }
+        }),
       foregroundIdentityResult: () => {
         capturedBeforeCreation ||= ControlledWindow.instances.length === initialWindows;
         return Promise.resolve({
@@ -29,6 +37,17 @@ export function previousAppWindowFixture(hide: () => void) {
 
   return {
     previous,
+    assertFocused: async (window: ControlledWindow) => {
+      window.emit('focus');
+      assert.deepEqual(await previous.getPreviousApp(), {
+        state: 'available',
+        label: 'Owned browser'
+      });
+      assert.deepEqual(window.webContents.sent.at(-1), {
+        channel: 'promptly:previous-app-changed',
+        payload: undefined
+      });
+    },
     assertCaptured: async () => {
       assert.equal(capturedBeforeCreation, true);
       assert.deepEqual(await previous.getPreviousApp(), {
