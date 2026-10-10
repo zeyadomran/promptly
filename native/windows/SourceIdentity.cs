@@ -43,9 +43,10 @@ internal sealed class SourceIdentity
         var name = new StringBuilder(256);
         if (NativeMethods.GetClassName(window, name, name.Capacity) == 0) return false;
         string kind = name.ToString();
-        // Explorer folder windows stay eligible; taskbar/desktop surfaces never become return targets.
+        // Explorer folder windows stay eligible; taskbar/desktop/switcher surfaces are not apps.
         return kind != "Shell_TrayWnd" && kind != "Shell_SecondaryTrayWnd" &&
-            kind != "Progman" && kind != "WorkerW";
+            kind != "Progman" && kind != "WorkerW" && kind != "XamlExplorerHostIslandWindow" &&
+            kind != "MultitaskingViewFrame" && kind != "ForegroundStaging";
     }
 
     private static SourceIdentity RecordProcess(IntPtr window, uint pid, bool foreground)
