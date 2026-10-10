@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { tagInputNameSchema } from '../../../shared/contracts/domain';
@@ -34,6 +34,7 @@ export function DraftTags({
   );
   const parsedName = tagInputNameSchema.safeParse(query);
   const create = parsedName.success && !state.tags.some((tag) => tag.name === parsedName.data);
+  const unavailable = selectedIds.filter((id) => !state.tags.some((tag) => tag.id === id));
   const choose = (id: string) => {
     if (pending || busy) return;
     const ids = selectedIds.includes(id)
@@ -68,6 +69,22 @@ export function DraftTags({
         .map((tag) => (
           <TagBadge key={tag.id} name={tag.name} color={tag.color} />
         ))}
+      {unavailable.map((id) => (
+        <Button
+          key={id}
+          variant="outline"
+          size="xs"
+          disabled={pending || busy}
+          aria-label="Remove unavailable tag from draft"
+          title="This tag is unavailable. Remove it to save without it."
+          onClick={() => {
+            choose(id);
+          }}
+        >
+          Unavailable tag
+          <X aria-hidden="true" />
+        </Button>
+      ))}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <Button
