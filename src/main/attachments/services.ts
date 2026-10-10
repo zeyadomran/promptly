@@ -56,26 +56,29 @@ export function attachmentServices(
       }
     },
     getAttachmentThumbnail: (input, context) => actions.raster(input, 160, context),
-    getAttachmentImage: (input, context) => actions.raster(input, 2048, context),
-    copyAttachmentImage: async (input, context) => {
-      const result = await actions.raster(input, 4096, context);
+    getAttachmentImage: (input, context) =>
+      actions.raster(input, input.purpose === 'drawing' ? 4096 : 2048, context),
+    copyAttachmentImage: (input, context) =>
+      service.mutations.run(async () => {
+        const result = await actions.raster(input, 4096, context);
 
-      if (!result.ok) return result;
-      if (service.owner(context) === undefined)
-        return failure('UNAUTHORIZED', 'The window closed.');
-      try {
-        await service.effects.copyPng(result.value.png);
-        return { ok: true, value: { status: 'copied' } };
-      } catch {
-        return failure('UNAVAILABLE', 'Unable to copy image.');
-      }
-    },
+        if (!result.ok) return result;
+        if (service.owner(context) === undefined)
+          return failure('UNAUTHORIZED', 'The window closed.');
+        try {
+          await service.effects.copyPng(result.value.png);
+          return { ok: true, value: { status: 'copied' } };
+        } catch {
+          return failure('UNAVAILABLE', 'Unable to copy image.');
+        }
+      }),
     saveAttachmentCopy: async (input, context) => {
       const owner = service.owner(context),
         result = await actions.read(input, context);
 
       if (!result.ok) return result;
-      if (owner === undefined) return failure('UNAUTHORIZED', 'The window closed.');
+      if (owner === undefined || service.owner(context) === undefined)
+        return failure('UNAUTHORIZED', 'The window closed.');
       try {
         return {
           ok: true,
@@ -95,7 +98,12 @@ export function attachmentServices(
         : { ok: true, value: { scene: result.value.scene } };
     },
     copyDrawingPng: (input, context) =>
-      actions.pngAction(input, false, context) as ReturnType<DesktopOperations['copyDrawingPng']>,
+      service.mutations.run(
+        () =>
+          actions.pngAction(input, false, context) as ReturnType<
+            DesktopOperations['copyDrawingPng']
+          >
+      ),
     exportDrawingPng: (input, context) =>
       actions.pngAction(input, true, context) as ReturnType<DesktopOperations['exportDrawingPng']>
   };

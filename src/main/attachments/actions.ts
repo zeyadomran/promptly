@@ -11,7 +11,9 @@ export class AttachmentActions {
       (input.draftToken !== undefined && !this.service.owns(input.draftToken, context))
     )
       return failure('UNAUTHORIZED', 'This attachment is unavailable.');
-    return this.service.storage.call('readManagedAttachment', input);
+    const { purpose: _purpose, ...request } = input;
+
+    return this.service.storage.call('readManagedAttachment', request);
   }
   async raster(
     input: OperationRequest<'getAttachmentImage'>,
@@ -24,7 +26,14 @@ export class AttachmentActions {
     if (!previewable(imageHeader(result.value.bytes)))
       return failure('UNAVAILABLE', 'This file has no safe image preview.');
     try {
-      return { ok: true as const, value: this.service.effects.raster(result.value.bytes, edge) };
+      const value = await this.service.effects.raster(result.value.bytes, edge);
+
+      if (
+        this.service.owner(context) === undefined ||
+        (input.draftToken !== undefined && !this.service.owns(input.draftToken, context))
+      )
+        return failure('UNAUTHORIZED', 'The image window closed.');
+      return { ok: true as const, value };
     } catch {
       return failure('UNAVAILABLE', 'The image cannot be decoded safely.');
     }
@@ -43,7 +52,7 @@ export class AttachmentActions {
     )
       return failure('INVALID_REQUEST', 'Drawing PNG dimensions do not match the scene.');
     try {
-      this.service.effects.raster(input.png, 4096);
+      await this.service.effects.raster(input.png, 4096);
     } catch {
       return failure('INVALID_REQUEST', 'The drawing PNG is damaged.');
     }
@@ -86,7 +95,7 @@ export class AttachmentActions {
       )
         return failure('INVALID_REQUEST', 'Drawing PNG dimensions exceed the limit.');
       try {
-        bytes = this.service.effects.raster(input.png, 4096).png;
+        bytes = (await this.service.effects.raster(input.png, 4096)).png;
       } catch {
         return failure('INVALID_REQUEST', 'The drawing PNG is damaged.');
       }
@@ -97,7 +106,8 @@ export class AttachmentActions {
       bytes = result.value.png;
     }
 
-    if (!owner.isAlive()) return failure('UNAUTHORIZED', 'The drawing window closed.');
+    if (this.service.owner(context) === undefined || !owner.isAlive())
+      return failure('UNAUTHORIZED', 'The drawing window closed.');
     try {
       if (save)
         return {

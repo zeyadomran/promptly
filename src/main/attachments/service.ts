@@ -5,7 +5,7 @@ import type { LibraryMutations } from '../storage/library-mutations';
 import type { StorageRequest } from '../storage/protocol';
 import type { TransferOwner } from '../storage/transfer/requests';
 import { AttachmentActions } from './actions';
-import { imageHeader, previewable } from './image-header';
+import { classifyIntake } from './classify-intake';
 import type { AssetEffects, AssetIntake } from './ports';
 import { attachmentServices } from './services';
 
@@ -15,6 +15,7 @@ export class AttachmentService {
     { owner: TransferOwner; stop: () => void; retired: boolean }
   >();
   private closing = false;
+  private draftGeneration = 0;
   private readonly pendingBegins = new Set<Promise<unknown>>();
   constructor(
     readonly storage: Pick<StorageClient, 'call'>,
@@ -52,7 +53,8 @@ export class AttachmentService {
     return operation;
   }
   private async beginOwned(input: OperationRequest<'beginDraft'>, context?: { senderId: number }) {
-    const owner = this.owner(context);
+    const owner = this.owner(context),
+      generation = this.draftGeneration;
 
     if (owner === undefined || this.closing)
       return failure('UNAUTHORIZED', 'The draft window is unavailable.');
@@ -66,7 +68,7 @@ export class AttachmentService {
       const token = result.value.token;
 
       this.drafts.set(token, { owner, retired: true, stop: () => undefined });
-      if (this.isClosing() || !owner.isAlive()) {
+      if (this.isClosing() || generation !== this.draftGeneration || !owner.isAlive()) {
         await this.discard({ draftToken: token }, context);
         return failure('UNAUTHORIZED', 'The draft window closed.');
       }
@@ -117,28 +119,7 @@ export class AttachmentService {
     if (!draft.ok) return draft;
     if (draft.value.attachments.length + files.length > 8)
       return failure('INVALID_REQUEST', 'An entry can have up to 8 attachments.');
-    const inputs = files.map((file) => {
-      let dimensions = imageHeader(file.bytes);
-
-      if (previewable(dimensions)) {
-        try {
-          this.effects.raster(file.bytes, 160);
-        } catch {
-          dimensions = undefined;
-        }
-      }
-
-      const image = previewable(dimensions) ? dimensions : null;
-
-      return {
-        name: file.name,
-        bytes: new Uint8Array(file.bytes),
-        mimeType: file.mimeType,
-        kind: image === null ? ('file' as const) : ('image' as const),
-        width: image?.width ?? null,
-        height: image?.height ?? null
-      };
-    });
+    const inputs = await classifyIntake(this.effects, files);
 
     if (!this.owns(token, context)) return failure('UNAUTHORIZED', 'The draft window closed.');
     return this.mutations.run(() =>
@@ -148,6 +129,11 @@ export class AttachmentService {
     );
   }
   readonly services = attachmentServices(this, new AttachmentActions(this));
+  retireDrafts(): void {
+    this.draftGeneration++;
+    for (const scope of this.drafts.values()) scope.stop();
+    this.drafts.clear();
+  }
   async close() {
     this.closing = true;
     await Promise.allSettled([...this.pendingBegins]);
@@ -157,6 +143,7 @@ export class AttachmentService {
       )
     );
 
+    await this.effects.close?.();
     if (results.some((result) => !result.ok))
       throw new Error('Unable to discard attachment drafts.');
   }

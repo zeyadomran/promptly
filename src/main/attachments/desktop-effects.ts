@@ -19,6 +19,7 @@ import type { TransferOwner } from '../storage/transfer/requests';
 import { attachmentName, readAttachmentFile } from './file-intake';
 import { imageHeader, previewable } from './image-header';
 import type { AssetEffects } from './ports';
+import { RasterDecoder } from './raster-decoder';
 
 function parent(owner: TransferOwner) {
   const contents = webContents.fromId(owner.id);
@@ -30,7 +31,19 @@ function parent(owner: TransferOwner) {
 }
 
 export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
+  const decoder = new RasterDecoder();
+  let closing = false;
+  const saves = new Set<AbortController>();
+  const alive = () => {
+    if (closing) throw new Error('Attachment effects closed');
+  };
+
   return {
+    close: async () => {
+      closing = true;
+      for (const controller of saves) controller.abort();
+      await decoder.close();
+    },
     owner: dialogs.owner,
     choose: async (owner) => {
       const result = await dialog.showOpenDialog(parent(owner), {
@@ -38,6 +51,7 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
         properties: ['openFile', 'multiSelections', 'dontAddToRecent']
       });
 
+      alive();
       if (result.canceled) return [];
       if (result.filePaths.length > assetLimits.count)
         throw new Error('Select up to eight attachments.');
@@ -54,6 +68,7 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
       const files = [];
 
       for (const file of paths) {
+        alive();
         if (!path.isAbsolute(file)) throw new Error('Not an absolute native path.');
         files.push(await readAttachmentFile(file));
       }
@@ -61,7 +76,10 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
       return files;
     },
     paste: async () => {
+      alive();
       const items = await clipboard.read();
+
+      alive();
 
       for (const item of items)
         if (item.types.includes('image/png')) {
@@ -97,34 +115,9 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
 
       return [];
     },
-    raster: (bytes, edge) => {
-      const dimensions = imageHeader(bytes);
-
-      if (!previewable(dimensions)) throw new Error('Unsafe image dimensions.');
-      let image = nativeImage.createFromBuffer(Buffer.from(bytes));
-
-      if (image.isEmpty()) throw new Error('Damaged image.');
-      if (
-        image.getSize().width !== dimensions.width ||
-        image.getSize().height !== dimensions.height
-      )
-        throw new Error('Image header mismatch.');
-      let limit = edge;
-
-      for (;;) {
-        const factor = Math.min(1, limit / Math.max(dimensions.width, dimensions.height));
-        const width = Math.max(1, Math.round(dimensions.width * factor)),
-          height = Math.max(1, Math.round(dimensions.height * factor));
-
-        image = image.resize({ width, height, quality: 'good' });
-        const png = image.toPNG();
-
-        if (png.byteLength <= assetLimits.bytes) return { png: new Uint8Array(png), width, height };
-        if (limit <= 128) throw new Error('Unable to produce bounded raster.');
-        limit = Math.floor(limit / 2);
-      }
-    },
+    raster: (bytes, edge) => decoder.raster(bytes, edge),
     copyPng: async (bytes) => {
+      alive();
       if (!previewable(imageHeader(bytes))) throw new Error('Unsafe image.');
       const image = nativeImage.createFromBuffer(Buffer.from(bytes));
 
@@ -140,6 +133,8 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
         properties: ['dontAddToRecent']
       });
 
+      alive();
+      if (!owner.isAlive()) throw new Error('Attachment window closed');
       if (result.canceled) return { status: 'cancelled' };
       const destination = result.filePath,
         controller = new AbortController(),
@@ -147,6 +142,7 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
           controller.abort();
         });
 
+      saves.add(controller);
       try {
         await validateExportDestination(destination, dialogs.protectedFiles);
         await atomicExport(
@@ -163,6 +159,7 @@ export function desktopAssetEffects(dialogs: TransferDialogs): AssetEffects {
         return { status: 'saved', filename: path.basename(destination) };
       } finally {
         stop();
+        saves.delete(controller);
       }
     }
   };

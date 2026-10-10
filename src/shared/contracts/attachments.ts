@@ -60,7 +60,10 @@ export const attachmentOperations = {
   },
   pasteAttachment: { request: draftRequestSchema, response: draftSnapshotSchema },
   getAttachmentThumbnail: { request: attachmentRequestSchema, response: rasterSchema },
-  getAttachmentImage: { request: attachmentRequestSchema, response: rasterSchema },
+  getAttachmentImage: {
+    request: attachmentRequestSchema.extend({ purpose: z.enum(['preview', 'drawing']).optional() }),
+    response: rasterSchema
+  },
   copyAttachmentImage: {
     request: attachmentRequestSchema,
     response: z.strictObject({ status: z.literal('copied') })

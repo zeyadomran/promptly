@@ -22,12 +22,16 @@ it('owns managed originals, sender drafts, shared assets and drawing backgrounds
       Promise.resolve(store.engine.run(1, name, input).result as DesktopResult<StorageResponse<K>>)
   };
   const context = { senderId: 7 };
+  const edges: number[] = [];
   const effects = {
     owner: (id: number) => ({ id, isAlive: () => true, onClose: () => () => undefined }),
     choose: () =>
       Promise.resolve([{ name: 'fixture.png', mimeType: 'image/png', bytes: readFileSync(file) }]),
     paste: () => Promise.resolve([]),
-    raster: () => ({ png, width: 1, height: 1 }),
+    raster: (_bytes: Uint8Array, edge: number) => {
+      edges.push(edge);
+      return Promise.resolve({ png, width: 1, height: 1 });
+    },
     copyPng: () => Promise.resolve(),
     save: () => Promise.resolve({ status: 'cancelled' as const })
   };
@@ -137,7 +141,15 @@ it('owns managed originals, sender drafts, shared assets and drawing backgrounds
     expect(
       await service.services.getAttachmentImage?.({ id: drawing.value.attachment.id }, context)
     ).toMatchObject({ ok: true, value: { width: 1, height: 1 } });
+    expect(
+      await service.services.getAttachmentImage?.(
+        { id: drawing.value.attachment.id, purpose: 'drawing' },
+        context
+      )
+    ).toMatchObject({ ok: true });
+    expect(edges.at(-1)).toBe(4096);
     await retirePendingDraft(storage, effects);
+    await retirePendingDraft(storage, effects, true);
     store.invoke('clearLibrary', {});
     expect(store.engine.run(1, 'readManagedAttachment', { id: original.id }).result).toMatchObject({
       ok: false

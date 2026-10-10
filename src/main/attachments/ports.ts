@@ -7,11 +7,12 @@ export interface AssetIntake {
   mimeType: string;
 }
 export interface AssetEffects {
+  close?: () => Promise<void>;
   owner: (id: number) => TransferOwner | undefined;
   choose: (owner: TransferOwner) => Promise<AssetIntake[]>;
   dropped?: (paths: string[]) => Promise<AssetIntake[]>;
   paste: () => Promise<AssetIntake[]>;
-  raster: (bytes: Uint8Array, edge: number) => OperationResponse<'getAttachmentImage'>;
+  raster: (bytes: Uint8Array, edge: number) => Promise<OperationResponse<'getAttachmentImage'>>;
   copyPng: (bytes: Uint8Array) => Promise<void>;
   save: (
     owner: TransferOwner,
