@@ -2,7 +2,11 @@ import { createHash } from 'node:crypto';
 
 import type { DesktopResult } from '../../shared/contracts/result';
 import { failure } from '../../shared/contracts/result';
-import type { PreparedCopy, WorkflowCopySource } from '../../shared/contracts/workflow-copy';
+import type {
+  PreparationMode,
+  PreparedCopy,
+  WorkflowCopySource
+} from '../../shared/contracts/workflow-copy';
 import { workflowLimits } from '../../shared/contracts/workflow-copy';
 import { formatContext } from '../../shared/workflows/context-text';
 import { parseTemplate } from '../../shared/workflows/template';
@@ -37,7 +41,8 @@ type PreparedContent = Pick<
 export async function prepareContent(
   source: WorkflowCopySource,
   ports: WorkflowCopyPorts,
-  signal: AbortSignal
+  signal: AbortSignal,
+  mode: PreparationMode = 'resolved'
 ): Promise<DesktopResult<PreparedContent>> {
   const segments: PreparedCopy['segments'] = [];
   let attachmentCount = 0;
@@ -90,7 +95,7 @@ export async function prepareContent(
         : (segments[0]?.text ?? '');
     const names = new Map<string, PreparedCopy['variables'][number]>();
 
-    if (await ports.variablesEnabled()) {
+    if (mode === 'resolved' && (await ports.variablesEnabled())) {
       for (const [index, segment] of segments.entries()) {
         for (const variable of parseTemplate(segment.text)) {
           const previous = names.get(variable.name);

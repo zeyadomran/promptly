@@ -1,13 +1,18 @@
+import '../bundles/bundle-selection.css';
+
+import { LayersIcon } from 'lucide-react';
+
+import { Button } from '../../components/ui/button';
+import { usePreferences } from '../settings/settings-context';
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 import { useLibrary } from './library-context';
 import { libraryDisplay } from './library-display';
 import { LibrarySort } from './LibrarySort';
-import { useBundleMatches } from './use-bundle-matches';
 
 export function LibraryListHeader() {
   const { state } = useLibrary();
   const workflow = useWorkflowCopy();
   const { settings } = usePreferences();
-  const matches = useBundleMatches(workflow.bundle, workflow.bundleState, state);
   const display = libraryDisplay(state);
   const filtered =
     display.request.query.trim() !== '' ||
@@ -39,21 +44,20 @@ export function LibraryListHeader() {
           <LibrarySort />
         </div>
       </div>
-      <BundleBar
-        model={workflow.bundle}
-        matching={matches.pending}
-        matchError={matches.error}
-        review={() => {
-          workflow.bundle.review();
-        }}
-      />
+      {workflow.bundleState.active && !workflow.bundleState.reviewing && (
+        <div className="bundle-selection-banner" role="status">
+          <span>Select snippets to combine.</span>
+          <Button
+            size="xs"
+            variant="ghost"
+            onClick={() => {
+              workflow.cancelBundle();
+            }}
+          >
+            Cancel
+          </Button>
+        </div>
+      )}
     </>
   );
 }
-
-import { LayersIcon } from 'lucide-react';
-
-import { Button } from '../../components/ui/button';
-import { BundleBar } from '../bundles/BundleBar';
-import { usePreferences } from '../settings/settings-context';
-import { useWorkflowCopy } from '../workflows/workflow-copy-context';

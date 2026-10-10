@@ -5,6 +5,7 @@ import type { DesktopResult } from './result';
 
 export const workflowLimits = { sources: 20, variables: 32, value: 100_000, text: 1_000_000 };
 export const separatorSchema = z.enum(['blank-line', 'divider', 'tagged']);
+export const preparationModeSchema = z.enum(['resolved', 'as-written']);
 export const savedCopySourceSchema = z.strictObject({
   kind: z.enum(['snippet', 'queue']),
   id: idSchema
@@ -46,6 +47,7 @@ export const variableAnswersSchema = z
   .refine((values) => Object.keys(values).length <= workflowLimits.variables);
 export const preparedCopySchema = z.strictObject({
   token: idSchema,
+  mode: preparationModeSchema.optional(),
   source: workflowCopySourceSchema,
   segments: z
     .array(
@@ -106,7 +108,10 @@ export const workflowCopyOutcomeSchema = z.strictObject({
 });
 export const workflowCopyOperations = {
   prepareCopy: {
-    request: z.strictObject({ source: workflowCopySourceSchema }),
+    request: z.strictObject({
+      source: workflowCopySourceSchema,
+      mode: preparationModeSchema.optional()
+    }),
     response: preparedCopySchema
   },
   commitCopy: {
@@ -135,6 +140,7 @@ export type SavedCopySource = z.infer<typeof savedCopySourceSchema>;
 export type WorkflowCopySource = z.infer<typeof workflowCopySourceSchema>;
 export type VariableAnswers = z.infer<typeof variableAnswersSchema>;
 export type PreparedCopy = z.infer<typeof preparedCopySchema>;
+export type PreparationMode = z.infer<typeof preparationModeSchema>;
 export type WorkflowCopyOutcome = z.infer<typeof workflowCopyOutcomeSchema>;
 export type CommitCopy = z.infer<typeof workflowCopyOperations.commitCopy.request>;
 export type WorkflowCopyOperations = {

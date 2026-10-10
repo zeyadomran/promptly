@@ -2,6 +2,7 @@ import { MainCopyOwner } from '../copy/main-owner';
 import type { SettingsController } from '../settings/controllers';
 import type { Shortcuts } from '../shortcuts/service';
 import type { StorageClient } from '../storage/client';
+import { trayCopyFeedback } from './copy-feedback';
 import { TrayFeedback } from './feedback';
 import { trayLabel } from './label';
 import { trayMenu } from './menu';
@@ -88,7 +89,8 @@ export class TrayCoordinator {
           if (!result.ok) throw new Error('Recent tray snippets are unavailable.');
           if (owner === undefined) return;
           const items: TrayItem[] = result.value.items.map((snippet) => ({
-            label: trayLabel(snippet.text),
+            label: snippet.hasText === false ? 'Attachment only' : trayLabel(snippet.text),
+            enabled: snippet.hasText !== false,
             run: () => this.copy(snippet.id, owner)
           }));
 
@@ -147,14 +149,7 @@ export class TrayCoordinator {
       return;
     }
 
-    this.feedback.show(
-      this.handle,
-      !result.ok
-        ? 'Copy failed'
-        : result.value.warnings.length > 0
-          ? 'Copied; statistics unconfirmed'
-          : 'Copied'
-    );
+    this.feedback.show(this.handle, !result.ok ? 'Copy failed' : trayCopyFeedback(result.value));
     if (!result.ok) this.commands.error();
   }
 

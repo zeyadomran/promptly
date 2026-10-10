@@ -4,7 +4,7 @@ import type {
   WorkflowCopyOperations
 } from '../../../shared/contracts/workflow-copy';
 import { workflowLimits } from '../../../shared/contracts/workflow-copy';
-import { bundleEntryLabel, reconcileBundleEntries } from './bundle-entry';
+import { bundleEntryLabel, reconcileBundleEntries, refreshedBundleEntry } from './bundle-entry';
 import { type BundleState, emptyBundleState } from './bundle-state';
 
 /** Selection reads full content once; checking a row never invokes a copy operation. */
@@ -64,7 +64,10 @@ export class BundleModel {
 
     this.publish({ pending: true, error: undefined });
     try {
-      const prepared = await this.bridge.prepareCopy({ source: { kind: 'snippet', id } });
+      const prepared = await this.bridge.prepareCopy({
+        source: { kind: 'snippet', id },
+        mode: 'as-written'
+      });
 
       if (prepared.ok)
         await this.bridge
@@ -156,25 +159,19 @@ export class BundleModel {
     this.publish({ pending: true });
     try {
       for (const entry of this.state.entries) {
-        const result = await this.bridge.prepareCopy({ source: { kind: 'snippet', id: entry.id } });
+        const result = await this.bridge.prepareCopy({
+          source: { kind: 'snippet', id: entry.id },
+          mode: 'as-written'
+        });
 
         if (result.ok)
           await this.bridge
             .cancelPreparedCopy({ token: result.value.token })
             .catch(() => undefined);
         if (generation !== this.generation) return;
-        const segment = result.ok ? result.value.segments[0] : undefined;
-
         this.publish({
           entries: this.state.entries.map((current) =>
-            current.id === entry.id
-              ? {
-                  ...current,
-                  missing: !result.ok && result.error.code === 'NOT_FOUND',
-                  changed: segment !== undefined && segment.fingerprint !== current.fingerprint,
-                  label: segment === undefined ? current.label : bundleEntryLabel(segment.text)
-                }
-              : current
+            current.id === entry.id ? refreshedBundleEntry(current, result) : current
           )
         });
       }

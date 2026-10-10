@@ -1,7 +1,8 @@
 import type { WorkflowCopyOutcome } from '../../../shared/contracts/workflow-copy';
 import { BundleModel } from '../bundles/bundle-model';
 import { FillModel } from '../variables/fill-model';
-import { legacyCopyOutcome, workflowCopyFeedback } from './copy-feedback';
+import { workflowCopyFeedback } from './copy-feedback';
+import { routeCopy } from './copy-route';
 import type {
   WorkflowCopyBridge,
   WorkflowCopyInput,
@@ -27,6 +28,7 @@ export class WorkflowCopyController {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private closed = false;
   private targetVersion = 0;
+  private requestVersion = 0;
   constructor(private readonly bridge: WorkflowCopyBridge) {
     this.fill = new FillModel(bridge, () =>
       this.input === undefined
@@ -71,9 +73,6 @@ export class WorkflowCopyController {
   clearError = (): void => {
     this.publish({ error: undefined });
   };
-  private isClosed(): boolean {
-    return this.closed;
-  }
   async refreshReturnTarget(): Promise<void> {
     const version = ++this.targetVersion;
 
@@ -105,50 +104,39 @@ export class WorkflowCopyController {
       return;
     }
 
+    if (options.return === true && this.state.returnLabel === undefined) {
+      this.publish({ error: 'No previous app is available to return to.' });
+      return;
+    }
+
+    const version = this.requestVersion;
+    const current = () => !this.closed && version === this.requestVersion;
+
     this.publish({ busy: true, error: undefined });
     this.input = input;
     this.onCopied = options.onCopied;
     try {
-      if (options.return === true) {
-        await this.refreshReturnTarget();
-        if (this.state.returnLabel === undefined) {
-          this.publish({ error: 'No previous app is available to return to.' });
-          return;
+      if (!current()) return;
+      await routeCopy(this.bridge, this.fill, source, options, {
+        current,
+        complete: (outcome) => {
+          this.complete(outcome);
+        },
+        review: () => {
+          this.publish({ reviewing: true });
+        },
+        error: (error) => {
+          this.publish({ error });
         }
-      }
-
-      const format = options.format ?? 'text';
-
-      if (source.kind === 'snippet' && options.return !== true && options.asWritten !== true) {
-        const result = await this.bridge.copySnippet({ id: source.id, format });
-
-        if (this.isClosed()) return;
-        if (result.ok) {
-          this.complete(legacyCopyOutcome(result.value));
-          return;
-        }
-
-        if (result.error.code !== 'TEMPLATE_REQUIRES_PREPARATION') {
-          this.publish({ error: result.error.message });
-          return;
-        }
-      }
-
-      await this.fill.open(source, format);
-      if (this.isClosed()) return;
-      const prepared = this.fill.snapshot().prepared;
-
-      if (prepared !== null && (prepared.variables.length === 0 || options.asWritten === true)) {
-        await this.fill.copy(options.return === true, options.asWritten === true);
-        if (this.fill.snapshot().active) this.publish({ reviewing: true });
-      } else this.publish({ reviewing: true });
-      void this.refreshReturnTarget();
-    } catch {
-      this.publish({
-        error: 'Copy could not be confirmed. Check the clipboard before trying again.'
       });
+      if (current()) void this.refreshReturnTarget();
+    } catch {
+      if (current())
+        this.publish({
+          error: 'Copy could not be confirmed. Check the clipboard before trying again.'
+        });
     } finally {
-      this.publish({ busy: false });
+      if (current()) this.publish({ busy: false });
     }
   }
   private complete(outcome: WorkflowCopyOutcome): void {
@@ -180,6 +168,15 @@ export class WorkflowCopyController {
     this.fill.cancel();
     this.bundle.cancel();
   };
+  reset(): void {
+    this.requestVersion += 1;
+    this.input = undefined;
+    this.onCopied = undefined;
+    clearTimeout(this.timer);
+    this.fill.reset();
+    this.bundle.cancel();
+    this.publish({ busy: false, reviewing: false, error: undefined, feedback: undefined });
+  }
   close(): void {
     this.closed = true;
     this.targetVersion += 1;

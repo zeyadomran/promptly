@@ -58,7 +58,11 @@ export class SearchLibrary {
     for (const entry of entries) {
       if (!filter.matches(entry)) continue;
       if (total >= request.offset && items.length < request.limit)
-        items.push({ ...entry.snippet, text: rowPreview(entry.snippet.text, request.preview) });
+        items.push({
+          ...entry.snippet,
+          text: rowPreview(entry.snippet.text, request.preview),
+          hasText: entry.snippet.text.trim().length > 0
+        });
       total += 1;
     }
 

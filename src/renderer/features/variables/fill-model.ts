@@ -1,7 +1,9 @@
 import type {
+  PreparationMode,
   WorkflowCopyOperations,
   WorkflowCopySource
 } from '../../../shared/contracts/workflow-copy';
+import { commitFill } from './fill-commit';
 import { previewFields } from './fill-preview';
 import { copySourceState } from './fill-source';
 import { emptyFillState, type FillState } from './fill-state';
@@ -26,10 +28,14 @@ export class FillModel {
     this.state = { ...this.state, ...update };
     for (const listener of this.listeners) listener();
   }
-  async open(source: WorkflowCopySource, format: 'text' | 'markdown' = 'text'): Promise<void> {
+  async open(
+    source: WorkflowCopySource,
+    format: 'text' | 'markdown' = 'text',
+    preparationMode: PreparationMode = 'resolved'
+  ): Promise<void> {
     if (this.state.pending) return;
     this.cancel();
-    this.publish({ ...emptyFillState(), active: true, source, format });
+    this.publish({ ...emptyFillState(), active: true, source, format, preparationMode });
     await this.prepare(source, false);
   }
   private async prepare(source: WorkflowCopySource, preserve: boolean): Promise<void> {
@@ -40,7 +46,7 @@ export class FillModel {
       void this.bridge.cancelPreparedCopy({ token: oldToken }).catch(() => undefined);
     this.publish({ loading: true, pending: false, prepared: null, source, errorCode: undefined });
     try {
-      const result = await this.bridge.prepareCopy({ source });
+      const result = await this.bridge.prepareCopy({ source, mode: this.state.preparationMode });
 
       if (generation !== this.generation) {
         if (result.ok)
@@ -112,81 +118,56 @@ export class FillModel {
   private updatePreview(): void {
     this.publish(previewFields(this.state));
   }
-  async copy(returnToApp = false, asWritten = false): Promise<boolean> {
-    const prepared = this.state.prepared;
-
-    if (prepared === null || this.state.pending || this.state.loading) return false;
-    const source =
-      this.currentSource === undefined ? (this.state.source ?? undefined) : this.currentSource();
-
-    const sourceState = copySourceState(prepared.source, source);
-
-    if (source === undefined || sourceState === 'missing') {
-      this.cancel('Your draft is no longer available.');
-      return false;
-    }
-
-    if (sourceState === 'changed') {
-      this.publish({ error: 'Your draft changed. Check the values again.' });
-      await this.prepare(source, true);
-      return false;
-    }
-
-    if (!asWritten && this.state.unresolved.length > 0) {
-      this.publish({
-        focusName: this.state.unresolved[0],
-        error: 'Fill every value or choose Leave blank.'
-      });
-      return false;
-    }
-
-    if (!asWritten && !this.state.previewValid) return false;
-    const generation = this.generation;
-
-    this.publish({ pending: true, error: undefined });
-    try {
-      const result = await this.bridge.commitCopy({
-        token: prepared.token,
-        values: this.state.values,
-        format: this.state.format,
-        mode: asWritten ? 'as-written' : 'resolved',
-        return: returnToApp,
-        ...(source.kind === 'draft' ? { draftRevision: source.draftRevision } : {})
-      });
-
-      if (generation !== this.generation) return false;
-      if (!result.ok) {
-        this.publish({ pending: false, error: result.error.message, errorCode: result.error.code });
-        if (result.error.code === 'CONFLICT' || result.error.code === 'PREPARATION_EXPIRED')
-          await this.refreshCurrent(source);
-        else if (result.error.code === 'NOT_FOUND') {
-          if (source.kind === 'bundle') this.publish({ prepared: null });
-          else this.cancel(result.error.message);
+  copy(returnToApp = false, asWritten = false): Promise<boolean> {
+    return commitFill(
+      this.bridge,
+      {
+        state: this.snapshot,
+        source: () => this.source(),
+        generation: () => this.generation,
+        publish: (update) => {
+          this.publish(update);
+        },
+        prepare: (source) => this.prepare(source, true),
+        cancel: (error) => {
+          this.cancel(error);
         }
+      },
+      returnToApp,
+      asWritten
+    );
+  }
+  async copyAsWritten(): Promise<boolean> {
+    if (this.state.pending || this.state.loading) return false;
+    if (this.state.prepared !== null) return this.copy(false, true);
+    const source = this.source();
 
-        return false;
-      }
+    if (source === undefined || this.state.source === null) return false;
+    const changed = copySourceState(this.state.source, source) !== 'ready';
 
-      this.publish({ ...emptyFillState(), outcome: result.value });
-      return true;
-    } catch {
-      if (generation === this.generation)
-        this.publish({ pending: false, error: 'Unable to copy. Your values are kept.' });
+    this.publish({ preparationMode: 'as-written' });
+    await this.prepare(source, false);
+    if (changed) {
+      this.publish({ error: 'Your draft changed. Check the literal preview, then copy again.' });
       return false;
     }
+
+    return this.copy(false, true);
+  }
+  private source(): WorkflowCopySource | undefined {
+    return this.currentSource === undefined
+      ? (this.state.source ?? undefined)
+      : this.currentSource();
   }
   cancel(error?: string): void {
     if (this.state.pending) return;
+    this.reset(error);
+  }
+  reset(error?: string): void {
     this.generation += 1;
     const token = this.state.prepared?.token;
 
     if (token !== undefined) void this.bridge.cancelPreparedCopy({ token }).catch(() => undefined);
     this.publish({ ...emptyFillState(), error });
-  }
-  private async refreshCurrent(source: WorkflowCopySource): Promise<void> {
-    const current = this.currentSource === undefined ? source : this.currentSource();
-
-    if (current === undefined) this.cancel('Your draft is no longer available.');
-    else await this.prepare(current, true);
   }
 }

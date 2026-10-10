@@ -14,6 +14,7 @@ export class WorkflowCopyService {
   private readonly requests: TransferRequests;
   private readonly tokens: PreparedTokens;
   private readonly now: () => number;
+  private preparationGeneration = 0;
   constructor(private readonly ports: WorkflowCopyPorts) {
     this.requests = new TransferRequests(ports.owner);
     this.now = ports.now ?? Date.now;
@@ -22,14 +23,26 @@ export class WorkflowCopyService {
   readonly services: WorkflowCopyOperations = {
     prepareCopy: (input, context) =>
       this.requests.run(context, async ({ owner, signal }) => {
+        const generation = this.preparationGeneration;
         const parsed = workflowCopyOperations.prepareCopy.request.safeParse(input);
 
         if (!parsed.success) return failure('INVALID_REQUEST', 'Invalid copy source.');
-        const content = await prepareContent(parsed.data.source, this.ports, signal);
+        const mode = parsed.data.mode ?? 'resolved';
+        const content = await prepareContent(parsed.data.source, this.ports, signal, mode);
 
         if (!content.ok) return content;
         signal.throwIfAborted();
-        const prepared = { ...content.value, token: randomUUID(), expiresAt: this.now() + 300_000 };
+        if (generation !== this.preparationGeneration)
+          return failure(
+            'PREPARATION_EXPIRED',
+            'The library was cleared. Prepare this text again.'
+          );
+        const prepared = {
+          ...content.value,
+          mode,
+          token: randomUUID(),
+          expiresAt: this.now() + 300_000
+        };
 
         if (!this.tokens.put(prepared, owner))
           return failure('UNAVAILABLE', 'Too many copy preparations are open.');
@@ -86,6 +99,9 @@ export class WorkflowCopyService {
       );
     const prepared = entry.prepared;
 
+    if (prepared.mode === 'as-written' && input.mode !== 'as-written')
+      return failure('INVALID_REQUEST', 'This preparation can only copy text as written.');
+
     if (
       entry.invalidated ||
       (prepared.source.kind === 'draft' && input.draftRevision !== prepared.source.draftRevision)
@@ -141,8 +157,12 @@ export class WorkflowCopyService {
   invalidateDraft(senderId: number, draftId: string, revision: number): void {
     this.tokens.invalidateDraft(senderId, draftId, revision);
   }
-  async close(): Promise<void> {
+  retirePreparations(): void {
+    this.preparationGeneration += 1;
     this.tokens.clear();
+  }
+  async close(): Promise<void> {
+    this.retirePreparations();
     await this.requests.close();
     this.tokens.clear();
   }

@@ -1,5 +1,6 @@
 import type { DesktopError } from '../../../shared/contracts/result';
 import type {
+  PreparationMode,
   PreparedCopy,
   VariableAnswers,
   WorkflowCopyOutcome,
@@ -12,6 +13,7 @@ export interface FillState {
   prepared: PreparedCopy | null;
   values: VariableAnswers;
   format: 'text' | 'markdown';
+  preparationMode: PreparationMode;
   preview: string;
   previewValid: boolean;
   outcome: WorkflowCopyOutcome | null;
@@ -28,6 +30,7 @@ export const emptyFillState = (): FillState => ({
   prepared: null,
   values: {},
   format: 'text',
+  preparationMode: 'resolved',
   preview: '',
   previewValid: true,
   outcome: null,

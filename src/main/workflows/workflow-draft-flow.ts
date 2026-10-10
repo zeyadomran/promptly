@@ -89,6 +89,17 @@ export async function draftCopyFlow() {
       ),
       'PREPARATION_EXPIRED'
     );
+    const cleared = await fixture.service.services.prepareCopy({ source }, { senderId: 1 });
+
+    if (!cleared.ok) throw new Error(cleared.error.message);
+    fixture.service.retirePreparations();
+    rejected(
+      await fixture.service.services.commitCopy(
+        { ...commit, token: cleared.value.token },
+        { senderId: 1 }
+      ),
+      'PREPARATION_EXPIRED'
+    );
     const lost = await fixture.service.services.prepareCopy({ source }, { senderId: 1 });
 
     if (!lost.ok) throw new Error(lost.error.message);
@@ -113,5 +124,41 @@ export async function draftCopyFlow() {
     );
   } finally {
     await fixture.dispose();
+  }
+
+  let release: (value: boolean) => void = () => undefined;
+  let admitted: () => void = () => undefined;
+  const held = new Promise<boolean>((resolve) => {
+    release = resolve;
+  });
+  const ready = new Promise<void>((resolve) => {
+    admitted = resolve;
+  });
+  let delayed = true;
+  const late = workflowFixture(() => {
+    admitted();
+    return delayed ? held : true;
+  });
+
+  try {
+    const source = {
+      kind: 'draft' as const,
+      draftId: randomUUID(),
+      draftRevision: 1,
+      text: 'literal',
+      attachmentCount: 0
+    };
+    const preparing = late.service.services.prepareCopy({ source }, { senderId: 1 });
+
+    await ready;
+    late.service.retirePreparations();
+    release(true);
+    rejected(await preparing, 'PREPARATION_EXPIRED');
+    delayed = false;
+    const fresh = await late.service.services.prepareCopy({ source }, { senderId: 1 });
+
+    assert.equal(fresh.ok, true);
+  } finally {
+    await late.dispose();
   }
 }

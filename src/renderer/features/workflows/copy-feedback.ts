@@ -13,7 +13,12 @@ export function workflowCopyFeedback(outcome: WorkflowCopyOutcome): string {
     ? ' Statistics unconfirmed.'
     : '';
 
-  return `Copied.${attachments}${returned}${warning}`;
+  const copied =
+    outcome.sourceIds.length > 1
+      ? `Copied a bundle of ${String(outcome.sourceIds.length)} snippets.`
+      : 'Copied.';
+
+  return `${copied}${attachments}${returned}${warning}`;
 }
 
 export function legacyCopyOutcome(outcome: CopyOutcome): WorkflowCopyOutcome {

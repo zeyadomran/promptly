@@ -7,7 +7,7 @@ import type { TransferOwner } from '../storage/transfer/requests';
 import type { WorkflowContent } from './ports';
 import { WorkflowCopyService } from './service';
 
-export function workflowFixture() {
+export function workflowFixture(variablesEnabled: () => boolean | Promise<boolean> = () => true) {
   const store = testStorage();
   const mutations = new LibraryMutations();
   const clipboard: string[] = [];
@@ -67,7 +67,7 @@ export function workflowFixture() {
   const service = new WorkflowCopyService({
     owner: (id) => (id === 1 ? owner : undefined),
     lookup,
-    variablesEnabled: () => true,
+    variablesEnabled,
     executePrepared: (context, resolve) => copy.executePrepared(context, resolve),
     now: () => now
   });

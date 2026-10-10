@@ -20,9 +20,9 @@ export function FillValuesActions({
     <DialogFooter>
       <Button
         variant="ghost"
-        disabled={disabled}
+        disabled={state.pending || state.loading || state.source === null}
         onClick={() => {
-          void model.copy(false, true);
+          void model.copyAsWritten();
         }}
       >
         Copy as written

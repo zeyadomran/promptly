@@ -1,3 +1,4 @@
+import type { DesktopResult } from '../../../shared/contracts/result';
 import type { PreparedCopy } from '../../../shared/contracts/workflow-copy';
 import type { BundleEntry } from './bundle-state';
 
@@ -16,4 +17,18 @@ export function reconcileBundleEntries(
       changed: segment !== undefined && segment.fingerprint !== entry.fingerprint
     };
   });
+}
+
+export function refreshedBundleEntry(
+  entry: BundleEntry,
+  result: DesktopResult<PreparedCopy>
+): BundleEntry {
+  const segment = result.ok ? result.value.segments[0] : undefined;
+
+  return {
+    ...entry,
+    missing: !result.ok && result.error.code === 'NOT_FOUND',
+    changed: segment !== undefined && segment.fingerprint !== entry.fingerprint,
+    label: segment === undefined ? entry.label : bundleEntryLabel(segment.text)
+  };
 }

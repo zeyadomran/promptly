@@ -1,4 +1,5 @@
 import type { SearchPage } from '../../../shared/contracts/domain';
+import { retainLibraryDisplay } from './library-display';
 import type { LibraryState } from './library-state';
 import { PAGE_SIZE } from './page-cache';
 
@@ -10,6 +11,13 @@ export class LibraryCursor {
   reset(): void {
     this.desiredId = null;
     this.index = 0;
+  }
+  reveal(state: LibraryState, id: string): void {
+    retainLibraryDisplay(state);
+    this.invalidate(state);
+    this.desiredId = id;
+    state.revealVersion += 1;
+    state.loading = true;
   }
 
   invalidate(state: LibraryState): void {

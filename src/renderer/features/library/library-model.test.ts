@@ -10,6 +10,7 @@ import {
 import { expectLibraryGeometry } from './library-geometry-test-fixture';
 import { LibraryModel } from './library-model';
 import { libraryPreviewFixture } from './library-preview-test-fixture';
+import { libraryRevealFlow } from './library-reveal-test-fixture';
 import { initialQuery } from './page-cache';
 
 it('browses paged results with command-safe selection across refreshes and newer queries', async () => {
@@ -184,6 +185,7 @@ it('browses paged results with command-safe selection across refreshes and newer
       expect(model.snapshot().selectedId).toBe('00000000-0000-4000-8000-000000000000');
       expect(model.snapshot().selectedIndex).toBe(1);
     });
+    await libraryRevealFlow(model, copied.id, reveal, expect, settle);
     fixture.change([], ['snippets', 'tags']);
     await settle(() => model.snapshot().unfilteredTotal, 0);
     expect(model.snapshot().selectedId).toBeNull();

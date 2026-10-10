@@ -40,9 +40,13 @@ export function WorkflowCopyProvider({
     const unsubscribe = window.promptly.subscribeWindowFocus(() => {
       void controller.refreshReturnTarget();
     });
+    const unsubscribeChanges = window.promptly.subscribeChanges((event) => {
+      if (event.cause === 'clear') controller.reset();
+    });
 
     return () => {
       unsubscribe();
+      unsubscribeChanges();
       controller.close();
     };
   }, [controller]);

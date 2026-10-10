@@ -75,6 +75,42 @@ export async function workflowBoundsFlow() {
 
     assert.equal(tooManyNames.ok, false);
     assert.equal(tooManyNames.error.code, 'INVALID_REQUEST');
+    const literal = await fixture.service.services.prepareCopy(
+      { source: { kind: 'snippet', id: variableLimit }, mode: 'as-written' },
+      { senderId: 1 }
+    );
+
+    assert.equal(literal.ok, true);
+    const literalCommit = {
+      token: literal.value.token,
+      values: {},
+      format: 'text' as const,
+      return: false
+    };
+
+    assert.equal(
+      (
+        await fixture.service.services.commitCopy(
+          { ...literalCommit, mode: 'resolved' },
+          { senderId: 1 }
+        )
+      ).ok,
+      false
+    );
+    assert.equal(
+      (
+        await fixture.service.services.commitCopy(
+          { ...literalCommit, mode: 'as-written' },
+          { senderId: 1 }
+        )
+      ).ok,
+      true
+    );
+    const literalText = Array.from({ length: 33 }, (_entry, index) => `{{v${String(index)}}}`).join(
+      ' '
+    );
+
+    assert.equal(fixture.clipboard.at(-1), literalText);
     const first = fixture.store.invoke('createSnippet', { text: 'a'.repeat(600001) }).snippet.id;
     const second = fixture.store.invoke('createSnippet', { text: 'b'.repeat(600001) }).snippet.id;
     const tooLongBundle = await fixture.service.services.prepareCopy(
@@ -84,7 +120,10 @@ export async function workflowBoundsFlow() {
 
     assert.equal(tooLongBundle.ok, false);
     assert.equal(tooLongBundle.error.code, 'INVALID_REQUEST');
-    assert.deepEqual(fixture.clipboard, ['{V} V V V {{file name}} {{x.y}} {{}} {{ a\n}}']);
+    assert.deepEqual(fixture.clipboard, [
+      '{V} V V V {{file name}} {{x.y}} {{}} {{ a\n}}',
+      literalText
+    ]);
   } finally {
     await fixture.dispose();
   }

@@ -47,15 +47,6 @@ export function BundleBar({
       >
         Review bundle
       </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => {
-          model.cancel();
-        }}
-      >
-        Cancel
-      </Button>
       {state.error !== undefined && (
         <span role="alert" className="workflow-error">
           {state.error}

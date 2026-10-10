@@ -8,6 +8,9 @@ it('keeps plain copy immediate, opens authoritative templates and blocks copy du
   const clipboard: string[] = [];
   const notifications: WorkflowCopyOutcome[] = [];
   let template = false;
+  let tooManyNames = false;
+  let heldPreparation: Promise<void> | undefined;
+  let targetAvailable = false;
   const prepared: PreparedCopy = {
     token: '00000000-0000-4000-8000-000000000001',
     source: { kind: 'snippet', id: '00000000-0000-4000-8000-000000000002' },
@@ -27,9 +30,24 @@ it('keeps plain copy immediate, opens authoritative templates and blocks copy du
       clipboard.push('plain');
       return Promise.resolve({ ok: true, value: { status: 'copied', id, warnings: [] } });
     },
-    prepareCopy: () => Promise.resolve({ ok: true, value: prepared }),
-    commitCopy: ({ values }) => {
-      clipboard.push(`Hello ${values['name']?.value ?? ''}`);
+    prepareCopy: async ({ mode }) => {
+      await heldPreparation;
+      if (tooManyNames && mode !== 'as-written')
+        return {
+          ok: false,
+          error: { code: 'INVALID_REQUEST', message: 'A copy can use at most 32 variable names.' }
+        };
+      return {
+        ok: true,
+        value: mode === 'as-written' ? { ...prepared, mode, variables: [] } : prepared
+      };
+    },
+    commitCopy: ({ values, mode, return: returnToApp }) => {
+      clipboard.push(
+        mode === 'as-written' || prepared.variables.length === 0
+          ? prepared.text
+          : `Hello ${values['name']?.value ?? ''}`
+      );
       return Promise.resolve({
         ok: true,
         value: {
@@ -38,14 +56,18 @@ it('keeps plain copy immediate, opens authoritative templates and blocks copy du
             { kind: 'snippet', id: prepared.source.kind === 'snippet' ? prepared.source.id : '' }
           ],
           attachmentCount: 0,
-          returned: 'not-requested',
+          returned: returnToApp ? 'unavailable' : 'not-requested',
           warnings: []
         }
       });
     },
     cancelPreparedCopy: () => Promise.resolve({ ok: true, value: {} }),
     invalidateCopyDraft: () => Promise.resolve({ ok: true, value: {} }),
-    getPreviousApp: () => Promise.resolve({ ok: true, value: { state: 'none' } })
+    getPreviousApp: () =>
+      Promise.resolve({
+        ok: true,
+        value: targetAvailable ? { state: 'available', label: 'Editor' } : { state: 'none' }
+      })
   };
   const controller = new WorkflowCopyController(bridge);
 
@@ -94,6 +116,39 @@ it('keeps plain copy immediate, opens authoritative templates and blocks copy du
     await controller.requestCopy(prepared.source, { return: true });
     expect(controller.snapshot().error).toContain('return');
     expect(clipboard).toEqual(['plain', 'Hello Ada', 'plain']);
+    prepared.text = '{{v0}} {{v1}} … {{v32}}';
+    tooManyNames = true;
+    await controller.requestCopy(prepared.source);
+    expect(controller.fill.snapshot().prepared).toBeNull();
+    expect(controller.snapshot().reviewing).toBe(true);
+    expect(await controller.fill.copyAsWritten()).toBe(true);
+    expect(clipboard.at(-1)).toBe('{{v0}} {{v1}} … {{v32}}');
+    tooManyNames = false;
+    let release: () => void = () => undefined;
+
+    heldPreparation = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const preparing = controller.requestCopy(prepared.source);
+
+    await Promise.resolve();
+    controller.reset(); // Published only after a confirmed library clear.
+    release();
+    await preparing;
+    expect(controller.snapshot().reviewing).toBe(false);
+    expect(controller.fill.snapshot().values).toEqual({});
+    expect(controller.fill.snapshot().active).toBe(false);
+    expect(controller.bundle.snapshot().entries).toEqual([]);
+    expect(clipboard).toHaveLength(4);
+    targetAvailable = true;
+    await controller.refreshReturnTarget();
+    expect(controller.snapshot().returnLabel).toBe('Editor');
+    targetAvailable = false;
+    prepared.variables = [];
+    prepared.text = 'Copy before return';
+    await controller.requestCopy(prepared.source, { return: true });
+    expect(clipboard.at(-1)).toBe('Copy before return');
+    expect(controller.snapshot().feedback).toContain('Return was unavailable');
   } finally {
     controller.close();
   }
