@@ -42,10 +42,16 @@ export function previousAppWindowFixture(hide: () => void) {
 export async function assertComposeRouting(lifecycle: WindowLifecycle, window: ControlledWindow) {
   const state = await lifecycle.services.getWindowState({});
 
-  await lifecycle.compose('queue');
+  await lifecycle.dispatchCommand({ command: 'compose', destination: 'queue' });
   assert.deepEqual(window.webContents.sent.at(-1), {
     channel: 'promptly:shell-command',
     payload: { command: 'compose', destination: 'queue' }
+  });
+  assert.deepEqual(await lifecycle.services.getWindowState({}), state);
+  await lifecycle.dispatchCommand({ command: 'copy', id: '00000000-0000-4000-8000-000000000042' });
+  assert.deepEqual(window.webContents.sent.at(-1), {
+    channel: 'promptly:shell-command',
+    payload: { command: 'copy', id: '00000000-0000-4000-8000-000000000042' }
   });
   assert.deepEqual(await lifecycle.services.getWindowState({}), state);
 }

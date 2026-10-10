@@ -34,6 +34,7 @@ import {
   windowRecoverySchema,
   windowStateSchema
 } from './window';
+import { workflowCopyOperations } from './workflow-copy';
 
 const emptySchema = z.strictObject({});
 const idRequestSchema = z.strictObject({ id: idSchema });
@@ -44,6 +45,7 @@ export const operations = {
   ...transferOperations,
   ...updateOperations,
   ...previousAppOperations,
+  ...workflowCopyOperations,
   getApplicationInfo: {
     request: emptySchema,
     response: z.strictObject({ version: z.string().min(1).max(128) })

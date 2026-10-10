@@ -1,6 +1,6 @@
 import { app, type BrowserWindow, screen } from 'electron';
 
-import type { WindowKind, WindowState } from '../../shared/contracts/window';
+import type { ShellCommand, WindowKind, WindowState } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
 import type { PreviousAppService } from '../previous-app/service';
 import type { SettingsService } from '../settings/service';
@@ -124,8 +124,8 @@ export class WindowLifecycle {
     publishShellNavigation(await this.show('settings', false), 'wiki');
   }
 
-  async compose(destination: 'library' | 'queue'): Promise<void> {
-    publishShellCommand(await this.show('settings', false), { command: 'compose', destination });
+  async dispatchCommand(command: ShellCommand): Promise<void> {
+    publishShellCommand(await this.show('settings', false), command);
   }
 
   hide(): void {

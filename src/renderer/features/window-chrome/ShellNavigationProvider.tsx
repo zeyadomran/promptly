@@ -1,17 +1,21 @@
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import type { ShellCommand } from '../../../shared/contracts/window';
 import { keyboardFocus, windowFocusMaySearch } from '../library/keyboard-focus';
 import { useUpdates } from '../settings/hooks/use-updates';
 import { usePreferences } from '../settings/settings-context';
 import { shellGlobalBindings, shellKeyCompose, shellKeyView } from './shell-keyboard';
-import { type SettingsSectionId, ShellNavigationContext, type ShellView } from './shell-navigation';
+import {
+  type ComposeCommand,
+  type CopyCommand,
+  type SettingsSectionId,
+  ShellNavigationContext,
+  type ShellView
+} from './shell-navigation';
 
 export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   const [view, setView] = useState<ShellView>('library');
-  const [composeCommand, setComposeCommand] = useState<
-    (ShellCommand & { request: number }) | undefined
-  >();
+  const [composeCommand, setComposeCommand] = useState<ComposeCommand>();
+  const [copyCommand, setCopyCommand] = useState<CopyCommand>();
   const [settingsTarget, setSettingsTarget] = useState({
     section: 'general' as SettingsSectionId,
     request: 0
@@ -30,10 +34,11 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   const showQueue = useCallback(() => {
     setView('queue');
   }, []);
-  const compose = useCallback((destination: 'library' | 'queue') => {
+  const compose = useCallback((destination: 'library' | 'queue', fromGlobal = false) => {
     setComposeCommand((current) => ({
       command: 'compose',
       destination,
+      fromGlobal,
       request: (current?.request ?? 0) + 1
     }));
   }, []);
@@ -68,10 +73,16 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   useEffect(
     () =>
       window.promptly.subscribeShellCommands((command) => {
+        if (command.command === 'copy') {
+          setView('library');
+          setCopyCommand((current) => ({ ...command, request: (current?.request ?? 0) + 1 }));
+          return;
+        }
+
         setView((current) =>
           current === 'settings' || current === 'wiki' ? command.destination : current
         );
-        compose(command.destination);
+        compose(command.destination, true);
       }),
     [compose]
   );
@@ -140,6 +151,7 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
       showQueue,
       compose,
       composeCommand,
+      copyCommand,
       showSettings,
       showWiki,
       toggleView: (next: 'settings' | 'wiki') => {
@@ -148,7 +160,17 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
         else showWiki();
       }
     }),
-    [view, settingsTarget, showLibrary, showQueue, showSettings, showWiki, compose, composeCommand]
+    [
+      view,
+      settingsTarget,
+      showLibrary,
+      showQueue,
+      showSettings,
+      showWiki,
+      compose,
+      composeCommand,
+      copyCommand
+    ]
   );
 
   return <ShellNavigationContext value={navigation}>{children}</ShellNavigationContext>;

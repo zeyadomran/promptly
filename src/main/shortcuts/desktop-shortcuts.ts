@@ -59,7 +59,10 @@ export function createDesktopShortcuts(
             const preferences = settings();
 
             if (manager !== undefined && preferences !== undefined)
-              await manager.compose(preferences.current.settings.composeDestination);
+              await manager.dispatchCommand({
+                command: 'compose',
+                destination: preferences.current.settings.composeDestination
+              });
           },
           () => {
             lifecycle()?.recoverVisibility();
