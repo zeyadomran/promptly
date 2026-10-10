@@ -10,8 +10,8 @@ import { createDesktopBridge } from '../preload/create-desktop-bridge';
 import { operations } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 
-export function assemblyFixture() {
-  const store = testStorage();
+export function assemblyFixture(now?: () => Date) {
+  const store = testStorage(now);
   const mutations = new LibraryMutations();
   const clipboard: string[] = [];
   let alive = true;

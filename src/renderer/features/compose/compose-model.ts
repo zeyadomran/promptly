@@ -1,5 +1,5 @@
 import type { Attachment } from '../../../shared/contracts/attachments';
-import { type ComposeDestination, draftIdentity } from './compose-state';
+import { type ComposeDestination, type ComposeDraft, draftIdentity } from './compose-state';
 import { ComposeStore } from './compose-store';
 
 /** One draft survives shell navigation and effect lifecycle replay. */
@@ -104,6 +104,7 @@ export class ComposeModel extends ComposeStore {
 
       if (!result.ok) {
         if (generation === this.generation) this.report(result.error.message);
+        if (result.error.code === 'NOT_FOUND') await this.recoverDeletedSource(draft, generation);
         return false;
       }
 
@@ -115,6 +116,32 @@ export class ComposeModel extends ComposeStore {
       return false;
     } finally {
       if (generation === this.generation) this.publish({ pending: false });
+    }
+  }
+  private async recoverDeletedSource(draft: ComposeDraft, generation: number) {
+    if (draft.source === undefined || generation !== this.generation) return;
+    try {
+      const source = await this.bridge.getQueueItem({ id: draft.source.id });
+
+      if (
+        source.ok ||
+        source.error.code !== 'NOT_FOUND' ||
+        generation !== this.generation ||
+        this.state.draft !== draft
+      )
+        return;
+      const revision = draft.revision + 1;
+
+      this.publish({
+        draft: { ...draft, source: undefined, revision },
+        error:
+          'The queued prompt was deleted. Your draft is kept. Save it as a new prompt or choose Library.'
+      });
+      void this.bridge
+        .invalidateCopyDraft({ draftId: draft.id, draftRevision: revision })
+        .catch(() => undefined);
+    } catch {
+      /* Preserve the original failed-save result and editable lease. */
     }
   }
 }
