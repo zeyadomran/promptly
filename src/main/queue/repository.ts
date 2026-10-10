@@ -129,6 +129,7 @@ export class QueueRepository {
     const item = this.get(id),
       undoToken = rememberQueueUndo(this, item, 'completion');
 
+    if (completed === (item.completedAt !== null)) return { ...this.snapshot(id), undoToken };
     this.context.db
       .prepare('UPDATE queue_items SET completedAt=?,position=? WHERE id=?')
       .run(

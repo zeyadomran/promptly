@@ -79,12 +79,12 @@ export function restoreQueue(queue: QueueRepository, token: string, kind: 'delet
       .run(item.completedAt, item.position, item.id);
   }
 
-  if (item.completedAt === null) {
-    const order = queue
-      .list()
-      .items.filter((candidate) => candidate.completedAt === null && candidate.id !== item.id)
-      .map((candidate) => candidate.id);
+  const order = queue
+    .list()
+    .items.filter((candidate) => candidate.completedAt === null && candidate.id !== item.id)
+    .map((candidate) => candidate.id);
 
+  if (item.completedAt === null) {
     const anchor = nextId === undefined || nextId === null ? -1 : order.indexOf(nextId);
     const position =
       kind === 'completion'
@@ -94,9 +94,9 @@ export function restoreQueue(queue: QueueRepository, token: string, kind: 'delet
         : Math.min(item.position, order.length);
 
     order.splice(position, 0, item.id);
-    queue.reorder(order);
   }
 
+  queue.reorder(order);
   queue.context.db.prepare('DELETE FROM queue_undo WHERE token=?').run(token);
   queue.assets.releaseUndo(token);
   return queue.snapshot(item.id);
