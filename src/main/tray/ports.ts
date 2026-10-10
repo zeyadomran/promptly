@@ -20,3 +20,15 @@ export interface TrayHandle {
 export interface TrayNative {
   create: () => TrayHandle;
 }
+import type { CopyService } from '../copy/service';
+
+export interface TrayCommands {
+  copy: () => CopyService | undefined;
+  prepareTemplate?: (id: string) => Promise<void>;
+  updateReady: () => boolean;
+  restartForUpdate: () => void;
+  open: (kind: 'main' | 'settings') => Promise<void>;
+  recover: () => Promise<void>;
+  quit: () => void;
+  error: () => void;
+}

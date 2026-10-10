@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 
 import { closeSettingsStorage } from '../lifecycle/close-settings-storage';
+import { assertTrayConfirmedCopy, assertTrayTemplateRoute } from './tray-template-flow';
 import { trayFixture } from './tray-test-fixture';
 import {
   assertReadyEmptyMenu,
@@ -52,14 +53,13 @@ it('keeps recent commands authoritative and capture-only pause reachable through
 
     fixture.store.invoke('updateSnippet', { id, text: full });
     await recent.run();
-    expect(clipboard).toEqual([full]);
-    expect(owned.statuses.at(-1)).toBe('Copied');
+    assertTrayConfirmedCopy(owned, full);
     vi.advanceTimersByTime(3000);
     expect(owned.statuses.at(-1)).toBe('');
-    expect(windows).not.toContain('unexpected hide');
     await tray.refresh();
     expect(owned.menu()[1]?.label).toBe('😀 && '.repeat(12) + '😀 …');
     expect(owned.recent()[0]?.text.length).toBeLessThanOrEqual(104);
+    await assertTrayTemplateRoute(owned, recent, id, full);
     fixture.store.invoke('deleteSnippet', { id });
     await recent.run();
     expect(clipboard).toEqual([full]);
@@ -84,7 +84,7 @@ it('keeps recent commands authoritative and capture-only pause reachable through
     expect(owned.captured()).toBe(0);
     keyboard.registered.get('Alt+Space')?.();
     keyboard.registered.get('Control+Alt+P')?.();
-    expect(windows).toEqual(['error', 'error', 'shortcut open', 'shortcut pin']);
+    expect(windows).toEqual([`prepare ${id}`, 'error', 'error', 'shortcut open', 'shortcut pin']);
     await owned
       .menu()
       .find((item) => item.label === 'Resume capture')

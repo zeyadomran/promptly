@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 import { useLibrary } from './library-context';
 import { libraryDisplay } from './library-display';
 import { LibraryRow } from './LibraryRow';
@@ -8,6 +9,7 @@ import { useVirtualStyles } from './use-virtual-styles';
 
 export function LibraryList({ regular = false }: { regular?: boolean }) {
   const { state, model } = useLibrary();
+  const workflow = useWorkflowCopy();
   const display = libraryDisplay(state);
   const { scroller, range } = useLibraryRange(
     display.total,
@@ -32,6 +34,7 @@ export function LibraryList({ regular = false }: { regular?: boolean }) {
       ref={scroller}
       role="listbox"
       aria-label="Snippets"
+      aria-multiselectable={workflow.bundleState.active || undefined}
       tabIndex={0}
       aria-busy={state.loading}
       aria-activedescendant={

@@ -3,6 +3,7 @@ import type {
   WorkflowCopySource
 } from '../../../shared/contracts/workflow-copy';
 import { previewFields } from './fill-preview';
+import { copySourceState } from './fill-source';
 import { emptyFillState, type FillState } from './fill-state';
 
 /** Owns answers only while a dialog is alive; drafts and saved sources are never mutated. */
@@ -115,18 +116,17 @@ export class FillModel {
     const prepared = this.state.prepared;
 
     if (prepared === null || this.state.pending || this.state.loading) return false;
-    const source = this.currentSource === undefined ? this.state.source : this.currentSource();
+    const source =
+      this.currentSource === undefined ? (this.state.source ?? undefined) : this.currentSource();
 
-    if (source === undefined) {
+    const sourceState = copySourceState(prepared.source, source);
+
+    if (source === undefined || sourceState === 'missing') {
       this.cancel('Your draft is no longer available.');
       return false;
     }
 
-    if (
-      source?.kind === 'draft' &&
-      prepared.source.kind === 'draft' &&
-      source.draftRevision !== prepared.source.draftRevision
-    ) {
+    if (sourceState === 'changed') {
       this.publish({ error: 'Your draft changed. Check the values again.' });
       await this.prepare(source, true);
       return false;
@@ -151,19 +151,16 @@ export class FillModel {
         format: this.state.format,
         mode: asWritten ? 'as-written' : 'resolved',
         return: returnToApp,
-        ...(source?.kind === 'draft' ? { draftRevision: source.draftRevision } : {})
+        ...(source.kind === 'draft' ? { draftRevision: source.draftRevision } : {})
       });
 
       if (generation !== this.generation) return false;
       if (!result.ok) {
         this.publish({ pending: false, error: result.error.message, errorCode: result.error.code });
-        if (
-          (result.error.code === 'CONFLICT' || result.error.code === 'PREPARATION_EXPIRED') &&
-          source !== null
-        )
-          await this.prepare(source, true);
+        if (result.error.code === 'CONFLICT' || result.error.code === 'PREPARATION_EXPIRED')
+          await this.refreshCurrent(source);
         else if (result.error.code === 'NOT_FOUND') {
-          if (source?.kind === 'bundle') this.publish({ prepared: null });
+          if (source.kind === 'bundle') this.publish({ prepared: null });
           else this.cancel(result.error.message);
         }
 
@@ -185,5 +182,11 @@ export class FillModel {
 
     if (token !== undefined) void this.bridge.cancelPreparedCopy({ token }).catch(() => undefined);
     this.publish({ ...emptyFillState(), error });
+  }
+  private async refreshCurrent(source: WorkflowCopySource): Promise<void> {
+    const current = this.currentSource === undefined ? source : this.currentSource();
+
+    if (current === undefined) this.cancel('Your draft is no longer available.');
+    else await this.prepare(current, true);
   }
 }

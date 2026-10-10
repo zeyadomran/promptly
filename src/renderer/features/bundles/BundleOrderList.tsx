@@ -1,25 +1,32 @@
-import { ArrowDownIcon, ArrowUpIcon, XIcon } from 'lucide-react';
+import { ArrowDownIcon, ArrowUpIcon, GripVerticalIcon, XIcon } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import type { BundleEntry } from './bundle-state';
+import { useBundleReorder } from './use-bundle-reorder';
 
 export function BundleOrderList({
   entries,
   pending,
   move,
-  remove
+  remove,
+  reorder
 }: {
   entries: BundleEntry[];
   pending: boolean;
   move: (id: string, delta: -1 | 1) => void;
   remove: (id: string) => void;
+  reorder: (id: string, beforeId: string | undefined) => void;
 }) {
+  const drag = useBundleReorder(pending, reorder);
+
   return (
     <ol className="bundle-order" aria-label="Bundle order">
       {entries.map((entry, index) => (
         <li
           key={entry.id}
           className="bundle-order-item"
+          data-bundle-order-id={entry.id}
+          data-dragging={drag.draggedId === entry.id || undefined}
           onKeyDown={(event) => {
             if (
               pending ||
@@ -35,6 +42,22 @@ export function BundleOrderList({
             move(entry.id, event.key === 'ArrowUp' ? -1 : 1);
           }}
         >
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="bundle-drag-handle"
+            disabled={pending}
+            aria-label={`Drag snippet ${String(index + 1)} to reorder, or use Alt and arrow keys`}
+            onPointerDown={(event) => {
+              drag.start(entry.id, event);
+            }}
+            onPointerMove={drag.move}
+            onPointerUp={drag.finish}
+            onPointerCancel={drag.finish}
+            onLostPointerCapture={drag.finish}
+          >
+            <GripVerticalIcon />
+          </Button>
           <span className="bundle-order-number">{index + 1}</span>
           <span className="bundle-order-label">
             {entry.label}

@@ -19,11 +19,15 @@ import { VariableText } from './VariableText';
 export function FillValuesDialog({
   model,
   compact = false,
-  returnLabel
+  returnLabel,
+  visible = true,
+  restoreFocus
 }: {
   model: FillModel;
   compact?: boolean;
   returnLabel?: string;
+  visible?: boolean;
+  restoreFocus?: () => void;
 }) {
   const state = useSyncExternalStore(model.subscribe, model.snapshot);
   const content = useRef<HTMLDivElement>(null);
@@ -48,7 +52,7 @@ export function FillValuesDialog({
 
   return (
     <Dialog
-      open={state.active && state.source?.kind !== 'bundle'}
+      open={visible && state.active && state.source?.kind !== 'bundle'}
       onOpenChange={(open) => {
         if (!open && !state.pending) model.cancel();
       }}
@@ -58,6 +62,11 @@ export function FillValuesDialog({
         className="workflow-dialog"
         data-compact={compact}
         showCloseButton={!state.pending}
+        onCloseAutoFocus={(event) => {
+          if (restoreFocus === undefined) return;
+          event.preventDefault();
+          restoreFocus();
+        }}
         onOpenAutoFocus={(event) => {
           const field = content.current?.querySelector<HTMLTextAreaElement>('[data-variable-name]');
 
@@ -98,54 +107,59 @@ export function FillValuesDialog({
                 : 'Used for this copy only. The saved snippet is not changed.'}
           </DialogDescription>
         </DialogHeader>
-        {state.loading && <p role="status">Preparing full text…</p>}
-        {state.error !== undefined && (
-          <p role="alert" className="workflow-error">
-            {state.error}
-          </p>
-        )}
-        <VariableFields
-          variables={variables}
-          values={state.values}
-          pending={state.pending || state.loading}
-          change={(name, value) => {
-            model.change(name, value);
-          }}
-          leaveBlank={(name, enabled) => {
-            model.leaveBlank(name, enabled);
-          }}
-          confirm={confirm}
-        />
-        {state.prepared !== null && (
-          <>
-            <pre className="workflow-annotated-preview" aria-label="Values preview">
-              {variables.length > 0 ? (
-                <VariableText text={state.prepared.text} values={state.values} />
-              ) : (
-                state.prepared.text
+        <div className="workflow-dialog-body">
+          {state.loading && <p role="status">Preparing full text…</p>}
+          {state.error !== undefined && (
+            <p role="alert" className="workflow-error">
+              {state.error}
+            </p>
+          )}
+          <VariableFields
+            variables={variables}
+            values={state.values}
+            pending={state.pending || state.loading}
+            change={(name, value) => {
+              model.change(name, value);
+            }}
+            leaveBlank={(name, enabled) => {
+              model.leaveBlank(name, enabled);
+            }}
+            confirm={confirm}
+          />
+          {state.prepared !== null && (
+            <>
+              <pre className="workflow-annotated-preview" aria-label="Values preview">
+                {variables.length > 0 ? (
+                  <VariableText
+                    text={state.prepared.text}
+                    values={state.previewValid ? state.values : undefined}
+                  />
+                ) : (
+                  state.prepared.text
+                )}
+              </pre>
+              <ResolvedPreview text={state.preview} />
+              {otherSequences > 0 && (
+                <p className="workflow-note">
+                  {otherSequences} other {'{{ }}'} sequences are not variables and are copied as
+                  written.
+                </p>
               )}
-            </pre>
-            <ResolvedPreview text={state.preview} />
-            {otherSequences > 0 && (
-              <p className="workflow-note">
-                {otherSequences} other {'{{ }}'} sequences are not variables and are copied as
-                written.
-              </p>
-            )}
-            {state.prepared.attachmentCount > 0 && (
-              <p className="workflow-note">
-                Attachments are copied separately. {state.prepared.attachmentCount} attachments are
-                not included.
-              </p>
-            )}
-          </>
-        )}
-        {state.unresolved.length > 0 && (
-          <p role="status">
-            {state.unresolved.length}{' '}
-            {state.unresolved.length === 1 ? 'value still needed' : 'values still needed'}
-          </p>
-        )}
+              {state.prepared.attachmentCount > 0 && (
+                <p className="workflow-note">
+                  Attachments are copied separately. {state.prepared.attachmentCount} attachments
+                  are not included.
+                </p>
+              )}
+            </>
+          )}
+          {state.unresolved.length > 0 && (
+            <p role="status">
+              {state.unresolved.length}{' '}
+              {state.unresolved.length === 1 ? 'value still needed' : 'values still needed'}
+            </p>
+          )}
+        </div>
         <FillValuesActions
           model={model}
           state={state}

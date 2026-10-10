@@ -81,6 +81,10 @@ it('keeps explicit bundle order across filters and paging, shares fill answers a
   expect(bundle.snapshot().hiddenCount).toBe(1);
   bundle.move(second, -1);
   expect(bundle.source().ids).toEqual([second, first]);
+  bundle.reorder(second, undefined);
+  expect(bundle.source().ids).toEqual([first, second]);
+  bundle.reorder(second, first);
+  expect(bundle.source().ids).toEqual([second, first]);
   bundle.setMatchingIds(new Set([first, second]));
   expect(bundle.snapshot().hiddenCount).toBe(0);
   expect(clipboard).toEqual([]);

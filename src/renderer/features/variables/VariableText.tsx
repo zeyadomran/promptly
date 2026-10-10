@@ -4,7 +4,21 @@ import type { VariableAnswers } from '../../../shared/contracts/workflow-copy';
 import { resolveTemplate, templateTokens } from '../../../shared/workflows/template';
 
 /** The complete text stays visible; bounded decoration prevents pathological DOM allocation. */
-export function VariableText({ text, values }: { text: string; values?: VariableAnswers }) {
+export function VariableText({
+  text,
+  values
+}: {
+  text: string;
+  values?: VariableAnswers | undefined;
+}) {
+  if (values !== undefined) {
+    try {
+      resolveTemplate(text, values);
+    } catch {
+      return <span>{text}</span>;
+    }
+  }
+
   const nodes: ReactNode[] = [];
   let offset = 0;
   let decorated = 0;

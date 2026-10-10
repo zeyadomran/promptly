@@ -2,12 +2,12 @@ import type { ReactNode } from 'react';
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 
 import { usePreferences } from '../settings/settings-context';
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 import { keyboardFocus, windowFocusMaySearch } from './keyboard-focus';
 import { LibraryCommandService } from './library-command-service';
 import { LibraryCommandsContext, useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
 import { libraryKeyCommand } from './library-keyboard';
-import { LibraryCopyToast, notifyCopied } from './LibraryCopyToast';
 import { LibraryUndoToast } from './LibraryUndoToast';
 
 export function LibraryCommandProvider({
@@ -20,18 +20,15 @@ export function LibraryCommandProvider({
   const { model, selection } = useLibrary();
   const tags = useLibraryTagActions();
   const { settings } = usePreferences();
+  const workflow = useWorkflowCopy();
   const composing = useRef(false);
   const [undo, setUndo] = useState<{ run: () => Promise<void> }>();
   const [commands] = useState(
     () =>
       new LibraryCommandService(window.promptly, {
         selectedId: () => model.snapshot().selectedId,
-        copied: (id) => {
-          const cache = model.snapshot().cache;
-          const index = cache.indexOf(id);
-
-          notifyCopied(index === undefined ? undefined : cache.at(index)?.snippet.text);
-        },
+        copied: () => undefined,
+        requestCopy: (source, options) => workflow.requestCopy(source, options),
         refresh: () => {
           model.refresh();
         },
@@ -76,7 +73,8 @@ export function LibraryCommandProvider({
           active,
           focus: keyboardFocus(event),
           selected: model.snapshot().selectedId !== null,
-          hasSearch: selection.hasSearch
+          hasSearch: selection.hasSearch,
+          bundleMode: workflow.bundle.snapshot().active
         },
         settings.localShortcuts
       );
@@ -86,6 +84,17 @@ export function LibraryCommandProvider({
       const selectedId = model.snapshot().selectedId;
       const run = async () => {
         if (command === 'copy' && selectedId !== null) await commands.copy(selectedId);
+        if (command === 'copy-and-return' && selectedId !== null)
+          await commands.copy(selectedId, 'text', { return: true });
+        if (command === 'bundle') {
+          if (workflow.bundle.snapshot().active) workflow.cancelBundle();
+          else workflow.startBundle();
+        }
+
+        if (command === 'toggle-bundle' && selectedId !== null)
+          await workflow.bundle.toggle(selectedId);
+        if (command === 'review-bundle') workflow.bundle.review();
+        if (command === 'cancel-bundle') workflow.cancelBundle();
         if (command === 'next' || command === 'previous')
           await selection.moveSelection(command === 'next' ? 1 : -1);
         if (command === 'delete') await commands.deleteSelected();
@@ -136,21 +145,24 @@ export function LibraryCommandProvider({
       window.removeEventListener('compositionend', finished);
       window.removeEventListener('keydown', keyboard);
     };
-  }, [active, commands, model, selection, tags, settings.localShortcuts]);
+  }, [active, commands, model, selection, tags, settings.localShortcuts, workflow]);
 
   return (
     <LibraryCommandsContext
       value={{
         ...state,
-        deleteSelected: () => (active ? commands.deleteSelected() : Promise.resolve()),
+        deleteSelected: () =>
+          active && !workflow.bundleState.active ? commands.deleteSelected() : Promise.resolve(),
         report: (error) => {
           commands.report(error);
         },
-        copy: (id, format) => (active ? commands.copy(id, format) : Promise.resolve())
+        copy: (id, format, options) =>
+          active && !workflow.bundleState.active
+            ? commands.copy(id, format, options)
+            : Promise.resolve()
       }}
     >
       {children}
-      <LibraryCopyToast visible={active && state.copiedId !== null} />
       {active && undo !== undefined && (
         <LibraryUndoToast
           undo={undo.run}

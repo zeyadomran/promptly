@@ -4,6 +4,7 @@ import type {
   WorkflowCopyOperations
 } from '../../../shared/contracts/workflow-copy';
 import { workflowLimits } from '../../../shared/contracts/workflow-copy';
+import { bundleEntryLabel, reconcileBundleEntries } from './bundle-entry';
 import { type BundleState, emptyBundleState } from './bundle-state';
 
 /** Selection reads full content once; checking a row never invokes a copy operation. */
@@ -88,7 +89,7 @@ export class BundleModel {
           ...this.state.entries,
           {
             id,
-            label: segment.text.split(/\r?\n/u, 1)[0]?.slice(0, 160) ?? '',
+            label: bundleEntryLabel(segment.text),
             fingerprint: segment.fingerprint,
             changed: false,
             missing: false
@@ -117,6 +118,19 @@ export class BundleModel {
   setSeparator(separator: ContextSeparator): void {
     this.publish({ separator });
   }
+  reorder(id: string, beforeId: string | undefined): void {
+    if (this.state.pending || id === beforeId) return;
+    const entries = this.state.entries.filter((candidate) => candidate.id !== id);
+    const entry = this.state.entries.find((candidate) => candidate.id === id);
+    const index =
+      beforeId === undefined
+        ? entries.length
+        : entries.findIndex((candidate) => candidate.id === beforeId);
+
+    if (entry === undefined || index < 0) return;
+    entries.splice(index, 0, entry);
+    this.publish({ entries });
+  }
   source() {
     return {
       kind: 'bundle' as const,
@@ -133,25 +147,7 @@ export class BundleModel {
     this.publish({ reviewing: false, error: undefined });
   }
   reconcile(prepared: PreparedCopy): void {
-    this.publish({
-      entries: this.state.entries.map((entry) => {
-        const segment = prepared.segments.find((part) => part.id === entry.id);
-
-        return {
-          ...entry,
-          label: segment?.text.split(/\r?\n/u, 1)[0]?.slice(0, 160) ?? entry.label,
-          missing: segment === undefined,
-          changed: segment !== undefined && segment.fingerprint !== entry.fingerprint
-        };
-      })
-    });
-  }
-  markMissing(id: string): void {
-    this.publish({
-      entries: this.state.entries.map((entry) =>
-        entry.id === id ? { ...entry, missing: true } : entry
-      )
-    });
+    this.publish({ entries: reconcileBundleEntries(this.state.entries, prepared) });
   }
   async refreshEntries(): Promise<void> {
     if (this.state.pending) return;
@@ -176,7 +172,7 @@ export class BundleModel {
                   ...current,
                   missing: !result.ok && result.error.code === 'NOT_FOUND',
                   changed: segment !== undefined && segment.fingerprint !== current.fingerprint,
-                  label: segment?.text.split(/\r?\n/u, 1)[0]?.slice(0, 160) ?? current.label
+                  label: segment === undefined ? current.label : bundleEntryLabel(segment.text)
                 }
               : current
           )

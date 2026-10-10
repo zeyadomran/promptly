@@ -1,4 +1,6 @@
 import type { DesktopBridge } from '../../../shared/contracts/desktop-bridge';
+import type { WorkflowCopyOutcome } from '../../../shared/contracts/workflow-copy';
+import type { WorkflowCopyInput, WorkflowCopyOptions } from '../workflows/workflow-copy-types';
 
 type CommandBridge = Pick<DesktopBridge, 'copySnippet' | 'deleteSnippet' | 'undoDeleteSnippet'>;
 interface CommandState {
@@ -21,6 +23,7 @@ export class LibraryCommandService {
       copied: (id: string) => void;
       refresh: () => void;
       deleted: (undo: () => Promise<void>) => void;
+      requestCopy?: (source: WorkflowCopyInput, options: WorkflowCopyOptions) => Promise<void>;
     }
   ) {}
 
@@ -46,12 +49,30 @@ export class LibraryCommandService {
     this.publish({ error });
   }
 
-  async copy(id: string, format: 'text' | 'markdown' = 'text'): Promise<void> {
+  async copy(
+    id: string,
+    format: 'text' | 'markdown' = 'text',
+    options: { return?: boolean; asWritten?: boolean } = {}
+  ): Promise<void> {
     if (this.closed || this.busy || this.effects.selectedId() !== id) return;
     this.busy = true;
     clearTimeout(this.timer);
     this.publish({ copiedId: null, error: undefined });
     try {
+      if (this.effects.requestCopy !== undefined) {
+        await this.effects.requestCopy(
+          { kind: 'snippet', id },
+          {
+            ...options,
+            format,
+            onCopied: (outcome) => {
+              this.confirmed(id, outcome);
+            }
+          }
+        );
+        return;
+      }
+
       const result = await this.bridge.copySnippet({ id, format });
 
       if (this.isClosed()) return;
@@ -60,24 +81,28 @@ export class LibraryCommandService {
         return;
       }
 
-      clearTimeout(this.timer);
-      this.publish({
-        copiedId: id,
-        error:
-          result.value.warnings.length > 0
-            ? 'Copied. Copy statistics could not be confirmed.'
-            : undefined
-      });
-      this.timer = setTimeout(() => {
-        this.publish({ copiedId: null });
-      }, 1500);
-      this.effects.copied(id);
-      if (result.value.warnings.includes('STATISTICS_UNCONFIRMED')) this.effects.refresh();
+      this.confirmed(id, { warnings: result.value.warnings });
     } catch {
       this.report('Copy could not be confirmed. Check the clipboard before trying again.');
     } finally {
       this.busy = false;
     }
+  }
+
+  private confirmed(id: string, outcome: Pick<WorkflowCopyOutcome, 'warnings'>): void {
+    if (this.closed) return;
+    clearTimeout(this.timer);
+    this.publish({
+      copiedId: id,
+      error: outcome.warnings.includes('STATISTICS_UNCONFIRMED')
+        ? 'Copied. Copy statistics could not be confirmed.'
+        : undefined
+    });
+    this.timer = setTimeout(() => {
+      this.publish({ copiedId: null });
+    }, 1500);
+    this.effects.copied(id);
+    if (outcome.warnings.includes('STATISTICS_UNCONFIRMED')) this.effects.refresh();
   }
 
   async deleteSelected(): Promise<void> {

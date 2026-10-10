@@ -1,22 +1,11 @@
 import { MainCopyOwner } from '../copy/main-owner';
-import type { CopyService } from '../copy/service';
 import type { SettingsController } from '../settings/controllers';
 import type { Shortcuts } from '../shortcuts/service';
 import type { StorageClient } from '../storage/client';
 import { TrayFeedback } from './feedback';
 import { trayLabel } from './label';
 import { trayMenu } from './menu';
-import type { TrayHandle, TrayItem, TrayNative } from './ports';
-
-interface TrayCommands {
-  copy: () => CopyService | undefined;
-  updateReady: () => boolean;
-  restartForUpdate: () => void;
-  open: (kind: 'main' | 'settings') => Promise<void>;
-  recover: () => Promise<void>;
-  quit: () => void;
-  error: () => void;
-}
+import type { TrayCommands, TrayHandle, TrayItem, TrayNative } from './ports';
 
 /** Native menu ownership; persistent data and capture pause retain their existing authorities. */
 export class TrayCoordinator {
@@ -148,6 +137,16 @@ export class TrayCoordinator {
     const result = await service.copyFromMain({ id, format: 'text' }, owner);
 
     if (!this.isCurrent(owner)) return;
+    if (
+      !result.ok &&
+      result.error.code === 'TEMPLATE_REQUIRES_PREPARATION' &&
+      this.commands.prepareTemplate !== undefined
+    ) {
+      await this.commands.prepareTemplate(id);
+      if (this.isCurrent(owner)) this.feedback.show(this.handle, 'Fill values in Promptly');
+      return;
+    }
+
     this.feedback.show(
       this.handle,
       !result.ok

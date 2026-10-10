@@ -4,7 +4,17 @@ import { workflowLimits } from '../../../shared/contracts/workflow-copy';
 import { Button } from '../../components/ui/button';
 import type { BundleModel } from './bundle-model';
 
-export function BundleBar({ model, review }: { model: BundleModel; review: () => void }) {
+export function BundleBar({
+  model,
+  review,
+  matching = false,
+  matchError
+}: {
+  model: BundleModel;
+  review: () => void;
+  matching?: boolean;
+  matchError?: string | undefined;
+}) {
   const state = useSyncExternalStore(model.subscribe, model.snapshot);
 
   if (!state.active || state.reviewing) return null;
@@ -12,7 +22,11 @@ export function BundleBar({ model, review }: { model: BundleModel; review: () =>
     <div className="bundle-bar" role="region" aria-label="Selected context snippets">
       <span role="status">
         {state.entries.length} selected
-        {state.hiddenCount > 0 ? ` · ${String(state.hiddenCount)} not shown` : ''}
+        {matching
+          ? ' · Checking filter…'
+          : matchError === undefined && state.hiddenCount > 0
+            ? ` · ${String(state.hiddenCount)} not shown`
+            : ''}
       </span>
       {state.entries.length === workflowLimits.sources && <span>Limit of 20 reached</span>}
       <Button
@@ -45,6 +59,11 @@ export function BundleBar({ model, review }: { model: BundleModel; review: () =>
       {state.error !== undefined && (
         <span role="alert" className="workflow-error">
           {state.error}
+        </span>
+      )}
+      {matchError !== undefined && (
+        <span role="alert" className="workflow-error">
+          {matchError}
         </span>
       )}
     </div>

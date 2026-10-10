@@ -8,11 +8,13 @@ import { VariableText } from '../variables/VariableText';
 export function BundlePreview({
   prepared,
   values,
-  exactText
+  exactText,
+  previewValid = true
 }: {
   prepared: PreparedCopy;
   values: VariableAnswers;
   exactText: string;
+  previewValid?: boolean;
 }) {
   const [mode, setMode] = useState('annotated');
   const separator = prepared.source.kind === 'bundle' ? prepared.source.separator : 'blank-line';
@@ -54,7 +56,10 @@ export function BundlePreview({
                   <span className="bundle-order-number">{index + 1}</span>
                   <pre>
                     {prepared.variables.length > 0 ? (
-                      <VariableText text={segment.text.replace(/[\r\n]+$/u, '')} values={values} />
+                      <VariableText
+                        text={segment.text.replace(/[\r\n]+$/u, '')}
+                        values={previewValid ? values : undefined}
+                      />
                     ) : (
                       segment.text.replace(/[\r\n]+$/u, '')
                     )}

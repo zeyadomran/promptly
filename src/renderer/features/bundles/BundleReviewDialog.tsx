@@ -21,12 +21,14 @@ export function BundleReviewDialog({
   model,
   fill,
   compact = false,
-  returnLabel
+  returnLabel,
+  restoreFocus
 }: {
   model: BundleModel;
   fill: FillModel;
   compact?: boolean;
   returnLabel?: string;
+  restoreFocus?: () => void;
 }) {
   const state = useSyncExternalStore(model.subscribe, model.snapshot);
   const filling = useSyncExternalStore(fill.subscribe, fill.snapshot);
@@ -87,6 +89,11 @@ export function BundleReviewDialog({
         className="workflow-dialog bundle-review-dialog"
         data-compact={compact}
         showCloseButton={!filling.pending}
+        onCloseAutoFocus={(event) => {
+          if (restoreFocus === undefined) return;
+          event.preventDefault();
+          restoreFocus();
+        }}
         onEscapeKeyDown={(event) => {
           if (filling.pending) event.preventDefault();
         }}
@@ -111,7 +118,7 @@ export function BundleReviewDialog({
             Combine full snippet text in this order. Nothing is saved.
           </DialogDescription>
         </DialogHeader>
-        <div className="bundle-review-columns">
+        <div className="workflow-dialog-body bundle-review-columns">
           <div className="bundle-review-controls">
             <BundleOrderList
               entries={state.entries}
@@ -121,6 +128,9 @@ export function BundleReviewDialog({
               }}
               remove={(id) => {
                 model.remove(id);
+              }}
+              reorder={(id, beforeId) => {
+                model.reorder(id, beforeId);
               }}
             />
             <BundleSeparator
@@ -154,6 +164,7 @@ export function BundleReviewDialog({
                 prepared={filling.prepared}
                 values={filling.values}
                 exactText={filling.preview}
+                previewValid={filling.previewValid}
               />
             )}
             {filling.prepared !== null && filling.prepared.attachmentCount > 0 && (

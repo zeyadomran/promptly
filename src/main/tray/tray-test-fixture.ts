@@ -117,6 +117,10 @@ export function trayFixture() {
     },
     {
       copy: () => copy,
+      prepareTemplate: (id) => {
+        windows.push(`prepare ${id}`);
+        return Promise.resolve();
+      },
       updateReady: () => updates.state.status === 'ready',
       restartForUpdate: () => {
         updates.restart();
