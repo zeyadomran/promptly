@@ -73,6 +73,24 @@ it('retains queue order on rejected writes, discards stale detail and owns confi
     model.start();
     await settle(() => model.snapshot().loading, false);
     expect(model.snapshot().items).toHaveLength(2);
+    expect(model.selectForCopy(fixture.second.id)).toBe(true);
+    fixture.makeAttachmentOnly(fixture.first.id);
+    fixture.emit();
+    await settle(
+      () => model.snapshot().items.find((item) => item.id === fixture.first.id)?.hasText,
+      false
+    );
+    model.dismiss();
+    model.select(fixture.first.id);
+    await settle(() => model.snapshot().detail?.id, fixture.first.id);
+    expect(model.snapshot().toast).toBeUndefined();
+    expect(model.selectForCopy(fixture.first.id)).toBe(false);
+    expect(model.snapshot().selectedId).toBe(fixture.first.id);
+    expect(model.snapshot().toast).toMatchObject({
+      kind: 'info',
+      message: 'No text to copy. Attachments are copied separately.'
+    });
+    model.dismiss();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     model.copied(fixture.second.id, {
       status: 'copied',

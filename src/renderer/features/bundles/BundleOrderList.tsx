@@ -1,6 +1,9 @@
 import { ArrowDownIcon, ArrowUpIcon, GripVerticalIcon, XIcon } from 'lucide-react';
 
+import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { Button } from '../../components/ui/button';
+import { usePreferences } from '../settings/settings-context';
+import { bundleMoveCommand } from './bundle-keyboard';
 import type { BundleEntry } from './bundle-state';
 import { useBundleReorder } from './use-bundle-reorder';
 
@@ -18,6 +21,19 @@ export function BundleOrderList({
   reorder: (id: string, beforeId: string | undefined) => void;
 }) {
   const drag = useBundleReorder(pending, reorder);
+  const { settings } = usePreferences();
+  const moveHints = (
+    [
+      ['up', settings.localShortcuts.moveUp],
+      ['down', settings.localShortcuts.moveDown]
+    ] as const
+  )
+    .flatMap(([direction, binding]) =>
+      binding === null
+        ? []
+        : [`${shortcutLabel(binding, window.promptly.platform)} to move ${direction}`]
+    )
+    .join(' or ');
 
   return (
     <ol className="bundle-order" aria-label="Bundle order">
@@ -28,18 +44,26 @@ export function BundleOrderList({
           data-bundle-order-id={entry.id}
           data-dragging={drag.draggedId === entry.id || undefined}
           onKeyDown={(event) => {
-            if (
-              pending ||
-              !event.altKey ||
-              event.ctrlKey ||
-              event.metaKey ||
-              event.nativeEvent.isComposing ||
-              !['ArrowUp', 'ArrowDown'].includes(event.key)
-            )
-              return;
+            const command = bundleMoveCommand(
+              {
+                key: event.key,
+                code: event.code,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                altKey: event.altKey,
+                shiftKey: event.shiftKey,
+                repeat: event.repeat,
+                isComposing: event.nativeEvent.isComposing,
+                altGraph: event.getModifierState('AltGraph')
+              },
+              { pending, prevented: event.defaultPrevented },
+              settings.localShortcuts
+            );
+
+            if (command === undefined) return;
             event.preventDefault();
             event.stopPropagation();
-            move(entry.id, event.key === 'ArrowUp' ? -1 : 1);
+            move(entry.id, command);
           }}
         >
           <Button
@@ -47,7 +71,7 @@ export function BundleOrderList({
             size="icon-sm"
             className="bundle-drag-handle"
             disabled={pending}
-            aria-label={`Drag snippet ${String(index + 1)} to reorder, or use Alt and arrow keys`}
+            aria-label={`Drag snippet ${String(index + 1)} to reorder${moveHints === '' ? '' : `, or use ${moveHints}`}`}
             onPointerDown={(event) => {
               drag.start(entry.id, event);
             }}

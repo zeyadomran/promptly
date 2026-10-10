@@ -21,6 +21,22 @@ export class QueueModel {
   select(id: string): void {
     this.reader.select(id);
   }
+  selectForCopy(id: string): boolean {
+    const state = this.store.snapshot();
+
+    if (!this.store.isActive() || state.pending || state.loading) return false;
+    this.select(id);
+    if (state.items.find((item) => item.id === id)?.hasText === false) {
+      this.store.notify({
+        kind: 'info',
+        id,
+        message: 'No text to copy. Attachments are copied separately.'
+      });
+      return false;
+    }
+
+    return true;
+  }
   tab(tab: 'open' | 'done'): void {
     this.reader.tab(tab);
   }

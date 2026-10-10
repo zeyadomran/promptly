@@ -3,6 +3,7 @@ import { expect, it } from 'vitest';
 import { failure } from '../../../shared/contracts/result';
 import type { PreparedCopy, WorkflowCopyOperations } from '../../../shared/contracts/workflow-copy';
 import { FillModel } from '../variables/fill-model';
+import { assertConfiguredBundleKeys } from './bundle-keyboard-flow';
 import { BundleModel } from './bundle-model';
 
 const first = '00000000-0000-4000-8000-000000000001';
@@ -77,6 +78,9 @@ it('keeps explicit bundle order across filters and paging, shares fill answers a
   bundle.start();
   await bundle.toggle(first);
   await bundle.toggle(second);
+  assertConfiguredBundleKeys(bundle, first, second, (expected) => {
+    expect(bundle.source().ids).toEqual(expected);
+  });
   bundle.setMatchingIds(new Set([second]));
   expect(bundle.snapshot().hiddenCount).toBe(1);
   bundle.move(second, -1);

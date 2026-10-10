@@ -15,6 +15,7 @@ export type QueueBridge = Pick<
   | 'saveQueueItemToLibrary'
 >;
 export type QueueToast =
+  | { kind: 'info'; id: string; message: string }
   | { kind: 'completion' | 'delete'; id: string; undoToken: string; message: string }
   | { kind: 'copied'; id: string; outcome: WorkflowCopyOutcome }
   | { kind: 'saved'; id: string; snippetId: string }

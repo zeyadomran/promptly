@@ -35,6 +35,29 @@ export function queueModelFixture() {
     second,
     snippetId,
     rejectWrites: false,
+    makeAttachmentOnly: (id: string) => {
+      items = items.map((entry) =>
+        entry.id !== id
+          ? entry
+          : {
+              ...entry,
+              text: '',
+              attachments: [
+                {
+                  id: '00000000-0000-4000-8000-000000000004',
+                  name: 'Owned fixture.png',
+                  kind: 'image',
+                  mimeType: 'image/png',
+                  byteLength: 1,
+                  sha256: 'a'.repeat(64),
+                  width: 1,
+                  height: 1,
+                  hasScene: false
+                }
+              ]
+            }
+      );
+    },
     holdFirstRead: () => {
       hold = first.id;
     },
