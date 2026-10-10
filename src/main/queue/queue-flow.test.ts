@@ -20,6 +20,29 @@ it('keeps an ordered queue independent from reusable snippets through completion
       first.id,
       second.id
     ]);
+    const movedUndo = store.invoke('setQueueItemCompleted', { id: first.id, completed: true });
+
+    store.invoke('reorderQueueItems', { ids: [second.id, third.id] });
+    store.invoke('undoQueueCompletion', { undoToken: movedUndo.undoToken });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      first.id,
+      second.id,
+      third.id
+    ]);
+    store.invoke('reorderQueueItems', { ids: [third.id, first.id, second.id] });
+    const removedNeighbour = store.invoke('setQueueItemCompleted', {
+      id: first.id,
+      completed: true
+    });
+    const neighbourDeletion = store.invoke('deleteQueueItem', { id: second.id });
+
+    store.invoke('undoQueueCompletion', { undoToken: removedNeighbour.undoToken });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      third.id,
+      first.id
+    ]);
+    store.invoke('undoDeleteQueueItem', { undoToken: neighbourDeletion.undoToken });
+    store.invoke('reorderQueueItems', { ids: [third.id, first.id, second.id] });
     const snippet = store.invoke('saveQueueItemToLibrary', { id: first.id }).snippet;
 
     expect(store.invoke('getQueueItem', { id: first.id }).item.completedAt).toBeNull();

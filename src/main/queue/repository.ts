@@ -9,7 +9,7 @@ import { StorageError } from '../storage/context';
 import type { StorageRequest } from '../storage/protocol';
 import { decodeSnippetText, decodeSqlText, tagColumns } from '../storage/sql-text';
 import { writeQueueContent } from './content';
-import { restoreQueue } from './undo';
+import { rememberQueueUndo, restoreQueue } from './undo';
 
 export class QueueRepository {
   readonly assets: AssetRepository;
@@ -122,7 +122,7 @@ export class QueueRepository {
   }
   complete(id: string, completed: boolean) {
     const item = this.get(id),
-      undoToken = this.undo(item, 'completion');
+      undoToken = rememberQueueUndo(this, item, 'completion');
 
     this.context.db
       .prepare('UPDATE queue_items SET completedAt=?,position=? WHERE id=?')
@@ -136,21 +136,13 @@ export class QueueRepository {
   }
   delete(id: string) {
     const item = this.get(id),
-      undoToken = this.undo(item, 'delete');
+      undoToken = rememberQueueUndo(this, item, 'delete');
 
     this.assets.retainUndo(undoToken, item.attachments);
     this.assets.replace({ kind: 'queue', id }, []);
     this.context.db.prepare('DELETE FROM queue_items WHERE id=?').run(id);
     this.normalize();
     return { revision: this.context.revision(), undoToken };
-  }
-  private undo(item: QueueItem, kind: string) {
-    const token = randomUUID();
-
-    this.context.db
-      .prepare('INSERT INTO queue_undo VALUES(?,?,?,?)')
-      .run(token, kind, JSON.stringify(item), this.context.now().getTime() + 30_000);
-    return token;
   }
   restore(token: string, kind: 'delete' | 'completion') {
     return restoreQueue(this, token, kind);

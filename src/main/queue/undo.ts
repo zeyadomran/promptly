@@ -1,6 +1,37 @@
-import { queueItemSchema } from '../../shared/contracts/queue';
+import { randomUUID } from 'node:crypto';
+
+import { assetIdSchema } from '../../shared/contracts/attachments';
+import { type QueueItem, queueItemSchema } from '../../shared/contracts/queue';
 import { StorageError } from '../storage/context';
 import type { QueueRepository } from './repository';
+
+const undoItemSchema = queueItemSchema.extend({ nextId: assetIdSchema.nullable().optional() });
+
+export function rememberQueueUndo(
+  queue: QueueRepository,
+  item: QueueItem,
+  kind: 'delete' | 'completion'
+) {
+  const token = randomUUID();
+  const nextId =
+    kind === 'completion' && item.completedAt === null
+      ? (queue.context.db
+          .prepare(
+            'SELECT id FROM queue_items WHERE completedAt IS NULL AND position>? ORDER BY position,id LIMIT 1'
+          )
+          .get(item.position)?.['id'] ?? null)
+      : undefined;
+
+  queue.context.db
+    .prepare('INSERT INTO queue_undo VALUES(?,?,?,?)')
+    .run(
+      token,
+      kind,
+      JSON.stringify({ ...item, ...(nextId === undefined ? {} : { nextId }) }),
+      queue.context.now().getTime() + 30_000
+    );
+  return token;
+}
 
 export function restoreQueue(queue: QueueRepository, token: string, kind: 'delete' | 'completion') {
   const row = queue.context.db
@@ -8,7 +39,7 @@ export function restoreQueue(queue: QueueRepository, token: string, kind: 'delet
     .get(token, kind, queue.context.now().getTime());
 
   if (row === undefined) throw new StorageError('NOT_FOUND', 'Undo expired or unavailable.');
-  const item = queueItemSchema.parse(JSON.parse(String(row['json'])));
+  const { nextId, ...item } = undoItemSchema.parse(JSON.parse(String(row['json'])));
 
   if (kind === 'delete') {
     const count = Number(
@@ -54,7 +85,15 @@ export function restoreQueue(queue: QueueRepository, token: string, kind: 'delet
       .items.filter((candidate) => candidate.completedAt === null && candidate.id !== item.id)
       .map((candidate) => candidate.id);
 
-    order.splice(Math.min(item.position, order.length), 0, item.id);
+    const anchor = nextId === undefined || nextId === null ? -1 : order.indexOf(nextId);
+    const position =
+      kind === 'completion'
+        ? anchor < 0
+          ? order.length
+          : anchor
+        : Math.min(item.position, order.length);
+
+    order.splice(position, 0, item.id);
     queue.reorder(order);
   }
 
