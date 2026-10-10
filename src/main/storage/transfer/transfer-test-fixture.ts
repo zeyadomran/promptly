@@ -7,23 +7,27 @@ import { streamRecordSchema } from '../../../shared/contracts/backup/stream';
 import { testStorage } from '../storage-test-fixture';
 import { readLines } from './read-lines';
 
-export function largeLegacyBackup(): PortableBackup {
+export function singleLineLegacyBackup(): string {
   const createdAt = '2026-10-02T00:00:00.000Z';
-
-  return {
+  const backup: PortableBackup = {
     format: 'promptly-library',
     version: 1,
     tags: [],
     memberships: [],
-    snippets: Array.from({ length: 7 }, () => ({
-      id: randomUUID(),
-      text: 'x'.repeat(1_000_000),
-      createdAt,
-      updatedAt: createdAt,
-      lastCopiedAt: null,
-      copyCount: 0
-    }))
+    snippets: [
+      {
+        id: randomUUID(),
+        text: 'legacy boundary',
+        createdAt,
+        updatedAt: createdAt,
+        lastCopiedAt: null,
+        copyCount: 0
+      }
+    ]
   };
+
+  // Cross the record-probe bound without staging megabytes of snippet content.
+  return JSON.stringify(backup).padEnd(6_004_097, ' ');
 }
 
 export function collidingTagBackup(baseline: PortableBackup) {
