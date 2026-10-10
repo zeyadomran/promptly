@@ -1,5 +1,9 @@
 import type { DesktopBridge } from '../../../shared/contracts/desktop-bridge';
 import type { LibraryState } from './library-state';
+import { initialQuery } from './page-cache';
+
+export const readLibrarySummary = (bridge: Pick<DesktopBridge, 'searchSnippets' | 'listTags'>) =>
+  Promise.all([bridge.searchSnippets({ ...initialQuery, limit: 1 }), bridge.listTags({})]);
 
 /** Apply authoritative summary data; report when removed tags require a fresh query. */
 export function applyLibrarySummary(

@@ -1,4 +1,9 @@
 import type {
+  BundleSelectionRequest,
+  BundleSelectionResponse
+} from '../../shared/contracts/bundle-selection';
+import { bundleSelectionRequestSchema } from '../../shared/contracts/bundle-selection';
+import type {
   SearchPage,
   SearchRequest,
   Snippet,
@@ -53,7 +58,12 @@ export class SearchLibrary {
     for (const entry of entries) {
       if (!filter.matches(entry)) continue;
       if (total >= request.offset && items.length < request.limit)
-        items.push({ ...entry.snippet, text: rowPreview(entry.snippet.text, request.preview) });
+        items.push({
+          ...entry.snippet,
+          text: rowPreview(entry.snippet.text, request.preview),
+          hasText: entry.snippet.text.trim().length > 0,
+          variableCount: entry.variableCount
+        });
       total += 1;
     }
 
@@ -68,6 +78,22 @@ export class SearchLibrary {
       offset: request.offset,
       hasMore: request.offset + items.length < total,
       matches
+    };
+  }
+
+  matchSelected(input: BundleSelectionRequest): BundleSelectionResponse {
+    const request = bundleSelectionRequestSchema.parse(input);
+
+    if (this.snapshot.refresh()) this.sorted.clear();
+    const filter = compileSearchFilter(request);
+
+    return {
+      revision: this.context.revision(),
+      ids: request.ids.filter((id) => {
+        const entry = this.snapshot.entries.get(id);
+
+        return entry !== undefined && filter.matches(entry);
+      })
     };
   }
 }

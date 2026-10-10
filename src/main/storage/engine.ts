@@ -1,18 +1,26 @@
-import type { ChangeEvent } from '../../shared/contracts/domain';
 import { failure, resultSchema } from '../../shared/contracts/result';
+import { AssetRepository } from '../attachments/repository';
+import { QueueRepository } from '../queue/repository';
 import { SettingsRepository } from '../settings/repository';
 import { SnippetDelete } from '../snippets/snippet-delete';
 import { SnippetReader } from '../snippets/snippet-reader';
 import { SnippetWrites } from '../snippets/snippet-writes';
 import { TagRepository } from '../snippets/tag-repository';
+import { storageChange } from './change';
 import { StorageContext, StorageError } from './context';
 import type { StorageHandlers, StorageOperation, StorageResponse, WorkerReply } from './protocol';
 import { storageOperations } from './protocol';
 import { TransferRepository } from './transfer/repository';
+import { workflowHandlers } from './workflow-handlers';
 
 const reads = new Set<StorageOperation>([
+  'getAssetDraft',
+  'readManagedAttachment',
+  'getQueueItem',
+  'listQueue',
   'getSnippet',
   'searchSnippets',
+  'matchBundleSelection',
   'listTags',
   'getRevision',
   'getSettings',
@@ -32,6 +40,8 @@ export class StorageEngine {
     const writes = new SnippetWrites(reader);
     const deletion = new SnippetDelete(writes);
     const transfer = new TransferRepository(writes);
+    const queue = new QueueRepository(writes);
+    const assets = new AssetRepository(this.context);
 
     this.transfer = transfer;
     const tags = new TagRepository(reader);
@@ -45,10 +55,12 @@ export class StorageEngine {
     }
 
     this.handlers = {
+      ...workflowHandlers(assets, queue, reader),
       getSettings: () => settings.read(),
       updateSettings: (input) => settings.write(input),
       getSnippet: (input) => reader.snapshot(input.id),
       searchSnippets: (input) => reader.query(input),
+      matchBundleSelection: (input) => reader.matchSelected(input),
       createSnippet: (input) => writes.create(input),
       updateSnippet: (input) => writes.update(input),
       duplicateSnippet: (input) => writes.duplicate(input),
@@ -102,7 +114,7 @@ export class StorageEngine {
       const result = reads.has(operation) ? action() : this.context.transaction(action);
       const reply: WorkerReply = { id, result };
 
-      if (!reads.has(operation)) reply.change = this.change(operation);
+      if (!reads.has(operation)) reply.change = storageChange(this.context, operation);
       if (operation === 'recordSuccessfulCopy' && reply.change !== undefined && result.ok) {
         // The selected operation's response schema was validated inside the transaction.
         const { snippet } = result.value as StorageResponse<'recordSuccessfulCopy'>;
@@ -132,31 +144,5 @@ export class StorageEngine {
     this.transfer.clearPlans();
     this.context.undo.clear();
     this.context.db.close();
-  }
-
-  private change(operation: StorageOperation): ChangeEvent {
-    if (operation === 'updateSettings')
-      return { revision: this.context.revision(), domains: ['settings'] };
-    const tagsOnly = operation === 'createTag' || operation === 'updateTag';
-    const relationships = [
-      'deleteSnippet',
-      'undoDeleteSnippet',
-      'duplicateSnippet',
-      'setSnippetTags',
-      'setTagMembership',
-      'ensureTag',
-      'deleteTag',
-      'clearLibrary',
-      'commitLibraryImport'
-    ];
-
-    return {
-      revision: this.context.revision(),
-      domains: tagsOnly
-        ? ['tags', 'snippets']
-        : relationships.includes(operation)
-          ? ['snippets', 'tags']
-          : ['snippets']
-    };
   }
 }

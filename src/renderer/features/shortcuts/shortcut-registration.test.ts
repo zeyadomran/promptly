@@ -9,12 +9,13 @@ it('explains the affected shortcut without confusing registration and selection 
     capture: 'registered',
     open: 'unavailable',
     pin: 'disabled',
+    compose: 'registered',
     hook: 'installed',
     capturePaused: false,
     recording: false,
     quarantined: false,
     captureHandlerAvailable: true,
-    labels: { capture: 'Shift × 2', open: 'Alt+Space', pin: null }
+    labels: { capture: 'Shift × 2', open: 'Alt+Space', pin: null, compose: 'Alt+Shift+N' }
   };
 
   expect(shortcutRegistration(status, 'open').detail).not.toMatch(/modifier|listener/i);

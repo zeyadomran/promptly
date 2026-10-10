@@ -1,5 +1,7 @@
+import type { BundleSelectionRequest } from '../../shared/contracts/bundle-selection';
 import type { SearchPage, SearchRequest, Snippet } from '../../shared/contracts/domain';
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
+import { AssetRepository } from '../attachments/repository';
 import { SearchLibrary } from '../search/search-library';
 import type { StorageContext } from '../storage/context';
 import { StorageError } from '../storage/context';
@@ -31,7 +33,8 @@ export class SnippetReader {
       ...record,
       text: decodeSnippetText(row['textUtf16'], row['text']),
       sourceApp: decodeSqlText(row['sourceApp']),
-      tags
+      tags,
+      attachments: new AssetRepository(this.context).list({ kind: 'snippet', id })
     });
   }
 
@@ -41,5 +44,9 @@ export class SnippetReader {
 
   query(request: SearchRequest): SearchPage {
     return this.search.query(request);
+  }
+
+  matchSelected(request: BundleSelectionRequest) {
+    return this.search.matchSelected(request);
   }
 }

@@ -1,0 +1,159 @@
+import { expect, it } from 'vitest';
+
+import { allSnippets, testStorage } from '../storage/storage-test-fixture';
+import { seedLegacyQueue } from './legacy-test-fixture';
+
+it('keeps an ordered queue independent from reusable snippets through completion undo, delete undo and reopen', () => {
+  const store = testStorage(undefined, seedLegacyQueue);
+
+  try {
+    expect(store.invoke('listQueue', {}).items.map((item) => item.variableCount)).toEqual([2, 33]);
+    store.invoke('clearLibrary', {});
+    const first = store.invoke('createQueueItem', { text: 'First' }).item;
+    const second = store.invoke('createQueueItem', { text: 'Second' }).item;
+    const third = store.invoke('createQueueItem', { text: 'Third' }).item;
+
+    store.invoke('reorderQueueItems', { ids: [third.id, first.id, second.id] });
+    store.invoke('setQueueItemCompleted', { id: first.id, completed: false });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      third.id,
+      first.id,
+      second.id
+    ]);
+    const done = store.invoke('setQueueItemCompleted', { id: first.id, completed: true });
+
+    expect(store.invoke('listQueue', {}).openCount).toBe(2);
+    store.invoke('undoQueueCompletion', { undoToken: done.undoToken });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      third.id,
+      first.id,
+      second.id
+    ]);
+    const movedUndo = store.invoke('setQueueItemCompleted', { id: first.id, completed: true });
+
+    store.invoke('reorderQueueItems', { ids: [second.id, third.id] });
+    store.invoke('undoQueueCompletion', { undoToken: movedUndo.undoToken });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      first.id,
+      second.id,
+      third.id
+    ]);
+    store.invoke('reorderQueueItems', { ids: [third.id, first.id, second.id] });
+    const removedNeighbour = store.invoke('setQueueItemCompleted', {
+      id: first.id,
+      completed: true
+    });
+    const neighbourDeletion = store.invoke('deleteQueueItem', { id: second.id });
+
+    store.invoke('undoQueueCompletion', { undoToken: removedNeighbour.undoToken });
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      third.id,
+      first.id
+    ]);
+    store.invoke('undoDeleteQueueItem', { undoToken: neighbourDeletion.undoToken });
+    store.invoke('reorderQueueItems', { ids: [third.id, first.id, second.id] });
+    const snippet = store.invoke('saveQueueItemToLibrary', { id: first.id }).snippet;
+
+    expect(store.invoke('getQueueItem', { id: first.id }).item.completedAt).toBeNull();
+    const added = store.invoke('addSnippetToQueue', { id: snippet.id }).item;
+
+    expect(store.invoke('searchSnippets', allSnippets).total).toBe(1);
+    const deletion = store.invoke('deleteQueueItem', { id: second.id });
+
+    store.invoke('undoDeleteQueueItem', { undoToken: deletion.undoToken });
+    const whitespace =
+      '\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff';
+
+    store.invoke('updateQueueItem', { id: added.id, text: whitespace.repeat(60) + 'tail' });
+    expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)).toMatchObject({
+      hasText: true
+    });
+    store.invoke('updateQueueItem', { id: added.id, text: '\0' });
+    expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.hasText).toBe(
+      true
+    );
+    const draft = store.invoke('beginAssetDraft', {});
+
+    store.invoke('storeDraftAttachment', {
+      draftToken: draft.token,
+      name: 'data.bin',
+      kind: 'file',
+      mimeType: 'application/octet-stream',
+      bytes: new Uint8Array([1]),
+      width: null,
+      height: null
+    });
+    const attachmentOnly = store.invoke('createQueueItem', {
+      text: whitespace,
+      draftToken: draft.token
+    }).item;
+
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === attachmentOnly.id)?.hasText
+    ).toBe(false);
+    store.invoke('deleteQueueItem', { id: attachmentOnly.id });
+    const longText =
+      'x'.repeat(1023) +
+      String.fromCodePoint(0x1f642) +
+      '\0{{constructor}} {{constructor}} {{toString}} {{9invalid}} {{two words}}';
+
+    store.invoke('updateQueueItem', { id: added.id, text: longText });
+    expect(store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.text).toBe(
+      'x'.repeat(1023)
+    );
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
+    const variableDeletion = store.invoke('deleteQueueItem', { id: added.id });
+
+    store.invoke('undoDeleteQueueItem', { undoToken: variableDeletion.undoToken });
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
+    store.reopen();
+    expect(store.invoke('getSnippet', { id: snippet.id }).snippet.text).toBe('First');
+    expect(store.invoke('getQueueItem', { id: added.id }).item.text).toBe(longText);
+    expect(
+      store.invoke('listQueue', {}).items.find((item) => item.id === added.id)?.variableCount
+    ).toBe(2);
+    expect(store.invoke('listQueue', {}).items.map((item) => item.id)).toEqual([
+      third.id,
+      first.id,
+      second.id,
+      added.id
+    ]);
+    expect(
+      store.engine.run(1, 'reorderQueueItems', { ids: [first.id, first.id] }).result
+    ).toMatchObject({ ok: false });
+    expect(store.invoke('listQueue', {}).openCount).toBe(4);
+    store.invoke('setQueueItemCompleted', { id: first.id, completed: true });
+    const reopening = store.invoke('setQueueItemCompleted', { id: first.id, completed: false });
+    const later = store.invoke('createQueueItem', { text: 'Later' }).item;
+
+    store.invoke('undoQueueCompletion', { undoToken: reopening.undoToken });
+    expect(
+      store
+        .invoke('listQueue', {})
+        .items.filter((item) => item.completedAt === null)
+        .map((item) => item.position)
+    ).toEqual([0, 1, 2, 3]);
+    const afterUndo = store.invoke('createQueueItem', { text: 'After undo' }).item;
+
+    store.reopen();
+    expect(
+      store
+        .invoke('listQueue', {})
+        .items.filter((item) => item.completedAt === null)
+        .map((item) => [item.id, item.position])
+    ).toEqual([
+      [third.id, 0],
+      [second.id, 1],
+      [added.id, 2],
+      [later.id, 3],
+      [afterUndo.id, 4]
+    ]);
+    expect(store.invoke('getQueueItem', { id: first.id }).item.completedAt).not.toBeNull();
+  } finally {
+    store.dispose();
+  }
+});

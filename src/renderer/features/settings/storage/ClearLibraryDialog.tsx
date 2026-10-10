@@ -42,16 +42,17 @@ export function ClearLibraryDialog({ pending, error, clear }: ClearLibraryProps)
         </Button>
       </DialogTrigger>
       <DialogContent
+        className="storage-clear-dialog"
         showCloseButton={!pending}
         onEscapeKeyDown={(event) => {
           if (pending) event.preventDefault();
         }}
       >
         <DialogHeader>
-          <DialogTitle>Clear all library data?</DialogTitle>
+          <DialogTitle>Clear all Promptly data?</DialogTitle>
           <DialogDescription>
-            This permanently removes all snippets and tags, including deleted snippets you could
-            undo. Preferences are kept.
+            This permanently removes Library snippets, queued prompts, tags, attachment files,
+            unsaved drafts and items you could undo. Preferences are kept.
           </DialogDescription>
         </DialogHeader>
         <div className="storage-confirmation">
@@ -91,7 +92,7 @@ export function ClearLibraryDialog({ pending, error, clear }: ClearLibraryProps)
               void apply();
             }}
           >
-            {pending ? 'Clearing' : 'Clear library'}
+            {pending ? 'Clearing' : 'Clear all data'}
           </Button>
         </DialogFooter>
       </DialogContent>

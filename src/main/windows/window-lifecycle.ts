@@ -1,22 +1,24 @@
 import { app, type BrowserWindow, screen } from 'electron';
 
-import { failure } from '../../shared/contracts/result';
-import type { WindowKind, WindowState } from '../../shared/contracts/window';
+import type { ShellCommand, WindowKind, WindowState } from '../../shared/contracts/window';
 import type { WindowRegistry } from '../ipc/window-registry';
 import type { SettingsService } from '../settings/service';
 import { createMainWindow } from './create-main-window';
+import type { PreviousAppCapture } from './previous-app-focus';
 import { reconcileWindows } from './reconcile-windows';
 import { recoverWindowRenderer, retireWindowRenderer } from './renderer-recovery';
 import {
   describeRecovery,
   describeWindow,
   desktopRootKind,
+  publishShellCommand,
   publishShellNavigation
 } from './shell-navigation';
 import type { WindowRecovery } from './visibility';
-import { canRecover, concealWindow, restoreWindow } from './visibility';
+import { canRecover, concealWindow, restoreWithCapture } from './visibility';
 import { watchWindowLifecycle } from './watch-window-lifecycle';
 import { WindowBounds } from './window-bounds';
+import { WindowCommands } from './window-commands';
 import { createWindowOperations } from './window-operations';
 
 export class WindowLifecycle {
@@ -26,15 +28,17 @@ export class WindowLifecycle {
   private bounds: WindowBounds | undefined;
   private closing = false;
   private readonly isClosing = () => this.closing;
-  private commandTail: Promise<unknown> = Promise.resolve();
+  private readonly commands: WindowCommands;
 
   constructor(
     private readonly registry: WindowRegistry,
     private readonly settings: SettingsService,
     private readonly recovery: WindowRecovery,
     private readonly onError: (error: unknown) => void,
-    private readonly onOpened: () => void = () => undefined
+    private readonly onOpened: () => void = () => undefined,
+    private readonly previousApp?: PreviousAppCapture
   ) {
+    this.commands = new WindowCommands(this.isClosing, onError);
     screen.on('display-removed', this.reconcile);
     screen.on('display-metrics-changed', this.reconcile);
   }
@@ -48,6 +52,8 @@ export class WindowLifecycle {
     const view = kind === 'settings' ? 'settings' : 'library';
 
     if (kind === 'settings') kind = 'main';
+    if (this.isClosing()) throw new Error('Promptly is shutting down.');
+    await this.previousApp?.captureBeforeShow();
     if (this.isClosing()) throw new Error('Promptly is shutting down.');
     if (kind === 'main' && view !== 'settings') kind = this.rootKind();
     // App-wide runtime accessibility remains enabled through quit; never disable active assistive support.
@@ -66,6 +72,7 @@ export class WindowLifecycle {
           this.windows.set(kind, created);
           if (kind === 'main') this.bounds = new WindowBounds(created, this.settings, this.onError);
           watchWindowLifecycle(created, kind, {
+            previousApp: this.previousApp,
             opened: this.onOpened,
             closing: () => this.closing,
             ready: () => this.ready.has(created),
@@ -118,6 +125,10 @@ export class WindowLifecycle {
     publishShellNavigation(await this.show('settings', false), 'wiki');
   }
 
+  async dispatchCommand(command: ShellCommand): Promise<void> {
+    publishShellCommand(await this.show('settings', false), command);
+  }
+
   hide(): void {
     const window = this.windows.get(this.rootKind());
 
@@ -132,7 +143,12 @@ export class WindowLifecycle {
   }
 
   recoverVisibility(): void {
-    restoreWindow(this.windows.get(this.rootKind()));
+    restoreWithCapture(
+      () => this.windows.get(this.rootKind()),
+      this.previousApp?.captureBeforeShow.bind(this.previousApp),
+      this.isClosing,
+      this.onError
+    );
   }
 
   recoverIfUnreachable(): void {
@@ -158,28 +174,12 @@ export class WindowLifecycle {
     );
   }
 
-  private enqueue(action: () => Promise<WindowState>) {
-    if (this.closing) return Promise.resolve(failure('UNAVAILABLE', 'Promptly is shutting down.'));
-    const result = this.commandTail
-      .then(action)
-      .then((value) => ({ ok: true as const, value }))
-      .catch((error: unknown) => {
-        this.onError(error);
-        return failure('UNAVAILABLE', 'Unable to change the window. Reopen Promptly to recover.');
-      });
-
-    this.commandTail = result;
-    return result;
-  }
-
   readonly services = createWindowOperations({
     state: (kind) => this.state(kind),
     recovery: () => describeRecovery(this.recovery, this.windows.get(this.rootKind())),
-    enqueue: (action) => this.enqueue(action),
+    enqueue: (action) => this.commands.enqueue(action),
     show: (kind, navigate) => this.show(kind, navigate),
-    hide: () => {
-      this.hide();
-    },
+    hide: this.hide.bind(this),
     switchMode: (mode) => this.bounds?.switchMode(mode) ?? Promise.resolve()
   });
 
@@ -187,7 +187,7 @@ export class WindowLifecycle {
     this.stopCommands();
     screen.removeListener('display-removed', this.reconcile);
     screen.removeListener('display-metrics-changed', this.reconcile);
-    await this.commandTail;
+    await this.commands.close();
     await Promise.allSettled(this.opening.values());
     await this.bounds?.close();
   }

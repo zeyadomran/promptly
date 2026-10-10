@@ -34,3 +34,9 @@ export function initialLibraryState(): LibraryState {
     version: 0
   };
 }
+
+export function restartLibraryState(state: LibraryState): void {
+  state.cache.clear();
+  state.retained = undefined;
+  state.loading = true;
+}

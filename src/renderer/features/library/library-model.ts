@@ -2,11 +2,12 @@ import type { DesktopBridge } from '../../../shared/contracts/desktop-bridge';
 import type { SearchPage, SearchRequest } from '../../../shared/contracts/domain';
 import type { DesktopError, DesktopResult } from '../../../shared/contracts/result';
 import { createSearchClient } from '../../lib/desktop-client';
+import { handleLibraryChange } from './library-change';
 import { LibraryCursor } from './library-cursor';
 import { failLibraryDisplay, retainLibraryDisplay } from './library-display';
-import { initialLibraryState } from './library-state';
-import { applyLibrarySummary } from './library-summary';
-import { initialQuery, PAGE_SIZE, sameQuery } from './page-cache';
+import { initialLibraryState, restartLibraryState } from './library-state';
+import { applyLibrarySummary, readLibrarySummary } from './library-summary';
+import { PAGE_SIZE, sameQuery } from './page-cache';
 
 type LibraryBridge = Pick<DesktopBridge, 'searchSnippets' | 'subscribeChanges' | 'listTags'>;
 
@@ -28,20 +29,16 @@ export class LibraryModel {
       (result, request) => {
         this.receive(result, request);
       },
-      (event) => {
-        if (this.state.cache.retainCopy(event, this.state.request.sort)) {
-          this.publish();
-          return false;
-        }
-
-        const relevant = event.domains.includes('snippets') || event.domains.includes('tags');
-
-        if (relevant) {
-          this.invalidate();
-          void this.refreshSummary();
-        } else this.state.cache.promote(event.revision);
-        return relevant;
-      }
+      (event) =>
+        handleLibraryChange(this.state, event, {
+          publish: () => {
+            this.publish();
+          },
+          refresh: () => {
+            this.invalidate();
+            void this.refreshSummary();
+          }
+        })
     );
   }
 
@@ -62,9 +59,7 @@ export class LibraryModel {
     this.closed = false;
     this.connect();
     this.cursor.invalidate(this.state);
-    this.state.cache.clear();
-    this.state.retained = undefined;
-    this.state.loading = true;
+    restartLibraryState(this.state);
     this.publish();
     void this.refreshSummary();
     void this.fetch(0);
@@ -72,10 +67,7 @@ export class LibraryModel {
 
   private async refreshSummary(): Promise<void> {
     const version = ++this.summaryVersion;
-    const [total, tags] = await Promise.all([
-      this.bridge.searchSnippets({ ...initialQuery, limit: 1 }),
-      this.bridge.listTags({})
-    ]);
+    const [total, tags] = await readLibrarySummary(this.bridge);
 
     if (this.closed || version !== this.summaryVersion) return;
     if (applyLibrarySummary(this.state, total, tags)) this.invalidate();
@@ -160,6 +152,13 @@ export class LibraryModel {
 
     this.publish();
     return missing === undefined ? Promise.resolve() : this.fetch(missing);
+  }
+  reveal(id: string): Promise<void> {
+    if (this.closed) return Promise.resolve();
+    this.cancelSearchTimer();
+    this.cursor.reveal(this.state, id);
+    this.publish();
+    return this.fetch(0);
   }
 
   private receive(result: DesktopResult<SearchPage>, request: SearchRequest): void {

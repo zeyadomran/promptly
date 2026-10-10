@@ -6,11 +6,14 @@ The source repository maintains the developer and contributor guides:
   run/check/build commands, process boundaries, native capture, and dependencies.
 - [TESTING.md](https://github.com/zeyadomran/promptly/blob/main/TESTING.md): canonical functional
   flows, one-test-per-flow policy, and manual release checks.
-- [RELEASING.md](https://github.com/zeyadomran/promptly/blob/main/RELEASING.md): unsigned Windows
-  installer construction, artifact provenance, and remaining qualification.
+- [RELEASING.md](https://github.com/zeyadomran/promptly/blob/main/RELEASING.md): signed Windows
+  releases and update feeds, unsigned development installer construction, artifact provenance,
+  and remaining qualification.
 - [CONTRIBUTORS.md](https://github.com/zeyadomran/promptly/blob/main/CONTRIBUTORS.md): contributions
   and ordinary bug reporting.
 - [SECURITY.md](https://github.com/zeyadomran/promptly/blob/main/SECURITY.md): private vulnerability reporting.
+- [PRIVACY.md](https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md): local data, capture,
+  update requests, and information you choose to share.
 - [License provenance](https://github.com/zeyadomran/promptly/blob/main/packaging/README.md):
   retained third-party terms and outstanding installer dependency qualification.
 

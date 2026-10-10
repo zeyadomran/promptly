@@ -4,8 +4,10 @@ import {
   settingsSchema,
   type SettingsSnapshot
 } from '../../shared/contracts/settings';
+import { shortcutChangeConflict } from '../../shared/shortcuts/conflicts';
 import type { StorageContext } from '../storage/context';
 import { StorageStartupError } from '../storage/startup-failure';
+import { migrateShortcutDefaults } from './migrate-shortcut-defaults';
 
 /** Only the worker owns SQL. Missing keys migrate to defaults; corrupt keys fail closed. */
 export class SettingsRepository {
@@ -39,6 +41,13 @@ export class SettingsRepository {
     const parsed = settingsSchema.safeParse({ ...defaults, ...values });
 
     if (!parsed.success) throw new StorageStartupError('preferences');
+    migrateShortcutDefaults(parsed.data, local);
+    if (
+      values['composeShortcut'] === undefined &&
+      shortcutChangeConflict({ ...parsed.data, composeShortcut: null }, parsed.data, 'win32') !==
+        undefined
+    )
+      parsed.data.composeShortcut = null;
     return { revision: this.context.revision(), settings: parsed.data };
   }
 

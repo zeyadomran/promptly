@@ -8,6 +8,7 @@ export const first: Snippet = {
   sourceApp: null,
   sourceAppId: null,
   tags: [],
+  attachments: [],
   lastCopiedAt: null,
   copyCount: 0
 };

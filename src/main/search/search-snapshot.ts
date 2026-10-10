@@ -3,6 +3,8 @@ import type { SQLOutputValue } from 'node:sqlite';
 import type { Snippet, Tag } from '../../shared/contracts/domain';
 import { snippetSchema, tagSchema } from '../../shared/contracts/domain';
 import { foldText } from '../../shared/search/match-text';
+import { countTemplateNames } from '../../shared/workflows/variable-count';
+import { AssetRepository } from '../attachments/repository';
 import type { StorageContext } from '../storage/context';
 import { decodeSnippetText, decodeSqlText, snippetColumns, tagColumns } from '../storage/sql-text';
 import { installSearchChangeLog } from './change-log';
@@ -13,6 +15,7 @@ export interface SearchEntry {
   sources: string[];
   tagNames: Set<string>;
   tagIds: Set<string>;
+  variableCount: number;
 }
 
 export class SearchSnapshot {
@@ -87,8 +90,14 @@ export class SearchSnapshot {
       ...record,
       text: decodeSnippetText(row['textUtf16'], row['text']),
       sourceApp: decodeSqlText(row['sourceApp']),
-      tags
+      tags,
+      attachments: new AssetRepository(this.context).list({
+        kind: 'snippet',
+        id: String(record['id'])
+      })
     });
+
+    const previous = this.entries.get(snippet.id);
 
     this.entries.set(snippet.id, {
       snippet,
@@ -97,7 +106,11 @@ export class SearchSnapshot {
         value === null ? [] : [foldText(value)]
       ),
       tagNames: new Set(tags.map((tag) => foldText(tag.name))),
-      tagIds: new Set(tags.map((tag) => tag.id))
+      tagIds: new Set(tags.map((tag) => tag.id)),
+      variableCount:
+        previous?.snippet.text === snippet.text
+          ? previous.variableCount
+          : countTemplateNames(snippet.text)
     });
   }
 }

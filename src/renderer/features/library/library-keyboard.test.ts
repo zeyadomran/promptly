@@ -37,6 +37,18 @@ it('routes library navigation and copy while preserving text, IME, and overlay o
   expect(libraryKeyCommand({ ...input, selected: false })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, focus: 'editor' })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, focus: 'overlay' })).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, ctrl: true })).toBe('copy-and-return');
+  expect(libraryKeyCommand({ ...input, bundleMode: true })).toBe('toggle-bundle');
+  expect(libraryKeyCommand({ ...input, bundleMode: true, ctrl: true })).toBe('review-bundle');
+  expect(libraryKeyCommand({ ...input, bundleMode: true, key: 'Escape' })).toBe('cancel-bundle');
+  expect(libraryKeyCommand({ ...input, ctrl: true, key: 'b' })).toBe('bundle');
+  expect(libraryKeyCommand({ ...input, focus: 'editor', ctrl: true, key: 'b' })).toBeUndefined();
+  expect(libraryKeyCommand({ ...input, bundleMode: true, focus: 'library', key: ' ' })).toBe(
+    'toggle-bundle'
+  );
+  expect(
+    libraryKeyCommand({ ...input, bundleMode: true, focus: 'library', key: 'Delete' })
+  ).toBeUndefined();
   expect(libraryKeyCommand({ ...input, composing: true })).toBeUndefined();
   expect(libraryKeyCommand({ ...input, key: 'Escape' })).toBe('clear-search');
   expect(libraryKeyCommand({ ...input, key: 'Escape', hasSearch: false })).toBe('hide');

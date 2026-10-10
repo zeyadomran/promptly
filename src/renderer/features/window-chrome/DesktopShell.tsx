@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 import { TooltipProvider } from '../../components/ui/tooltip';
-import { LibraryWindow } from '../library/LibraryWindow';
+import { WorkflowWorkspace } from '../compose/WorkflowWorkspace';
 import { OnboardingTitleBar } from '../onboarding/OnboardingTitleBar';
 import { OnboardingWindow } from '../onboarding/OnboardingWindow';
 import { SettingsWindow } from '../settings/components/SettingsWindow';
@@ -24,7 +24,6 @@ export function DesktopShell({
   const preferences = usePreferences();
   const navigation = useShellNavigation();
   const onboardingWindow = window.location.hash === '#onboarding';
-  const libraryActive = navigation.view === 'library';
 
   return (
     <TooltipProvider>
@@ -46,14 +45,7 @@ export function DesktopShell({
             <OnboardingWindow />
           ) : (
             <>
-              <div
-                className="desktop-view"
-                data-shell-library
-                hidden={!libraryActive}
-                inert={!libraryActive}
-              >
-                <LibraryWindow mode={mode} onModeChange={setMode} active={libraryActive} />
-              </div>
+              <WorkflowWorkspace mode={mode} onModeChange={setMode} />
               {navigation.view === 'settings' && <SettingsWindow />}
               {navigation.view === 'wiki' &&
                 (wiki ?? (

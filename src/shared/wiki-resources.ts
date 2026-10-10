@@ -8,6 +8,7 @@ export const wikiResourceUrls: Readonly<Record<WikiResource, string>> = {
   releasing: 'https://github.com/zeyadomran/promptly/blob/main/RELEASING.md',
   contributors: 'https://github.com/zeyadomran/promptly/blob/main/CONTRIBUTORS.md',
   security: 'https://github.com/zeyadomran/promptly/blob/main/SECURITY.md',
+  privacy: 'https://github.com/zeyadomran/promptly/blob/main/PRIVACY.md',
   licenses: 'https://github.com/zeyadomran/promptly/blob/main/packaging/README.md',
   history:
     'https://github.com/zeyadomran/promptly/tree/292f584f0424f8b2101d71472d40efc427804be4/docs'

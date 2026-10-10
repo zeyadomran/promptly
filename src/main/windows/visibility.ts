@@ -26,3 +26,19 @@ export function restoreWindow(window: BrowserWindow | undefined): void {
   window.show();
   if (!window.isVisible()) throw new Error('Promptly could not restore its window.');
 }
+
+export function restoreWithCapture(
+  window: () => BrowserWindow | undefined,
+  capture: (() => Promise<void>) | undefined,
+  closing: () => boolean,
+  onError: (error: unknown) => void
+): void {
+  if (closing()) return;
+  if (capture === undefined) restoreWindow(window());
+  else
+    void capture()
+      .then(() => {
+        if (!closing()) restoreWindow(window());
+      })
+      .catch(onError);
+}

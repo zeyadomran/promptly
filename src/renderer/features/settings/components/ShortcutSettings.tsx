@@ -44,6 +44,15 @@ export function ShortcutSettings() {
         recording={recording}
         disabled={preferences.pending}
       />
+      <ShortcutGroup title="Composing and copying">
+        <SettingSwitch
+          label="Prompt for variable values"
+          description="Fill recognised {{name}} variables for this copy only."
+          checked={settings.promptVariables}
+          disabled={inactive}
+          patch={(promptVariables) => ({ promptVariables })}
+        />
+      </ShortcutGroup>
       <ShortcutGroup title="When saving">
         <SettingSwitch
           label="Show confirmation toast"

@@ -1,19 +1,11 @@
 import type { ChildProcessWithoutNullStreams } from 'node:child_process';
 
 import { NdjsonFrames } from './ndjson-frames';
+import { admitRequest, type NativePreparation, type PendingRequest } from './request-admission';
 import { terminateNative } from './terminate-native';
 import { NativeTransportError, type TransportFailure } from './transport-failure';
 
 export { NativeTransportError, type TransportFailure } from './transport-failure';
-interface Pending {
-  id: string;
-  frame: string;
-  resolve: (value: unknown) => void;
-  reject: (error: NativeTransportError) => void;
-  timer: ReturnType<typeof setTimeout>;
-  parse: (value: unknown) => unknown;
-  expiresAt: number;
-}
 export interface NativeProcessOptions {
   launch: () => ChildProcessWithoutNullStreams;
 }
@@ -21,8 +13,8 @@ export interface NativeProcessOptions {
 /** Shared platform pipe: one active request, at most four admitted requests, no text diagnostics. */
 export class NativeProcess {
   private child: ChildProcessWithoutNullStreams | undefined;
-  private active: Pending | undefined;
-  private queue: Pending[] = [];
+  private active: PendingRequest | undefined;
+  private queue: PendingRequest[] = [];
   private serial = 0;
   private session = 0;
   private disposed = false;
@@ -42,7 +34,8 @@ export class NativeProcess {
     command: string,
     payload: object,
     parse: (value: unknown) => T,
-    deadlineMs: number
+    deadlineMs: number,
+    beforeSend?: NativePreparation
   ): Promise<T> {
     if (this.disposed) return Promise.reject(new NativeTransportError('disposed'));
     if (this.queue.length + (this.active === undefined ? 0 : 1) >= 4)
@@ -52,10 +45,11 @@ export class NativeProcess {
 
     if (Buffer.byteLength(frame) > 4096) return Promise.reject(new NativeTransportError('busy'));
     return new Promise<T>((resolve, reject) => {
-      const pending: Pending = {
+      const pending: PendingRequest = {
         id,
         frame,
         parse,
+        beforeSend,
         expiresAt: performance.now() + deadlineMs,
         resolve: (value) => {
           resolve(value as T);
@@ -114,6 +108,12 @@ export class NativeProcess {
     if (this.active === undefined) return;
     try {
       const child = this.child ?? this.start();
+
+      if (!admitRequest(this.active, { pid: child.pid, generation: this.session })) {
+        this.active = undefined;
+        this.pump();
+        return;
+      }
 
       child.stdin.write(this.active.frame);
     } catch {

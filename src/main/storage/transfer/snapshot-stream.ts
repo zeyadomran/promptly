@@ -3,11 +3,12 @@ import {
   portableSnippetSchema,
   portableTagSchema
 } from '../../../shared/contracts/backup/format';
+import { workflowSnippetSchema } from '../../../shared/contracts/backup/workflow';
 import type { StorageContext } from '../context';
 import { decodeSnippetText, decodeSqlText, tagColumns } from '../sql-text';
 
 /** Iterators bound memory to one record within a coherent synchronous worker turn. */
-export function* portableSnippets(context: StorageContext) {
+export function* portableSnippets(context: StorageContext, workflow = false) {
   for (const row of context.db
     .prepare(
       'SELECT id, CAST(text AS BLOB) AS text, textUtf16, createdAt, updatedAt, lastCopiedAt, copyCount FROM snippets ORDER BY id'
@@ -15,7 +16,7 @@ export function* portableSnippets(context: StorageContext) {
     .iterate()) {
     const { textUtf16, ...value } = row;
 
-    yield portableSnippetSchema.parse({
+    yield (workflow ? workflowSnippetSchema : portableSnippetSchema).parse({
       ...value,
       text: decodeSnippetText(textUtf16, row['text'])
     });

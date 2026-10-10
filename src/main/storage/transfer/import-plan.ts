@@ -4,6 +4,7 @@ import type { ImportPreview } from '../../../shared/contracts/backup/operations'
 import type { StorageContext } from '../context';
 import type { ImportStage } from './import-stage';
 import { conflictId, libraryIdentity, snippetIdentity, storedIdentity } from './library-identity';
+import { planWorkflowAssets, planWorkflowQueue, stagedAssetIds } from './workflow-plan';
 
 export interface ImportPlan {
   stage: ImportStage;
@@ -52,6 +53,7 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
       .run(target, sameName === undefined ? 1 : 0, tag.id);
   }
 
+  planWorkflowAssets(context, stage);
   for (const snippet of stage.snippets()) {
     const tags = stage.db
       .prepare(
@@ -59,7 +61,7 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
       )
       .all(snippet.id)
       .map((row) => String(row['target']));
-    const identity = snippetIdentity(snippet, tags);
+    const identity = snippetIdentity(snippet, tags, stagedAssetIds(stage, 'snippet', snippet.id));
     let target = snippet.id;
     let attempt = 0;
     let existing = storedIdentity(context, target);
@@ -84,6 +86,7 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
       .run(target, skip ? 1 : 0, snippet.id);
   }
 
+  planWorkflowQueue(context, stage);
   stage.db.exec('COMMIT');
   return {
     stage,
@@ -98,7 +101,33 @@ export function planImport(context: StorageContext, stage: ImportStage): ImportP
       remappedSnippetIds,
       remappedTagIds,
       coalescedTags,
-      skippedSnippets
+      skippedSnippets,
+      queueItems: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_queue').get()?.['count']
+      ),
+      assets: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_assets').get()?.['count']
+      ),
+      remappedQueueIds: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_queue WHERE id<>target').get()?.[
+          'count'
+        ]
+      ),
+      remappedAssetIds: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_assets WHERE id<>target').get()?.[
+          'count'
+        ]
+      ),
+      skippedQueueItems: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_queue WHERE skip=1').get()?.[
+          'count'
+        ]
+      ),
+      skippedAssets: Number(
+        stage.db.prepare('SELECT COUNT(*) AS count FROM workflow_assets WHERE fresh=0').get()?.[
+          'count'
+        ]
+      )
     }
   };
 }

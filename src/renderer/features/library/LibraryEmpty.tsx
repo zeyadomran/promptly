@@ -1,5 +1,6 @@
 import { Button } from '../../components/ui/button';
 import { usePreferences } from '../settings/settings-context';
+import { useShellNavigation } from '../window-chrome/shell-navigation';
 import { useLibrary } from './library-context';
 import { initialQuery } from './page-cache';
 import { saveShortcutLabel } from './save-shortcut-label';
@@ -7,6 +8,7 @@ import { saveShortcutLabel } from './save-shortcut-label';
 export function LibraryEmpty() {
   const { state, model, selection } = useLibrary();
   const { settings } = usePreferences();
+  const navigation = useShellNavigation();
   const filtered =
     state.request.query !== '' || state.request.tagIds.length > 0 || state.request.untagged;
 
@@ -25,9 +27,20 @@ export function LibraryEmpty() {
           Clear search and filters
         </Button>
       ) : (
-        <p className="text-muted-foreground">
-          Select text in another app, then {saveShortcutLabel(settings.saveShortcut)} to save it.
-        </p>
+        <>
+          <p className="text-muted-foreground">
+            Select text in another app, then {saveShortcutLabel(settings.saveShortcut)} to save it.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              navigation.compose('library');
+            }}
+          >
+            New snippet
+          </Button>
+        </>
       )}
     </div>
   );

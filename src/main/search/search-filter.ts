@@ -3,7 +3,7 @@ import { foldText } from '../../shared/search/match-text';
 import { parseQuery } from '../../shared/search/parse-query';
 import type { SearchEntry } from './search-snapshot';
 
-export function compileSearchFilter(request: SearchRequest) {
+export function compileSearchFilter(request: Pick<SearchRequest, 'query' | 'tagIds' | 'untagged'>) {
   const parsed = parseQuery(request.query);
   const text = parsed.text.map(foldText);
   const requirements: ((entry: SearchEntry) => boolean)[] = [];
@@ -19,6 +19,8 @@ export function compileSearchFilter(request: SearchRequest) {
   return {
     text,
     matches(entry: SearchEntry): boolean {
+      if (entry.snippet.text.trim() === '' && (parsed.text.length > 0 || parsed.sources.length > 0))
+        return false;
       for (const requirement of requirements) if (!requirement(entry)) return false;
       return true;
     }

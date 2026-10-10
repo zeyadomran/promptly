@@ -5,6 +5,9 @@ export const wikiPageIds = [
   'Getting-Started',
   'Capturing-Text',
   'Library-and-Search',
+  'Compose-and-Queue',
+  'Attachments-and-Drawing',
+  'Variables-and-Bundles',
   'Tags',
   'Keyboard-Shortcuts',
   'Settings',
@@ -22,6 +25,7 @@ export const wikiResourceSchema = z.enum([
   'releasing',
   'contributors',
   'security',
+  'privacy',
   'licenses',
   'history'
 ]);

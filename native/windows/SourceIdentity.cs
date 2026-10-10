@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Text;
 
 internal sealed class SourceIdentity
 {
@@ -13,14 +14,20 @@ internal sealed class SourceIdentity
     internal object Source;
     private static readonly Dictionary<string, SourceIdentity> Identities = new Dictionary<string, SourceIdentity>();
     private static readonly Queue<string> Order = new Queue<string>();
+    private static readonly object Cache = new object();
 
-    internal static SourceIdentity Record()
+    internal static SourceIdentity Record(uint excludedPid = 0)
     {
-        var window = NativeMethods.GetForegroundWindow();
+        return RecordWindow(NativeMethods.GetForegroundWindow(), excludedPid, true);
+    }
+
+    internal static SourceIdentity RecordWindow(IntPtr window, uint excludedPid, bool foreground)
+    {
         uint pid;
         NativeMethods.GetWindowThreadProcessId(window, out pid);
         if (window == IntPtr.Zero || pid == 0 || pid > Int32.MaxValue) return null;
-        try { return RecordProcess(window, pid); }
+        if (excludedPid != 0 && (pid == excludedPid || !EligibleExternalWindow(window))) return null;
+        try { return RecordProcess(window, pid, foreground); }
         catch (ArgumentException) { return null; }
         catch (InvalidOperationException) { return null; }
         catch (Win32Exception error)
@@ -30,7 +37,20 @@ internal sealed class SourceIdentity
         }
     }
 
-    private static SourceIdentity RecordProcess(IntPtr window, uint pid)
+    private static bool EligibleExternalWindow(IntPtr window)
+    {
+        if (!NativeMethods.IsWindowVisible(window)) return false;
+        var name = new StringBuilder(256);
+        if (NativeMethods.GetClassName(window, name, name.Capacity) == 0) return false;
+        string kind = name.ToString();
+        // Explorer folder windows stay eligible; taskbar/desktop/switcher surfaces are not apps.
+        return kind != "Shell_TrayWnd" && kind != "Shell_SecondaryTrayWnd" &&
+            kind != "Progman" && kind != "WorkerW" && kind != "XamlExplorerHostIslandWindow" &&
+            kind != "MultitaskingViewFrame" && kind != "ForegroundStaging" &&
+            kind != "TopLevelWindowForOverflowXamlIsland" && kind != "XamlExplorerHostIslandWindow_WASDK";
+    }
+
+    private static SourceIdentity RecordProcess(IntPtr window, uint pid, bool foreground)
     {
         using (var process = Process.GetProcessById((int)pid))
         {
@@ -44,10 +64,13 @@ internal sealed class SourceIdentity
                     identity.Source = new { pid = pid, name = name, id = basename };
             }
             catch (Exception) { identity.Source = null; }
-            if (!identity.Valid(true)) return null;
-            Identities.Add(identity.Token, identity);
-            Order.Enqueue(identity.Token);
-            while (Order.Count > 32) Identities.Remove(Order.Dequeue());
+            if (!identity.Valid(foreground)) return null;
+            lock (Cache)
+            {
+                Identities.Add(identity.Token, identity);
+                Order.Enqueue(identity.Token);
+                while (Order.Count > 32) Identities.Remove(Order.Dequeue());
+            }
             return identity;
         }
     }
@@ -55,7 +78,8 @@ internal sealed class SourceIdentity
     internal static SourceIdentity Resolve(string token)
     {
         SourceIdentity identity;
-        return token != null && Identities.TryGetValue(token, out identity) ? identity : null;
+        lock (Cache)
+            return token != null && Identities.TryGetValue(token, out identity) ? identity : null;
     }
 
     internal bool Valid(bool foreground)

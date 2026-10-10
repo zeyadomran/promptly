@@ -6,7 +6,8 @@ export type CaptureIdentity = WindowsIdentity;
 export type CaptureNative = Pick<
   WindowsSelection,
   'foregroundIdentityResult' | 'captureSelection' | 'activateSource' | 'sourceAvailable'
->;
+> &
+  Partial<Pick<WindowsSelection, 'activationTargetIdentity'>>;
 
 export interface CaptureEvent {
   status: CaptureResult['status'] | 'failed';

@@ -6,6 +6,7 @@ import { WindowRegistry } from '../ipc/window-registry';
 import { testSettings } from '../settings/settings-test-fixture';
 import { shortcutFixture } from '../shortcuts/shortcut-test-fixture';
 import { UpdateService } from '../updates/service';
+import { assertComposeRouting, previousAppWindowFixture } from './previous-app-test-flow';
 import { WindowLifecycle } from './window-lifecycle';
 import { ControlledWindow } from './window-test-fixture';
 
@@ -39,6 +40,9 @@ it('keeps recording focus and a reachable window when its external recovery rout
     openSettings: () => Promise.resolve(),
     publish: () => undefined
   });
+  const previousApp = previousAppWindowFixture(() => {
+    lifecycle.hide();
+  });
 
   const lifecycle = new WindowLifecycle(
     new WindowRegistry(),
@@ -47,10 +51,12 @@ it('keeps recording focus and a reachable window when its external recovery rout
     () => undefined,
     () => {
       void updates.check(true);
-    }
+    },
+    previousApp.previous
   );
 
   await lifecycle.show();
+  await previousApp.assertCaptured();
   const tutorial = ControlledWindow.instances.at(-1);
 
   await lifecycle.showWiki();
@@ -86,6 +92,8 @@ it('keeps recording focus and a reachable window when its external recovery rout
       value: { kind: 'main', visible: true }
     });
     expect(window.isDestroyed()).toBe(false);
+    await assertComposeRouting(lifecycle, window);
+    await previousApp.assertFocused(window);
     expect(updates.state).toEqual(checked);
     lifecycle.hide();
     expect(window.isMinimized()).toBe(true);

@@ -1,4 +1,7 @@
-import type { LocalShortcuts } from '../../../../shared/contracts/local-shortcuts';
+import {
+  type LocalShortcuts,
+  optionalLocalShortcutActions
+} from '../../../../shared/contracts/local-shortcuts';
 import { localShortcutLabels } from '../../../../shared/shortcuts/conflicts';
 import { ShortcutBindingControl } from '../../shortcuts/components/ShortcutBindingControl';
 import { ShortcutGroup } from '../../shortcuts/components/ShortcutGroup';
@@ -11,6 +14,14 @@ const descriptions: Record<keyof LocalShortcuts, string> = {
   next: 'Move to the next snippet.',
   previous: 'Move to the previous snippet.',
   copy: 'Copy the selected snippet.',
+  newSnippet: 'Start a draft in Library or Queue.',
+  showLibrary: 'Show the Library workspace.',
+  showQueue: 'Show the Queue workspace.',
+  copyAndReturn: 'Copy selected text and return to the previous app. Paste it yourself.',
+  queueComplete: 'Complete or reopen the selected queued prompt.',
+  moveUp: 'Move a queued prompt or bundle item up.',
+  moveDown: 'Move a queued prompt or bundle item down.',
+  bundle: 'Select Library snippets for a transient context bundle.',
   delete: 'Delete the selected snippet outside search. Either binding runs the same command.',
   deleteAlternate: 'Optional second key for deleting a snippet.',
   focusSearch: 'Focus the library search.',
@@ -55,6 +66,7 @@ export function LocalShortcutSettings({
               target={action}
               label={localShortcutLabels[action]}
               scope="local"
+              optional={optionalLocalShortcutActions.some((key) => key === action)}
               preferences={preferences}
               recording={recording}
               disabled={disabled}

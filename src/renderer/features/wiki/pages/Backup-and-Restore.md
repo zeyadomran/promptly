@@ -1,6 +1,6 @@
 # Backup and Restore
 
-Open [Settings → Storage](promptly:settings/storage) for export and import. Library data is stored locally in SQLite.
+Open **Settings → Storage** for export and import. Library data is stored locally in SQLite.
 
 ## Export a backup
 
@@ -8,23 +8,42 @@ Open [Settings → Storage](promptly:settings/storage) for export and import. Li
 2. Choose a destination in the Windows save dialog.
 3. Keep the exported file somewhere safe before changing, upgrading, or uninstalling the app.
 
-The JSON option exports a Promptly JSON Lines backup of the snippet library, tag definitions,
-and memberships. **Markdown** exports a readable copy of the full snippet text; it is not
-the restore format. Library transfer does not replace application preferences.
+The JSON option exports a **v3 Promptly JSON Lines** backup containing saved Library snippets,
+tags and memberships, Open/Done Queue prompts and order, original attachment bytes and metadata,
+flattened drawing PNGs, editable scenes and their retained original backgrounds. Copy statistics
+are included. Export remains available when Queue has content but Library is empty.
+
+**Markdown (text only)** is a readable export of full Library and Queue text and metadata. It
+omits attachment bytes and drawing scenes, names omitted files and reports their count. It is
+not the restore format. Neither export includes preferences, unsaved drafts/drawing edits,
+temporary Undo content, variable answers or transient bundle selections. Save entries first.
 
 ## Import a backup
 
-1. Choose **Import JSON** and select a Promptly JSON Lines or supported legacy JSON backup.
-2. Review the preview's snippet, tag, membership, remapped-ID, and already-present counts.
+1. Choose **Import JSON** and select a Promptly backup. v3 JSON Lines and legacy v1/v2 formats
+   are supported.
+2. Review snippet, queued-prompt, attachment, tag, membership, remapped-ID and already-present
+   counts in the preview.
 3. Choose **Import** to confirm or **Cancel** to leave the library unchanged.
 
-Import adds data while keeping existing snippets. Identical versions are skipped. Different
+Import adds data while keeping existing Library and Queue content. Identical versions are skipped. Different
 IDs and conflicting versions are preserved, and matching tag names share the existing tag.
-Invalid or incomplete backups are rejected rather than partially committed.
+Saved order, attachment ownership and drawing backgrounds are restored with remapped IDs where
+needed. Invalid, damaged or incomplete backups are rejected rather than partially committed.
+Cancelling leaves saved content unchanged. Import does not replace application preferences.
 
-**Clear all** permanently removes library data while keeping preferences. Export a JSON backup
-first if you may need the data again; read the confirmation carefully. Clearing the library is
-not part of ordinary backup or restore.
+## Clear and upgrade
+
+**Clear all** opens **Clear all data** confirmation. Typing `CLEAR ALL` removes Library, Queue,
+tags, managed attachments, unsaved drafts and Undo ownership while keeping preferences.
+Export a JSON backup first if you may need saved content again. Clear is not a secure erase;
+backups, database remnants and clipboard history may retain copies.
+
+Upgrades use additive schema migrations and preserve existing Library text. Before upgrading,
+keep a complete backup and the original legacy backups you already have. Older builds can
+reject a newer database; reinstalling an old executable does not roll its schema back. v3 backups
+are not intended for old releases. Importing v1/v2 into 1.1.0 is supported, but it does not turn
+an upgraded profile back into an older schema.
 
 For this product, the live profile normally lives in `%APPDATA%\Promptly`, including
 `promptly.sqlite` and possible SQLite WAL/SHM companions. Prefer the app's export flow for

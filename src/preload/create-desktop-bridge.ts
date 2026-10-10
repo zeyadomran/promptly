@@ -14,14 +14,20 @@ import {
 } from '../shared/contracts/operations';
 import type { DesktopResult } from '../shared/contracts/result';
 import { failure, resultSchema } from '../shared/contracts/result';
+import { focusSubscription } from './focus-subscription';
 import { navigationSubscription } from './navigation-subscription';
+import { operationMethods } from './operation-methods';
+import { shellCommandSubscription } from './shell-command-subscription';
 import { updateSubscription } from './update-subscription';
 
 export interface BridgeTransport {
+  resolveDroppedFiles?: (files: File[]) => string[];
   invoke(channel: string, request: unknown): Promise<unknown>;
   listen(listener: (value: unknown) => void): () => void;
   listenNavigation?: (listener: (value: unknown) => void) => () => void;
+  listenCommands?: (listener: (value: unknown) => void) => () => void;
   listenFocus?: (listener: () => void) => () => void;
+  listenPreviousApp?: (listener: () => void) => () => void;
   listenUpdates?: (listener: (value: unknown) => void) => () => void;
 }
 
@@ -78,75 +84,37 @@ export function createDesktopBridge(
 
   const bridge = Object.freeze<DesktopBridge>({
     platform,
-    getUpdateState: (request) => call('getUpdateState', request),
-    checkForUpdates: (request) => call('checkForUpdates', request),
-    installUpdate: (request) => call('installUpdate', request),
-    restartForUpdate: (request) => call('restartForUpdate', request),
+    ...operationMethods(call),
+    addDroppedAttachments: (request) => {
+      if (transport.resolveDroppedFiles === undefined)
+        return Promise.resolve(failure('UNAVAILABLE', 'File dropping is unavailable.'));
+      try {
+        return call('addDroppedAttachments', {
+          draftToken: request.draftToken,
+          paths: transport.resolveDroppedFiles(request.files)
+        });
+      } catch {
+        return Promise.resolve(failure('INVALID_REQUEST', 'Drop actual local files.'));
+      }
+    },
+
     subscribeUpdates: updateSubscription(transport.listenUpdates, focusStops, () => disposed),
-    getApplicationInfo: (request) => call('getApplicationInfo', request),
-    openRepository: (request) => call('openRepository', request),
-    openWiki: (request) => call('openWiki', request),
-    openWikiPageEditor: (request) => call('openWikiPageEditor', request),
-    openWikiResource: (request) => call('openWikiResource', request),
-    openPrivacyPolicy: (request) => call('openPrivacyPolicy', request),
-    getOnboardingState: (request) => call('getOnboardingState', request),
-    setOnboardingStep: (request) => call('setOnboardingStep', request),
-    finishOnboarding: (request) => call('finishOnboarding', request),
-    getStorageLocation: (request) => call('getStorageLocation', request),
-    revealStorageLocation: (request) => call('revealStorageLocation', request),
-    exportLibrary: (request) => call('exportLibrary', request),
-    previewLibraryImport: (request) => call('previewLibraryImport', request),
-    confirmLibraryImport: (request) => call('confirmLibraryImport', request),
-    cancelLibraryImport: (request) => call('cancelLibraryImport', request),
-    clearLibrary: (request) => call('clearLibrary', request),
-    getWindowState: (request) => call('getWindowState', request),
-    getWindowRecovery: (request) => call('getWindowRecovery', request),
-    returnToMainWindow: (request) => call('returnToMainWindow', request),
-    setWindowMode: (request) => call('setWindowMode', request),
-    setWindowVisibility: (request) => call('setWindowVisibility', request),
-    openDesktopWindow: (request) => call('openDesktopWindow', request),
-    quitApplication: (request) => call('quitApplication', request),
-    searchSnippets: (request) => call('searchSnippets', request),
-    getSnippet: (request) => call('getSnippet', request),
-    getSnippetSource: (request) => call('getSnippetSource', request),
-    openSnippetSource: (request) => call('openSnippetSource', request),
-    createSnippet: (request) => call('createSnippet', request),
-    updateSnippet: (request) => call('updateSnippet', request),
-    deleteSnippet: (request) => call('deleteSnippet', request),
-    undoDeleteSnippet: (request) => call('undoDeleteSnippet', request),
-    duplicateSnippet: (request) => call('duplicateSnippet', request),
-    copySnippet: (request) => call('copySnippet', request),
-    setSnippetTags: (request) => call('setSnippetTags', request),
-    setTagMembership: (request) => call('setTagMembership', request),
-    ensureTag: (request) => call('ensureTag', request),
-    listTags: (request) => call('listTags', request),
-    createTag: (request) => call('createTag', request),
-    updateTag: (request) => call('updateTag', request),
-    deleteTag: (request) => call('deleteTag', request),
-    getSettings: (request) => call('getSettings', request),
-    getLoginStatus: (request) => call('getLoginStatus', request),
-    updateSettings: (request) => call('updateSettings', request),
-    getShortcutStatus: (request) => call('getShortcutStatus', request),
-    retryShortcuts: (request) => call('retryShortcuts', request),
-    setCapturePaused: (request) => call('setCapturePaused', request),
-    setShortcutRecording: (request) => call('setShortcutRecording', request),
-    captureSelection: (request) => call('captureSelection', request),
     subscribeShellNavigation: navigationSubscription(
       transport.listenNavigation,
       focusStops,
       () => disposed
     ),
-    subscribeWindowFocus(listener) {
-      if (disposed || transport.listenFocus === undefined) return () => undefined;
-      const stopFocus = transport.listenFocus(listener);
-      const unsubscribe = () => {
-        stopFocus();
-        focusStops.delete(unsubscribe);
-      };
-
-      focusStops.add(unsubscribe);
-      return unsubscribe;
-    },
+    subscribeShellCommands: shellCommandSubscription(
+      transport.listenCommands,
+      focusStops,
+      () => disposed
+    ),
+    subscribeWindowFocus: focusSubscription(transport.listenFocus, focusStops, () => disposed),
+    subscribePreviousApp: focusSubscription(
+      transport.listenPreviousApp,
+      focusStops,
+      () => disposed
+    ),
     subscribeChanges(listener) {
       if (disposed) return () => undefined;
       // Ownership belongs to this registration, even when callbacks are identical.
@@ -169,7 +137,7 @@ export function createDesktopBridge(
             if (result.success && result.data.ok)
               emit({
                 revision: result.data.value.revision,
-                domains: ['snippets', 'tags', 'settings']
+                domains: ['snippets', 'tags', 'settings', 'queue', 'attachments']
               });
           })
           .catch(() => undefined);

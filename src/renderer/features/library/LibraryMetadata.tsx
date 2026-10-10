@@ -1,5 +1,8 @@
+import { PaperclipIcon } from 'lucide-react';
+
 import type { SnippetPreview } from '../../../shared/contracts/domain';
 import { relativeTime } from '../snippets/relative-time';
+import { VariableCount } from '../variables/VariableCount';
 import { LibraryCopyStatus } from './LibraryCopyStatus';
 import { LibraryRowTags } from './LibraryRowTags';
 
@@ -28,6 +31,16 @@ export function LibraryMetadata({
           <span className="library-row-source">{snippet.sourceApp}</span>
         )}
       </span>
+      <VariableCount count={snippet.variableCount} />
+      {snippet.attachments.length > 0 && (
+        <span
+          className="library-attachment-count"
+          aria-label={`${String(snippet.attachments.length)} attachments, copied separately`}
+        >
+          <PaperclipIcon aria-hidden="true" />
+          {snippet.attachments.length}
+        </span>
+      )}
       {snippet.tags.length > 0 && <LibraryRowTags tags={snippet.tags} />}
     </div>
   );

@@ -25,6 +25,11 @@ input.on('line', (line) => {
     tokens.push(identity);
     if (tokens.length > 32) tokens.shift();
     result = { status: 'ok', identity, source };
+  } else if (request.command === 'activationTarget') {
+    const identity = tokens.at(-1);
+
+    result =
+      identity === undefined ? { status: 'foregroundChanged' } : { status: 'ok', identity, source };
   } else if (request.command === 'validate' || request.command === 'activate')
     result = { status: tokens.includes(request.identity) ? 'ok' : 'foregroundChanged' };
   process.stdout.write(`${JSON.stringify({ ...result, v: 1, id: request.id })}\n`);

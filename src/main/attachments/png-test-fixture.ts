@@ -1,0 +1,6 @@
+export const png = new Uint8Array(
+  Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGJhYPgPAAAA///t90cTAAAABklEQVQDAAETAQQOyOR6AAAAAElFTkSuQmCC',
+    'base64'
+  )
+);

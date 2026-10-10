@@ -6,6 +6,7 @@ import { expect, it } from 'vitest';
 import { allSnippets } from './storage-test-fixture';
 import { transferStore } from './transfer/transfer-test-fixture';
 import { workerExportFile } from './transfer/worker-transfer-test-fixture';
+import { workflowRoundtrip } from './transfer/workflow-roundtrip-flow';
 
 // Large backups took 22.7s on a hosted runner; this timeout is not app latency.
 it(
@@ -120,6 +121,7 @@ it(
         expect(store.invoke('getSnippet', { id }).snippet).toMatchObject({ id, text, tags: [] });
       expect(store.invoke('searchSnippets', allSnippets).total).toBe(2);
       store.invoke('clearLibrary', {});
+      workflowRoundtrip(store);
       const largeText = '\u0001'.repeat(1_000_000);
       const largeIds = Array.from(
         { length: 17 },

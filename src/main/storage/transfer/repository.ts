@@ -6,6 +6,7 @@ import { writeImport } from './import-write';
 import { libraryIdentity } from './library-identity';
 import { stageBackup } from './stage-backup';
 import { writeExport } from './stream-export';
+import { readWorkflowStage } from './workflow-stage';
 
 export class TransferRepository {
   private readonly plans = new Map<string, ImportPlan>();
@@ -20,8 +21,9 @@ export class TransferRepository {
   export(input: StorageRequest<'exportLibraryData'>) {
     const { context } = this.writes.reader;
 
-    writeExport(context, input.descriptor, input.format);
-    return { revision: context.revision() };
+    const attachmentsOmitted = writeExport(input.descriptor, input.format, this.writes);
+
+    return { revision: context.revision(), attachmentsOmitted };
   }
 
   preview(input: StorageRequest<'prepareLibraryImport'>) {
@@ -36,7 +38,18 @@ export class TransferRepository {
         'UNAVAILABLE',
         'Too many pending imports. Cancel an existing preview.'
       );
-    const stage = stageBackup(input.filename);
+    let stage;
+
+    try {
+      stage = readWorkflowStage(input.filename) ?? stageBackup(input.filename);
+    } catch (error) {
+      if (error instanceof StorageError) throw error;
+      throw new StorageError(
+        'UNAVAILABLE',
+        'The backup file is missing or unreadable. Choose an accessible file.'
+      );
+    }
+
     let plan: ImportPlan;
 
     try {

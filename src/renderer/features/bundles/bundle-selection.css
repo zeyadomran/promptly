@@ -1,0 +1,57 @@
+.bundle-selection-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+  font-size: 12px;
+}
+.bundle-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+}
+.bundle-selection-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--input);
+  border-radius: 4px;
+  background: var(--background);
+  font-size: 11px;
+}
+.bundle-selection-checkbox[data-state='checked'] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border-color: var(--primary);
+}
+.bundle-selection-checkbox:focus-visible {
+  outline: 3px solid var(--ring);
+  outline-offset: 2px;
+}
+.bundle-selection-checkbox:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.library-attachment-count {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 3px;
+  color: var(--muted-foreground);
+}
+.library-attachment-count svg {
+  width: 11px;
+  height: 11px;
+}
+.library-return-action {
+  align-self: flex-start;
+  opacity: 0;
+  flex-shrink: 0;
+}
+.library-row:hover .library-return-action,
+.library-row:focus-within .library-return-action,
+.library-row[aria-selected='true'] .library-return-action {
+  opacity: 1;
+}

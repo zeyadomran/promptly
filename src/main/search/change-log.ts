@@ -18,6 +18,10 @@ export function installSearchChangeLog(db: DatabaseSync): void {
     CREATE TEMP TRIGGER search_relation_update AFTER UPDATE ON main.snippet_tags BEGIN
       INSERT OR IGNORE INTO search_dirty VALUES (old.snippetId);
       INSERT OR IGNORE INTO search_dirty VALUES (new.snippetId); END;
+    CREATE TEMP TRIGGER search_assets_insert AFTER INSERT ON main.content_assets WHEN new.ownerKind='snippet' BEGIN
+      INSERT OR IGNORE INTO search_dirty VALUES(new.ownerId); END;
+    CREATE TEMP TRIGGER search_assets_delete AFTER DELETE ON main.content_assets WHEN old.ownerKind='snippet' BEGIN
+      INSERT OR IGNORE INTO search_dirty VALUES(old.ownerId); END;
     CREATE TEMP TRIGGER search_tag_update AFTER UPDATE ON main.tags BEGIN
       INSERT OR IGNORE INTO search_dirty SELECT snippetId FROM snippet_tags WHERE tagId = new.id;
     END;

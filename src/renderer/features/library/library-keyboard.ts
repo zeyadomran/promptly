@@ -8,6 +8,11 @@ import { localShortcutMatches } from '../../../shared/shortcuts/local';
 
 export type LibraryKeyCommand =
   | 'copy'
+  | 'copy-and-return'
+  | 'bundle'
+  | 'toggle-bundle'
+  | 'review-bundle'
+  | 'cancel-bundle'
   | 'next'
   | 'previous'
   | 'delete'
@@ -34,6 +39,7 @@ interface LibraryKeyInput extends KeyInput {
   focus: LibraryFocus;
   selected: boolean;
   hasSearch: boolean;
+  bundleMode?: boolean;
 }
 
 function keyEvent(input: KeyInput): ShortcutKeyEvent {
@@ -80,16 +86,38 @@ export function libraryKeyCommand(
   if (input.focus === 'control' && !editableShortcutAllowed(event)) return undefined;
   if (!input.repeat) {
     if (matches('settings')) return 'settings';
-    if (matches('dismiss')) return input.hasSearch ? 'clear-search' : 'hide';
+    if (matches('dismiss'))
+      return input.bundleMode === true
+        ? 'cancel-bundle'
+        : input.hasSearch
+          ? 'clear-search'
+          : 'hide';
     if (matches('focusSearch')) return 'focus-search';
-    if (input.selected && matches('tag')) return 'tag';
+    if (matches('bundle')) return 'bundle';
+    if (input.bundleMode === true && matches('copyAndReturn')) return 'review-bundle';
+    if (input.selected && input.bundleMode !== true && matches('tag')) return 'tag';
   }
 
   if (input.focus === 'control') return undefined;
   if (matches('next')) return 'next';
   if (matches('previous')) return 'previous';
   if (input.repeat || !input.selected) return undefined;
+  if (input.bundleMode === true) {
+    if (
+      matches('copy') ||
+      (input.focus === 'library' &&
+        input.key === ' ' &&
+        !input.ctrl &&
+        !input.meta &&
+        !input.alt &&
+        !input.shift)
+    )
+      return 'toggle-bundle';
+    return undefined;
+  }
+
   if (matches('copy')) return 'copy';
+  if (matches('copyAndReturn')) return 'copy-and-return';
   if (input.focus !== 'search' && (matches('delete') || matches('deleteAlternate')))
     return 'delete';
   return undefined;

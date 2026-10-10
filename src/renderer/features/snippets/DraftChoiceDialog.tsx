@@ -20,6 +20,7 @@ export function DraftChoiceDialog({
 }) {
   const { session, state } = useSnippetSession();
   const keepButton = useRef<HTMLButtonElement>(null);
+  const busy = state.pending || state.assetPending;
   const keep = () => {
     session.keep();
     void resumeEditing().catch(() => {
@@ -31,7 +32,7 @@ export function DraftChoiceDialog({
     <Dialog
       open={active && state.prompt}
       onOpenChange={(open) => {
-        if (active && !open && !state.pending) keep();
+        if (active && !open && !busy) keep();
       }}
     >
       {active && (
@@ -61,18 +62,18 @@ export function DraftChoiceDialog({
             <Button
               className="draft-discard"
               variant="ghost"
-              disabled={state.pending}
+              disabled={busy}
               onClick={() => {
-                session.discard();
+                void session.discard();
               }}
             >
               Discard
             </Button>
-            <Button ref={keepButton} variant="outline" disabled={state.pending} onClick={keep}>
+            <Button ref={keepButton} variant="outline" disabled={busy} onClick={keep}>
               Keep editing
             </Button>
             <Button
-              disabled={state.pending || state.missing}
+              disabled={busy || state.missing}
               onClick={() => {
                 void session.save();
               }}

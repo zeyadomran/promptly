@@ -7,6 +7,8 @@ export const desktopErrorSchema = z.strictObject({
     'NOT_FOUND',
     'CONFLICT',
     'UNAVAILABLE',
+    'TEMPLATE_REQUIRES_PREPARATION',
+    'PREPARATION_EXPIRED',
     'INTERNAL'
   ]),
   message: z.string().min(1).max(256)

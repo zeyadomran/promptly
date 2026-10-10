@@ -15,7 +15,8 @@ export function RetryShortcuts({
   const unavailable =
     status?.capture === 'unavailable' ||
     status?.open === 'unavailable' ||
-    status?.pin === 'unavailable';
+    status?.pin === 'unavailable' ||
+    status?.compose === 'unavailable';
   const retry = async () => {
     setPending(true);
     try {
@@ -26,7 +27,8 @@ export function RetryShortcuts({
           ? result.error.message
           : result.value.capture === 'unavailable' ||
               result.value.open === 'unavailable' ||
-              result.value.pin === 'unavailable'
+              result.value.pin === 'unavailable' ||
+              result.value.compose === 'unavailable'
             ? 'Some shortcuts remain unavailable. Choose another combination or restart Promptly if the modifier listener is unavailable.'
             : 'Retry completed. See the current shortcut status above.'
       );

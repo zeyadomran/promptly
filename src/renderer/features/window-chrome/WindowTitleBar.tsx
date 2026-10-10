@@ -42,7 +42,7 @@ export function WindowTitleBar({
       data-mode={mode}
       data-update-visible={visible}
     >
-      {view === 'library' ? (
+      {view === 'library' || view === 'queue' ? (
         <div className="window-brand">
           <Logo size={20} />
           <span className="window-label">Promptly</span>

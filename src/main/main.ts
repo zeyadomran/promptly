@@ -123,7 +123,8 @@ if (primaryInstance)
         dialogs,
         settings,
         keyboard,
-        windowsSelection
+        windowsSelection,
+        () => lifecycle
       );
       confirmation = desktopConfirmation(library.capture.service, settings, () => lifecycle);
       onboarding = desktopOnboarding(
@@ -173,7 +174,8 @@ if (primaryInstance)
         },
         () => {
           updates?.windowOpened();
-        }
+        },
+        library.previousApp
       );
       await tray.refresh();
       installDesktopAppearance(openWindow, () => lifecycle);

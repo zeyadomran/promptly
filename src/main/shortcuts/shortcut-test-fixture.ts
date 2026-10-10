@@ -30,6 +30,7 @@ export function shortcutFixture(
     capture: spy(() => undefined),
     open: spy(() => undefined),
     pin: spy(() => undefined),
+    compose: spy(() => undefined),
     captureAvailable: () => true
   };
   const hook: KeyboardHook = {

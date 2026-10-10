@@ -21,7 +21,7 @@ export default defineConfig(({ command }) => ({
 
         return html.replace(
           '__CSP__',
-          `default-src 'none'; script-src 'self'; style-src ${style}; img-src 'self'; font-src 'self'; connect-src ${connect}; base-uri 'none'; form-action 'none'; object-src 'none'`
+          `default-src 'none'; script-src 'self'; style-src ${style}; img-src 'self' blob:; font-src 'self'; connect-src ${connect}; base-uri 'none'; form-action 'none'; object-src 'none'`
         );
       }
     }

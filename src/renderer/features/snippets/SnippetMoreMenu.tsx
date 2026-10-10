@@ -1,5 +1,6 @@
 import { CopyPlus, FileCode, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 
 import type { Snippet } from '../../../shared/contracts/domain';
 import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
@@ -14,11 +15,15 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
 import { useLibraryCommands } from '../library/library-commands';
 import { useLibrary } from '../library/library-context';
+import { useQueue } from '../queue/queue-context';
 import { usePreferences } from '../settings/settings-context';
 import { useShellNavigation } from '../window-chrome/shell-navigation';
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 
 export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligible: boolean }) {
-  const { view } = useShellNavigation();
+  const { view, showQueue } = useShellNavigation();
+  const workflow = useWorkflowCopy();
+  const { model: queueModel } = useQueue();
   const [open, setOpen] = useState(false);
   const commands = useLibraryCommands();
   const { model } = useLibrary();
@@ -28,6 +33,38 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
     .replace('BACKSPACE', 'Backspace')
     .replace('TAB', 'Tab');
   const [pending, setPending] = useState(false);
+  const copyDisabled =
+    !eligible || snippet.text.trim() === '' || workflow.busy || workflow.bundleState.active;
+  const queue = async () => {
+    if (!eligible || pending) return;
+    setPending(true);
+    try {
+      const result = await window.promptly.addSnippetToQueue({ id: snippet.id });
+
+      if (!result.ok) commands?.report(result.error.message);
+      else {
+        try {
+          toast.success('Added to Queue.', {
+            action: {
+              label: 'View queue',
+              onClick: () => {
+                showQueue();
+                void queueModel.reveal(result.value.item.id).catch(() => {
+                  commands?.report('Added to Queue. Unable to show this prompt.');
+                });
+              }
+            }
+          });
+        } catch {
+          commands?.report('Added to Queue. Feedback is unavailable.');
+        }
+      }
+    } catch {
+      commands?.report('Unable to add this snippet to Queue.');
+    } finally {
+      setPending(false);
+    }
+  };
 
   const duplicate = async () => {
     if (!eligible || pending) return;
@@ -70,13 +107,29 @@ export function SnippetMoreMenu({ snippet, eligible }: { snippet: Snippet; eligi
           }}
         >
           <DropdownMenuItem
-            disabled={!eligible}
+            disabled={copyDisabled}
             onSelect={() => {
               void commands?.copy(snippet.id, 'markdown');
             }}
           >
             <FileCode aria-hidden="true" />
             Copy as Markdown
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={copyDisabled}
+            onSelect={() => {
+              void workflow.requestCopy({ kind: 'snippet', id: snippet.id }, { asWritten: true });
+            }}
+          >
+            Copy as written
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={!eligible || pending}
+            onSelect={() => {
+              void queue();
+            }}
+          >
+            Add to Queue
           </DropdownMenuItem>
           <DropdownMenuItem
             disabled={!eligible || pending}

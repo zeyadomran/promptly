@@ -49,7 +49,7 @@ export function useStorageTransfer() {
       setMessage(
         result.value.status === 'cancelled'
           ? 'Export canceled.'
-          : `${result.value.filename} exported.`
+          : `${result.value.filename} exported.${(result.value.attachmentsOmitted ?? 0) > 0 ? ` Text only: ${String(result.value.attachmentsOmitted)} attachment files omitted.` : ''}`
       );
   };
 
@@ -99,7 +99,10 @@ export function useStorageTransfer() {
       setPreview(undefined);
     }
 
-    if (result.ok) setMessage(`${String(preview.snippets)} snippets imported.`);
+    if (result.ok)
+      setMessage(
+        `Import complete: ${String(preview.snippets - preview.skippedSnippets)} snippets, ${String((preview.queueItems ?? 0) - (preview.skippedQueueItems ?? 0))} queued prompts and ${String((preview.assets ?? 0) - (preview.skippedAssets ?? 0))} attachment files added.`
+      );
   };
 
   const clear = async () => {
@@ -114,7 +117,9 @@ export function useStorageTransfer() {
     }
 
     if (result?.ok === true && active.current)
-      setMessage('Library cleared. Preferences were kept.');
+      setMessage(
+        'Library, Queue, tags, attachments and unsaved drafts cleared. Preferences were kept.'
+      );
     return result?.ok === true;
   };
 

@@ -32,3 +32,23 @@
   display: grid;
   gap: 8px;
 }
+.storage-import-dialog[data-slot='dialog-content'],
+.storage-clear-dialog[data-slot='dialog-content'] {
+  max-height: calc(100dvh - 32px);
+  display: flex;
+  flex-direction: column;
+}
+.storage-import-dialog [data-slot='dialog-header'],
+.storage-import-dialog [data-slot='dialog-footer'],
+.storage-clear-dialog [data-slot='dialog-header'],
+.storage-clear-dialog [data-slot='dialog-footer'] {
+  flex-shrink: 0;
+}
+.storage-preview-body {
+  min-height: 0;
+  overflow: auto;
+}
+.storage-clear-dialog .storage-confirmation {
+  min-height: 0;
+  overflow: auto;
+}

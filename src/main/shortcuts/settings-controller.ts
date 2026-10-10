@@ -21,7 +21,7 @@ export function shortcutController(dependencies: ControllerDependencies): Settin
 
   return {
     name: 'global shortcuts',
-    keys: ['saveShortcut', 'openShortcut', 'pinShortcut', 'doubleTapWindowMs'],
+    keys: ['saveShortcut', 'openShortcut', 'pinShortcut', 'composeShortcut', 'doubleTapWindowMs'],
     apply: async (settings) => {
       const previous = dependencies.previous();
       const initial = previous === undefined;

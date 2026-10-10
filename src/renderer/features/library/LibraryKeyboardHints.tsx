@@ -1,8 +1,10 @@
 import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { usePreferences } from '../settings/settings-context';
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 
 export function LibraryKeyboardHints({ regular = false }: { regular?: boolean }) {
   const { settings } = usePreferences();
+  const workflow = useWorkflowCopy();
   const label = (binding: string) =>
     shortcutLabel(binding, window.promptly.platform)
       .replace('DELETE', 'Del')
@@ -20,12 +22,25 @@ export function LibraryKeyboardHints({ regular = false }: { regular?: boolean })
         </span>
       )}
       <span>
-        <kbd>{label(settings.localShortcuts.copy)}</kbd> copy
+        <kbd>{label(settings.localShortcuts.copy)}</kbd>{' '}
+        {workflow.bundleState.active ? 'select' : 'copy'}
       </span>
-      <span>
-        <kbd>{label(settings.localShortcuts.tag)}</kbd> tag
-      </span>
-      {regular && (
+      {!workflow.bundleState.active && (
+        <span>
+          <kbd>{label(settings.localShortcuts.tag)}</kbd> tag
+        </span>
+      )}
+      {workflow.bundleState.active && (
+        <span>
+          <kbd>{label(settings.localShortcuts.dismiss)}</kbd> cancel
+        </span>
+      )}
+      {workflow.bundleState.active && settings.localShortcuts.copyAndReturn !== null && (
+        <span>
+          <kbd>{label(settings.localShortcuts.copyAndReturn)}</kbd> review
+        </span>
+      )}
+      {regular && !workflow.bundleState.active && (
         <span>
           <kbd>{label(settings.localShortcuts.delete)}</kbd> remove
         </span>

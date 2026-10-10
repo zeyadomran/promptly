@@ -1,6 +1,8 @@
 import { app, type BrowserWindow } from 'electron';
 
 import type { WindowKind } from '../../shared/contracts/window';
+import type { PreviousAppService } from '../previous-app/service';
+import { watchPreviousAppFocus } from './previous-app-focus';
 import { watchRendererRecovery } from './renderer-recovery';
 import { canRecover, type WindowRecovery } from './visibility';
 
@@ -9,6 +11,7 @@ export function watchWindowLifecycle(
   window: BrowserWindow,
   kind: WindowKind,
   owner: {
+    previousApp?: Pick<PreviousAppService, 'captureAfterFocus'> | undefined;
     opened: () => void;
     closing: () => boolean;
     recovery: WindowRecovery;
@@ -19,6 +22,7 @@ export function watchWindowLifecycle(
     error: (error: unknown) => void;
   }
 ) {
+  watchPreviousAppFocus(window, owner.previousApp, owner.closing, owner.error);
   const opened = () => {
     if (!owner.closing()) owner.opened();
   };

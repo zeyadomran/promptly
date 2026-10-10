@@ -20,6 +20,7 @@ const envelope = { v: z.literal(1), id: z.string().min(1).max(128) };
 const identity = z.string().regex(/^[a-f0-9]{32}$/);
 const elapsedMs = z.number().nonnegative();
 const metadata = {
+  ownForeground: z.literal(true).optional(),
   source: nativeSourceSchema.nullable().optional(),
   identity: identity.optional(),
   targetIntegrityLevel: z.int().nonnegative().nullable().optional(),

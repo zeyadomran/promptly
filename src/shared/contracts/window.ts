@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { idSchema } from './domain';
+
 export const sizeModeSchema = z.enum(['compact', 'regular']);
 export const windowKindSchema = z.enum(['main', 'settings', 'onboarding']);
 export const windowStateSchema = z.strictObject({
@@ -19,5 +21,15 @@ export const windowRecoverySchema = z.strictObject({
 export type WindowRecoveryState = z.infer<typeof windowRecoverySchema>;
 export const focusSearchChannel = 'promptly:focus-search';
 export const shellNavigationChannel = 'promptly:shell-navigation';
-export const shellNavigationSchema = z.enum(['library', 'settings', 'wiki']);
+export const shellNavigationSchema = z.enum(['library', 'queue', 'settings', 'wiki']);
 export type NativeShellView = z.infer<typeof shellNavigationSchema>;
+export const shellCommandChannel = 'promptly:shell-command';
+export const shellCommandSchema = z.discriminatedUnion('command', [
+  z.strictObject({ command: z.literal('compose'), destination: z.enum(['library', 'queue']) }),
+  z.strictObject({
+    command: z.literal('copy'),
+    id: idSchema,
+    format: z.enum(['text', 'markdown']).optional()
+  })
+]);
+export type ShellCommand = z.infer<typeof shellCommandSchema>;

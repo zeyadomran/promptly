@@ -1,3 +1,4 @@
+import { AssetRepository } from '../attachments/repository';
 import { StorageError } from '../storage/context';
 import type { StorageRequest } from '../storage/protocol';
 import type { SnippetWrites } from './snippet-writes';
@@ -11,6 +12,10 @@ export class SnippetDelete {
     const token = context.undo.token();
     const now = context.now().getTime();
 
+    const assets = new AssetRepository(context);
+
+    assets.retainUndo(token, snippet.attachments);
+    assets.replace({ kind: 'snippet', id: input.id }, []);
     context.db.prepare('DELETE FROM snippets WHERE id = ?').run(input.id);
     context.afterCommit(() => {
       context.undo.save(token, snippet, now);
@@ -30,6 +35,7 @@ export class SnippetDelete {
     );
 
     this.writes.insert({ ...snippet, tags });
+    new AssetRepository(context).releaseUndo(input.undoToken);
     context.afterCommit(() => {
       context.undo.remove(input.undoToken);
     });
@@ -39,7 +45,9 @@ export class SnippetDelete {
   clear() {
     const { context } = this.writes.reader;
 
-    context.db.exec('DELETE FROM snippets; DELETE FROM tags;');
+    context.db.exec(
+      'DELETE FROM content_assets; DELETE FROM drafts; DELETE FROM asset_undo; DELETE FROM queue_undo; DELETE FROM queue_items; DELETE FROM snippets; DELETE FROM tags;'
+    );
     context.afterCommit(() => {
       context.undo.clear();
     });
