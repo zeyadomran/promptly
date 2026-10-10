@@ -38,6 +38,9 @@ export function AttachmentChip({
   const image = attachment.kind !== 'file';
   const raster = useAttachmentRaster(attachment.id, draftToken, false, image);
   const name = attachmentName(attachment.name);
+  const characters = Array.from(name);
+  const tail = characters.length > 32 ? characters.slice(-18).join('') : '';
+  const beginning = tail === '' ? name : characters.slice(0, -18).join('');
   const action = async (copy: boolean) => {
     setBusy(true);
     setMessage(undefined);
@@ -75,7 +78,14 @@ export function AttachmentChip({
       </div>
       <div className="attachment-chip-label">
         <span className="attachment-name">
-          {raster.missing || missing ? 'File missing from storage' : name}
+          {raster.missing || missing ? (
+            'File missing from storage'
+          ) : (
+            <>
+              <span className="attachment-name-start">{beginning}</span>
+              {tail !== '' && <span>{tail}</span>}
+            </>
+          )}
         </span>
         <span>{attachmentSize(attachment.byteLength)}</span>
       </div>

@@ -11,6 +11,18 @@ export function GeneralSettings() {
   return (
     <>
       <LoginSettings />
+      <SettingChoice
+        label="Quick compose adds to"
+        description="The destination for a new global shortcut draft."
+        value={settings.composeDestination}
+        choices={[
+          { value: 'queue', label: 'Queue' },
+          { value: 'library', label: 'Library' }
+        ]}
+        patch={(value) =>
+          value === 'queue' || value === 'library' ? { composeDestination: value } : undefined
+        }
+      />
       <SettingSwitch
         label="Show in system tray"
         description={

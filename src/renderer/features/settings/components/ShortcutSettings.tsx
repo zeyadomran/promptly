@@ -6,7 +6,6 @@ import { useShortcutRecording } from '../../shortcuts/hooks/use-shortcut-recordi
 import { useShortcutStatus } from '../../shortcuts/hooks/use-shortcut-status';
 import { LocalShortcutSettings } from './LocalShortcutSettings';
 import { ResetShortcutsButton } from './ResetShortcutsButton';
-import { SettingChoice } from './SettingChoice';
 import { SettingSwitch } from './SettingSwitch';
 
 export function ShortcutSettings() {
@@ -46,18 +45,6 @@ export function ShortcutSettings() {
         disabled={preferences.pending}
       />
       <ShortcutGroup title="Composing and copying">
-        <SettingChoice
-          label="Quick compose destination"
-          description="The destination for a new global shortcut draft."
-          value={settings.composeDestination}
-          choices={[
-            { value: 'queue', label: 'Queue' },
-            { value: 'library', label: 'Library' }
-          ]}
-          patch={(value) =>
-            value === 'queue' || value === 'library' ? { composeDestination: value } : undefined
-          }
-        />
         <SettingSwitch
           label="Prompt for variable values"
           description="Fill recognised {{name}} variables for this copy only."

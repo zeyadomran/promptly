@@ -8,7 +8,7 @@ import { AttachmentChip } from './AttachmentChip';
 
 export interface AttachmentStripProps {
   attachments: Attachment[];
-  draftToken?: string;
+  draftToken?: string | undefined;
   editable?: boolean;
   pending?: boolean;
   onChange?: (attachments: Attachment[], draftToken: string) => void;
@@ -42,7 +42,7 @@ export function AttachmentStrip({
       DesktopResult<{
         token: string;
         attachments: Attachment[];
-        rejected?: { name: string; reason: string }[];
+        rejected?: { name: string; reason: string }[] | undefined;
       }>
     >
   ) => {

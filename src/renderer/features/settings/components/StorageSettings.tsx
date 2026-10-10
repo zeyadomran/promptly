@@ -14,7 +14,7 @@ export function StorageSettings() {
     <div className="storage-settings">
       <StorageRow
         label="Export"
-        description="JSON is a portable backup. Markdown is a readable copy of your full text."
+        description="JSON includes Library, Queue, tags and attachment files. Markdown exports text only."
       >
         <div className="storage-actions" role="group" aria-label="Export format">
           <Button
@@ -33,7 +33,7 @@ export function StorageSettings() {
               void transfer.exportLibrary('markdown');
             }}
           >
-            Markdown
+            Markdown (text only)
           </Button>
         </div>
       </StorageRow>
@@ -54,7 +54,7 @@ export function StorageSettings() {
       </StorageRow>
       <StorageRow
         label="Clear all"
-        description="Permanently remove library data. Your preferences are kept."
+        description="Permanently remove Library, Queue, tags, attachments and unsaved drafts. Preferences are kept."
       >
         <ClearLibraryDialog
           pending={transfer.pending}

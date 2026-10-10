@@ -14,12 +14,13 @@ import { useCompose } from './compose-context';
 export function ComposeDraftChoiceDialog() {
   const { model, state, save } = useCompose();
   const keep = useRef<HTMLButtonElement>(null);
+  const busy = state.pending || state.assetPending;
 
   return (
     <Dialog
       open={state.prompt}
       onOpenChange={(open) => {
-        if (!open && !state.pending) model.keep();
+        if (!open && !busy) model.keep();
       }}
     >
       <DialogContent
@@ -28,7 +29,7 @@ export function ComposeDraftChoiceDialog() {
           keep.current?.focus();
         }}
         onEscapeKeyDown={(event) => {
-          if (state.pending) event.preventDefault();
+          if (busy) event.preventDefault();
         }}
         onCloseAutoFocus={(event) => {
           event.preventDefault();
@@ -43,7 +44,7 @@ export function ComposeDraftChoiceDialog() {
         <DialogFooter>
           <Button
             variant="ghost"
-            disabled={state.pending}
+            disabled={busy}
             onClick={() => {
               void model.discard();
             }}
@@ -53,7 +54,7 @@ export function ComposeDraftChoiceDialog() {
           <Button
             ref={keep}
             variant="outline"
-            disabled={state.pending}
+            disabled={busy}
             onClick={() => {
               model.keep();
             }}
@@ -61,7 +62,7 @@ export function ComposeDraftChoiceDialog() {
             Keep editing
           </Button>
           <Button
-            disabled={state.pending}
+            disabled={busy}
             onClick={() => {
               void save();
             }}

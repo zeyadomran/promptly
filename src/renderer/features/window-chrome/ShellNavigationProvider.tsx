@@ -131,6 +131,12 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
 
       if (next === undefined) return;
       event.preventDefault();
+      if (
+        (next === 'library' || next === 'queue') &&
+        document.querySelector('.workspace-layout[data-mode="compact"][data-drafted="true"]') !==
+          null
+      )
+        return;
       if (next === 'library') showLibrary();
       else if (next === 'queue') showQueue();
       else if (next === 'settings') showSettings();

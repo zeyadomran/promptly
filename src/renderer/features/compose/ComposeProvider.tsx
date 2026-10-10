@@ -3,6 +3,7 @@ import { type ReactNode, useEffect, useRef, useState, useSyncExternalStore } fro
 import type { WorkflowSaveOutcome } from '../../../shared/contracts/workflow-save';
 import { useSnippetSession } from '../snippets/snippet-context';
 import { useShellNavigation } from '../window-chrome/shell-navigation';
+import { useWorkflowCopy } from '../workflows/workflow-copy-context';
 import { ComposeContext } from './compose-context';
 import { ComposeModel } from './compose-model';
 import type { ComposeDestination } from './compose-state';
@@ -18,8 +19,14 @@ export function ComposeProvider({
   const [model] = useState(() => new ComposeModel(window.promptly));
   const state = useSyncExternalStore(model.subscribe, model.snapshot);
   const navigation = useShellNavigation();
+  const copy = useWorkflowCopy();
   const { session, requestExit } = useSnippetSession();
   const command = useRef(0);
+  const savedCallback = useRef(onSaved);
+
+  useEffect(() => {
+    savedCallback.current = onSaved;
+  }, [onSaved]);
   const focus = () => {
     requestAnimationFrame(() =>
       document.querySelector<HTMLElement>('[data-compose-text]')?.focus()
@@ -39,6 +46,7 @@ export function ComposeProvider({
 
   const open = async (destination: ComposeDestination, options?: { fromGlobal?: boolean }) => {
     if (await guard()) {
+      copy.cancelBundle();
       await model.open(destination, options);
       focus();
     }
@@ -46,6 +54,7 @@ export function ComposeProvider({
 
   const editQueue = async (id: string) => {
     if (await guard()) {
+      copy.cancelBundle();
       await model.editQueue(id);
       focus();
     }
@@ -57,7 +66,7 @@ export function ComposeProvider({
 
     if (saved && result !== undefined) {
       try {
-        await onSaved?.(result);
+        await savedCallback.current?.(result);
       } catch {
         model.report('Saved. Unable to show the saved entry. Use Show to try again.');
       }
