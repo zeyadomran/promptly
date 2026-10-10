@@ -34,7 +34,9 @@ export function DraftTags({
   );
   const parsedName = tagInputNameSchema.safeParse(query);
   const create = parsedName.success && !state.tags.some((tag) => tag.name === parsedName.data);
-  const unavailable = selectedIds.filter((id) => !state.tags.some((tag) => tag.id === id));
+  const unavailable = state.loading
+    ? []
+    : selectedIds.filter((id) => !state.tags.some((tag) => tag.id === id));
   const choose = (id: string) => {
     if (pending || busy) return;
     const ids = selectedIds.includes(id)
