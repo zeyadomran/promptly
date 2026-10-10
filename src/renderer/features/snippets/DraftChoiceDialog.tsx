@@ -63,7 +63,7 @@ export function DraftChoiceDialog({
               variant="ghost"
               disabled={state.pending}
               onClick={() => {
-                session.discard();
+                void session.discard();
               }}
             >
               Discard

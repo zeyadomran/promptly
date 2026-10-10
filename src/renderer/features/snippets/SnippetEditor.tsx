@@ -10,7 +10,7 @@ export function SnippetEditor() {
   const selection = useLibrarySelection();
   const { settings } = usePreferences();
   const cancel = () => {
-    session.discard();
+    void session.discard();
     selection.focusSearch();
   };
 

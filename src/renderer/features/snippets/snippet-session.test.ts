@@ -56,7 +56,7 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     hold = true;
     session.select(second.id);
     expect(session.snapshot()).toMatchObject({ loading: true, snippet: { id: first.id } });
-    session.edit();
+    await session.edit();
     expect(session.snapshot().editing).toBe(false);
     hold = false;
     release?.();
@@ -80,7 +80,7 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
       ]
     });
     session.refresh();
-    session.edit();
+    await session.edit();
     expect(session.snapshot()).toMatchObject({
       loading: true,
       snippet: { id: first.id, tags: [] },
@@ -92,13 +92,13 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.tags[0]?.name).toBe('desktop-check');
     });
-    session.edit();
+    await session.edit();
     session.change('Discard this draft');
-    session.discard();
+    await session.discard();
     await vi.waitFor(() => {
       expect(session.snapshot()).toMatchObject({ editing: false, snippet: { id: first.id } });
     });
-    session.edit();
+    await session.edit();
     session.change('Preserved draft');
     session.select(null, true);
     expect(session.snapshot()).toMatchObject({
@@ -126,7 +126,7 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
     finishWrite?.();
     expect(await saving).toBe(true);
     writeHold = false;
-    session.edit();
+    await session.edit();
     release?.();
     await Promise.resolve();
     expect(session.snapshot()).toMatchObject({
@@ -135,14 +135,14 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
       conflict: false
     });
     expect(session.dirty).toBe(false);
-    session.discard();
+    await session.discard();
     session.select(second.id);
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.id).toBe(second.id);
     });
     expect(records.get(first.id)?.text).toBe('Preserved draft');
     expect(records.get(second.id)?.text).toBe('Other snippet');
-    session.edit();
+    await session.edit();
     session.change('Draft kept through clear and import');
     hold = true;
     session.refresh();
@@ -173,7 +173,7 @@ it('preserves a dirty draft through selection changes and retires stale asynchro
         draft: 'Draft kept through clear and import'
       });
     });
-    session.discard();
+    await session.discard();
     await vi.waitFor(() => {
       expect(session.snapshot().snippet?.text).toBe('Imported replacement');
     });

@@ -35,7 +35,7 @@ export function SnippetActions({ snippet }: { snippet: Snippet }) {
         variant="outline"
         disabled={!eligible}
         onClick={() => {
-          session.edit();
+          void session.edit();
         }}
       >
         <Pencil aria-hidden="true" />

@@ -21,6 +21,12 @@ export function createDesktopTray(
 
   return new TrayCoordinator(storage, shortcuts, electronTray(error), {
     copy,
+    prepareTemplate: async (id) => {
+      const windows = lifecycle();
+
+      if (windows === undefined) throw new Error('Library is not ready.');
+      await windows.dispatchCommand({ command: 'copy', id, format: 'text' });
+    },
     updateReady: updates.ready,
     restartForUpdate: updates.restart,
     open: async (kind) => {

@@ -7,6 +7,7 @@ export const SnippetContext = createContext<
   | {
       session: SnippetSession;
       state: SnippetSessionState;
+      requestExit: () => Promise<boolean>;
     }
   | undefined
 >(undefined);
