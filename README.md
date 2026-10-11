@@ -11,7 +11,7 @@ Keep reusable prompts, replies, notes and code in a searchable Library, and work
 separate prompt Queue. Create text directly or capture a selection from a supported app.
 Add files, annotate images, fill reusable variables and copy ordered context bundles.
 
-The features below describe the **1.1.0 source**. The download link points to the latest
+The features below describe the **1.1.1 source**. The download link points to the latest
 published installer; check its release notes for availability.
 
 **[Download Promptly for Windows x64](https://github.com/zeyadomran/promptly/releases/latest/download/Promptly-x64-Setup.exe)**

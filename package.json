@@ -1,7 +1,7 @@
 {
   "name": "promptly",
   "productName": "Promptly",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "A local desktop library for reusable text snippets.",
   "private": true,
   "license": "MIT",
