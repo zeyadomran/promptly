@@ -12,14 +12,14 @@ export function QueueTabs() {
       aria-label="Prompt state"
       value={state.tab}
       onValueChange={(value) => {
-        if (value === 'open' || value === 'done') model.tab(value);
+        if ((value === 'open' || value === 'done') && value !== state.tab) model.tab(value);
       }}
     >
       <ToggleGroupItem
         value="open"
         aria-label={`Open prompts: ${String(state.openCount)}`}
         onFocus={() => {
-          model.tab('open');
+          if (state.tab !== 'open') model.tab('open');
         }}
       >
         Open <span>{state.openCount}</span>
@@ -28,7 +28,7 @@ export function QueueTabs() {
         value="done"
         aria-label={`Done prompts: ${String(done)}`}
         onFocus={() => {
-          model.tab('done');
+          if (state.tab !== 'done') model.tab('done');
         }}
       >
         Done <span>{done}</span>
