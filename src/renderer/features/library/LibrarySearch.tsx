@@ -4,11 +4,11 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useLibrary } from './library-context';
 
-export function LibrarySearch() {
+export function LibrarySearch({ hidden = false }: { hidden?: boolean }) {
   const { state, model, searchRef } = useLibrary();
 
   return (
-    <div className="library-search">
+    <div className="library-search" hidden={hidden} inert={hidden}>
       <Search aria-hidden="true" className="size-4 text-muted-foreground" />
       <Input
         ref={searchRef}

@@ -29,7 +29,8 @@ export function WorkspaceBar({ mode, openCount = 0 }: { mode: SizeMode; openCoun
           Queue{openCount > 0 && <span className="workspace-count">{openCount}</span>}
         </TabsTrigger>
       </TabsList>
-      {navigation.view === 'library' ? <LibrarySearch /> : <QueueTabs />}
+      <LibrarySearch hidden={navigation.view !== 'library'} />
+      {navigation.view === 'queue' && <QueueTabs />}
       <Button
         className="workspace-new"
         size="sm"

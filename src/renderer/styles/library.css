@@ -21,6 +21,9 @@
 .library-search > svg {
   flex-shrink: 0;
 }
+.library-search[hidden] {
+  display: none;
+}
 .library-search-input {
   min-width: 0;
   flex: 1;

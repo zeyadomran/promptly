@@ -15,10 +15,22 @@ export function QueueTabs() {
         if (value === 'open' || value === 'done') model.tab(value);
       }}
     >
-      <ToggleGroupItem value="open" aria-label={`Open prompts: ${String(state.openCount)}`}>
+      <ToggleGroupItem
+        value="open"
+        aria-label={`Open prompts: ${String(state.openCount)}`}
+        onFocus={() => {
+          model.tab('open');
+        }}
+      >
         Open <span>{state.openCount}</span>
       </ToggleGroupItem>
-      <ToggleGroupItem value="done" aria-label={`Done prompts: ${String(done)}`}>
+      <ToggleGroupItem
+        value="done"
+        aria-label={`Done prompts: ${String(done)}`}
+        onFocus={() => {
+          model.tab('done');
+        }}
+      >
         Done <span>{done}</span>
       </ToggleGroupItem>
     </SegmentedControl>
