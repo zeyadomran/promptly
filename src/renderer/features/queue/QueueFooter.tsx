@@ -10,6 +10,9 @@ export function QueueFooter() {
 
   return (
     <footer className="queue-footer">
+      <span className="queue-order-hint">
+        {state.tab === 'open' ? 'Manual order' : 'Newest completed first'}
+      </span>
       <span>
         <kbd>{label(keys.copy)}</kbd> Copy
       </span>

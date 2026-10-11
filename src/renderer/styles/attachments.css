@@ -107,3 +107,23 @@
   object-fit: contain;
   margin: auto;
 }
+
+.attachment-strip[data-compact='true'] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.attachment-intake[data-compact='true'] {
+  order: -1;
+  margin-top: 0;
+  gap: 4px;
+}
+.attachment-intake[data-compact='true'] > button {
+  width: 28px;
+  height: 28px;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.attachment-intake[data-compact='true'] .draft-tags {
+  flex-shrink: 0;
+}

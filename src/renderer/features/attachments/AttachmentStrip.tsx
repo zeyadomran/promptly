@@ -1,16 +1,19 @@
-import { ClipboardPaste, Paperclip, Pencil } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 
 import type { Attachment } from '../../../shared/contracts/attachments';
 import type { DesktopResult } from '../../../shared/contracts/result';
-import { Button } from '../../components/ui/button';
 import { drawingCapacityReason } from '../drawing/drawing-capacity';
 import { AttachmentChip } from './AttachmentChip';
+import { AttachmentIntake } from './AttachmentIntake';
 
 export interface AttachmentStripProps {
   attachments: Attachment[];
   draftToken?: string | undefined;
   editable?: boolean;
+  compact?: boolean;
+  intakeStart?: ReactNode;
+  intakeEnd?: ReactNode;
   pending?: boolean;
   onChange?: (attachments: Attachment[], draftToken: string) => void;
   onError?: (message: string, draftToken?: string) => void;
@@ -23,6 +26,9 @@ export function AttachmentStrip({
   attachments,
   draftToken,
   editable = false,
+  compact = false,
+  intakeStart,
+  intakeEnd,
   pending = false,
   onChange,
   onError,
@@ -78,6 +84,7 @@ export function AttachmentStrip({
       className="attachment-strip"
       aria-label="Attachments"
       data-dragging={drag}
+      data-compact={compact}
       onDragOver={(event) => {
         if (!editable || !event.dataTransfer.types.includes('Files')) return;
         event.preventDefault();
@@ -134,41 +141,20 @@ export function AttachmentStrip({
         </div>
       )}
       {editable && (
-        <div className="attachment-intake">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pending || busy || draftToken === undefined}
-            onClick={() => {
-              if (draftToken !== undefined)
-                void run(() => window.promptly.chooseAttachments({ draftToken }));
-            }}
-          >
-            <Paperclip aria-hidden="true" />
-            Add files
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={pending || busy || draftToken === undefined}
-            data-paste-attachment
-            onClick={paste}
-          >
-            <ClipboardPaste aria-hidden="true" />
-            Paste attachment
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={pending || busy || onDraw === undefined || drawingRefusal !== undefined}
-            title={drawingRefusal}
-            onClick={onDraw}
-          >
-            <Pencil aria-hidden="true" />
-            Draw
-          </Button>
-          <span className="attachment-limit">{String(attachments.length)} of 8 · 10 MB each</span>
-        </div>
+        <AttachmentIntake
+          compact={compact}
+          count={attachments.length}
+          disabled={pending || busy || draftToken === undefined}
+          drawingRefusal={drawingRefusal}
+          onChoose={() => {
+            if (draftToken !== undefined)
+              void run(() => window.promptly.chooseAttachments({ draftToken }));
+          }}
+          onPaste={paste}
+          onDraw={onDraw}
+          start={intakeStart}
+          end={intakeEnd}
+        />
       )}
       {editable && drawingRefusal !== undefined && (
         <p className="attachment-limit" role="status">

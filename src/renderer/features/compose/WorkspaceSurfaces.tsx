@@ -74,7 +74,7 @@ export function WorkspaceSurfaces({
         void drop(Array.from(event.dataTransfer.files));
       }}
     >
-      <WorkspaceBar mode={mode} openCount={queue.openCount} />
+      {!(mode === 'compact' && drafted) && <WorkspaceBar mode={mode} openCount={queue.openCount} />}
       <ComposeFeedback show={show} />
       <div className="workspace-surfaces">
         <TabsContent

@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react';
+import { ListFilter, X } from 'lucide-react';
 
 import { Button } from '../../components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '../../components/ui/tooltip';
@@ -8,7 +8,7 @@ import { TagOverflowRow } from '../tags/TagOverflowRow';
 import { useLibraryTagActions } from './library-commands';
 import { useLibrary } from './library-context';
 
-export function LibraryTags({ regular = false }: { regular?: boolean }) {
+export function LibraryTags() {
   const { state, model } = useLibrary();
   const actions = useLibraryTagActions();
   const selected = state.request.tagIds;
@@ -28,20 +28,24 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
       className="library-tags"
       label="Filter by tag"
       leading={
-        tags.length === 0 ? undefined : (
+        selected.length === 0 &&
+        !state.request.untagged &&
+        state.request.query === '' ? undefined : (
           <Button
             variant="ghost"
             size="xs"
             className="library-tag-chip library-tag-all"
-            aria-pressed={selected.length === 0 && !state.request.untagged}
+            aria-label="Clear search and filters"
             onClick={() => {
-              model.query({ ...state.request, tagIds: [], untagged: false });
+              model.query({ ...state.request, query: '', tagIds: [], untagged: false });
             }}
           >
-            All
+            <X aria-hidden="true" />
+            {state.request.untagged ? 'Untagged' : 'Clear'}
           </Button>
         )
       }
+      endWhenFits
       items={tags.map((tag) => ({
         id: tag.id,
         content: (
@@ -93,9 +97,9 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
             <Button
               data-tag-picker-trigger="filter-create"
               variant="ghost"
-              size={regular ? 'xs' : 'icon-xs'}
+              size="icon-xs"
               className="library-create-tag tag-overflow-trigger"
-              aria-label="Create tag"
+              aria-label="Filter or create tags"
               aria-haspopup="dialog"
               aria-expanded={actions?.activeTrigger === 'filter-create'}
               disabled={actions === undefined}
@@ -103,11 +107,10 @@ export function LibraryTags({ regular = false }: { regular?: boolean }) {
                 actions?.createTag(event.currentTarget);
               }}
             >
-              <Plus aria-hidden="true" />
-              {regular && 'New tag'}
+              <ListFilter aria-hidden="true" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Create tag</TooltipContent>
+          <TooltipContent>Filter or create tags</TooltipContent>
         </Tooltip>
       }
     />

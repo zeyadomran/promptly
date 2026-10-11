@@ -8,21 +8,28 @@
 .library-search {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 4px 14px;
-  border-bottom: 1px solid var(--border);
+  gap: 6px;
+  height: 30px;
+  min-width: 120px;
+  flex: 1;
+  max-width: 480px;
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--muted);
+}
+.library-search > svg {
   flex-shrink: 0;
 }
 .library-search-input {
   min-width: 0;
   flex: 1;
-  height: 36px;
+  height: 28px;
   padding: 0;
   border: 0;
   border-radius: 0;
   box-shadow: none;
-  font-size: 15px;
+  font-size: 13px;
   background: transparent;
 }
 .library-search-input:focus-visible {
@@ -30,25 +37,34 @@
   box-shadow: none;
 }
 .library-search:focus-within {
-  box-shadow: inset 0 -1px var(--ring);
-}
-.library-key-hint {
-  color: var(--muted-foreground);
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  font-family: inherit;
-  font-size: 10px;
-  padding: 1px 4px;
+  border-color: var(--ring);
+  box-shadow: var(--focus-shadow);
 }
 .library-tags {
   display: flex;
   align-items: center;
   gap: 6px;
-  min-height: 42px;
-  padding: 8px 14px;
+  min-width: 0;
+  flex: 1;
   overflow: hidden;
+}
+.library-filter-row {
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
+  gap: 4px;
+  min-height: 34px;
+  padding: 3px 10px;
+  border-bottom: 1px solid var(--border);
+}
+.library-filter-row > button {
+  flex-shrink: 0;
+}
+.library-result-count {
+  margin-inline: 4px;
+  color: var(--muted-foreground);
+  font-size: 11px;
+  white-space: nowrap;
 }
 .library-tag-chip {
   height: 24px;
@@ -284,28 +300,7 @@
   font-family: inherit;
   color: var(--foreground);
 }
-.library-list-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  padding: 4px 14px 6px 16px;
-  min-height: 22px;
-  color: var(--muted-foreground);
-  font-size: 11.5px;
-}
-.library-sort-trigger {
-  height: 22px;
-  padding: 0 8px;
-  gap: 4px;
-  border-radius: 4px;
-  color: var(--foreground);
-  font-size: 11.5px;
-  font-weight: 500;
-}
 .library-sort-trigger > svg {
-  width: 12px;
-  height: 12px;
   color: var(--muted-foreground);
 }
 .library-sort-menu {

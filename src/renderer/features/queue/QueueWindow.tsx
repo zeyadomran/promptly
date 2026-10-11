@@ -1,7 +1,5 @@
 import './queue.css';
 
-import { Tabs } from 'radix-ui';
-
 import type { SizeMode } from '../../../shared/contracts/window';
 import { Button } from '../../components/ui/button';
 import { useWorkflowCopy } from '../workflows/workflow-copy-context';
@@ -10,7 +8,6 @@ import { queueItems } from './queue-state';
 import { QueueDetail } from './QueueDetail';
 import { QueueEmpty } from './QueueEmpty';
 import { QueueFooter } from './QueueFooter';
-import { QueueHeader } from './QueueHeader';
 import { QueueList } from './QueueList';
 import { QueueToast } from './QueueToast';
 import { useQueueKeyboard } from './use-queue-keyboard';
@@ -46,17 +43,13 @@ export function QueueWindow({
 
   useQueueKeyboard(active, copy);
   return (
-    <Tabs.Root
+    <section
       className="queue-window"
+      aria-label="Prompt queue"
       data-mode={mode}
       hidden={!active}
       inert={!active}
-      value={state.tab}
-      onValueChange={(value) => {
-        if (value === 'open' || value === 'done') model.tab(value);
-      }}
     >
-      <QueueHeader />
       {state.error !== undefined && state.items.length > 0 && (
         <div className="queue-error" role="alert">
           <span>{state.error}</span>
@@ -72,13 +65,16 @@ export function QueueWindow({
         </div>
       )}
       <div className="queue-layout">
-        <Tabs.Content value={state.tab} className="queue-list-column">
+        <div
+          className="queue-list-column"
+          aria-label={state.tab === 'open' ? 'Open prompts' : 'Done prompts'}
+        >
           {queueItems(state).length === 0 ? (
             <QueueEmpty />
           ) : (
             <QueueList copy={copy} returnLabel={workflow.returnLabel} onEdit={onEdit} />
           )}
-        </Tabs.Content>
+        </div>
         {mode === 'regular' && (
           <QueueDetail
             copy={copy}
@@ -93,6 +89,6 @@ export function QueueWindow({
       <span className="sr-only" role="status" aria-live="polite">
         {state.announcement}
       </span>
-    </Tabs.Root>
+    </section>
   );
 }

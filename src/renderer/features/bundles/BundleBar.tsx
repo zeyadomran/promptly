@@ -6,11 +6,13 @@ import type { BundleModel } from './bundle-model';
 
 export function BundleBar({
   model,
+  cancel,
   review,
   matching = false,
   matchError
 }: {
   model: BundleModel;
+  cancel: () => void;
   review: () => void;
   matching?: boolean;
   matchError?: string | undefined;
@@ -38,6 +40,9 @@ export function BundleBar({
         }}
       >
         Clear
+      </Button>
+      <Button variant="ghost" size="sm" disabled={state.pending} onClick={cancel}>
+        Cancel
       </Button>
       <Button
         variant="outline"

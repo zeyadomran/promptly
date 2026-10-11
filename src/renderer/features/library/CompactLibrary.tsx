@@ -4,11 +4,9 @@ import { useLibrary } from './library-context';
 import { libraryDisplay } from './library-display';
 import { LibraryBundleBar } from './LibraryBundleBar';
 import { LibraryEmpty } from './LibraryEmpty';
+import { LibraryFilterRow } from './LibraryFilterRow';
 import { LibraryFooter } from './LibraryFooter';
 import { LibraryList } from './LibraryList';
-import { LibraryListHeader } from './LibraryListHeader';
-import { LibrarySearch } from './LibrarySearch';
-import { LibraryTags } from './LibraryTags';
 
 export function CompactLibrary() {
   const { state, model } = useLibrary();
@@ -17,8 +15,7 @@ export function CompactLibrary() {
 
   return (
     <section className="compact-library" aria-label="Snippet library">
-      <LibrarySearch />
-      <LibraryTags />
+      <LibraryFilterRow />
       {(state.error?.message ?? commands?.error) !== undefined && (
         <p role="alert" className="library-error">
           {state.error?.message ?? commands?.error}
@@ -35,7 +32,6 @@ export function CompactLibrary() {
           )}
         </p>
       )}
-      <LibraryListHeader />
       <div className="library-results" aria-busy={state.loading}>
         {state.loading && display.total === 0 ? (
           <p className="library-empty" role="status">

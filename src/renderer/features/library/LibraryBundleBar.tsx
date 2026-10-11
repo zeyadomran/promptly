@@ -12,6 +12,9 @@ export function LibraryBundleBar() {
   return (
     <BundleBar
       model={workflow.bundle}
+      cancel={() => {
+        workflow.cancelBundle();
+      }}
       matching={matches.pending}
       matchError={matches.error}
       review={() => {

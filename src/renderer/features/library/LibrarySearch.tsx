@@ -1,9 +1,10 @@
-import { Search } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 
+import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { useLibrary } from './library-context';
 
-export function LibrarySearch({ regular = false }: { regular?: boolean }) {
+export function LibrarySearch() {
   const { state, model, searchRef } = useLibrary();
 
   return (
@@ -22,10 +23,19 @@ export function LibrarySearch({ regular = false }: { regular?: boolean }) {
           model.query({ ...state.request, query: event.target.value }, true);
         }}
       />
-      {regular ? (
-        <span className="regular-filter-hint">tag:review from:terminal</span>
-      ) : (
-        <kbd className="library-key-hint">esc</kbd>
+      {state.request.query !== '' && (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          aria-label="Clear search"
+          title="Clear search"
+          onClick={() => {
+            model.query({ ...state.request, query: '' });
+            searchRef.current?.focus();
+          }}
+        >
+          <X aria-hidden="true" />
+        </Button>
       )}
     </div>
   );
