@@ -5,38 +5,6 @@
   min-height: 0;
   overflow: hidden;
 }
-.regular-library-header {
-  padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.regular-library .library-search {
-  min-height: 40px;
-  padding: 0 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: none;
-}
-.regular-library .library-search:focus-within {
-  border-color: var(--ring);
-  box-shadow: var(--focus-shadow);
-}
-.regular-filter-hint {
-  color: var(--muted-foreground);
-  font-size: 11px;
-  white-space: nowrap;
-}
-.regular-library .library-tags {
-  min-height: 0;
-  padding: 14px 0 0;
-}
-.regular-library .library-tag-chip {
-  height: 26px;
-  font-size: 12.5px;
-}
-.regular-library .library-create-tag {
-  border-radius: 999px;
-}
 .regular-library-split {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);

@@ -5,10 +5,8 @@ import { useLibrary } from '../library/library-context';
 import { libraryDisplay } from '../library/library-display';
 import { LibraryBundleBar } from '../library/LibraryBundleBar';
 import { LibraryEmpty } from '../library/LibraryEmpty';
+import { LibraryFilterRow } from '../library/LibraryFilterRow';
 import { LibraryList } from '../library/LibraryList';
-import { LibraryListHeader } from '../library/LibraryListHeader';
-import { LibrarySearch } from '../library/LibrarySearch';
-import { LibraryTags } from '../library/LibraryTags';
 import { RegularFooter } from './RegularFooter';
 import { SnippetPreview } from './SnippetPreview';
 
@@ -20,10 +18,6 @@ export function RegularLibrary() {
 
   return (
     <section className="regular-library" aria-label="Snippet library">
-      <header className="regular-library-header">
-        <LibrarySearch regular />
-        <LibraryTags regular />
-      </header>
       {(state.error?.message ?? commands?.error) !== undefined && (
         <p role="alert" className="library-error">
           {state.error?.message ?? commands?.error}
@@ -42,7 +36,7 @@ export function RegularLibrary() {
       )}
       <div className="regular-library-split" data-composing={compose.draft !== undefined}>
         <div className="regular-library-list">
-          <LibraryListHeader />
+          <LibraryFilterRow />
           <div className="regular-library-results" aria-busy={state.loading}>
             {state.loading && display.total === 0 ? (
               <p role="status" className="library-empty">

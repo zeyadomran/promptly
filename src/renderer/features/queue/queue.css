@@ -10,30 +10,24 @@
 .queue-window[hidden] {
   display: none;
 }
-.queue-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.queue-tabs {
-  display: flex;
-  gap: 4px;
-}
-.queue-tabs [data-state='active'] {
-  background: var(--muted);
+.queue-tabs.segmented-control {
+  padding: 2px;
+  background: transparent;
+  border-color: transparent;
 }
 .queue-tabs span {
   color: var(--muted-foreground);
-  font-size: 11px;
+  font-size: 10px;
 }
-.queue-header-note,
 .queue-muted {
   color: var(--muted-foreground);
   font-size: 11px;
+}
+.queue-order-hint {
+  margin-right: auto;
+}
+.workspace-layout[data-mode='compact'] .queue-order-hint {
+  display: none;
 }
 .queue-layout {
   display: grid;

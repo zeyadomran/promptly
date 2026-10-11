@@ -16,11 +16,13 @@ export function DraftTags({
   selectedIds,
   onChange,
   pending = false,
+  compact = false,
   onBusy
 }: {
   selectedIds: string[];
   onChange: (ids: string[]) => void;
   pending?: boolean;
+  compact?: boolean;
   onBusy?: (busy: boolean) => void;
 }) {
   const { state } = useLibrary();
@@ -66,27 +68,27 @@ export function DraftTags({
 
   return (
     <div className="draft-tags">
-      {state.tags
-        .filter(({ id }) => selectedIds.includes(id))
-        .map((tag) => (
-          <TagBadge key={tag.id} name={tag.name} color={tag.color} />
+      {!compact &&
+        state.tags
+          .filter(({ id }) => selectedIds.includes(id))
+          .map((tag) => <TagBadge key={tag.id} name={tag.name} color={tag.color} />)}
+      {!compact &&
+        unavailable.map((id) => (
+          <Button
+            key={id}
+            variant="outline"
+            size="xs"
+            disabled={pending || busy}
+            aria-label="Remove unavailable tag from draft"
+            title="This tag is unavailable. Remove it to save without it."
+            onClick={() => {
+              choose(id);
+            }}
+          >
+            Unavailable tag
+            <X aria-hidden="true" />
+          </Button>
         ))}
-      {unavailable.map((id) => (
-        <Button
-          key={id}
-          variant="outline"
-          size="xs"
-          disabled={pending || busy}
-          aria-label="Remove unavailable tag from draft"
-          title="This tag is unavailable. Remove it to save without it."
-          onClick={() => {
-            choose(id);
-          }}
-        >
-          Unavailable tag
-          <X aria-hidden="true" />
-        </Button>
-      ))}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverAnchor asChild>
           <Button
@@ -101,7 +103,7 @@ export function DraftTags({
             }}
           >
             <Plus aria-hidden="true" />
-            Tags
+            Tags{compact && selectedIds.length > 0 ? ` (${String(selectedIds.length)})` : ''}
           </Button>
         </PopoverAnchor>
         <PopoverContent
@@ -141,6 +143,23 @@ export function DraftTags({
                   />
                 ))}
               </CommandGroup>
+              {compact && unavailable.length > 0 && (
+                <CommandGroup heading="Unavailable tags">
+                  {unavailable.map((id) => (
+                    <CommandItem
+                      key={id}
+                      value={id}
+                      disabled={pending || busy}
+                      onSelect={() => {
+                        choose(id);
+                      }}
+                    >
+                      <X aria-hidden="true" />
+                      Remove unavailable tag
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
               {create && (
                 <CommandGroup>
                   <CommandItem

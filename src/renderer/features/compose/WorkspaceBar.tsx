@@ -4,6 +4,8 @@ import type { SizeMode } from '../../../shared/contracts/window';
 import { shortcutLabel } from '../../../shared/shortcuts/accelerator';
 import { Button } from '../../components/ui/button';
 import { TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { LibrarySearch } from '../library/LibrarySearch';
+import { QueueTabs } from '../queue/QueueTabs';
 import { usePreferences } from '../settings/settings-context';
 import { useShellNavigation } from '../window-chrome/shell-navigation';
 import { useCompose } from './compose-context';
@@ -27,7 +29,10 @@ export function WorkspaceBar({ mode, openCount = 0 }: { mode: SizeMode; openCoun
           Queue{openCount > 0 && <span className="workspace-count">{openCount}</span>}
         </TabsTrigger>
       </TabsList>
+      <LibrarySearch hidden={navigation.view !== 'library'} />
+      {navigation.view === 'queue' && <QueueTabs />}
       <Button
+        className="workspace-new"
         size="sm"
         variant="outline"
         onClick={() => {

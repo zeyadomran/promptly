@@ -25,7 +25,10 @@ export function ShellNavigationProvider({ children }: { children: ReactNode }) {
   const rememberFocus = useCallback(() => {
     const active = document.activeElement;
 
-    if (active instanceof HTMLElement && active.closest('[data-shell-library]') !== null)
+    if (
+      active instanceof HTMLElement &&
+      (active.closest('[data-shell-library]') !== null || active.matches('[data-promptly-search]'))
+    )
       libraryFocus.current = active;
   }, []);
   const showLibrary = useCallback(() => {

@@ -1,4 +1,3 @@
-import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '../../components/ui/button';
@@ -27,13 +26,12 @@ export function LibrarySort() {
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="xs"
+          size="icon-xs"
           className="library-sort-trigger"
           aria-label={'Sort snippets: ' + current.label}
+          title={'Sort snippets: ' + current.label}
         >
           <Icon aria-hidden="true" />
-          {current.label}
-          <ChevronDown aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       {view === 'library' && (

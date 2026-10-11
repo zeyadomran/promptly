@@ -23,26 +23,7 @@ export function ComposeActions() {
 
   return (
     <footer className="compose-actions">
-      <p className="compose-save-hint">
-        {draft.destination === 'queue'
-          ? 'Keeps this prompt in Queue.'
-          : 'Saves a reusable snippet.'}
-        <br />
-        Ctrl+Enter to save · Ctrl+Shift+Enter to save and return
-      </p>
-      {copy.returnLabel !== undefined && (
-        <p className="compose-save-hint">Save and return goes back to {copy.returnLabel}.</p>
-      )}
       <div className="compose-action-buttons">
-        <Button
-          variant="outline"
-          disabled={busy}
-          onClick={() => {
-            model.requestClose();
-          }}
-        >
-          Cancel
-        </Button>
         <CopyDraftMenu
           source={model.currentCopySource}
           hasText={draft.text.trim() !== ''}
@@ -54,8 +35,8 @@ export function ComposeActions() {
           aria-disabled={empty || copy.returnLabel === undefined}
           title={
             copy.returnLabel === undefined
-              ? 'No previous app to return to.'
-              : `Save, then switch back to ${copy.returnLabel}.`
+              ? 'No previous app to return to. Ctrl+Shift+Enter to save and return when available.'
+              : `Save, then switch back to ${copy.returnLabel} (Ctrl+Shift+Enter).`
           }
           onClick={() => {
             confirm(true);
@@ -68,6 +49,11 @@ export function ComposeActions() {
           variant={returning ? 'outline' : 'default'}
           disabled={busy}
           aria-disabled={empty}
+          title={
+            draft.destination === 'queue'
+              ? 'Save to Queue (Ctrl+Enter)'
+              : 'Save to Library (Ctrl+Enter)'
+          }
           aria-describedby={empty ? 'compose-error' : undefined}
           onClick={() => {
             confirm();
@@ -81,9 +67,6 @@ export function ComposeActions() {
               : 'Apply changes'}
         </Button>
       </div>
-      {copy.returnLabel === undefined && (
-        <p className="compose-return-hint">No previous app to return to.</p>
-      )}
     </footer>
   );
 }
