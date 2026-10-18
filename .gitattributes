@@ -1,3 +1,5 @@
 # Keep text checkouts consistent with Prettier on Windows and macOS.
 # Binary assets remain binary through automatic detection.
 * text=auto eol=lf
+
+scripts/git-hooks/pre-commit text eol=lf
