@@ -53,7 +53,7 @@ beforeAll(async () => {
         formats: ['cjs'],
         fileName: () => 'worker.cjs'
       },
-      rollupOptions: { external: [/^node:/] }
+      rolldownOptions: { external: [/^node:/] }
     }
   });
   client = new StorageClient(

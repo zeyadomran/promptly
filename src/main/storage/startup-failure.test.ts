@@ -25,7 +25,7 @@ it('rejects damaged and newer databases with safe startup guidance and retains o
           formats: ['cjs'],
           fileName: () => 'worker.cjs'
         },
-        rollupOptions: { external: [/^node:/] }
+        rolldownOptions: { external: [/^node:/] }
       }
     });
     for (const [name, cause] of [
