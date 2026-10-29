@@ -139,7 +139,7 @@ it(
               formats: ['cjs'],
               fileName: () => 'export-worker.cjs'
             },
-            rollupOptions: { external: [/^node:/] }
+            rolldownOptions: { external: [/^node:/] }
           }
         });
       });
